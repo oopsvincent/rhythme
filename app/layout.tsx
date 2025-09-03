@@ -13,23 +13,57 @@ const geistMono = Geist_Mono({
 });
 
 const spaceGrotesk = Space_Grotesk({
-    variable: "--font-space-grotesk",
-    subsets: ["latin"],
-})
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
 
 const playfairDisplay = Playfair_Display({
-    variable: "--font-playfair-display",
-    subsets: ["latin"],
-})
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+});
 
 const inter = Inter({
-    variable: "--font-inter",
-    subsets: ["latin"],
-})
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
-    description: "The Productivity Ecosystem",
-    title: "Rhythmé",
+  title: "Rhythmé",
+  description: "The Productivity Ecosystem – align your habits, focus, and goals in one unified experience.",
+  keywords: ["productivity", "habits", "journaling", "focus", "goals", "ecosystem", "rhythmé"],
+  authors: [{ name: "Rhythmé Team", url: "https://yourdomain.com" }],
+  creator: "Rhythmé",
+  publisher: "Rhythmé",
+  metadataBase: new URL("https://rhythme-gamma.vercel.app"),
+  openGraph: {
+    title: "Rhythmé – The Productivity Ecosystem",
+    description: "Align your life with habits, journaling, focus, and goals — all in one place.",
+    url: "https://yourdomain.com",
+    siteName: "Rhythmé",
+    images: [
+      {
+        url: "/preview.png",
+        width: 1200,
+        height: 630,
+        alt: "Rhythmé App Preview",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Rhythmé – The Productivity Ecosystem",
+    description: "Align your life with habits, journaling, focus, and goals — all in one place.",
+    images: ["/preview.png"],
+    creator: "@oopsvincent",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  themeColor: "#0f172a",
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({
