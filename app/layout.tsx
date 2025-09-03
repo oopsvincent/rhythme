@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Playfair_Display, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,6 +17,16 @@ const spaceGrotesk = Space_Grotesk({
     subsets: ["latin"],
 })
 
+const playfairDisplay = Playfair_Display({
+    variable: "--font-playfair-display",
+    subsets: ["latin"],
+})
+
+const inter = Inter({
+    variable: "--font-inter",
+    subsets: ["latin"],
+})
+
 export const metadata: Metadata = {
     description: "The Productivity Ecosystem",
     title: "Rhythmé",
@@ -30,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${playfairDisplay.variable} antialiased`}
       >
         {children}
       </body>
