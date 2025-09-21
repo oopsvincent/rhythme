@@ -1,8 +1,6 @@
 // app/dashboard/page.tsx
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import Image from "next/image";
-import { span } from "framer-motion/client";
 
 export default async function DashboardPage() {
   const supabase = await createClient(); // 👈 must await
