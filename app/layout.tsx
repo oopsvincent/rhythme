@@ -60,9 +60,19 @@ const clashDisplay = localFont({
 });
 
 const spaceGrotesk = Space_Grotesk({
-    variable: "--font-space-grotesk",
-    subsets: ["latin"],
-})
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -105,6 +115,7 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
 //   themeColor: "#0f172a",
+
   manifest: "/site.webmanifest",
 };
 
