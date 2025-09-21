@@ -64,15 +64,15 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
 });
 
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair-display",
-  subsets: ["latin"],
-});
+// const playfairDisplay = Playfair_Display({
+//   variable: "--font-playfair-display",
+//   subsets: ["latin"],
+// });
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
+// const inter = Inter({
+//   variable: "--font-inter",
+//   subsets: ["latin"],
+// });
 
 const inter = Inter({
   variable: "--font-inter",
