@@ -1,10 +1,8 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
     <div className="relative min-h-screen flex flex-col justify-center items-center text-center bg-background overflow-hidden">
       {/* Title */}
-      <h1 className="text-8xl font-head text-primary drop-shadow-lg">
+      <h1 className="text-8xl font-primary text-primary drop-shadow-lg">
         Hello, Rhythmé
       </h1>
       <p className="text-2xl font-body text-accent mt-4">
