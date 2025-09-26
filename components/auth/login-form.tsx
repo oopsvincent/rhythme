@@ -176,10 +176,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/utils/supabase/client";
-import { useSearchParams } from "next/navigation";
 import { useOAuthError } from "@/hooks/useOAuthError";
 import { OctagonAlert } from "lucide-react";
-import { Suspense } from "react";
 
 export function LoginForm({
   className,
@@ -279,7 +277,6 @@ export function LoginForm({
             </svg>
           </Button>
         </div>
-        <Suspense fallback={null}>
           <div className={`${errorData ? "flex" : "hidden"}`}>
             {errorData && (
               <Alert variant="destructive">
@@ -292,7 +289,6 @@ export function LoginForm({
               </Alert>
             )}
           </div>
-        </Suspense>
         <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
           <span className="bg-background text-muted-foreground relative z-10 px-2">
             Or continue with
