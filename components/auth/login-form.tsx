@@ -178,7 +178,8 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/utils/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { useOAuthError } from "@/hooks/useOAuthError";
-import { OctagonAlert, Terminal } from "lucide-react";
+import { OctagonAlert } from "lucide-react";
+import { Suspense } from "react";
 
 export function LoginForm({
   className,
@@ -216,6 +217,7 @@ export function LoginForm({
       <div className="grid gap-6">
         <div className="flex justify-center items-center gap-5">
           <Button
+            type="button"
             variant="outline"
             onClick={() => signInWithProvider("google")}
             className="w-1/4"
@@ -228,6 +230,7 @@ export function LoginForm({
             </svg>
           </Button>
           <Button
+            type="button"
             variant="outline"
             onClick={() => signInWithProvider("github")}
             className="w-1/4"
@@ -245,6 +248,7 @@ export function LoginForm({
             </svg>
           </Button>
           <Button
+            type="button"
             variant="outline"
             onClick={() => signInWithProvider("spotify")}
             className="w-1/4"
@@ -258,6 +262,7 @@ export function LoginForm({
             </svg>
           </Button>
           <Button
+            type="button"
             variant="outline"
             onClick={() => signInWithProvider("discord")}
             className="w-1/4"
@@ -274,17 +279,20 @@ export function LoginForm({
             </svg>
           </Button>
         </div>
-        <div className={`${errorData ? "flex" : "hidden"}`}>
-          {errorData && (
-            <Alert variant="destructive">
+        <Suspense fallback={null}>
+          <div className={`${errorData ? "flex" : "hidden"}`}>
+            {errorData && (
+              <Alert variant="destructive">
                 <OctagonAlert />
-              <AlertTitle>{errorData.error}</AlertTitle>
-              <AlertDescription>
-            {errorData.errorDescription}
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
+                <AlertTitle>Access Denied</AlertTitle>
+                <AlertDescription>{errorData.error}</AlertDescription>
+                <AlertDescription>
+                  {errorData.errorDescription}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </Suspense>
         <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
           <span className="bg-background text-muted-foreground relative z-10 px-2">
             Or continue with
