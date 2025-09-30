@@ -18,17 +18,20 @@ import { PencilLine } from "lucide-react"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
-export function NameUpdateDialog() {
+interface NameUpdateDialogProps {
+  currentName?: string
+}
+
+export function NameUpdateDialog({ currentName = "" }: NameUpdateDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const router = useRouter()
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
       try {
         await updateUsername(formData)
-        setOpen(false)
-        router.refresh()
+        // No need for setOpen(false) or router.refresh() 
+        // because the action redirects
       } catch (error) {
         console.error("Failed to update username:", error)
         // You can add toast notifications here
@@ -58,7 +61,7 @@ export function NameUpdateDialog() {
               <Input
                 id="username-1"
                 name="username"
-                defaultValue=""
+                defaultValue={currentName}
                 required
                 disabled={isPending}
               />
