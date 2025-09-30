@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
@@ -11,10 +10,9 @@ async function signInWithProvider(
   provider: "google" | "github" | "discord" | "spotify" | "apple" | "meta"
 ) {
   if (provider === "apple" || provider === "meta") {
-    alert(`We don’t have money to add ${provider} login yet 💸`)
+    console.log(`Will be added later: ${provider}`);
     return
   }
-
   const supabase = createClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
@@ -22,35 +20,35 @@ async function signInWithProvider(
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
     },
   })
-
   if (error) {
     console.error(error.message)
     return
   }
-
   if (data?.url) {
     window.location.href = data.url
   }
 }
-
 
 // 2. Define provider configs
 const providers = [
   {
     id: "google" as const,
     name: "Continue with Google",
+    shortName: "Google",
     color: "bg-white border text-gray-800 hover:bg-blue-100",
     icon: <FcGoogle size={20} />,
   },
   {
     id: "github" as const,
     name: "Continue with GitHub",
+    shortName: "GitHub",
     color: "bg-gray-900 text-white hover:bg-gray-400",
     icon: <FaGithub size={20} />,
   },
   {
     id: "apple" as const,
     name: "Continue with Apple",
+    shortName: "Apple",
     color: "bg-black text-white hover:bg-gray-800",
     icon: <FaApple size={20} />,
     disabled: true, // Apple OAuth not in your supabase config yet
@@ -58,18 +56,21 @@ const providers = [
   {
     id: "discord" as const,
     name: "Continue with Discord",
+    shortName: "Discord",
     color: "bg-indigo-600 text-white hover:bg-indigo-500",
     icon: <FaDiscord size={20} />,
   },
   {
     id: "spotify" as const,
     name: "Continue with Spotify",
+    shortName: "Spotify",
     color: "bg-green-500 text-white hover:bg-green-400",
     icon: <FaSpotify size={20} />,
   },
   {
     id: "meta" as const,
     name: "Continue with Meta",
+    shortName: "Meta",
     color: "bg-blue-600 text-white hover:bg-blue-500",
     icon: <FaFacebook size={20} />,
     disabled: true,
@@ -90,7 +91,9 @@ export default function OAuthButtons() {
           disabled={provider.disabled}
         >
           {provider.icon}
-          <span>{provider.name}</span>
+          {/* Show full text on mobile, short name on desktop */}
+          <span className="md:hidden">{provider.name}</span>
+          <span className="hidden md:inline">{provider.shortName}</span>
         </Button>
       ))}
     </div>
