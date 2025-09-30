@@ -8,27 +8,31 @@ import { FaGithub, FaDiscord, FaSpotify, FaApple, FaFacebook } from "react-icons
 
 // 1. Function to handle login
 async function signInWithProvider(
-  provider: "google" | "github" | "discord" | "spotify"
+  provider: "google" | "github" | "discord" | "spotify" | "apple" | "meta"
 ) {
+  if (provider === "apple" || provider === "meta") {
+    alert(`We don’t have money to add ${provider} login yet 💸`)
+    return
+  }
 
-    const supabase = createClient();
-
+  const supabase = createClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
     },
-  });
+  })
 
   if (error) {
-    console.error(error.message);
-    return;
+    console.error(error.message)
+    return
   }
 
   if (data?.url) {
-    window.location.href = data.url;
+    window.location.href = data.url
   }
 }
+
 
 // 2. Define provider configs
 const providers = [
