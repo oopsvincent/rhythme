@@ -6,8 +6,9 @@ export default function SignOutButton() {
   const supabase = createClient();
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    window.location.href = "/login"; // redirect manually after sign-out
+    await supabase.auth.signOut({
+        
+    });
   }
 
   return (
