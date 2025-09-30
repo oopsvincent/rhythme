@@ -1,9 +1,29 @@
-import { GalleryVerticalEnd } from "lucide-react"
+'use client'
 
-import { LoginForm } from "@/components/auth/login-form"
-import { Suspense } from "react"
+import { GalleryVerticalEnd } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { LoginForm } from "@/components/auth/login-form";
+import { Suspense, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        router.replace('/dashboard'); // replace avoids back button issues
+      }
+    };
+
+    checkSession();
+  }, [supabase, router]);
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
