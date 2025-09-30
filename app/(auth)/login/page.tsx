@@ -12,13 +12,13 @@ export default function LoginPage() {
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
               <GalleryVerticalEnd className="size-4" />
             </div>
-            Acme Inc.
+            Rhythmé Inc.
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <Suspense fallback="null">
-            <LoginForm />
+            <Suspense fallback={null}>
+              <LoginForm />
             </Suspense>
           </div>
         </div>
@@ -31,5 +31,5 @@ export default function LoginPage() {
         />
       </div>
     </div>
-  )
+  );
 }
