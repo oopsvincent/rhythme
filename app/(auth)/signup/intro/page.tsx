@@ -49,8 +49,8 @@ export default function IntroPage() {
       {/* Continue Button */}
       <div className="w-full px-6 mb-5">
         <Button
-          className="w-full py-6 my-5 text-lg font-semibold rounded-full bg-primary hover:bg-primary"
-          onClick={() => router.push("/login")}
+          className="w-full py-6 my-5 text-lg font-semibold rounded-full bg-primary hover:bg-primary cursor-pointer"
+          onClick={() => router.push("/signup/create")}
         >
           CONTINUE <ChevronsRight size={8} />
         </Button>
