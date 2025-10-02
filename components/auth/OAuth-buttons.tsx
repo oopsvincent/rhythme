@@ -7,9 +7,9 @@ import { FaGithub, FaDiscord, FaSpotify, FaApple, FaFacebook } from "react-icons
 
 // 1. Function to handle login
 async function signInWithProvider(
-  provider: "google" | "github" | "discord" | "spotify" | "apple" | "meta"
+  provider: "google" | "github" | "discord" | "spotify" | "apple" | "facebook"
 ) {
-  if (provider === "apple" || provider === "meta") {
+  if (provider === "apple") {
     console.log(`Will be added later: ${provider}`);
     return
   }
@@ -68,12 +68,11 @@ const providers = [
     icon: <FaSpotify size={20} />,
   },
   {
-    id: "meta" as const,
+    id: "facebook" as const,
     name: "Continue with Meta",
     shortName: "Meta",
     color: "bg-blue-600 text-white hover:bg-blue-500",
     icon: <FaFacebook size={20} />,
-    disabled: true,
   },
 ];
 
@@ -83,6 +82,7 @@ export default function OAuthButtons() {
       {providers.map((provider) => (
         <Button
           key={provider.id}
+          type="button"
           onClick={() =>
             !provider.disabled && signInWithProvider(provider.id)
           }
