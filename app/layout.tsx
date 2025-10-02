@@ -1,62 +1,64 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
-import localFont from 'next/font/local';
+import localFont from "next/font/local";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ModeToggle } from "@/components/theme-button";
 
 const clashDisplay = localFont({
   src: [
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '900',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "900",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '800',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "800",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '700',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "700",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '600',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "600",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '500',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "500",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '500',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "500",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '400',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "400",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '300',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "300",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '200',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "200",
+      style: "normal",
     },
     {
-        path: '../public/fonts/ClashDisplay-Variable.ttf',
-        weight: '100',
-        style: 'normal'        
+      path: "../public/fonts/ClashDisplay-Variable.ttf",
+      weight: "100",
+      style: "normal",
     },
   ],
-  variable: '--font-clash-display',
+  variable: "--font-clash-display",
 });
 
 const spaceGrotesk = Space_Grotesk({
@@ -81,15 +83,25 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Rhythmé",
-  description: "The Productivity Ecosystem – align your habits, focus, and goals in one unified experience.",
-  keywords: ["productivity", "habits", "journaling", "focus", "goals", "ecosystem", "rhythmé"],
+  description:
+    "The Productivity Ecosystem – align your habits, focus, and goals in one unified experience.",
+  keywords: [
+    "productivity",
+    "habits",
+    "journaling",
+    "focus",
+    "goals",
+    "ecosystem",
+    "rhythmé",
+  ],
   authors: [{ name: "Rhythmé Team", url: "https://yourdomain.com" }],
   creator: "Rhythmé",
   publisher: "Rhythmé",
   metadataBase: new URL("https://rhythme-gamma.vercel.app"),
   openGraph: {
     title: "Rhythmé – The Productivity Ecosystem",
-    description: "Align your life with habits, journaling, focus, and goals — all in one place.",
+    description:
+      "Align your life with habits, journaling, focus, and goals — all in one place.",
     url: "https://yourdomain.com",
     siteName: "Rhythmé",
     images: [
@@ -106,7 +118,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Rhythmé – The Productivity Ecosystem",
-    description: "Align your life with habits, journaling, focus, and goals — all in one place.",
+    description:
+      "Align your life with habits, journaling, focus, and goals — all in one place.",
     images: ["/preview.png"],
     creator: "@oopsvincent",
   },
@@ -114,7 +127,7 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
-//   themeColor: "#0f172a",
+  //   themeColor: "#0f172a",
 
   manifest: "/site.webmanifest",
 };
@@ -125,11 +138,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${spaceGrotesk.variable} ${inter.variable} ${clashDisplay.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+                    <div className="absolute top-2 right-2">
+            <ModeToggle />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
