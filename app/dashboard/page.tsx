@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SignOutButton from "@/components/auth/signout-button";
 import { NameUpdateDialog } from "@/components/auth/name-dialog-form";
+import { ModeToggle } from "@/components/theme-button";
 
 export const dynamic = 'force-dynamic' // Disable caching for this page
 
@@ -61,6 +62,7 @@ export default async function DashboardPage() {
         </div>
         {/* Client Component handles sign-out */}
         <SignOutButton />
+        <ModeToggle />
       </div>
     </main>
   );

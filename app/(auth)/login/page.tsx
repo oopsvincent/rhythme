@@ -1,4 +1,5 @@
-'use client'
+// login/page.tsx
+"use client";
 
 import { GalleryVerticalEnd } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,7 +18,7 @@ export default function LoginPage() {
       } = await supabase.auth.getUser();
 
       if (user) {
-        router.replace('/dashboard'); // replace avoids back button issues
+        router.replace("/dashboard");
       }
     };
 
@@ -25,10 +26,24 @@ export default function LoginPage() {
   }, [supabase, router]);
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
+    <div className="grid min-h-svh lg:grid-cols-2 bg-background">
+      {/* Left side - Hero section */}
+      <div className="bg-primary relative hidden lg:flex lg:flex-col justify-center items-start pl-8 p-6">
+        <h1 className="scroll-m-20 text-justify text-8xl font-primary font-black tracking-tight text-balance text-primary-foreground">
+          Welcome <br /> Back
+        </h1>
+        <h2 className="scroll-m-20 border-b border-primary-foreground/20 pb-2 text-3xl font-semibold tracking-tight first:mt-0 font-primary text-primary-foreground/90">
+          Your rhythm of focus, growth, and balance starts here.
+        </h2>
+        <h3 className="scroll-m-20 text-2xl font-semibold tracking-tighter text-primary-foreground/80">
+          One account, a simpler path to productivity
+        </h3>
+      </div>
+
+      {/* Right side - Login form */}
+      <div className="flex flex-col gap-4 p-6 md:p-10 bg-background">
         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
+          <a href="#" className="flex items-center gap-2 font-medium text-foreground">
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
               <GalleryVerticalEnd className="size-4" />
             </div>
@@ -42,13 +57,6 @@ export default function LoginPage() {
             </Suspense>
           </div>
         </div>
-      </div>
-      <div className="bg-muted relative hidden lg:block">
-        <img
-          src="/placeholder.svg"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
       </div>
     </div>
   );

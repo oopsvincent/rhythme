@@ -2,7 +2,20 @@
 @import "tw-animate-css";
 
 
-@custom-variant dark (&:is(.dark *));
+
+/* @import "tailwindcss"; */
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+/* Rest of your CSS */
 
 html,
 body {
