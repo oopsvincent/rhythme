@@ -10,7 +10,7 @@ export function useOAuthError() {
 
   useEffect(() => {
     // --- 1. Check query params (?error=...)
-    const queryError = searchParams ? searchParams.get("error_code") : null;
+    const queryError = searchParams ? searchParams.get("error") : null;
     const queryDescription =
       searchParams ? (searchParams.get("error_description") || searchParams.get("error_code")) : null;
 
