@@ -186,3 +186,28 @@ body {
     @apply bg-background text-foreground font-body;
   }
 }
+
+
+/* --- Theming --- */
+
+@layer utilities {
+  .icon-light {
+    transform: rotate(0) scale(1);
+    opacity: 1;
+  }
+  
+  .dark .icon-light {
+    transform: rotate(-90deg) scale(0);
+    opacity: 0;
+  }
+  
+  .icon-dark {
+    transform: rotate(90deg) scale(0);
+    opacity: 0;
+  }
+  
+  .dark .icon-dark {
+    transform: rotate(0) scale(1);
+    opacity: 1;
+  }
+}

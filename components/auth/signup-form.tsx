@@ -64,12 +64,12 @@ export function SignupForm({
                   <Label htmlFor="password" className="text-foreground">
                     Password
                   </Label>
-                  <a
+                  {/* <a
                     href="#"
                     className="ml-auto text-sm text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors"
                   >
                     Generate a Password
-                  </a>
+                  </a> */}
                 </div>
                 <Input
                   id="password"

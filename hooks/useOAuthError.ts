@@ -25,7 +25,7 @@ export function useOAuthError() {
       const hash = window.location.hash; // "#error=..."
       if (hash) {
         const params = new URLSearchParams(hash.substring(1));
-        const hashError = params.get("error_code");
+        const hashError = params.get("error");
         const hashDescription =
           params.get("error_description") || params.get("error_code");
 
