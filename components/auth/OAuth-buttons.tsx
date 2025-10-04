@@ -42,7 +42,7 @@ const providers = [
     id: "github" as const,
     name: "Continue with GitHub",
     shortName: "GitHub",
-    color: "bg-secondary hover:bg-secondary/80 text-foreground",
+    color: "bg-background hover:bg-secondary/80 text-foreground",
     icon: <FaGithub size={20} />,
   },
   {
@@ -87,7 +87,7 @@ export default function OAuthButtons() {
             !provider.disabled && signInWithProvider(provider.id)
           }
           variant="outline"
-          className={`w-full md:w-[40%] flex items-center justify-center space-x-2 ${provider.color}`}
+          className={`w-full md:w-[40%] flex items-center justify-center space-x-2 ${provider.color} cursor-pointer`}
           disabled={provider.disabled}
         >
           {provider.icon}

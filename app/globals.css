@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-
+@custom-variant dark (&:is(.dark *));
 
 /* @import "tailwindcss"; */
 
@@ -9,7 +9,7 @@
   :root {
     color-scheme: light;
   }
-  
+
   .dark {
     color-scheme: dark;
   }
@@ -34,7 +34,7 @@ body {
   /* COLORS (semantic mapping → real values below) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
 
@@ -187,7 +187,6 @@ body {
   }
 }
 
-
 /* --- Theming --- */
 
 @layer utilities {
@@ -195,19 +194,28 @@ body {
     transform: rotate(0) scale(1);
     opacity: 1;
   }
-  
+
   .dark .icon-light {
     transform: rotate(-90deg) scale(0);
     opacity: 0;
   }
-  
+
   .icon-dark {
     transform: rotate(90deg) scale(0);
     opacity: 0;
   }
-  
+
   .dark .icon-dark {
     transform: rotate(0) scale(1);
     opacity: 1;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
