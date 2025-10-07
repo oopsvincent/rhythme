@@ -84,9 +84,9 @@ const RhythmeLanding = () => {
 
       {/* Hero Section */}
       <section id="hero" className="pt-32 pb-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto text-center font-marketing">
           <div className="w-32 h-32 bg-muted rounded-full mx-auto mb-8"></div>
-          <h2 className="text-5xl md:text-6xl font-bold font-primary mb-4">
+          <h2 className="text-5xl md:text-6xl font-marketing font-bold mb-4">
             Find Your Flow with Rhythmé
           </h2>
           <p className="text-xl text-muted-foreground mb-12">
@@ -427,7 +427,7 @@ const RhythmeLanding = () => {
 
       {/* Pricing */}
       <section id="pricing" className="py-20 px-6 bg-card">
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto text-center font-marketing">
           <h2 className="text-4xl md:text-5xl font-bold font-primary mb-4">
             Choose Your Rhythm
           </h2>
