@@ -23,7 +23,7 @@ export const DragSlider = ({ onComplete, navigateTo = "/signup/create" }: DragSl
   const textOpacity = useTransform(x, [0, DRAG_THRESHOLD], [1, 0]);
   const iconRotate = useTransform(x, [0, MAX_DRAG], [0, 360]);
 
-  const handleDragEnd = (_: any, info: { offset: { x: number } }) => {
+  const handleDragEnd = (_: unknown, info: { offset: { x: number } }) => {
     setIsDragging(false);
     
     if (info.offset.x > DRAG_THRESHOLD) {
