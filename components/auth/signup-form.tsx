@@ -21,9 +21,9 @@ export function SignupForm({
         <CardTitle className="lg:hidden text-4xl font-bold text-foreground">
           Welcome to Rhythmé        
         </CardTitle>
-        <h2 className="lg:hidden scroll-m-20 border-b border-border pb-2 text-2xl font-semibold tracking-tight first:mt-0 text-foreground">
+        {/* <h2 className="lg:hidden scroll-m-20 border-b border-border pb-2 text-2xl font-semibold tracking-tight first:mt-0 text-foreground">
           Your rhythm of focus, growth, and balance starts here.
-        </h2>
+        </h2> */}
         <h6 className="lg:hidden scroll-m-20 text-xl font-semibold tracking-tighter font-sans text-muted-foreground">
           One account, a simpler path to productivity
         </h6>

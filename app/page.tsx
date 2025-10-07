@@ -1,23 +1,9 @@
+import RhythmeLanding from "@/components/landing-page";
+
 export default function Home() {
   return (
     <div className="relative min-h-screen flex flex-col justify-center items-center text-center bg-background overflow-hidden">
-      {/* Title */}
-      <h1 className="text-8xl font-primary text-primary drop-shadow-lg">
-        Hello, Rhythmé
-      </h1>
-      <p className="text-2xl font-body text-accent mt-4">
-        The Ultimate Productivity Ecosystem
-      </p>
-
-      {/* Tagline */}
-      <p className="text-lg font-body text-text-primary mt-2 max-w-xl px-2">
-        Align your habits, focus, mental health and growth — all in one seamless experience.
-      </p>
-
-      {/* Coming soon */}
-      <p className="mt-6 text-sm font-mono uppercase tracking-wider text-foreground/70">
-        Coming September 2026
-      </p>
+      <RhythmeLanding />
 
       {/* Decorative graphics */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>

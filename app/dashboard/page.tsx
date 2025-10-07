@@ -5,6 +5,7 @@ import { SectionCards } from "@/components/section-cards"
 import { SiteHeader } from "@/components/site-header"
 
 import data from "./data.json"
+import { SettingsDialog } from "@/components/settings-dialog"
 
 export default function Page() {
   return (
@@ -16,6 +17,9 @@ export default function Page() {
               <SectionCards />
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
+              </div>
+              <div>
+                <SettingsDialog />
               </div>
               <DataTable data={data} />
             </div>

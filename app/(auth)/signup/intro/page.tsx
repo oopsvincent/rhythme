@@ -1,8 +1,15 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, LineChart, Clock, Trophy, ChevronsRight } from "lucide-react";
+import {
+  LineChart,
+  CheckCircle,
+  Clock,
+  Trophy,
+  ChevronsRight,
+} from "lucide-react";
 
 interface FeatureProps {
   icon: React.ReactNode;
@@ -11,71 +18,118 @@ interface FeatureProps {
 }
 
 export default function IntroPage() {
-  const [slideProgress, setSlideProgress] = useState(0);
+//   const router = useRouter();
+  const [sliderPosition, setSliderPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const buttonRef = useRef<HTMLDivElement>(null);
-  const startXRef = useRef(0);
-  const currentXRef = useRef(0);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const knobRef = useRef<HTMLDivElement>(null);
+  const startPosRef = useRef(0);
   const maxSlideRef = useRef(0);
-  const animationFrameRef = useRef<number | null>(null);
 
-  const handleStart = (clientX: number): void => {
+  // Calculate max slide distance on mount and resize
+  useEffect(() => {
+    const calculateMaxSlide = () => {
+      if (containerRef.current && knobRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        const knobWidth = knobRef.current.offsetWidth;
+        maxSlideRef.current = containerWidth - knobWidth - 8; // 8px padding
+      }
+    };
+
+    calculateMaxSlide();
+    window.addEventListener("resize", calculateMaxSlide);
+
+    return () => window.removeEventListener("resize", calculateMaxSlide);
+  }, []);
+
+  const handleStart = (clientX: number) => {
+    if (isCompleting) return;
     setIsDragging(true);
-    startXRef.current = clientX - slideProgress;
-    currentXRef.current = clientX;
-    if (buttonRef.current) {
-      maxSlideRef.current = buttonRef.current.offsetWidth - 80;
-    }
+    startPosRef.current = clientX - sliderPosition;
   };
 
-  const handleMove = (clientX: number): void => {
-    if (!isDragging) return;
-    
-    currentXRef.current = clientX;
-    
-    // Cancel previous animation frame if it exists
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    
-    // Use requestAnimationFrame for smooth updates
-    animationFrameRef.current = requestAnimationFrame(() => {
-      const diff = currentXRef.current - startXRef.current;
-      const progress = Math.max(0, Math.min(diff, maxSlideRef.current));
-      setSlideProgress(progress);
+  const handleMove = (clientX: number) => {
+    if (!isDragging || isCompleting) return;
 
-      // Auto-navigate when slide is complete
-      if (progress >= maxSlideRef.current * 0.85) {
+    requestAnimationFrame(() => {
+      const newPosition = clientX - startPosRef.current;
+      const clampedPosition = Math.max(
+        0,
+        Math.min(newPosition, maxSlideRef.current)
+      );
+
+      setSliderPosition(clampedPosition);
+
+      // Auto-complete when reaching 90% of the way
+      if (clampedPosition >= maxSlideRef.current * 0.98 && !isCompleting) {
+        setIsDragging(false);
         handleComplete();
       }
     });
   };
 
-  const handleEnd = (): void => {
+  const handleEnd = () => {
+    if (isCompleting) return;
     setIsDragging(false);
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    if (slideProgress < maxSlideRef.current * 0.85) {
-      setSlideProgress(0);
+
+    // If not past threshold, animate back to start
+    if (sliderPosition < maxSlideRef.current * 0.85) {
+      animateToPosition(0);
     }
   };
 
-  const handleComplete = (): void => {
+  const handleComplete = () => {
+    if (isCompleting) return;
+    setIsCompleting(true);
     setIsDragging(false);
-    setSlideProgress(maxSlideRef.current);
-    setTimeout(() => {
-      // Navigate to next page
-      window.location.href = "/signup/create";
-    }, 150);
+
+    // Animate to end
+    animateToPosition(maxSlideRef.current, () => {
+      // Haptic feedback
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate(40);
+      }
+
+      // Navigate after a short delay
+      setTimeout(() => {
+        window.location.href = "/signup/create"
+        // router.push("/signup/create");
+      }, 200);
+    });
   };
+
+  const animateToPosition = (targetPosition: number, onComplete?: VoidFunction) => {
+  const startPosition = sliderPosition;
+  const distance = targetPosition - startPosition;
+  const duration = 350; // a touch slower for smoother ease
+  const startTime = performance.now();
+
+  const animate = (currentTime: number) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeOutQuint = 1 - Math.pow(1 - progress, 5);
+    const newPosition = startPosition + distance * easeOutQuint;
+
+    setSliderPosition(newPosition);
+    if (progress < 1) requestAnimationFrame(animate);
+    else if (onComplete) onComplete();
+  };
+
+  requestAnimationFrame(animate);
+};
+
+
+  const progressPercentage = (sliderPosition / maxSlideRef.current) * 100;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-between bg-background overflow-hidden">
       {/* Header */}
       <div className="flex flex-col items-center mt-8 md:mt-12 text-center px-6">
         <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-          <span className="text-primary-foreground text-3xl md:text-4xl font-bold font-primary">R</span>
+          <span className="text-primary-foreground text-3xl md:text-4xl font-bold font-primary">
+            R
+          </span>
         </div>
         <h1 className="mt-4 md:mt-6 font-bold text-3xl md:text-4xl leading-tight font-primary">
           Welcome to <span className="text-primary">Rhythmé</span>
@@ -109,10 +163,10 @@ export default function IntroPage() {
           </CardContent>
         </Card>
 
-        {/* Slide to Continue Button */}
+        {/* Slide to Continue */}
         <div className="w-full max-w-md md:max-w-lg px-4">
           <div
-            ref={buttonRef}
+            ref={containerRef}
             className="relative w-full h-16 md:h-20 bg-primary rounded-full overflow-hidden shadow-xl touch-none select-none"
             onMouseDown={(e) => handleStart(e.clientX)}
             onMouseMove={(e) => handleMove(e.clientX)}
@@ -122,35 +176,42 @@ export default function IntroPage() {
             onTouchMove={(e) => handleMove(e.touches[0].clientX)}
             onTouchEnd={handleEnd}
           >
-            {/* Background Progress */}
+            {/* Progress fill */}
             <div
               className="absolute inset-0 bg-secondary will-change-transform"
               style={{
-                transform: `scaleX(${slideProgress / maxSlideRef.current || 0})`,
-                transformOrigin: 'left',
+                transform: `scaleX(${progressPercentage / 100})`,
+                transformOrigin: "left",
               }}
             />
 
-            {/* Text */}
+            {/* Label */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="text-primary-foreground font-bold text-base md:text-lg tracking-wide font-primary">
-                {slideProgress > 0 ? "KEEP SLIDING..." : "SLIDE TO CONTINUE"}
+              <span
+                className="text-primary-foreground font-bold text-base md:text-lg tracking-wide font-primary transition-opacity duration-200"
+                style={{ opacity: sliderPosition > 0 ? 0.6 : 1 }}
+              >
+                {sliderPosition > 0 ? "KEEP SLIDING..." : "SLIDE TO CONTINUE"}
               </span>
             </div>
 
-            {/* Slider Button */}
+            {/* Draggable knob */}
             <div
-              className="absolute left-1 top-1/2 w-14 h-14 md:w-16 md:h-16 bg-card rounded-full shadow-lg flex items-center justify-center cursor-grab active:cursor-grabbing will-change-transform"
+              ref={knobRef}
+              className="absolute left-1 top-1/2 w-14 h-14 md:w-16 md:h-16 bg-card rounded-full shadow-lg flex items-center justify-center cursor-grab active:cursor-grabbing touch-none will-change-transform"
               style={{
-                transform: `translate3d(${slideProgress}px, -50%, 0)`,
-                transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: `translate3d(${sliderPosition}px, -50%, 0)`,
+                transition: isDragging
+                  ? "none"
+                  : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
+              onMouseDown={(e) => e.preventDefault()}
+              onTouchStart={(e) => e.preventDefault()}
             >
-              <ChevronsRight className="text-primary" size={32} />
+              <ChevronsRight className="text-primary" size={28} />
             </div>
           </div>
 
-          {/* Helper Text */}
           <p className="text-center text-muted-foreground text-sm mt-3 font-body">
             Swipe right to get started
           </p>
@@ -165,8 +226,12 @@ function Feature({ icon, title, text }: FeatureProps) {
     <div className="flex items-start space-x-3 md:space-x-4">
       <div className="flex-shrink-0">{icon}</div>
       <div>
-        <h3 className="font-semibold text-sm md:text-base text-card-foreground font-body">{title}</h3>
-        <p className="text-xs md:text-sm text-muted-foreground mt-1 font-body">{text}</p>
+        <h3 className="font-semibold text-sm md:text-base text-card-foreground font-body">
+          {title}
+        </h3>
+        <p className="text-xs md:text-sm text-muted-foreground mt-1 font-body">
+          {text}
+        </p>
       </div>
     </div>
   );

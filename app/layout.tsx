@@ -149,7 +149,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 z-[100]">
             <ModeToggle />
           </div>
         </ThemeProvider>
