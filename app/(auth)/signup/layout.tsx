@@ -1,8 +1,15 @@
-"use client";
+// app/layout.tsx or a child layout/component in Next.js 15
+'use client';
+
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
+import React from "react";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
   const pathname = usePathname();
 
   return (
