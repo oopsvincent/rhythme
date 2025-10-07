@@ -10,6 +10,7 @@ import {
   Trophy,
   ChevronsRight,
 } from "lucide-react";
+import { DragSlider } from "@/components/drag-slider";
 
 interface FeatureProps {
   icon: React.ReactNode;
@@ -19,108 +20,108 @@ interface FeatureProps {
 
 export default function IntroPage() {
 //   const router = useRouter();
-  const [sliderPosition, setSliderPosition] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isCompleting, setIsCompleting] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const knobRef = useRef<HTMLDivElement>(null);
-  const startPosRef = useRef(0);
-  const maxSlideRef = useRef(0);
+//   const [sliderPosition, setSliderPosition] = useState(0);
+//   const [isDragging, setIsDragging] = useState(false);
+//   const [isCompleting, setIsCompleting] = useState(false);
+//   const containerRef = useRef<HTMLDivElement>(null);
+//   const knobRef = useRef<HTMLDivElement>(null);
+//   const startPosRef = useRef(0);
+//   const maxSlideRef = useRef(0);
 
-  // Calculate max slide distance on mount and resize
-  useEffect(() => {
-    const calculateMaxSlide = () => {
-      if (containerRef.current && knobRef.current) {
-        const containerWidth = containerRef.current.offsetWidth;
-        const knobWidth = knobRef.current.offsetWidth;
-        maxSlideRef.current = containerWidth - knobWidth - 8; // 8px padding
-      }
-    };
+//   // Calculate max slide distance on mount and resize
+//   useEffect(() => {
+//     const calculateMaxSlide = () => {
+//       if (containerRef.current && knobRef.current) {
+//         const containerWidth = containerRef.current.offsetWidth;
+//         const knobWidth = knobRef.current.offsetWidth;
+//         maxSlideRef.current = containerWidth - knobWidth - 8; // 8px padding
+//       }
+//     };
 
-    calculateMaxSlide();
-    window.addEventListener("resize", calculateMaxSlide);
+//     calculateMaxSlide();
+//     window.addEventListener("resize", calculateMaxSlide);
 
-    return () => window.removeEventListener("resize", calculateMaxSlide);
-  }, []);
+//     return () => window.removeEventListener("resize", calculateMaxSlide);
+//   }, []);
 
-  const handleStart = (clientX: number) => {
-    if (isCompleting) return;
-    setIsDragging(true);
-    startPosRef.current = clientX - sliderPosition;
-  };
+//   const handleStart = (clientX: number) => {
+//     if (isCompleting) return;
+//     setIsDragging(true);
+//     startPosRef.current = clientX - sliderPosition;
+//   };
 
-  const handleMove = (clientX: number) => {
-    if (!isDragging || isCompleting) return;
+//   const handleMove = (clientX: number) => {
+//     if (!isDragging || isCompleting) return;
 
-    requestAnimationFrame(() => {
-      const newPosition = clientX - startPosRef.current;
-      const clampedPosition = Math.max(
-        0,
-        Math.min(newPosition, maxSlideRef.current)
-      );
+//     requestAnimationFrame(() => {
+//       const newPosition = clientX - startPosRef.current;
+//       const clampedPosition = Math.max(
+//         0,
+//         Math.min(newPosition, maxSlideRef.current)
+//       );
 
-      setSliderPosition(clampedPosition);
+//       setSliderPosition(clampedPosition);
 
-      // Auto-complete when reaching 90% of the way
-      if (clampedPosition >= maxSlideRef.current * 0.98 && !isCompleting) {
-        setIsDragging(false);
-        handleComplete();
-      }
-    });
-  };
+//       // Auto-complete when reaching 90% of the way
+//       if (clampedPosition >= maxSlideRef.current * 0.98 && !isCompleting) {
+//         setIsDragging(false);
+//         handleComplete();
+//       }
+//     });
+//   };
 
-  const handleEnd = () => {
-    if (isCompleting) return;
-    setIsDragging(false);
+//   const handleEnd = () => {
+//     if (isCompleting) return;
+//     setIsDragging(false);
 
-    // If not past threshold, animate back to start
-    if (sliderPosition < maxSlideRef.current * 0.85) {
-      animateToPosition(0);
-    }
-  };
+//     // If not past threshold, animate back to start
+//     if (sliderPosition < maxSlideRef.current * 0.85) {
+//       animateToPosition(0);
+//     }
+//   };
 
-  const handleComplete = () => {
-    if (isCompleting) return;
-    setIsCompleting(true);
-    setIsDragging(false);
+//   const handleComplete = () => {
+//     if (isCompleting) return;
+//     setIsCompleting(true);
+//     setIsDragging(false);
 
-    // Animate to end
-    animateToPosition(maxSlideRef.current, () => {
-      // Haptic feedback
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        navigator.vibrate(40);
-      }
+//     // Animate to end
+//     animateToPosition(maxSlideRef.current, () => {
+//       // Haptic feedback
+//       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+//         navigator.vibrate(40);
+//       }
 
-      // Navigate after a short delay
-      setTimeout(() => {
-        window.location.href = "/signup/create"
-        // router.push("/signup/create");
-      }, 200);
-    });
-  };
+//       // Navigate after a short delay
+//       setTimeout(() => {
+//         window.location.href = "/signup/create"
+//         // router.push("/signup/create");
+//       }, 200);
+//     });
+//   };
 
-  const animateToPosition = (targetPosition: number, onComplete?: VoidFunction) => {
-  const startPosition = sliderPosition;
-  const distance = targetPosition - startPosition;
-  const duration = 350; // a touch slower for smoother ease
-  const startTime = performance.now();
+//   const animateToPosition = (targetPosition: number, onComplete?: VoidFunction) => {
+//   const startPosition = sliderPosition;
+//   const distance = targetPosition - startPosition;
+//   const duration = 350; // a touch slower for smoother ease
+//   const startTime = performance.now();
 
-  const animate = (currentTime: number) => {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const easeOutQuint = 1 - Math.pow(1 - progress, 5);
-    const newPosition = startPosition + distance * easeOutQuint;
+//   const animate = (currentTime: number) => {
+//     const elapsed = currentTime - startTime;
+//     const progress = Math.min(elapsed / duration, 1);
+//     const easeOutQuint = 1 - Math.pow(1 - progress, 5);
+//     const newPosition = startPosition + distance * easeOutQuint;
 
-    setSliderPosition(newPosition);
-    if (progress < 1) requestAnimationFrame(animate);
-    else if (onComplete) onComplete();
-  };
+//     setSliderPosition(newPosition);
+//     if (progress < 1) requestAnimationFrame(animate);
+//     else if (onComplete) onComplete();
+//   };
 
-  requestAnimationFrame(animate);
-};
+//   requestAnimationFrame(animate);
+// };
 
 
-  const progressPercentage = (sliderPosition / maxSlideRef.current) * 100;
+//   const progressPercentage = (sliderPosition / maxSlideRef.current) * 100;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-between bg-background overflow-hidden">
@@ -164,58 +165,7 @@ export default function IntroPage() {
         </Card>
 
         {/* Slide to Continue */}
-        <div className="w-full max-w-md md:max-w-lg px-4">
-          <div
-            ref={containerRef}
-            className="relative w-full h-16 md:h-20 bg-primary rounded-full overflow-hidden shadow-xl touch-none select-none"
-            onMouseDown={(e) => handleStart(e.clientX)}
-            onMouseMove={(e) => handleMove(e.clientX)}
-            onMouseUp={handleEnd}
-            onMouseLeave={handleEnd}
-            onTouchStart={(e) => handleStart(e.touches[0].clientX)}
-            onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-            onTouchEnd={handleEnd}
-          >
-            {/* Progress fill */}
-            <div
-              className="absolute inset-0 bg-secondary will-change-transform"
-              style={{
-                transform: `scaleX(${progressPercentage / 100})`,
-                transformOrigin: "left",
-              }}
-            />
-
-            {/* Label */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span
-                className="text-primary-foreground font-bold text-base md:text-lg tracking-wide font-primary transition-opacity duration-200"
-                style={{ opacity: sliderPosition > 0 ? 0.6 : 1 }}
-              >
-                {sliderPosition > 0 ? "KEEP SLIDING..." : "SLIDE TO CONTINUE"}
-              </span>
-            </div>
-
-            {/* Draggable knob */}
-            <div
-              ref={knobRef}
-              className="absolute left-1 top-1/2 w-14 h-14 md:w-16 md:h-16 bg-card rounded-full shadow-lg flex items-center justify-center cursor-grab active:cursor-grabbing touch-none will-change-transform"
-              style={{
-                transform: `translate3d(${sliderPosition}px, -50%, 0)`,
-                transition: isDragging
-                  ? "none"
-                  : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-              onMouseDown={(e) => e.preventDefault()}
-              onTouchStart={(e) => e.preventDefault()}
-            >
-              <ChevronsRight className="text-primary" size={28} />
-            </div>
-          </div>
-
-          <p className="text-center text-muted-foreground text-sm mt-3 font-body">
-            Swipe right to get started
-          </p>
-        </div>
+        <DragSlider />
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
-"use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -13,74 +12,15 @@ import { Check, Star, Calendar, BookOpen, Timer, Trophy, Copyright } from "lucid
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Checkbox } from "./ui/checkbox";
+import Navbar from "./navbar";
 
 const RhythmeLanding = () => {
-  const router = useRouter();
-  const [activeSection, setActiveSection] = useState("hero");
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = ["hero", "features", "testimonials", "pricing"];
-      const scrollPosition = window.scrollY + 200;
-
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (
-            scrollPosition >= offsetTop &&
-            scrollPosition < offsetTop + offsetHeight
-          ) {
-            if (activeSection !== section) {
-              setActiveSection(section);
-              window.history.replaceState(null, "", `#${section}`);
-            }
-            break;
-          }
-        }
-      }
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [activeSection]);
-
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-accent/5 to-background">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md z-50 border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-bold font-primary">Rhythmé</h1>
-            <div className="hidden md:flex gap-6">
-              <button
-                onClick={() => scrollToSection("features")}
-                className="text-foreground hover:text-primary transition"
-              >
-                Explore
-              </button>
-              <button
-                onClick={() => scrollToSection("pricing")}
-                className="text-foreground hover:text-primary transition"
-              >
-                Pricing
-              </button>
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <Button variant="ghost" onClick={() => router.push("/login")}>Log in</Button>
-            <Link className="bg-primary rounded-md flex justify-center items-center p-2" href={"/signup/intro"}>Get started</Link>
-          </div>
-        </div>
-      </nav>
+
+    <Navbar />
 
       {/* Hero Section */}
       <section id="hero" className="pt-32 pb-20 px-6">
