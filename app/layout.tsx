@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Space_Grotesk, Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -66,10 +66,10 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
 });
 
-// const playfairDisplay = Playfair_Display({
-//   variable: "--font-playfair-display",
-//   subsets: ["latin"],
-// });
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+});
 
 // const inter = Inter({
 //   variable: "--font-inter",
@@ -140,7 +140,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${spaceGrotesk.variable} ${inter.variable} ${clashDisplay.variable} antialiased`}
+        className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -149,7 +149,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 z-[100]">
             <ModeToggle />
           </div>
         </ThemeProvider>

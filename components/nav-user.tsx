@@ -28,7 +28,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { signOut } from "@/app/actions/auth"
+import { redirect } from "next/navigation"
+import { useState } from "react"
+import { useDialogStore } from "@/store/useDialogStore"
 
 export function NavUser({
   user,
@@ -39,10 +41,14 @@ export function NavUser({
     avatar: string
   }
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
+
+  const { setSettingsOpen } = useDialogStore();
+
+  const [openAccount, setOpenAccount] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
+    redirect("/logout");
   }
 
   return (
@@ -89,7 +95,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                 <IconUserCircle />
                 Account
               </DropdownMenuItem>
