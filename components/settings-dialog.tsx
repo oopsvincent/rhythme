@@ -23,6 +23,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -212,50 +221,14 @@ function SettingsContent({ section }: { section: string }) {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Coming Soon</h3>
           <p className="text-muted-foreground">
-            Settings for &quot;{section}&ldquo; will be available soon.
+            Settings for &quot;{section}&quot; will be available soon.
           </p>
         </div>
       )
   }
 }
 
-// Custom Bottom Sheet Component
-function BottomSheet({ 
-  open, 
-  onOpenChange, 
-  children 
-}: { 
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  children: React.ReactNode 
-}) {
-  return (
-    <>
-      {/* Backdrop */}
-      {open && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-50 animate-in fade-in"
-          onClick={() => onOpenChange(false)}
-        />
-      )}
-      
-      {/* Bottom Sheet */}
-      <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-2xl border-t transition-transform duration-300 ${
-          open ? 'translate-y-0' : 'translate-y-full'
-        }`}
-      >
-        {/* Drag Handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-muted-foreground/20 rounded-full" />
-        </div>
-        {children}
-      </div>
-    </>
-  )
-}
-
-// Mobile Menu Component using Bottom Sheet
+// Mobile Menu Component using Shadcn Drawer
 function MobileMenu({ 
   activeSection, 
   setActiveSection, 
@@ -273,34 +246,25 @@ function MobileMenu({
   }
 
   return (
-    <>
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="gap-2"
-        onClick={() => setOpen(true)}
-      >
-        <Menu className="h-4 w-4" />
-        Menu
-      </Button>
-
-      <BottomSheet open={open} onOpenChange={setOpen}>
-        <div className="px-4 pb-safe">
-          <div className="flex items-center justify-between py-3 mb-2">
-            <div>
-              <h3 className="font-semibold text-lg">Settings Menu</h3>
-              <p className="text-sm text-muted-foreground">Choose a category</p>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="max-h-[60vh] overflow-y-auto pb-4 space-y-1">
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-2"
+        >
+          <Menu className="h-4 w-4" />
+          Menu
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>Settings Menu</DrawerTitle>
+          <DrawerDescription>Choose a category</DrawerDescription>
+        </DrawerHeader>
+        
+        <div className="max-h-[60vh] overflow-y-auto px-4 pb-4">
+          <div className="space-y-1">
             {settingsSections.map((section) => {
               const Icon = section.icon
               const isActive = section.id === activeSection
@@ -332,15 +296,15 @@ function MobileMenu({
             })}
           </div>
         </div>
-      </BottomSheet>
-    </>
+      </DrawerContent>
+    </Drawer>
   )
 }
 
 // Main Settings Dialog Component
 export function SettingsDialog() {
   const [activeSection, setActiveSection] = React.useState("account")
-const { settingsOpen, setSettingsOpen } = useDialogStore()
+  const { settingsOpen, setSettingsOpen } = useDialogStore()
 
   const currentSection = settingsSections.find(s => s.id === activeSection)
 
@@ -393,21 +357,21 @@ const { settingsOpen, setSettingsOpen } = useDialogStore()
             {/* Header */}
             <div className="border-b p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
+                {/* Mobile Menu Button - Moved to the left */}
+                <div className="md:hidden">
+                  <MobileMenu 
+                    activeSection={activeSection}
+                    setActiveSection={setActiveSection}
+                    onClose={() => {}}
+                  />
+                </div>
+                
                 {currentSection && (
                   <>
                     <currentSection.icon className="h-5 w-5 text-muted-foreground" />
                     <h3 className="font-semibold">{currentSection.name}</h3>
                   </>
                 )}
-              </div>
-              
-              {/* Mobile Menu Button */}
-              <div className="md:hidden">
-                <MobileMenu 
-                  activeSection={activeSection}
-                  setActiveSection={setActiveSection}
-                  onClose={() => {}}
-                />
               </div>
             </div>
 
