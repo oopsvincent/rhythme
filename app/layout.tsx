@@ -3,7 +3,6 @@ import { Space_Grotesk, Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/theme-button";
 
 const clashDisplay = localFont({
   src: [
@@ -150,7 +149,7 @@ export default function RootLayout({
         >
           {children}
                     <div className="absolute top-2 right-2 z-[100]">
-            <ModeToggle />
+            {/* <ModeToggle /> */}
           </div>
         </ThemeProvider>
       </body>
