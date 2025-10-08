@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, Eye, Database, UserCheck, AlertTriangle } from 'lucide-react';
+// import { Shield, Lock, Eye, Database, UserCheck, AlertTriangle } from 'lucide-react';
 
 const PrivacyPolicy = () => {
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, AlertTriangle, Shield, CreditCard, Users, Gavel, Ban } from 'lucide-react';
+// import { FileText, AlertTriangle, Shield, CreditCard, Users, Gavel, Ban } from 'lucide-react';
 
 const TermsOfService = () => {
   return (
