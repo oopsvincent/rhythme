@@ -12,3 +12,5 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   activeSection: 'overview',
   setActiveSection: (section) => set({ activeSection: section }),
 }))
+
+export type { Section }
