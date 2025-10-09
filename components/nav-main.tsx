@@ -1,15 +1,70 @@
+// // components/nav-main.tsx
+// "use client"
+
+// import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react"
+// import { Button } from "@/components/ui/button"
+// import {
+//   SidebarGroup,
+//   SidebarGroupContent,
+//   SidebarMenu,
+//   SidebarMenuButton,
+//   SidebarMenuItem,
+// } from "@/components/ui/sidebar"
+// import { useNavigationStore } from "@/store/nav-store"
+
+// export function NavMain({
+//   items,
+// }: {
+//   items: {
+//     title: string
+//     url: string
+//     icon?: Icon
+//     section: string // Add this prop
+//   }[]
+// }) {
+
+
+//   return (
+//     <SidebarGroup>
+//       <SidebarGroupContent className="flex flex-col gap-2">
+//         {/* Quick Create button stays the same */}
+//         <SidebarMenu>
+//           <SidebarMenuItem className="flex items-center gap-2">
+//             <SidebarMenuButton
+//               tooltip="Quick Create"
+//               className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+//             >
+//               <IconCirclePlusFilled />
+//               <span>Quick Create</span>
+//             </SidebarMenuButton>
+//             <Button
+//               size="icon"
+//               className="size-8 group-data-[collapsible=icon]:opacity-0"
+//               variant="outline"
+//             >
+//               <IconMail />
+//               <span className="sr-only">Inbox</span>
+//             </Button>
+//           </SidebarMenuItem>
+//         </SidebarMenu>
+        
+//         {/* Navigation items */}
+
+//       </SidebarGroupContent>
+//     </SidebarGroup>
+//   )
+// }
+
 "use client"
 
-import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react"
+import { type LucideIcon } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import {
-  SidebarGroup,
-  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useNavigationStore } from "@/store/nav-store"
 
 export function NavMain({
   items,
@@ -17,42 +72,31 @@ export function NavMain({
   items: {
     title: string
     url: string
-    icon?: Icon
+    icon: LucideIcon
+    section?: string
+    isActive?: boolean
   }[]
 }) {
+  const { activeSection, setActiveSection } = useNavigationStore()
   return (
-    <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton
-              tooltip="Quick Create"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+    <SidebarMenu>
+      {items.map((item) => {
+        const isActive = activeSection === item.section
+
+        return (
+          <SidebarMenuItem key={item.title}>
+            <SidebarMenuButton 
+              tooltip={item.title}
+              onClick={() => setActiveSection(item.section as any)}
+              isActive={isActive}
+              className={isActive ? "bg-accent" : ""}
             >
-              <IconCirclePlusFilled />
-              <span>Quick Create</span>
+              {item.icon && <item.icon />}
+              <span>{item.title}</span>
             </SidebarMenuButton>
-            <Button
-              size="icon"
-              className="size-8 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <IconMail />
-              <span className="sr-only">Inbox</span>
-            </Button>
           </SidebarMenuItem>
-        </SidebarMenu>
-        <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+        )
+      })}
+    </SidebarMenu>
   )
 }
