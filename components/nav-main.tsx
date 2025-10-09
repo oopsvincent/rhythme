@@ -87,7 +87,7 @@ export function NavMain({
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton 
               tooltip={item.title}
-              onClick={() => setActiveSection(item.section as any)}
+              onClick={() => setActiveSection(item.section as string)}
               isActive={isActive}
               className={isActive ? "bg-accent" : ""}
             >
