@@ -65,7 +65,7 @@ import {
 import { useNavigationStore } from "@/store/nav-store"
 
 // 👇 Import your Section type from where it's defined
-// import type { Section } from "@/store/nav-store"
+import type { Section } from "@/store/nav-store"
 
 export function NavMain({
   items,
@@ -89,7 +89,7 @@ export function NavMain({
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
               tooltip={item.title}
-              onClick={() => setActiveSection(item.section as unknown)}
+              onClick={() => setActiveSection(item.section as Section)}
               isActive={isActive}
               className={isActive ? "bg-accent" : ""}
             >
