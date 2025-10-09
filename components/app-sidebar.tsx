@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
+import { FolderKanban, Home, Search, Section, Sparkles } from "lucide-react";
 
 const data = {
   user: {
@@ -42,31 +43,31 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
-    {
-      title: "Dashboard",
+        {
+      title: "Home",
       url: "#",
-      icon: IconDashboard,
+      icon: Home,
+      isActive: true,
+      section: "overview",
     },
     {
-      title: "Lifecycle",
+      title: "Search",
       url: "#",
-      icon: IconListDetails,
+      icon: Search,
+      section: "search",
     },
     {
-      title: "Analytics",
+      title: "Ask AI",
       url: "#",
-      icon: IconChartBar,
+      icon: Sparkles,
+      section: "analytics",
     },
     {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
+        title: "Projects",
+        url: "#",
+        icon: FolderKanban,
+        section: "data-table",
+    }
   ],
   navClouds: [
     {
@@ -202,10 +203,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+         <NavMain items={data.navMain} />
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        {/* <NavMain items={data.navMain} /> */}
         <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

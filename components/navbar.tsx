@@ -46,32 +46,11 @@ const Navbar = async () => {
             <div className="flex gap-4">
               {user && user.id ? 
               <>
-                <form action={ async () => {
-                    "use server";
-
-                    redirect("/dashboard")
-                }}>
-                  {/* Add form fields or content here if needed */}
-                  <Button type="submit">Dashboard</Button>
-                </form>
+            <Link className="justify-center items-center bg-primary rounded-md p-2" href={"/dashboard"}>Dashboard</Link>
               </> : 
               <>
-                <form action={ async () => {
-                    "use server";
-
-                    redirect("/login")
-                }}>
-                  {/* Add form fields or content here if needed */}
-                  <Button variant="ghost" type="submit">Login</Button>
-                </form>
-                <form action={ async () => {
-                    "use server";
-
-                    redirect("/signup/intro")
-                }}>
-                  {/* Add form fields or content here if needed */}
-                  <Button type="submit">Get Started</Button>
-                </form>
+                <Link href={"/login"} className="bg-primary/5 hover:bg-primary/50 justify-center items-center rounded-md px-2 py-1.5 transition-all duration-300">Login</Link>
+                <Link href={"/signup/intro"} className="bg-primary justify-center items-center rounded-md px-2 py-1.5">Get Started for Free</Link>
               </>}
               {/* <Button variant="ghost" onClick={() => router.push("/login")}>Log in</Button> */}
               {/* <Link className="bg-primary rounded-md flex justify-center items-center p-2" href={"/signup/intro"}>Get started</Link> */}

@@ -3,6 +3,7 @@ import { getUser } from '@/app/actions/auth'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { Metadata } from 'next'
+import { SidebarRight } from '@/components/sidebar-right'
 
 export default async function DashboardLayout({
   children,
@@ -30,6 +31,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </SidebarInset>
+        <SidebarRight />
     </SidebarProvider>
   )
 }
