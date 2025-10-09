@@ -57,13 +57,15 @@
 "use client"
 
 import { type LucideIcon } from "lucide-react"
-
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useNavigationStore } from "@/store/nav-store"
+
+// 👇 Import your Section type from where it's defined
+import type { Section } from "@/store/nav-store"
 
 export function NavMain({
   items,
@@ -72,7 +74,7 @@ export function NavMain({
     title: string
     url: string
     icon: LucideIcon
-    section: string
+    section: Section
     isActive?: boolean
   }[]
 }) {
