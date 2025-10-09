@@ -85,16 +85,15 @@ export function NavMain({
 
         return (
           <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton 
-              tooltip={item.title}
-              onClick={() => setActiveSection(item.section)}
-              isActive={isActive}
-              className={isActive ? "bg-accent" : ""}
-            >
-              {item.icon && <item.icon />}
-              <span>{item.title}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+            <SidebarMenuButton
+  tooltip={item.title}
+  onClick={() => item.section && setActiveSection(item.section)}
+  isActive={isActive}
+  className={isActive ? "bg-accent" : ""}
+>
+  {item.icon && <item.icon />}
+  <span>{item.title}</span>
+</SidebarMenuButton>
         )
       })}
     </SidebarMenu>
