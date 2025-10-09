@@ -73,7 +73,7 @@ export function NavMain({
     title: string
     url: string
     icon: LucideIcon
-    section?: string
+    section: string
     isActive?: boolean
   }[]
 }) {
@@ -87,7 +87,7 @@ export function NavMain({
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton 
               tooltip={item.title}
-              onClick={() => setActiveSection(item.section as any)}
+              onClick={() => setActiveSection(item.section)}
               isActive={isActive}
               className={isActive ? "bg-accent" : ""}
             >
