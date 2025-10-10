@@ -8,6 +8,9 @@ import { SiteHeader } from "@/components/site-header"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { useNavigationStore } from "@/store/nav-store"
 import data from "./data.json"
+import { Goals } from "@/sections/Goals"
+import { Habits } from "@/sections/Habits"
+import { Tasks } from "@/sections/Tasks"
 
 export default function Page() {
   const activeSection = useNavigationStore((state) => state.activeSection)
@@ -19,7 +22,6 @@ export default function Page() {
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             
-            {/* Render different content based on activeSection */}
             {activeSection === 'overview' && (
               <>
                 <SectionCards />
@@ -43,6 +45,25 @@ export default function Page() {
             {activeSection === 'settings' && (
                 <>Settings</>
             )}
+
+            {activeSection === 'goals' && (
+                <div className="p-10">
+                    <Goals />
+                </div>
+            )}
+
+            {activeSection === 'habits' && (
+                <div className="p-10">
+                    <Habits />
+                </div>
+            )}
+
+            {activeSection === 'tasks' && (
+                <div className="p-10">
+                    <Tasks />
+                </div>
+            )}
+
               <div className="px-4 lg:px-6">
                 <SettingsDialog />
               </div>

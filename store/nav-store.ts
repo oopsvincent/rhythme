@@ -1,7 +1,7 @@
 // store/navigation-store.ts
 import { create } from 'zustand'
 
-type Section = 'overview' | 'analytics' | 'data-table' | 'settings'
+type Section = 'overview' | 'analytics' | 'data-table' | 'settings' | 'tasks' | 'goals' | 'habits' | 'focus'
 
 interface NavigationState {
   activeSection: Section

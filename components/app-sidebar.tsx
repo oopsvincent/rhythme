@@ -34,7 +34,18 @@ import {
 } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
-import { FolderKanban, Home, Search, Section, Sparkles } from "lucide-react";
+import {
+    CalendarSync,
+  CheckSquare,
+  FolderKanban,
+  Goal,
+  Home,
+  ListCheck,
+  Search,
+  Section,
+  Sparkles,
+} from "lucide-react";
+import { Separator } from "./ui/separator";
 
 const data = {
   user: {
@@ -43,12 +54,30 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
-        {
+    {
       title: "Home",
       url: "#",
       icon: Home,
       isActive: true,
       section: "overview",
+    },
+    { 
+        title: "Habits", 
+        icon: CalendarSync, 
+        url: "#", 
+        section: "habits" ,
+    },
+    {
+      title: "Goals",
+      url: "#",
+      icon: Goal,
+      section: "goals",
+    },
+    {
+      title: "Tasks",
+      url: "#",
+      icon: ListCheck,
+      section: "tasks",
     },
     {
       title: "Search",
@@ -63,11 +92,11 @@ const data = {
       section: "analytics",
     },
     {
-        title: "Projects",
-        url: "#",
-        icon: FolderKanban,
-        section: "data-table",
-    }
+      title: "Projects",
+      url: "#",
+      icon: FolderKanban,
+      section: "data-table",
+    },
   ],
   navClouds: [
     {
@@ -203,11 +232,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-         <NavMain items={data.navMain} />
+        {/* <NavMain items={data.navMain} /> */}
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* <NavMain items={data.navMain} /> */}
+      <Separator />
+      <SidebarContent className="py-3">
+        <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
