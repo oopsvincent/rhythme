@@ -1,19 +1,25 @@
-import { redirect } from 'next/navigation'
-import { getUser } from '@/app/actions/auth'
-import { AppSidebar } from '@/components/app-sidebar'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { Metadata } from 'next'
-import { SidebarRight } from '@/components/sidebar-right'
+import { redirect } from "next/navigation";
+import { getUser } from "@/app/actions/auth";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { Metadata } from "next";
+import { SidebarRight } from "@/components/sidebar-right";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 export default async function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const user = await getUser()
+  const user = await getUser();
 
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
 
   return (
@@ -27,16 +33,24 @@ export default async function DashboardLayout({
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <main className="flex flex-1 flex-col">
-          {children}
-        </main>
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <main className="flex flex-1 flex-col">{children}</main>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem>Maruf Kaam Chor Hai</ContextMenuItem>
+            <ContextMenuItem>Usko do kaam diya</ContextMenuItem>
+            <ContextMenuItem>Usse woh bhi nahi hota hai</ContextMenuItem>
+            <ContextMenuItem>👌🍌</ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
       </SidebarInset>
-        <SidebarRight />
+      <SidebarRight />
     </SidebarProvider>
-  )
+  );
 }
 
 export const metadata: Metadata = {
   title: "Rhythmé Dashboard",
-  description: "Your Personal Dashboard for Productivity"
-}
+  description: "Your Personal Dashboard for Productivity",
+};
