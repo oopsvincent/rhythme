@@ -413,10 +413,10 @@ function TaskCard({
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              {/* <Badge variant={getPriorityColor(task.priority) as any}>
+              <Badge variant={getPriorityColor(task.priority)}>
                 <Flag className="mr-1 h-3 w-3" />
                 {task.priority}
-              </Badge> */}
+              </Badge>
               <Badge className={getStatusColor(task.status)}>
                 {task.status}
               </Badge>
