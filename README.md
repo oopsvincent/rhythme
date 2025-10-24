@@ -71,7 +71,7 @@ Day One is about starting. However small the steps, this is the spark of RhythmÃ
 Stay tuned as we build this vision into reality.  
 
 ---
-##Changle-Log
+## Changle-Log
 
 ## [0.9.1] - 2025-10-24
 
@@ -88,4 +88,38 @@ Stay tuned as we build this vision into reality.
 
 ### Fixed
 - Minor visual inconsistencies between priority badges in the Tasks section.
+
+---
+## [0.1.0] - 2025-09-21
+
+### Highlights
+- Initial release introducing authentication, legal, and dashboard functionality with a fully integrated Supabase backend and reusable UI components.
+
+### Added
+- **Authentication system:** Routes and pages for login, signup, callback, and signout.
+- **Protected dashboard:** Basic authenticated area accessible only to logged-in users.
+- **Legal pages:** Added terms and privacy policy pages.
+- **Custom 404 page:** User-friendly not-found page.
+- **Reusable UI components:** Button, card, input, and label components for consistent styling.
+- **Utility functions:** Helper methods for Supabase integration and general app utilities.
+- **Global styling and layout:** Theming, typography, and branding updates.
+- **Dependency setup:** Installed and configured dependencies for authentication and UI frameworks.
+
+### Changed
+- Updated global metadata and layout structure to align with new branding and theming.
+
+### Fixed
+- N/A (initial release)
+
+### Deprecated
+- None
+
+### Security
+- Added secure authentication flow using Supabaseâ€™s OAuth and session management.
+
+### Breaking Changes
+- None (first release)
+
+
+  
 
