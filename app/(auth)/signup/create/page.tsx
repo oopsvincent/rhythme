@@ -1,12 +1,26 @@
+'use client'
 import React from "react";
 import { SignupForm } from "@/components/auth/signup-form";
 import { GalleryVerticalEnd } from "lucide-react";
+import { motion } from "framer-motion";
 
 const SignInForm = () => {
   return (
     <div className="grid min-h-svh lg:grid-cols-2 bg-background">
       {/* Left side - Hero section */}
-      <div className="bg-primary relative hidden lg:flex lg:flex-col justify-center items-start pl-8 p-6">
+      <motion.div
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="absolute z-10 bg-accent t-0 hidden lg:flex lg:left-5 lg:top-0 justify-center items-start pl-8 p-6 w-[50%] h-full rounded-r-full"
+      ></motion.div>
+      
+      <motion.div
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+        className="z-10 bg-primary relative hidden lg:flex lg:flex-col justify-center items-start pl-8 p-6 rounded-r-full"
+      >
         <h1 className="scroll-m-20 text-justify text-8xl font-primary font-black tracking-tight text-balance text-primary-foreground">
           Welcome to <br /> Rhythmé
         </h1>
@@ -16,7 +30,7 @@ const SignInForm = () => {
         <h3 className="scroll-m-20 text-2xl font-semibold tracking-tighter text-primary-foreground/80">
           One account, a simpler path to productivity
         </h3>
-      </div>
+      </motion.div>
 
       {/* Right side - Signup form */}
       <div className="flex flex-col gap-4 p-6 md:p-10 bg-background">

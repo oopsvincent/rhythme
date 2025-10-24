@@ -13,6 +13,8 @@ import { Plus, Calendar, Flag, MoreVertical, Trash2, Edit } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../components/ui/dropdown-menu"
 import { Progress } from "../components/ui/progress"
 import { motion } from "framer-motion"
+import type { VariantProps } from "class-variance-authority"
+import { badgeVariants } from "@/components/ui/badge" // adjust path if needed
 
 interface Task {
   id: string
@@ -124,14 +126,20 @@ export function Tasks() {
     setIsAddDialogOpen(false)
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'destructive'
-      case 'medium': return 'default'
-      case 'low': return 'secondary'
-      default: return 'default'
-    }
+type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>
+
+const getPriorityColor = (priority: string): BadgeVariant => {
+  switch (priority) {
+    case "high":
+      return "destructive"
+    case "medium":
+      return "default"
+    case "low":
+      return "secondary"
+    default:
+      return "default"
   }
+}
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -413,7 +421,7 @@ function TaskCard({
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant={getPriorityColor(task.priority)}>
+              <Badge className={getPriorityColor(task.priority)}>
                 <Flag className="mr-1 h-3 w-3" />
                 {task.priority}
               </Badge>
