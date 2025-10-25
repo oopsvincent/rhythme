@@ -70,24 +70,6 @@ All code and concepts in this repository are the **exclusive private intellectua
 Day One is about starting. However small the steps, this is the spark of Rhythmé.  
 Stay tuned as we build this vision into reality.  
 
----
-## Changle-Log
-
-## [0.9.1] - 2025-10-24
-
-### Highlights
-- Introduced dynamic **Framer Motion animations** to the authentication pages for a smoother, more engaging user experience.  
-- Enhanced **Tasks section styling** with improved badge consistency and maintainability.
-
-### Added
-- Animated hero sections on **Login** and **Signup** pages using **Framer Motion** to improve visual appeal and user engagement.
-
-### Changed
-- Refactored **Tasks section** to use `badgeVariants` for consistent priority-based styling.  
-- Updated all **Badge** components to use `className` instead of `variant` for color and priority representation.
-
-### Fixed
-- Minor visual inconsistencies between priority badges in the Tasks section.
 
 ---
 ## [0.1.0] - 2025-09-21
