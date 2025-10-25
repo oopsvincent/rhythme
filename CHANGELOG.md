@@ -18,6 +18,34 @@
 
 ---
 
+## [0.3.0] - 2025-09-24
+
+### Highlights
+- Introduces a complete signup flow with animated onboarding steps and a cleaner, more responsive login experience. Enhances usability and visual consistency across authentication pages.
+
+### Added
+- **Signup flow:** Multi-step signup process with animations and an introductory page for better user onboarding.
+- **Intro page:** Added to guide new users through the signup process.
+
+### Changed
+- **Login page layout:** Refactored for improved responsiveness across devices.
+- **Login form:** Updated to prioritize social login options and simplify the overall UI.
+- **Route naming:** Renamed confirm route for consistency within the authentication system.
+
+### Fixed
+- Minor layout inconsistencies between login and signup screens.
+
+### Deprecated
+- None.
+
+### Security
+- No direct security changes in this update.
+
+### Breaking Changes
+- None.
+
+---
+
 ## [0.2.0] - 2025-09-22
 
 ### Highlights
