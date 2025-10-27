@@ -1,6 +1,39 @@
 ## Changle-Log
 
-## [0.9.1] - 2025-10-24
+---
+
+## [0.17.0] - 2025-10-27
+
+### Highlights
+- Major framework upgrade to **Next.js v16** with the **React Compiler** and **Turbopack**. This update modernizes the app’s architecture, improving performance, build speed, and development experience.
+
+### Added
+- **React Compiler** integration for optimized rendering and improved runtime performance.
+- **Turbopack** support for faster builds and hot reloading.
+- Added new dependencies to support updated Next.js and React ecosystem.
+
+### Changed
+- **Next.js** upgraded to v16.
+- **React** and related libraries updated to latest versions.
+- **TypeScript configuration** updated for better compatibility with the new build system.
+- Updated several **@radix-ui** packages and `date-fns` to align with the new framework setup.
+
+### Fixed
+- Resolved potential type conflicts and dependency mismatches caused by older configurations.
+
+### Deprecated
+- None.
+
+### Security
+- Updated core dependencies to the latest stable versions for improved security and reliability.
+
+### Breaking Changes
+- Requires **Node.js 18+** and updated **TypeScript** configuration.
+- Custom build scripts or plugins relying on older Next.js APIs may need manual adjustments.
+
+---
+
+## [0.16.0] - 2025-10-24
 
 ### Highlights
 - Introduced dynamic **Framer Motion animations** to the authentication pages for a smoother, more engaging user experience.  
@@ -15,6 +48,181 @@
 
 ### Fixed
 - Minor visual inconsistencies between priority badges in the Tasks section.
+
+---
+
+## [0.15.0] - 2025-10-10
+
+### Highlights
+- Major productivity update introducing **Goals**, **Habits**, and **Tasks** sections to the dashboard. This release expands functionality and improves navigation, laying the foundation for a more interactive and goal-oriented user experience.
+
+### Added
+- **New sections:** Introduced dedicated **Goals**, **Habits**, and **Tasks** modules integrated into the dashboard.
+- **UI components:** Added context menu, progress bar, and textarea components for improved interaction.
+- **Enhanced navigation:** Sidebar and section cards updated to include new sections.
+- **Header improvements:** Updated site header for clearer navigation and section awareness.
+- **Dependencies:** Added new Radix UI components for menus and progress tracking.
+
+### Changed
+- **Dashboard layout:** Refactored to support context menus and new content sections.
+- **Avatar logic:** Improved user avatar initials generation for better fallback consistency.
+- **UI consistency:** Enhanced layout styling and visual hierarchy across dashboard sections.
+
+### Fixed
+- Minor UI alignment and responsiveness issues within the dashboard.
+
+### Deprecated
+- None.
+
+### Security
+- None.
+
+### Breaking Changes
+- None.
+
+---
+
+## [0.14.0] - 2025-10-09
+
+### Highlights
+- Major navigation and layout upgrade introducing modular sidebar components, interactive calendars, and improved section-based dashboard rendering. This update enhances usability, organization, and scalability of the dashboard experience.
+
+### Added
+- **Sidebar system:** Introduced new components including sidebar-left, sidebar-right, team-switcher, nav-favorites, nav-workspaces, resizable, collapsible, and popover.
+- **Calendar and date-picker:** Added interactive calendar UI and date-picker components.
+- **Active section navigation:** Dashboard now dynamically renders content based on the selected section.
+- **New dependencies:** Updated `package.json` to include libraries supporting sidebar and calendar functionality.
+
+### Changed
+- **Dashboard page:** Refactored to utilize new sidebar and navigation structure.
+- **Navigation components:** Updated `nav-main` and `nav-user` to use Lucide icons.
+- **Loading screens:** Improved loading behavior and visual transitions for better UX.
+
+### Fixed
+- Minor inconsistencies in navigation and section rendering logic.
+
+### Deprecated
+- None.
+
+### Security
+- None.
+
+### Breaking Changes
+- None.
+
+---
+
+## [0.13.0] - 2025-10-08
+
+### Highlights
+- Improves mobile settings UX by replacing the custom BottomSheet with the standardized Shadcn Drawer component, ensuring better consistency, accessibility, and maintainability across the UI.
+
+### Added
+- **Drawer component integration:** Adopted Shadcn’s Drawer for mobile settings interactions to align with design standards and simplify maintenance.
+
+### Changed
+- **Settings dialog:** Replaced the previous BottomSheet implementation with the Drawer component.
+- **Code cleanup:** Commented out unused `lucide-react` icon imports in PrivacyPolicy and Terms pages.
+
+### Fixed
+- Minor inconsistencies in mobile settings presentation and layout behavior.
+
+### Deprecated
+- None.
+
+### Security
+- None.
+
+### Breaking Changes
+- None.
+
+---
+
+## [0.12.0] - 2025-10-08
+
+### Highlights
+- Refactors the landing page for improved modularity and cleaner architecture by isolating the features section into a dedicated component. Enhances routing consistency through Next.js Link integration.
+
+### Added
+- **FeaturesSectionLanding component:** New standalone component for the landing page’s features section to improve modularity and code organization.
+
+### Changed
+- **Landing page:** Updated `landing-page.tsx` to use the new `FeaturesSectionLanding` component.
+- **Sidebar links:** Replaced `<a>` tags with Next.js `<Link>` for improved client-side routing and performance.
+- **Code structure:** Improved maintainability through better component separation.
+
+### Fixed
+- Minor routing and styling inconsistencies on the landing page and sidebar.
+
+### Deprecated
+- None.
+
+### Security
+- Improved navigation reliability and safety through consistent use of framework-level routing.
+
+### Breaking Changes
+- None.
+
+---
+
+## [0.11.0] - 2025-10-08
+
+### Highlights
+- Revamps the settings experience with a fully redesigned, responsive dialog and modernized theme toggle. Enhances usability across devices with mobile-friendly navigation, animated transitions, and improved visual consistency.
+
+### Added
+- **Sectioned settings dialog:** New responsive design with mobile bottom sheet navigation and desktop-friendly sections.
+- **Custom switch component:** Introduced a reusable toggle switch UI built on `@radix-ui/react-switch`.
+- **Framer Motion animations:** Integrated into theme toggle for smooth transitions.
+- **System theme detection:** Automatically detects and applies system theme preferences.
+- **Dependency updates:** Added `@radix-ui/react-switch` to support new UI interactions.
+
+### Changed
+- **Settings dialog:** Replaced sidebar-based version with a responsive, modular dialog.
+- **Theme toggle:** Refactored to use Framer Motion and system theme detection for dynamic visual feedback.
+- **Settings controls:** Updated UI and layout for consistency with new switch and dialog components.
+
+### Fixed
+- Minor layout and alignment inconsistencies in settings and theme toggle UI.
+
+### Deprecated
+- None.
+
+### Security
+- No direct security updates, but improved UI isolation reduces risk of unintended state changes.
+
+### Breaking Changes
+- None.
+
+---
+
+## [0.10.0] - 2025-10-07
+
+### Highlights
+- Refactors the signup intro and landing page for cleaner, modular architecture. Introduces reusable UI components and improved navigation with authentication-aware logic, while ensuring compatibility with Next.js 15.
+
+### Added
+- **DragSlider component:** Reusable component replacing custom drag-to-continue logic in the signup intro.
+- **Navbar component:** New landing page navigation bar featuring authentication-aware actions (login/logout/settings).
+- **Middleware updates:** Supabase middleware now redirects unauthenticated users attempting to access the dashboard to the login page.
+
+### Changed
+- **Signup intro:** Refactored to use `DragSlider` for improved maintainability and smoother interaction.
+- **Landing page:** Updated structure and layout to integrate the new `Navbar` component.
+- **Type definitions:** Adjusted and refined for improved compatibility with Next.js 15.
+- **General layout:** Minor updates for better responsiveness and consistency across pages.
+
+### Fixed
+- Minor layout and animation issues in signup and landing page interactions.
+
+### Deprecated
+- None.
+
+### Security
+- Strengthened authentication routing via updated middleware redirect logic for unauthenticated users.
+
+### Breaking Changes
+- None.
 
 ---
 
