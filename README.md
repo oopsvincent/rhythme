@@ -69,3 +69,6 @@ All code and concepts in this repository are the **exclusive private intellectua
 ## 🌱 Closing Note
 Day One is about starting. However small the steps, this is the spark of Rhythmé.  
 Stay tuned as we build this vision into reality.  
+
+
+
