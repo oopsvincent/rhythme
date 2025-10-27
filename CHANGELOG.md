@@ -18,6 +18,33 @@
 
 ---
 
+## [0.4.0] - 2025-09-26
+
+### Highlights
+- Enhances the login experience by introducing clear, actionable error messages for OAuth authentication failures. This improves user feedback and simplifies debugging during sign-in.
+
+### Added
+- **Custom Alert component:** Reusable UI component for displaying alerts and error messages consistently across the app.
+- **useOAuthError hook:** Handles and surfaces OAuth provider errors within the login form.
+- **Descriptive error messages:** Login form now provides detailed feedback when authentication fails.
+
+### Changed
+- **Login form behavior:** Updated to integrate the new Alert component and error-handling hook for improved user experience.
+
+### Fixed
+- Improved error visibility and clarity for failed OAuth logins.
+
+### Deprecated
+- None.
+
+### Security
+- No new security changes, but enhanced transparency during failed OAuth flows aids debugging without exposing sensitive data.
+
+### Breaking Changes
+- None.
+
+---
+
 ## [0.3.0] - 2025-09-24
 
 ### Highlights
