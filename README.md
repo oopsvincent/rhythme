@@ -36,90 +36,92 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details. -->
 
 
-# Rhythmé  
+# 🌊 Rhythmé  
 
-Welcome to **Day One** of *Rhythmé*.  
+Welcome to the evolving journey of **Rhythmé** — a *Personal Alignment System* designed to bring harmony between your productivity, focus, and well-being.  
 
-Rhythmé is not just another productivity app—it is being built to **solve the real problem of fragmented tools** and their failure to consider the **mental and emotional side of productivity**.  
+Rhythmé is more than a productivity app. It’s a **unified ecosystem** that helps users manage their **habits, focus, and reflections** in one intelligent flow — learning from their behavior to help them grow with balance and clarity.  
 
-Our mission is to create a **unified productivity ecosystem** where habits, journaling, and focus come together, supported by intelligent insights that adapt to the user’s state of mind.  
-
-This is just the beginning. The code you see here today may be small, but it marks the first step toward something much bigger.  
+Our mission is to bridge the gap between **discipline and mindfulness**, building tools that don’t just track progress, but nurture purpose.  
 
 ---
 
-## ⚡ Project Status
-- **Started:** August 22, 2025  
-- **Current Phase:** Initial setup and scaffolding  
-- **Stage:** Public for viewing only (not for collaboration at this stage)  
+## 🚀 Current Phase: Foundation Development (Phase 1)  
+
+We’re actively building the **core working app**, where users can:  
+- Sign up / Log in securely with Supabase  
+- Create, edit, and track daily habits  
+- Journal their thoughts and reflections  
+- Use a focus timer to manage deep work sessions  
+
+This phase lays the groundwork for future features like:  
+- Personalized AI insights  
+- Sentiment analysis of journals  
+- Predictive habit success scores  
+- Goal alignment and recommendations  
 
 ---
 
-## 📜 License & Intellectual Property Notice
+## 🧩 Tech Stack  
+
+- **Framework:** Next.js + React  
+- **Styling:** TailwindCSS + shadcn/ui  
+- **Backend & Database:** Supabase (PostgreSQL, Auth, Storage)  
+- **AI/ML (Upcoming):** Python, FastAPI, Hugging Face models  
+- **Hosting:** Vercel  
+- **Version Control:** Git & GitHub  
+
+---
+
+## 👥 The Team  
+
+| Role | Member | Responsibility |
+|------|---------|----------------|
+| **Founder & Lead Developer** | [Farhan](https://oopsvincent.vercel.app) | Frontend, Backend integration, Product direction |
+| **AI/ML Engineer** | [Soumodip](https://github.com/soumodip-esc) | Habit prediction, sentiment analysis, personal insights |
+| **Database Specialist** | [Dhiraj](https://Dhiraj2024Patra) | Schema design, optimization, and data integrity |
+| **UI/UX Designer** | [Mouktick](#) | Visual design, layouts, and experience flow |
+| **Docs & QA** | [Maruf](https://github.com/yeasirmarufmollah-web) | Changelogs, testing, and weekly summaries |
+
+---
+
+## ⚡ Project Timeline  
+
+| Phase | Objective | Status |
+|-------|------------|--------|
+| **Phase 1 – Foundation (Aug–Nov 2025)** | Core app (auth, habits, journals, focus) | 🚧 In Progress |
+| **Phase 2 – Intelligence (Dec 2025–May 2026)** | AI insights, predictive analytics | ⏳ Upcoming |
+| **Phase 3 – Integration (Mid–Late 2026)** | External syncs, growth & monetization | 🔒 Planned |
+
+---
+
+## 📜 License & Intellectual Property Notice  
+
 This repository is **publicly viewable** for transparency and inspiration.  
-However, you are **not permitted** to:  
-- Copy this code  
-- Modify or reuse it  
-- Distribute or republish it  
+However, all materials contained here are **the exclusive private intellectual property of the Rhythmé Team.**  
 
-All code and concepts in this repository are the **exclusive private intellectual property of the Rhythmé Team**.  
+You are **not permitted** to:  
+- Copy, modify, or distribute any part of this repository  
+- Reuse code, branding, or concepts for commercial or public use  
+
+© 2025 Rhythmé Team. All rights reserved.  
+
+---
+
+## 🌱 Final Note  
+
+From a spark on Day One to a growing ecosystem today, Rhythmé continues to evolve with purpose and persistence.  
+This is not just about productivity — it’s about finding balance, focus, and flow in the rhythm of life.  
+
+> *Find your rhythm. Build your balance. Live aligned.*  
+
 
 ---
 
-## 🌱 Closing Note
-Day One is about starting. However small the steps, this is the spark of Rhythmé.  
-Stay tuned as we build this vision into reality.  
+## Version
+Current version: **0.17.0**  
+See full changelog → [CHANGELOG.md](./docs/CHANGELOG.md)
+## Authors
 
----
-## Changle-Log
-
-## [0.9.1] - 2025-10-24
-
-### Highlights
-- Introduced dynamic **Framer Motion animations** to the authentication pages for a smoother, more engaging user experience.  
-- Enhanced **Tasks section styling** with improved badge consistency and maintainability.
-
-### Added
-- Animated hero sections on **Login** and **Signup** pages using **Framer Motion** to improve visual appeal and user engagement.
-
-### Changed
-- Refactored **Tasks section** to use `badgeVariants` for consistent priority-based styling.  
-- Updated all **Badge** components to use `className` instead of `variant` for color and priority representation.
-
-### Fixed
-- Minor visual inconsistencies between priority badges in the Tasks section.
-
----
-## [0.1.0] - 2025-09-21
-
-### Highlights
-- Initial release introducing authentication, legal, and dashboard functionality with a fully integrated Supabase backend and reusable UI components.
-
-### Added
-- **Authentication system:** Routes and pages for login, signup, callback, and signout.
-- **Protected dashboard:** Basic authenticated area accessible only to logged-in users.
-- **Legal pages:** Added terms and privacy policy pages.
-- **Custom 404 page:** User-friendly not-found page.
-- **Reusable UI components:** Button, card, input, and label components for consistent styling.
-- **Utility functions:** Helper methods for Supabase integration and general app utilities.
-- **Global styling and layout:** Theming, typography, and branding updates.
-- **Dependency setup:** Installed and configured dependencies for authentication and UI frameworks.
-
-### Changed
-- Updated global metadata and layout structure to align with new branding and theming.
-
-### Fixed
-- N/A (initial release)
-
-### Deprecated
-- None
-
-### Security
-- Added secure authentication flow using Supabase’s OAuth and session management.
-
-### Breaking Changes
-- None (first release)
-
-
-  
+- [@oopsvincent](https://www.github.com/oopsvincent)
 
