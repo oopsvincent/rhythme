@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { type Icon } from "@tabler/icons-react";
+// import { type Icon } from "@tabler/icons-react";
+import { type LucideProps } from "lucide-react";
 
 import {
   SidebarGroup,
@@ -19,7 +20,7 @@ export function NavSecondary({
   items: {
     title: string;
     url: string;
-    icon: Icon;
+    icon: React.ForwardRefExoticComponent<LucideProps>;
   }[];
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   const { setSettingsOpen } = useDialogStore();
