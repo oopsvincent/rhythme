@@ -1,23 +1,23 @@
 "use client";
 
 import * as React from "react";
-import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react";
+// import {
+//   IconCamera,
+//   IconChartBar,
+//   IconDashboard,
+//   IconDatabase,
+//   IconFileAi,
+//   IconFileDescription,
+//   IconFileWord,
+//   IconFolder,
+//   IconHelp,
+//   IconInnerShadowTop,
+//   IconListDetails,
+//   IconReport,
+//   IconSearch,
+//   IconSettings,
+//   IconUsers,
+// } from "@tabler/icons-react";
 
 import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
@@ -35,17 +35,26 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import {
+    Aperture,
     CalendarSync,
   CheckSquare,
+  ClockArrowUp,
   FolderKanban,
   Goal,
+  HelpCircle,
   Home,
   ListCheck,
+  NotebookPen,
   Search,
+  SearchCheck,
   Section,
+  Settings,
   Sparkles,
 } from "lucide-react";
 import { Separator } from "./ui/separator";
+import { title } from "process";
+import { url } from "inspector";
+import { FaStopwatch } from "react-icons/fa";
 
 const data = {
   user: {
@@ -56,34 +65,40 @@ const data = {
   navMain: [
     {
       title: "Home",
-      url: "#",
+      url: "/dashboard",
       icon: Home,
       isActive: true,
-      section: "overview",
+      section: "dashboard",
     },
     { 
         title: "Habits", 
         icon: CalendarSync, 
-        url: "#", 
+        url: "/dashboard/habits", 
         section: "habits" ,
     },
     {
       title: "Goals",
-      url: "#",
+      url: "/dashboard/goals",
       icon: Goal,
       section: "goals",
     },
     {
       title: "Tasks",
-      url: "#",
+      url: "/dashboard/tasks",
       icon: ListCheck,
       section: "tasks",
     },
     {
-      title: "Search",
-      url: "#",
-      icon: Search,
-      section: "search",
+        title: "Focus",
+        url: "/dashboard/focus",
+        icon: ClockArrowUp,
+        section: "focus",
+    },
+    {
+        title: "Journal",
+        url: "/dashboard/journal",
+        icon: NotebookPen,
+        section: "journal",
     },
     {
       title: "Ask AI",
@@ -98,88 +113,88 @@ const data = {
       section: "data-table",
     },
   ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
+//   navClouds: [
+//     {
+//       title: "Capture",
+//       icon: IconCamera,
+//       isActive: true,
+//       url: "#",
+//       items: [
+//         {
+//           title: "Active Proposals",
+//           url: "#",
+//         },
+//         {
+//           title: "Archived",
+//           url: "#",
+//         },
+//       ],
+//     },
+//     {
+//       title: "Proposal",
+//       icon: IconFileDescription,
+//       url: "#",
+//       items: [
+//         {
+//           title: "Active Proposals",
+//           url: "#",
+//         },
+//         {
+//           title: "Archived",
+//           url: "#",
+//         },
+//       ],
+//     },
+//     {
+//       title: "Prompts",
+//       icon: IconFileAi,
+//       url: "#",
+//       items: [
+//         {
+//           title: "Active Proposals",
+//           url: "#",
+//         },
+//         {
+//           title: "Archived",
+//           url: "#",
+//         },
+//       ],
+//     },
+//   ],
   navSecondary: [
     {
       title: "Settings",
-      url: "#",
-      icon: IconSettings,
+      url: "/settings/appearance",
+      icon: Settings,
     },
     {
       title: "Get Help",
       url: "#",
-      icon: IconHelp,
+      icon: HelpCircle,
     },
     {
       title: "Search",
       url: "#",
-      icon: IconSearch,
+      icon: SearchCheck,
     },
   ],
-  documents: [
-    {
-      name: "Journals Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
+//   documents: [
+//     {
+//       name: "Journals Library",
+//       url: "#",
+//       icon: IconDatabase,
+//     },
+//     {
+//       name: "Reports",
+//       url: "#",
+//       icon: IconReport,
+//     },
+//     {
+//       name: "Word Assistant",
+//       url: "#",
+//       icon: IconFileWord,
+//     },
+//   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -226,7 +241,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link href="/">
-                <IconInnerShadowTop className="!size-5" />
+                <Aperture className="!size-5" />
                 <span className="text-base font-semibold">Rhythmé Inc.</span>
               </Link>
             </SidebarMenuButton>
@@ -238,7 +253,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <Separator />
       <SidebarContent className="py-3">
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
 

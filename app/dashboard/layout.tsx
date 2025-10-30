@@ -38,10 +38,10 @@ export default async function DashboardLayout({
             <main className="flex flex-1 flex-col">{children}</main>
           </ContextMenuTrigger>
           <ContextMenuContent>
-            <ContextMenuItem>Maruf Kaam Chor Hai</ContextMenuItem>
-            <ContextMenuItem>Usko do kaam diya</ContextMenuItem>
-            <ContextMenuItem>Usse woh bhi nahi hota hai</ContextMenuItem>
-            <ContextMenuItem>👌🍌</ContextMenuItem>
+            <ContextMenuItem>Copy</ContextMenuItem>
+            <ContextMenuItem>Paste</ContextMenuItem>
+            <ContextMenuItem>Share</ContextMenuItem>
+            <ContextMenuItem>Delete</ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
       </SidebarInset>
