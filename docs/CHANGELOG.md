@@ -2,6 +2,73 @@
 
 ---
 
+## [0.18.0] - 2025-10-29
+
+### Highlights
+- Major update introducing a complete **Tasks CRUD system** with real-time updates, new dashboard sections, and an overhauled settings experience.  
+- This release marks a significant step toward full product functionality and scalability, replacing legacy state management and improving overall app architecture.
+
+### Added
+- Full **Tasks CRUD system** (create, read, update, delete) with server actions and real-time updates.
+- **Task list, item, and form components** for a dynamic and interactive dashboard experience.
+- New **dashboard pages** for Focus, Goals, Habits, Journal, and Tasks.
+- Comprehensive **Settings modal** with sections for:
+  - Account  
+  - Appearance  
+  - Notifications  
+  - Privacy
+- Added **slug pages** for individual tasks using `task-id`.
+- New **utility hooks** and **UI components** for scroll areas and responsive layouts.
+- Responsive and adaptive **sidebar navigation** system.
+
+### Changed
+- Refactored **dashboard layout** for improved modularity and responsiveness.
+- Removed **Zustand** state management in favor of server actions and context-based updates.
+- Reworked **navigation logic**, improving route handling and sidebar synchronization.
+- Enhanced **loading UI** and user feedback during transitions.
+
+### Fixed
+- Replaced placeholder context menu items with fully functional actions.
+- Improved UI consistency and performance across dashboard sections.
+
+### Deprecated
+- Legacy Zustand store and related state management code have been fully removed.
+
+### Security
+- None in this release.
+
+### Breaking Changes
+- State management migrated from Zustand to server actions — existing local setups or custom states may require refactoring.
+- Dashboard and settings route structures updated; ensure internal links and imports are aligned with new paths.
+
+---
+
+## [0.17.1] - 2025-10-28
+
+### Highlights
+- Improved project documentation to reflect recent updates and provide clearer insight into the team and project goals.
+
+### Added
+- Added detailed **team information** section to the README.
+
+### Changed
+- Updated **project description** and **status overview** in README to match the latest development progress.
+- Enhanced formatting and clarity for better readability.
+
+### Fixed
+- None.
+
+### Deprecated
+- None.
+
+### Security
+- None.
+
+### Breaking Changes
+- None.
+
+---
+
 ## [0.17.0] - 2025-10-27
 
 ### Highlights
