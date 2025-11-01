@@ -9,9 +9,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Star, Calendar, BookOpen, Timer, Trophy, Copyright } from "lucide-react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Checkbox } from "./ui/checkbox";
+// import { useRouter } from "next/navigation";
+// import Link from "next/link";
+// import { Checkbox } from "./ui/checkbox";
 import Navbar from "./navbar";
 import FeaturesSectionLanding from "./features-section";
 

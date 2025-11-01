@@ -62,10 +62,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { useNavigationStore } from "@/store/nav-store"
-
-// 👇 Import your Section type from where it's defined
-import type { Section } from "@/store/nav-store"
+import { usePathname, redirect, useRouter } from "next/navigation"
 
 export function NavMain({
   items,
@@ -78,18 +75,20 @@ export function NavMain({
     isActive?: boolean
   }[]
 }) {
-  const { activeSection, setActiveSection } = useNavigationStore()
+    const router = useRouter()
+  const pathname = usePathname()
+  const currentSection = pathname?.split("/").pop();
 
   return (
     <SidebarMenu>
       {items.map((item) => {
-        const isActive = activeSection === item.section
+        const isActive = currentSection === item.section
 
         return (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
               tooltip={item.title}
-              onClick={() => setActiveSection(item.section as Section)}
+              onClick={() => redirect(item.url)}
               isActive={isActive}
               className={isActive ? "bg-accent" : ""}
             >
