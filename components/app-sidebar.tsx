@@ -102,7 +102,7 @@ const data = {
     },
     {
       title: "Ask AI",
-      url: "#",
+      url: "/dashboard/ai",
       icon: Sparkles,
       section: "analytics",
     },

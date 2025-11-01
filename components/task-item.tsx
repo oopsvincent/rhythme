@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import { updateTaskStatus, deleteTask } from '@/app/actions/getTasks'
 import type { Task, Status } from '@/types/database'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface TaskItemProps {
   task: Task
@@ -47,7 +48,8 @@ export default function TaskItem({ task }: TaskItemProps) {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold hover:underline cursor-pointer" onClick={() => router.push(`/dashboard/tasks/${task.task_id}`)}>{task.title}</h3>
+            <Link className="text-lg font-semibold hover:underline cursor-pointer" href={`/dashboard/tasks/${task.task_id}`}>{task.title}</Link>
+            {/* <h3 className="text-lg font-semibold hover:underline cursor-pointer" onClick={() => router.push(`/dashboard/tasks/${task.task_id}`)}>{task.title}</h3> */}
             <span className={`px-2 py-1 rounded text-xs font-medium ${priorityColors[task.priority]}`}>
               {task.priority}
             </span>

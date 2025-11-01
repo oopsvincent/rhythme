@@ -16,6 +16,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { Calendar } from "./ui/calendar"
+import { CalendarWithFilters } from "./calendar-with-filters"
 
 // This is sample data.
 const data = {
@@ -53,9 +54,10 @@ export function SidebarRight({
         <NavUser user={data.user} />
       </SidebarHeader>
       <SidebarContent>
-        <DatePicker />
+        {/* <DatePicker /> */}
         <SidebarSeparator className="mx-0" />
-        <Calendars calendars={data.calendars} />
+        <CalendarWithFilters />
+        {/* <Calendars calendars={data.calendars} /> */}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

@@ -107,7 +107,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <DropdownMenuItem onClick={() => redirect("/user")}>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>

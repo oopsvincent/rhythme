@@ -29,3 +29,19 @@ export async function getUser() {
     avatar: user.user_metadata?.avatar_url || `https://avatar.vercel.sh/${user.email}`,
   }
 }
+
+
+export async function getFullUser() {
+  const supabase = await createClient()
+  
+  const { data: { user }, error } = await supabase.auth.getUser()
+  
+//   console.log('Auth check:', { user: user?.email, error }) // Debug log
+  
+  if (error || !user) {
+    console.log('No user found, should redirect') // Debug log
+    return null
+  }
+
+  return user
+}
