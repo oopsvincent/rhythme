@@ -4,6 +4,27 @@
 import { useState, useTransition } from 'react'
 import { createTask } from '@/app/actions/getTasks'
 import type { CreateTaskInput, Priority } from '@/types/database'
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from './ui/textarea'
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
 
 export default function TaskForm() {
   const [isPending, startTransition] = useTransition()
@@ -46,18 +67,31 @@ export default function TaskForm() {
 
   if (!showForm) {
     return (
-      <button
+      <Button
         onClick={() => setShowForm(true)}
         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mb-6"
       >
         + New Task
-      </button>
+      </Button>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 rounded-lg shadow-md mb-6">
-      <h2 className="text-xl font-semibold mb-4">Create New Task</h2>
+    <Dialog>
+              <DialogTrigger asChild >
+      <Button
+        onClick={() => setShowForm(true)}
+        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mb-6"
+      >
+        + New Task
+      </Button>
+        </DialogTrigger>
+        <DialogContent>
+
+    <form onSubmit={handleSubmit} className="">
+        <DialogHeader>
+      <DialogTitle className="text-xl font-semibold mb-4">Create New Task</DialogTitle>
+        </DialogHeader>
 
       {error && (
         <div className="text-red-800 px-4 py-3 rounded mb-4">
@@ -67,10 +101,10 @@ export default function TaskForm() {
 
       <div className="space-y-4">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-1">
+          <Label htmlFor="title" className="block text-sm font-medium mb-1">
             Title *
-          </label>
-          <input
+          </Label>
+          <Input
             id="title"
             type="text"
             value={formData.title}
@@ -82,10 +116,10 @@ export default function TaskForm() {
         </div>
 
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+          <Label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
             Description
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             id="description"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -98,10 +132,10 @@ export default function TaskForm() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="due_date" className="block text-sm font-medium text-gray-700 mb-1">
+            <Label htmlFor="due_date" className="block text-sm font-medium text-gray-700 mb-1">
               Due Date
-            </label>
-            <input
+            </Label>
+            <Input
               id="due_date"
               type="date"
               value={formData.due_date}
@@ -109,44 +143,48 @@ export default function TaskForm() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={isPending}
             />
-          </div>
-
-          <div>
-            <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
+            <Label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
               Priority
-            </label>
-            <select
-              id="priority"
+            </Label>
+            <Select
               value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onValueChange={(value: Priority) => setFormData({ ...formData, priority: value })}
               disabled={isPending}
             >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
       <div className="flex gap-3 mt-6">
-        <button
+        <Button
           type="submit"
           disabled={isPending}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="bg-primary px-6 py-2 rounded-lg hover:bg-accent disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isPending ? 'Creating...' : 'Create Task'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => setShowForm(false)}
           disabled={isPending}
-          className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 disabled:bg-gray-100"
+          className="bg-transparent border-2 text-gray-700 px-6 py-2 rounded-lg hover:bg-transparent disabled:bg-gray-100"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
+        </DialogContent>
+
+            
+    </Dialog>
   )
 }

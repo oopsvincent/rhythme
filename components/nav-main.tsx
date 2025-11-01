@@ -1,59 +1,3 @@
-// // components/nav-main.tsx
-// "use client"
-
-// import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react"
-// import { Button } from "@/components/ui/button"
-// import {
-//   SidebarGroup,
-//   SidebarGroupContent,
-//   SidebarMenu,
-//   SidebarMenuButton,
-//   SidebarMenuItem,
-// } from "@/components/ui/sidebar"
-// import { useNavigationStore } from "@/store/nav-store"
-
-// export function NavMain({
-//   items,
-// }: {
-//   items: {
-//     title: string
-//     url: string
-//     icon?: Icon
-//     section: string // Add this prop
-//   }[]
-// }) {
-
-
-//   return (
-//     <SidebarGroup>
-//       <SidebarGroupContent className="flex flex-col gap-2">
-//         {/* Quick Create button stays the same */}
-//         <SidebarMenu>
-//           <SidebarMenuItem className="flex items-center gap-2">
-//             <SidebarMenuButton
-//               tooltip="Quick Create"
-//               className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-//             >
-//               <IconCirclePlusFilled />
-//               <span>Quick Create</span>
-//             </SidebarMenuButton>
-//             <Button
-//               size="icon"
-//               className="size-8 group-data-[collapsible=icon]:opacity-0"
-//               variant="outline"
-//             >
-//               <IconMail />
-//               <span className="sr-only">Inbox</span>
-//             </Button>
-//           </SidebarMenuItem>
-//         </SidebarMenu>
-        
-//         {/* Navigation items */}
-
-//       </SidebarGroupContent>
-//     </SidebarGroup>
-//   )
-// }
 "use client"
 
 import { type LucideIcon } from "lucide-react"
@@ -62,7 +6,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { usePathname, redirect, useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 export function NavMain({
   items,
@@ -75,20 +19,31 @@ export function NavMain({
     isActive?: boolean
   }[]
 }) {
-    const router = useRouter()
+  const router = useRouter()
   const pathname = usePathname()
-  const currentSection = pathname?.split("/").pop();
 
   return (
     <SidebarMenu>
       {items.map((item) => {
-        const isActive = currentSection === item.section
+        // Get path segments
+        const pathSegments = pathname?.split("/").filter(Boolean) || []
+        
+        let isActive = false
+
+        // Special case for overview/dashboard root
+        if (item.section === "overview" || item.section === "dashboard") {
+          isActive = pathname === "/dashboard"
+        } 
+        // For all other sections, check if section is in the path
+        else {
+          isActive = pathSegments.includes(item.section)
+        }
 
         return (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
               tooltip={item.title}
-              onClick={() => redirect(item.url)}
+              onClick={() => router.push(item.url)}
               isActive={isActive}
               className={isActive ? "bg-accent" : ""}
             >
