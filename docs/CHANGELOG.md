@@ -2,6 +2,36 @@
 
 ---
 
+## [0.19.0] - 2025-11-01
+
+### Highlights
+- Introduces **user profile pages** and a **calendar drawer**, enhancing personalization and organization across the app.  
+- Improves dashboard interactivity and navigation flow, particularly for mobile users.
+
+### Added
+- New **user profile pages** under `/user`, featuring detailed user information and a dedicated layout.
+- **Calendar drawer** with a **filterable calendar component**, integrated into the dashboard for easy access.
+- Support for **context and provider-based navigation and settings management** for improved global state handling.
+
+### Changed
+- Refactored **navigation** and **settings** to utilize new providers and context.
+- Updated **sidebar** and **navigation components** for consistency and responsiveness.
+- Enhanced **dashboard** and **journal pages** for smoother user experience and visual coherence.
+
+### Fixed
+- Minor UI inconsistencies across settings and navigation views.
+
+### Deprecated
+- None.
+
+### Security
+- None.
+
+### Breaking Changes
+- None.
+
+---
+
 ## [0.18.0] - 2025-10-29
 
 ### Highlights
