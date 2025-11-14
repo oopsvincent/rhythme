@@ -2,6 +2,40 @@
 
 ---
 
+## [0.20.0] - 2025-11-14
+### Highlights
+- Major overhaul of the marketing-facing parts of the product with a new landing structure, pricing page, and footer. This improves clarity, branding consistency, and prepares the app for public visibility. Navigation now correctly adapts to authenticated/unauthenticated states using a client/server split, and layouts now support proper redirect behavior with return URLs.
+
+### Added
+- New landing page architecture with a server wrapper for better performance and auth-aware rendering.
+- Enhanced feature section, testimonial section, and marketing layout improvements.
+- Dedicated pricing page and pricing component.
+- New global footer component.
+- New public branding assets (logos, images, etc.).
+- Updated dashboard and user layouts to support redirects with return URLs.
+
+### Changed
+- Navigation reworked to use a client/server split for accurate user state handling.
+- Sidebar logo updated to use a new image.
+- Landing page structure reorganized for maintainability and clearer content hierarchy.
+- Dashboard and user layouts improved for more predictable routing.
+
+### Fixed
+- Resolved a large number of bugs caused by outdated components, inconsistent layouts, and previous refactors.
+- Fixed routing inconsistencies when unauthenticated users attempted to access dashboard routes.
+- Addressed various UI errors and broken asset references.
+
+### Deprecated
+- Old preview image.
+- Old logo.
+- `favicon.ico` (replaced by new branding assets).
+
+### Breaking Changes
+- Removal of old public assets may break any external or internal references relying on deprecated images or favicon files.
+- Navigation refactor may require updating any custom components that previously depended on client-only navigation logic.
+
+---
+
 ## [0.19.0] - 2025-11-01
 
 ### Highlights
