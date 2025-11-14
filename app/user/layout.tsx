@@ -9,6 +9,10 @@ const layout = async ({
 }) => {
 
     const user = await getUser();
+    if (!user) {
+    // Redirect to login with the return URL
+    redirect("/login?redirect=/user")
+  }
     // redirect(`/user/${user?.id}`)
 
   return (

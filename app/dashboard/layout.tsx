@@ -21,7 +21,8 @@ export default async function DashboardLayout({
   const user = await getUser();
 
   if (!user) {
-    redirect("/login");
+    // Redirect to login with the return URL
+    redirect("/login?redirect=/dashboard")
   }
 
   // Fetch user settings from your database

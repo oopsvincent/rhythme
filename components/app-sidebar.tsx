@@ -55,6 +55,7 @@ import { Separator } from "./ui/separator";
 import { title } from "process";
 import { url } from "inspector";
 import { FaStopwatch } from "react-icons/fa";
+import Image from "next/image";
 
 const data = {
   user: {
@@ -241,7 +242,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link href="/">
-                <Aperture className="!size-5" />
+                {/* <Aperture className="!size-5" /> */}
+                <Image src={"/Rhythme.svg"} width={25} height={25} alt="logo" />
                 <span className="text-base font-semibold">Rhythmé Inc.</span>
               </Link>
             </SidebarMenuButton>
