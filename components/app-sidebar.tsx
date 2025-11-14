@@ -1,23 +1,6 @@
 "use client";
 
 import * as React from "react";
-// import {
-//   IconCamera,
-//   IconChartBar,
-//   IconDashboard,
-//   IconDatabase,
-//   IconFileAi,
-//   IconFileDescription,
-//   IconFileWord,
-//   IconFolder,
-//   IconHelp,
-//   IconInnerShadowTop,
-//   IconListDetails,
-//   IconReport,
-//   IconSearch,
-//   IconSettings,
-//   IconUsers,
-// } from "@tabler/icons-react";
 
 import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
@@ -52,9 +35,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Separator } from "./ui/separator";
-import { title } from "process";
-import { url } from "inspector";
-import { FaStopwatch } from "react-icons/fa";
 import Image from "next/image";
 
 const data = {
@@ -69,7 +49,7 @@ const data = {
       url: "/dashboard",
       icon: Home,
       isActive: true,
-      section: "dashboard",
+      section: "overview",
     },
     { 
         title: "Habits", 

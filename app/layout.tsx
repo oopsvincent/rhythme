@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
+import './loading.css';
+import './styles/not-found.css'
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 

@@ -11,9 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useDialogStore } from "@/store/useDialogStore";
 import { Button } from "./ui/button";
-import { SettingsDialog } from "./settings-dialog";
 import { useSettings } from "./providers/settings";
 
 export function NavSecondary({

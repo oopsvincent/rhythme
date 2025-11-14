@@ -1,5 +1,3 @@
-// app/logout/page.tsx
-import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions/auth";
 import { SpinnerEmpty } from "@/components/spinner-logout";
 

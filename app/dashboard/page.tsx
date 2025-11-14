@@ -25,7 +25,7 @@ export default async function Page() {
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <main className="flex justify-start items-center flex-wrap mx-6">
-                <h1 className="text-4xl font-extrabold ">{greetings}, {user?.name.split(" ")[0]}</h1>
+                <h1 className="text-4xl font-extrabold font-primary">{greetings}, {user?.name.split(" ")[0]}</h1>
             </main>
 
             <Separator />
