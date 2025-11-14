@@ -16,10 +16,10 @@ export function SpinnerEmpty() {
         <EmptyMedia variant="icon">
           <Spinner />
         </EmptyMedia>
-        <EmptyTitle>Logging you out</EmptyTitle>
-        <EmptyDescription>
+        <EmptyTitle>Signing Out</EmptyTitle>
+        {/* <EmptyDescription>
           Please wait while we process your request. Do not refresh the page.
-        </EmptyDescription>
+        </EmptyDescription> */}
       </EmptyHeader>
       <EmptyContent>
         {/* <Button variant="outline" size="sm">

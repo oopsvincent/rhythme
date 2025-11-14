@@ -162,7 +162,7 @@ export function Habits() {
               <Plus className="mr-2 h-4 w-4" />
               Add Habit
             </button>
-          </DialogTrigger>
+          </DialogTrigger> 
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Habit</DialogTitle>

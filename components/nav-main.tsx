@@ -5,6 +5,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { usePathname, useRouter } from "next/navigation"
 
@@ -22,6 +23,13 @@ export function NavMain({
   const router = useRouter()
   const pathname = usePathname()
 
+    const { setOpenMobile } = useSidebar()  // ✅ Get the function
+
+  const handleNavigation = (url: string) => {
+    router.push(url)
+    setOpenMobile(false)  // ✅ Close mobile sidebar
+  }
+
   return (
     <SidebarMenu>
       {items.map((item) => {
@@ -31,7 +39,7 @@ export function NavMain({
         let isActive = false
 
         // Special case for overview/dashboard root
-        if (item.section === "overview" || item.section === "dashboard") {
+        if (item.section === "overview") {
           isActive = pathname === "/dashboard"
         } 
         // For all other sections, check if section is in the path
@@ -43,7 +51,7 @@ export function NavMain({
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
               tooltip={item.title}
-              onClick={() => router.push(item.url)}
+              onClick={() => handleNavigation(item.url)}
               isActive={isActive}
               className={isActive ? "bg-accent" : ""}
             >

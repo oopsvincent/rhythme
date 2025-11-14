@@ -1,0 +1,220 @@
+/* app/styles/loading.css */
+
+/* Shutter blade rotation */
+@keyframes shutter-rotate {
+  0% { transform: rotate(0deg) scale(1); }
+  35% { transform: rotate(18deg) scale(0.98); }
+  50% { transform: rotate(36deg) scale(0.92); }
+  65% { transform: rotate(18deg) scale(0.98); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* Aperture hole scaling */
+@keyframes aperture-scale {
+  0% { transform: scale(1); opacity: 1; }
+  40% { transform: scale(0.4); opacity: 0.96; }
+  55% { transform: scale(0.28); opacity: 0.9; }
+  70% { transform: scale(0.48); opacity: 0.97; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Shutter breathing depth */
+@keyframes shutter-breath {
+  0% { transform: scale(1); filter: drop-shadow(0 6px 18px rgba(0,0,0,0.65)); }
+  50% { transform: scale(0.995); filter: drop-shadow(0 10px 28px rgba(0,0,0,0.75)); }
+  100% { transform: scale(1); filter: drop-shadow(0 6px 18px rgba(0,0,0,0.65)); }
+}
+
+/* Loading dot animation */
+@keyframes loading-dot {
+  0% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+  50% { transform: translateY(-6px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+}
+
+/* Apply to blades */
+.blade {
+  transform-origin: 100px 100px;
+  animation: shutter-rotate 2.4s cubic-bezier(0.22, 0.9, 0.36, 1) infinite;
+  opacity: 0.98;
+}
+
+/* Phase offsets */
+.blade-0 { animation-delay: 0s; }
+.blade-1 { animation-delay: -0.14s; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+.blade-2 { animation-delay: -0.28s; }
+.blade-3 { animation-delay: -0.42s; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55)); }
+.blade-4 { animation-delay: -0.56s; }
+.blade-5 { animation-delay: -0.7s; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.45)); }
+
+/* Aperture hole animation */
+#apertureHole {
+  transform-origin: 100px 100px;
+  animation: aperture-scale 2.4s cubic-bezier(0.22, 0.9, 0.36, 1) infinite;
+}
+
+/* Breathing depth */
+#blades {
+  animation: shutter-breath 4.8s ease-in-out infinite;
+}
+
+/* Loading dot on text */
+.loading-dots::after {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: 0.5rem;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: loading-dot 1s infinite;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .blade, #blades, #apertureHole, .loading-dots::after {
+    animation: none !important;
+  }
+}
+
+/* film-rotate: slow rotation behind the shutter */
+.film-rotate {
+  transform-origin: center;
+  animation: film-rotate 14s linear infinite;
+  opacity: 0.5;
+}
+@keyframes film-rotate {
+  from { transform: rotate(0deg) }
+  to { transform: rotate(360deg) }
+}
+
+/* lens flare subtle float */
+.lens-flare {
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  filter: blur(6px);
+  transform-origin: 50% 50%;
+  animation: flare-move 3.6s ease-in-out infinite;
+}
+@keyframes flare-move {
+  0% { transform: translate(0,0) scale(1); opacity: 0.75; }
+  50% { transform: translate(6px,-4px) scale(1.06); opacity: 0.9; }
+  100% { transform: translate(0,0) scale(1); opacity: 0.75; }
+}
+
+/* small brand glow pulse */
+@keyframes brand-glow {
+  0% { filter: drop-shadow(0 0 0px rgba(255,107,53,0.0)); }
+  50% { filter: drop-shadow(0 6px 18px rgba(255,107,53,0.08)); }
+  100% { filter: drop-shadow(0 0 0px rgba(255,107,53,0.0)); }
+}
+.mx-auto > svg { animation: brand-glow 4s ease-in-out infinite; }
+
+/* Ensure blades + aperture animations exist in file (from previous) */
+.blade { transform-origin: 100px 100px; animation: shutter-rotate 2.4s cubic-bezier(.22,.9,.36,1) infinite; opacity: 0.98; }
+.blade-0 { animation-delay: 0s; }
+.blade-1 { animation-delay: -0.14s; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+.blade-2 { animation-delay: -0.28s; }
+.blade-3 { animation-delay: -0.42s; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55)); }
+.blade-4 { animation-delay: -0.56s; }
+.blade-5 { animation-delay: -0.7s; }
+#apertureHole { transform-origin: 100px 100px; animation: aperture-scale 2.4s cubic-bezier(.22,.9,.36,1) infinite; }
+#blades { animation: shutter-breath 4.8s ease-in-out infinite; }
+
+/* keep loading-dots logic (if using elsewhere) */
+.loading-dots::after {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: 0.5rem;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: loading-dot 1s infinite;
+}
+@keyframes loading-dot { 0% { transform: translateY(0) scale(.8); opacity:.5 } 50% { transform: translateY(-6px) scale(1.1); opacity:1 } 100% { transform: translateY(0) scale(.8); opacity:.5 } }
+
+/* reduced motion safety */
+@media (prefers-reduced-motion: reduce) {
+  .film-rotate, .lens-flare, .blade, #apertureHole, .mx-auto > svg, .loading-dots::after {
+    animation: none !important;
+  }
+}
+
+
+/* ---------- wave shutter (single-copy top & bottom) ---------- */
+
+/* wrapper clips and animates the SVG; keep the svg itself simple */
+.wave-wrap { overflow: hidden; pointer-events: none; }
+
+/* flip the top SVG vertically — we keep transform here minimal so wrapper can animate translateY */
+.flip-vertical { transform: scaleY(-1); }
+
+/* TOP wrapper slides down from off-screen to near center, then back */
+@keyframes top-wave-inout {
+  0%   { transform: translateY(-120%); }
+  30%  { transform: translateY(-18%); }  /* approach */
+  45%  { transform: translateY(-6%); }   /* near center (gap for text) */
+  50%  { transform: translateY(-2.5%); } /* closed / paused slightly overlapping */
+  65%  { transform: translateY(-6%); }   /* retreat start */
+  100% { transform: translateY(-120%); } /* off-screen */
+}
+
+/* BOTTOM wrapper slides up symmetrically */
+@keyframes bottom-wave-inout {
+  0%   { transform: translateY(120%); }
+  30%  { transform: translateY(18%); }
+  45%  { transform: translateY(6%); }
+  50%  { transform: translateY(2.5%); }
+  65%  { transform: translateY(6%); }
+  100% { transform: translateY(120%); }
+}
+
+/* assign animations to wrapper elements (not the svg) */
+.wave-top-wrap {
+  animation: top-wave-inout 3.2s ease-in-out infinite;
+  z-index: 40;
+  will-change: transform;
+}
+.wave-bottom-wrap {
+  animation: bottom-wave-inout 3.2s ease-in-out infinite;
+  z-index: 40;
+  will-change: transform;
+}
+
+/* Optional micro-phase offset for a subtle feel (uncomment to enable) */
+/* .wave-bottom-wrap { animation-delay: 0.05s; } */
+
+/* center text appears only while waves pause together */
+@keyframes shutter-text-appear {
+  0% { opacity: 0; transform: translateY(-6px) scale(.98); }
+  30% { opacity: 0; transform: translateY(-6px) scale(.98); }
+  45% { opacity: 0.08; transform: translateY(-2px) scale(.995); }
+  50% { opacity: 1; transform: translateY(0) scale(1); }    /* visible */
+  65% { opacity: 0.08; transform: translateY(2px) scale(.995); }
+  100% { opacity: 0; transform: translateY(6px) scale(.98); }
+}
+.shutter-text {
+  animation: shutter-text-appear 3.2s ease-in-out infinite;
+  color: rgba(255,255,255,0.94);
+  text-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  z-index: 30;
+  pointer-events: none;
+}
+
+/* responsiveness tweak */
+@media (max-width: 640px) {
+  .wave-top-wrap, .wave-bottom-wrap { animation-duration: 3.6s; }
+  /* optionally increase translate amounts on smaller screens */
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .wave-top-wrap,
+  .wave-bottom-wrap,
+  .shutter-text {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
