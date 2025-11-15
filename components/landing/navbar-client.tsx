@@ -20,10 +20,10 @@ const NavbarClient: React.FC<NavbarProps> = ({ user }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks: NavLink[] = [
-    { label: "Features", href: "#features" },
+    { label: "Features", href: "features" },
     { label: "Pricing", href: "pricing" },
-    { label: "About", href: "#about" },
-    { label: "Blog", href: "#blog" },
+    { label: "About", href: "about" },
+    { label: "Docs", href: "#docs" },
   ];
 
   const toggleMobileMenu = () => {

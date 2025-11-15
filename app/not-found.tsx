@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function NotFound() {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#0b0b0f] flex items-center justify-center text-white">
@@ -43,13 +45,13 @@ export default function NotFound() {
         </p>
 
         {/* CTA */}
-        <a
+        <Link
           href="/"
           className="inline-block mt-4 px-8 py-3 text-sm md:text-base font-medium rounded-full
                      bg-white/10 backdrop-blur-md border border-white/20 notfound-cta"
         >
           Return to Home
-        </a>
+        </Link>
       </div>
     </div>
   );

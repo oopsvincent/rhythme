@@ -1,7 +1,7 @@
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
-import Navbar from "./navbar";
-import RhythmeLanding from "./landing-page";
+import Navbar from "./landing/navbar";
+import RhythmeLanding from "./landing/landing-page";
 
 /**
  * Server Component wrapper that fetches user data and renders both

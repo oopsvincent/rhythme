@@ -24,7 +24,7 @@ import {
   Calendar,
   BarChart3
 } from "lucide-react";
-import FeaturesSectionLanding from "./features-section";
+import FeaturesSection from "./features";
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -184,7 +184,7 @@ const RhythmeLanding: React.FC<RhythmeLandingProps> = ({ user }) => {
       </section>
 
       {/* Features Section */}
-      <FeaturesSectionLanding />
+      <FeaturesSection />
 
       {/* Stats Section */}
       {/* <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 relative z-10">

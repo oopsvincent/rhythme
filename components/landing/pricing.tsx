@@ -97,7 +97,7 @@ export default function PricingComponent() {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
       
-      <div className="max-w-7xl mx-auto text-center relative z-10">
+      <div className="max-w-7xl mx-auto text-center relative z-10 font-marketing">
         <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]">
           Choose Your Rhythm
         </h2>
@@ -271,7 +271,7 @@ export default function PricingComponent() {
         {/* Bottom Message */}
         <div className="mt-16 space-y-2">
           <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]">
-            Free to begin, limitless when you're ready
+            Free to begin, limitless when you&lsquo;re ready
           </p>
           <p className="text-muted-foreground text-lg">
             No credit card required • Cancel anytime • 30-day money-back guarantee
