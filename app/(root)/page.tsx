@@ -1,7 +1,7 @@
-import Footer from "@/components/footer";
-import RhythmeLanding from "@/components/landing-page";
+import Footer from "@/components/landing/footer";
+import RhythmeLanding from "@/components/landing/landing-page";
 import LandingPageWrapper from "@/components/landing-provider";
-import PricingComponent from "@/components/pricing";
+import PricingComponent from "@/components/landing/pricing";
 
 export default function Home() {
   return (
