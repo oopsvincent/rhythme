@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useState } from "react";
 
 /**
@@ -88,19 +89,19 @@ export default function GlobalError({
             Reload page
           </button>
 
-          <a
+          <Link
             href="/"
             className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-white/6 border border-white/10 text-sm hover:bg-white/8 transition"
           >
             Go home
-          </a>
+          </Link>
 
-          <a
+          <Link
             href={mailToHref}
             className="ml-auto inline-flex items-center justify-center px-4 py-2 rounded-full bg-transparent border border-accent text-accent text-sm hover:bg-accent/10 transition"
           >
             Report issue
-          </a>
+          </Link>
         </div>
 
         {/* Details toggle / developer info */}

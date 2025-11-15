@@ -271,7 +271,7 @@ export default function PricingComponent() {
         {/* Bottom Message */}
         <div className="mt-16 space-y-2">
           <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]">
-            Free to begin, limitless when you're ready
+            Free to begin, limitless when you&lsquo;re ready
           </p>
           <p className="text-muted-foreground text-lg">
             No credit card required • Cancel anytime • 30-day money-back guarantee

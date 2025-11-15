@@ -54,7 +54,7 @@ const AboutPage: React.FC = () => {
     {
       icon: <Lightbulb className="w-6 h-6" />,
       title: "Continuous Innovation",
-      description: "We're constantly learning, iterating, and improving based on your feedback and needs.",
+      description: "We&rsquo;re constantly learning, iterating, and improving based on your feedback and needs.",
     },
     {
       icon: <Users className="w-6 h-6" />,
@@ -90,7 +90,7 @@ const AboutPage: React.FC = () => {
     {
       year: "2024",
       title: "The Beginning",
-      description: "Rhythmé was born from a simple idea: productivity tools shouldn't be complicated. Started as a side project by developers frustrated with existing solutions.",
+      description: "Rhythmé was born from a simple idea: productivity tools shouldn&rsquo;t be complicated. Started as a side project by developers frustrated with existing solutions.",
     },
     {
       year: "Q2 2024",
@@ -144,7 +144,7 @@ const AboutPage: React.FC = () => {
               Building the Future of Productivity
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              We believe that building better habits and achieving goals shouldn't require juggling multiple apps or complicated systems. Rhythmé is our answer to that challenge.
+              We believe that building better habits and achieving goals shouldn&rsquo;t require juggling multiple apps or complicated systems. Rhythmé is our answer to that challenge.
             </p>
 
             {/* Quick Action Buttons */}
@@ -203,10 +203,10 @@ const AboutPage: React.FC = () => {
 
               <div className="space-y-6 text-muted-foreground">
                 <p className="text-base sm:text-lg leading-relaxed">
-                  We started Rhythmé because we were tired of productivity apps that promised everything but delivered complexity. We tried them all—habit trackers that forgot about journaling, task managers that ignored focus time, analytics tools that overwhelmed rather than inspired.
+                  We started Rhythmé because we were tired of productivity apps that promised everything but delivered complexity. We tried them all&mdash;habit trackers that forgot about journaling, task managers that ignored focus time, analytics tools that overwhelmed rather than inspired.
                 </p>
                 <p className="text-base sm:text-lg leading-relaxed">
-                  The truth is, building better habits and achieving your goals shouldn't require a PhD in productivity systems. It should feel natural, even enjoyable. That's why we created Rhythmé—a single, beautifully designed space where habits, tasks, focus, and reflection come together seamlessly.
+                  The truth is, building better habits and achieving your goals shouldn&rsquo;t require a PhD in productivity systems. It should feel natural, even enjoyable. That&rsquo;s why we created Rhythmé&mdash;a single, beautifully designed space where habits, tasks, focus, and reflection come together seamlessly.
                 </p>
                 <p className="text-base sm:text-lg leading-relaxed">
                   Our mission is simple: <strong className="text-foreground">empower everyone to build the life they want, one small habit at a time.</strong> We believe that with the right tools and support, anyone can transform their daily routine and achieve extraordinary things.
@@ -259,7 +259,7 @@ const AboutPage: React.FC = () => {
                 Our Journey
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground">
-                From idea to impact—here's how we got here
+                From idea to impact&mdash;here&rsquo;s how we got here
               </p>
             </div>
 
@@ -310,7 +310,7 @@ const AboutPage: React.FC = () => {
                 Built by Makers, For Makers
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                We're a small, passionate team dedicated to helping you achieve your goals
+                We&rsquo;re a small, passionate team dedicated to helping you achieve your goals
               </p>
             </div>
 
@@ -325,9 +325,9 @@ const AboutPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex-1 text-center md:text-left">
-                  <h3 className="text-2xl font-bold mb-4">We're Growing!</h3>
+                  <h3 className="text-2xl font-bold mb-4">We&rsquo;re Growing!</h3>
                   <p className="text-muted-foreground mb-6 leading-relaxed">
-                    Rhythmé started as a side project and has grown into a product used by thousands. We're bootstrapped, indie, and focused on building something that genuinely helps people. If you're passionate about productivity and want to join us on this journey, we'd love to hear from you.
+                    Rhythmé started as a side project and has grown into a product used by thousands. We&rsquo;re bootstrapped, indie, and focused on building something that genuinely helps people. If you&rsquo;re passionate about productivity and want to join us on this journey, we&rsquo;d love to hear from you.
                   </p>
                   <Link href="/careers">
                     <button className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg font-semibold hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 group">
@@ -354,7 +354,7 @@ const AboutPage: React.FC = () => {
                   Join Us on This Journey
                 </h2>
                 <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Be part of a community that's building better habits and achieving extraordinary things, one day at a time.
+                  Be part of a community that&rsquo;s building better habits and achieving extraordinary things, one day at a time.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link href="/signup/intro">
