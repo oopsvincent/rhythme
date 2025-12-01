@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function NotFound() {
@@ -20,7 +21,7 @@ export default function NotFound() {
         {/* Logo + Compass block */}
         <div className="relative mx-auto mb-8 w-40 h-40 flex items-center justify-center">
           {/* Logo (from public/rhythme.svg) */}
-          <img
+          <Image
             src="/rhythme.svg"
             alt="Rhythmé"
             className="notfound-logo w-20 h-20 md:w-24 md:h-24"

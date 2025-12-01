@@ -61,7 +61,7 @@ export function SignupForm({
             Check your email
           </CardTitle>
           <CardDescription className="text-base">
-            We've sent a confirmation link to <strong>{email}</strong>
+            We&apos;ve sent a confirmation link to <strong>{email}</strong>
           </CardDescription>
         </CardHeader>
 
@@ -71,12 +71,12 @@ export function SignupForm({
             <AlertDescription className="space-y-2">
               <p>1. Check your inbox for a confirmation email</p>
               <p>2. Click the confirmation link in the email</p>
-              <p>3. You'll be redirected to complete your profile</p>
+              <p>3. You&apos;ll be redirected to complete your profile</p>
             </AlertDescription>
           </Alert>
 
           <div className="text-center text-sm text-muted-foreground space-y-2">
-            <p>Didn't receive the email? Check your spam folder.</p>
+            <p>Didn&apos;t receive the email? Check your spam folder.</p>
             <Button
               variant="link"
               onClick={() => setStatus("idle")}

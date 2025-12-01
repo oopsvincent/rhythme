@@ -10,13 +10,15 @@ interface TaskPageProps {
         slug: string
     }>
 }
+type TaskID = string | undefined
 
 export default async function TaskSlugPage({ params }: TaskPageProps) {
     // Await params in Next.js 15+
     const { slug } = await params;
+    const taskID: TaskID = slug.split("-").pop();
     
     // Fetch data directly in Server Component
-    const result = await getTaskById(slug);
+    const result = await getTaskById(taskID as TaskID);
 
     // Handle errors
     if (result.error) {

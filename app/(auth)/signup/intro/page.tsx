@@ -9,9 +9,7 @@ import {
   Trophy,
   Sparkles,
   ArrowRight,
-  Zap,
 } from "lucide-react";
-import { DragSlider } from "@/components/drag-slider";
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 
