@@ -1,18 +1,42 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+// app/auth/callback/route.ts
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
+import { createClient } from '@/utils/supabase/server'
+import { NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
+
+export async function GET(request: NextRequest) {
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
+  const origin = requestUrl.origin
 
   if (code) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
+    const supabase = await createClient()
+    
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
     if (!error) {
-      return NextResponse.redirect(new URL("/dashboard", process.env.NEXT_PUBLIC_SITE_URL));
+      // Get the user
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Check if user has completed onboarding
+        const { data: preferences } = await supabase
+          .from('user_preferences')
+          .select('user_preferences_id')
+          .eq('user_id', user.id)
+          .single()
+        
+        // If no preferences exist, this is a new OAuth user - redirect to onboarding
+        if (!preferences) {
+          return NextResponse.redirect(`${origin}/onboarding`)
+        }
+        
+        // Existing user - redirect to dashboard
+        return NextResponse.redirect(`${origin}/dashboard`)
+      }
     }
   }
 
-  return NextResponse.redirect(new URL("/dashboard", process.env.NEXT_PUBLIC_SITE_URL));
+  // If something went wrong, redirect to login with error
+  return NextResponse.redirect(`${origin}/login?error=oauth_callback_failed`)
 }
