@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/context-menu";
 import CalendarDrawer from "@/components/calender-drawer";
 import { SettingsProvider } from "@/components/providers/settings";
+import OnboardingCheck from "@/components/OnboardingCheck";
 
 export default async function DashboardLayout({
   children,
@@ -69,7 +70,8 @@ export default async function DashboardLayout({
           </div>
           <ContextMenu>
             <ContextMenuTrigger asChild>
-              <main className="flex flex-1 flex-col">{children}</main>
+              
+              <OnboardingCheck><main className="flex flex-1 flex-col">{children}</main></OnboardingCheck>
             </ContextMenuTrigger>
             <ContextMenuContent>
               <ContextMenuItem>Copy</ContextMenuItem>
