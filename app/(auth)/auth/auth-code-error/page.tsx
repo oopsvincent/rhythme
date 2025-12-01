@@ -17,7 +17,7 @@ export default function AuthCodeErrorPage() {
             Verification Failed
           </CardTitle>
           <CardDescription>
-            We couldn't verify your email address
+            We couldn&apos;t verify your email address
           </CardDescription>
         </CardHeader>
 

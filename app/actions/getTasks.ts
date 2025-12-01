@@ -4,7 +4,6 @@
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
 import type { Task, CreateTaskInput, UpdateTaskInput, ActionResponse, Status, Priority } from "@/types/database"
-import { UUID } from "crypto"
 
 // Helper function to get authenticated user
 async function getAuthenticatedUser() {
@@ -79,7 +78,7 @@ export async function getTasksByStatus(status: Status): Promise<ActionResponse<T
 }
 
 // GET single task by ID 
-export async function getTaskById(id: string): Promise<ActionResponse<Task>> {
+export async function getTaskById(id: string | undefined): Promise<ActionResponse<Task>> {
   try {
     const { user, supabase } = await getAuthenticatedUser()
 

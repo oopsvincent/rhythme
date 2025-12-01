@@ -52,16 +52,17 @@ function generateBreadcrumbs(pathname: string) {
 
 // Format path segments that aren't in the mapping (like slugs or IDs)
 function formatPathSegment(segment: string): string {
-  // If it's a UUID or ID-like string, truncate it
-  if (segment.match(/^[a-f0-9-]{20,}$/i)) {
-    return segment.substring(0, 8) + '...'
+  const parts = segment.split("-");
+
+  // Remove trailing numeric ID (BIGSERIAL)
+  const last = parts[parts.length - 1];
+  if (/^\d+$/.test(last)) {
+    parts.pop();
   }
-  
-  // Otherwise, capitalize and replace hyphens with spaces
-  return segment
-    .split('-')
+
+  return parts
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+    .join(" ");
 }
 
 export function SiteHeader() {
