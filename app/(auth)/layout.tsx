@@ -1,7 +1,7 @@
 // app/(auth)/layout.tsx  (SERVER COMPONENT)
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function AuthLayout({
   children,

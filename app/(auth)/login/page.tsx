@@ -1,31 +1,10 @@
-// login/page.tsx
 "use client";
-
 import { GalleryVerticalEnd } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
-import { Suspense, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { Suspense } from "react";
 import { motion } from "framer-motion";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const supabase = createClient();
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        router.replace("/dashboard");
-      }
-    };
-
-    checkSession();
-  }, [supabase, router]);
-
   return (
     <div className="grid min-h-svh lg:grid-cols-2 bg-background">
       {/* Left side - Hero section */}

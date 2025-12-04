@@ -1,11 +1,11 @@
 "use client";
-
-import * as React from "react";
-
-import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
+import Link from "next/link";
+import Image from "next/image";
+import { Separator } from "./ui/separator";
+
 import {
   Sidebar,
   SidebarContent,
@@ -15,8 +15,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { createClient } from "@/utils/supabase/client";
-import Link from "next/link";
 import {
     Aperture,
     CalendarSync,
@@ -34,8 +32,6 @@ import {
   Settings,
   Sparkles,
 } from "lucide-react";
-import { Separator } from "./ui/separator";
-import Image from "next/image";
 
 const data = {
   user: {
@@ -178,67 +174,25 @@ const data = {
 //   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const supabase = createClient();
-  const [user, setUser] = React.useState<{
+export function AppSidebarClient({
+  user,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  user?: {
     name: string;
     email: string;
     avatar: string;
-  } | null>(null);
-
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error("Error fetching user:", error);
-        return;
-      }
-
-      const currentUser = data?.user;
-      if (currentUser) {
-        setUser({
-          name:
-            currentUser.user_metadata?.name ||
-            currentUser.email?.split("@")[0] ||
-            "Anonymous",
-          email: currentUser.email || "No email",
-          avatar:
-            currentUser.user_metadata?.avatar_url ||
-            "/avatars/default-user.png",
-        });
-      }
-    };
-
-    fetchUser();
-  }, [supabase]);
+  } | null;
+}) {
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <Link href="/">
-                {/* <Aperture className="!size-5" /> */}
-                <Image src={"/Rhythme.svg"} width={25} height={25} alt="logo" />
-                <span className="text-base font-semibold">Rhythmé Inc.</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        {/* <NavMain items={data.navMain} /> */}
-      </SidebarHeader>
-
+      <SidebarHeader className="font-black font-primary tracking-wide text-xl flex flex-row justify-start items-center ml-2 select-none"><Image alt="R" src={"/rhythme.svg"} width={25} height={25}/><span>Rhythmé</span></SidebarHeader>
       <Separator />
       <SidebarContent className="py-3">
         <NavMain items={data.navMain} />
-        {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
-
       <SidebarFooter>
         {user ? (
           <NavUser user={user} />

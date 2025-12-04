@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useOAuthError } from "@/hooks/useOAuthError";
 import { OctagonAlert } from "lucide-react";
 import OAuthButtons from "./OAuth-buttons";
@@ -21,19 +21,16 @@ export function LoginForm({
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const router = useRouter();
   const supabase = createClient();
 
   const errorData = useOAuthError();
-  console.log(errorData);
-
-  const router = useRouter();
+  const oauthErrorMsg = errorData?.errorDescription ?? null;
 
   async function signInWithEmail(e: React.FormEvent) {
-    e.preventDefault(); // ⛔ stop page refresh
+    e.preventDefault();
     setStatus("loading");
     setErrorMsg(null);
-
-    const supabase = createClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -48,7 +45,6 @@ export function LoginForm({
       return;
     }
 
-    // login success: redirect to dashboard
     router.push("/dashboard");
   }
 
@@ -66,40 +62,36 @@ export function LoginForm({
           Login with your Rhythmé ID
         </p>
       </div>
+
       <div className="grid gap-6">
         <div className="flex justify-center items-center gap-5">
           <OAuthButtons />
         </div>
-        <div
-          className={`${
-            errorData.error !== null || errorData.errorDescription !== null
-              ? "flex"
-              : "hidden"
-          }`}
-        >
-          {errorData && (
-            <Alert variant="destructive">
-              <OctagonAlert />
-              <AlertTitle>Access Denied</AlertTitle>
-              <AlertDescription>{errorData.error}</AlertDescription>
-              <AlertDescription>{errorData.errorDescription}</AlertDescription>
-            </Alert>
-          )}
-        </div>
-        {status === "error" && errorMsg && (
-          <div className="text-sm text-red-500">
-            <Alert variant="destructive">
-              <OctagonAlert />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
-          </div>
+
+        {/* OAuth error */}
+        {oauthErrorMsg && (
+          <Alert variant="destructive">
+            <OctagonAlert />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{oauthErrorMsg}</AlertDescription>
+          </Alert>
         )}
+
+        {/* Email/password error */}
+        {status === "error" && errorMsg && (
+          <Alert variant="destructive">
+            <OctagonAlert />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{errorMsg}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
           <span className="bg-background text-muted-foreground relative z-10 px-2">
             Or continue with
           </span>
         </div>
+
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -110,6 +102,7 @@ export function LoginForm({
             required
           />
         </div>
+
         <div className="grid gap-3">
           <div className="flex items-center">
             <Label htmlFor="password">Password</Label>
@@ -127,6 +120,7 @@ export function LoginForm({
             required
           />
         </div>
+
         <Button
           type="submit"
           className="w-full"
@@ -135,6 +129,7 @@ export function LoginForm({
           {status === "loading" ? "Logging in..." : "Login"}
         </Button>
       </div>
+
       <div className="text-center text-sm">
         Don&apos;t have an account?{" "}
         <Link href={"/signup/intro"} className="underline underline-offset-4">

@@ -1,7 +1,7 @@
 // app/actions/tasks.ts
 'use server'
 
-import { createClient } from "@/utils/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import type { Task, CreateTaskInput, UpdateTaskInput, ActionResponse, Status, Priority } from "@/types/database"
 
