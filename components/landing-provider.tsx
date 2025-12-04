@@ -1,5 +1,5 @@
 import React from "react";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import Navbar from "./landing/navbar";
 import RhythmeLanding from "./landing/landing-page";
 

@@ -1,6 +1,6 @@
 // app/tasks/page.tsx
 import { getTasks, getTaskStats } from "@/app/actions/getTasks";
-import TaskList from "@/components/task-list";
+// import TaskList from "@/components/task-list";
 import TaskForm from "@/components/task-form";
 import { SiteHeader } from "@/components/site-header";
 
@@ -73,7 +73,7 @@ export default async function TasksPage() {
         </div>
 
         {/* Task List */}
-        <TaskList initialTasks={tasksResult?.data ?? []} />
+        {/* <TaskList initialTasks={tasksResult?.data ?? []} /> */}
       </div>
     </div>
   );

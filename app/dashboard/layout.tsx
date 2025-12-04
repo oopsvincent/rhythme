@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@/app/actions/auth";
-import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Metadata } from "next";
 import { SidebarRight } from "@/components/sidebar-right";
@@ -13,6 +12,8 @@ import {
 import CalendarDrawer from "@/components/calender-drawer";
 import { SettingsProvider } from "@/components/providers/settings";
 import OnboardingCheck from "@/components/OnboardingCheck";
+import AppSidebarWrapper from "@/components/providers/appSidebarWrapper";
+import { AppSidebarClient } from "@/components/app-sidebar";
 
 export default async function DashboardLayout({
   children,
@@ -63,7 +64,7 @@ export default async function DashboardLayout({
           } as React.CSSProperties
         }
       >
-        <AppSidebar variant="inset" />
+        <AppSidebarWrapper variant="inset" />
         <SidebarInset>
           <div className="fixed bottom-3 right-3 lg:hidden z-50">
             <CalendarDrawer />

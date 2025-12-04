@@ -59,7 +59,7 @@ export default function GlobalError({
 
         {/* Top row: logo + title */}
         <div className="flex items-center gap-4 mb-6">
-          <Image src="/rhythme.svg" alt="Rhythmé" className="w-12 h-12 md:w-14 md:h-14" />
+          <Image src="/Rhythme.svg" alt="Rhythmé" width={12} height={12} className="w-12 h-12 md:w-14 md:h-14" />
           <div>
             <h2 className="text-xl md:text-2xl font-semibold">Something went off beat</h2>
             <p className="text-sm text-white/70">We hit an unexpected error. Let’s try to get you back to rhythm.</p>

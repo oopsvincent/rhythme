@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import OAuthButtons from "./OAuth-buttons";
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 import { Mail, Loader2 } from "lucide-react";
 
