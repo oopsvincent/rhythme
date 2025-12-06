@@ -133,6 +133,130 @@
 
 ---
 
+## [0.22.0] - 2025-12-04
+### Highlights
+- Supabase integration has been fully reorganized with a proper server/client split, reducing confusion and preventing inconsistent runtime behavior.
+- RSC and SSR are now applied across most of the auth route group, improving performance and reducing unnecessary client-side work.
+- Sidebar logic is now cleaner and more maintainable with a server-side wrapper and a dedicated client component.
+
+### Added
+- Server and client variants of the Supabase client.
+- Server-side `AppSidebarWrapper` for providing user context to the sidebar.
+- Server action–based OAuth button workflow.
+- Widespread adoption of React Server Components and SSR in the auth routes.
+
+### Changed
+- Moved Supabase utilities from `utils/supabase` → `lib/supabase` and updated all imports.
+- Refactored the sidebar to run as a client component wrapped in a server layer.
+- Removed the client-side `TaskList` and disabled its usage in the dashboard.
+- Updated to Next.js **16.0.7**.
+- Cleaned up unused imports, components, and legacy code.
+
+### Fixed
+- No direct bug fixes, but the refactor resolves several structural issues linked to mixed client/server usage.
+
+### Deprecated
+- None.
+
+### Security
+- No security-specific changes.
+
+### Breaking Changes
+- Any code referencing the old `utils/supabase` path will break until updated.
+- Removal of the client-side `TaskList` may require updates to any dependent features.
+
+---
+
+## [0.21.0] - 2024-12-01
+
+### Highlights
+- Improved user experience with SEO-friendly task URLs and smarter authentication flow.
+- Performance optimizations with Next.js Image components and code cleanup.
+
+### Added
+- Server component layout for auth pages with automatic redirect for logged-in users.
+- Slug-based URL format for task details (includes task title and ID for better SEO).
+
+### Changed
+- Replaced `<img>` tags with Next.js `<Image>` components in error and not-found pages for optimized image loading.
+- Updated task detail URL structure to include human-readable slugs alongside task IDs.
+- Refactored task fetching logic to handle new slug-based URL format.
+- Improved auth flow to automatically redirect authenticated users away from auth pages to dashboard.
+
+### Fixed
+- Corrected apostrophe escaping in user-facing messages for proper text rendering.
+- Removed unused imports and components for cleaner, more maintainable codebase.
+- Enhanced code organization by eliminating dead code.
+
+---
+
+## [0.20.0] - 2025-12-01
+
+### Highlights
+- New user onboarding flow ensures seamless first-time user experience and proper account setup.
+- Enhanced authentication system with improved error handling and additional password management features.
+- Better user journey control with automatic onboarding status checks after login and email confirmation.
+
+### Added
+- New onboarding page for first-time user setup and configuration.
+- `OnboardingCheck` component to verify onboarding completion before dashboard access.
+- Password reset page for secure password recovery.
+- Password update page for changing existing passwords.
+- Auth code error page for better error communication during authentication flows.
+- Onboarding status verification in Supabase authentication logic.
+
+### Changed
+- Refactored authentication routes for improved organization and clarity.
+- Enhanced authentication forms with better error handling and user feedback.
+- Updated Supabase logic to automatically check onboarding status after login.
+- Improved email confirmation flow to include onboarding status validation.
+- Updated package.json dependencies to latest versions.
+
+### Fixed
+- Enhanced error handling across authentication flows for better user experience.
+- Improved authentication state management and route protection.
+
+### Deprecated
+- Removed legacy confirm route in favor of new authentication flow structure.
+
+### Breaking Changes
+- Users will be required to complete onboarding flow before accessing dashboard.
+- Legacy confirm route has been removed; existing deep links may need updating.
+
+---
+
+## [0.19.0] - 2025-12-15
+
+### Highlights
+- Complete landing page overhaul with new feature cards, testimonials, and enhanced hero section for better user engagement.
+- New About and Features pages added to provide comprehensive product information.
+- Improved code organization with dedicated landing components directory for better maintainability.
+
+### Added
+- New About page with detailed company/product information.
+- New Features page showcasing product capabilities.
+- Feature cards component for highlighting key functionalities.
+- Testimonial cards component for social proof.
+- Dedicated `components/landing` directory for landing-related components.
+- Enhanced hero section with improved design and call-to-action elements.
+
+### Changed
+- Replaced `<a>` tags with Next.js `<Link>` components in error and not-found pages for optimized client-side navigation.
+- Refactored landing page layout with improved visual hierarchy and design.
+- Updated typography to use proper HTML entities for apostrophes and dashes across about and pricing components.
+- Reorganized component imports to reflect new directory structure.
+- Enhanced CTA (Call-to-Action) sections throughout landing pages.
+- Updated navigation links to include new About and Features pages.
+
+### Fixed
+- Improved typographic rendering with proper HTML entities replacing straight quotes.
+- Enhanced routing performance by using Next.js Link components instead of anchor tags.
+
+### Deprecated
+- Removed old landing-page component in favor of modularized landing components.
+
+---
+
 ```markdown
 ## [0.18.0] - 2025-12-14
 
