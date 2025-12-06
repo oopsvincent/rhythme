@@ -2,6 +2,41 @@
 
 ---
 
+## [0.20.0] - 2025-12-01
+
+### Highlights
+- New user onboarding flow ensures seamless first-time user experience and proper account setup.
+- Enhanced authentication system with improved error handling and additional password management features.
+- Better user journey control with automatic onboarding status checks after login and email confirmation.
+
+### Added
+- New onboarding page for first-time user setup and configuration.
+- `OnboardingCheck` component to verify onboarding completion before dashboard access.
+- Password reset page for secure password recovery.
+- Password update page for changing existing passwords.
+- Auth code error page for better error communication during authentication flows.
+- Onboarding status verification in Supabase authentication logic.
+
+### Changed
+- Refactored authentication routes for improved organization and clarity.
+- Enhanced authentication forms with better error handling and user feedback.
+- Updated Supabase logic to automatically check onboarding status after login.
+- Improved email confirmation flow to include onboarding status validation.
+- Updated package.json dependencies to latest versions.
+
+### Fixed
+- Enhanced error handling across authentication flows for better user experience.
+- Improved authentication state management and route protection.
+
+### Deprecated
+- Removed legacy confirm route in favor of new authentication flow structure.
+
+### Breaking Changes
+- Users will be required to complete onboarding flow before accessing dashboard.
+- Legacy confirm route has been removed; existing deep links may need updating.
+
+---
+
 ## [0.19.0] - 2025-12-15
 
 ### Highlights
