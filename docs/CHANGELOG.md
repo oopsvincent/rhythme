@@ -2,6 +2,40 @@
 
 ---
 
+## [0.22.0] - 2025-12-04
+### Highlights
+- Supabase integration has been fully reorganized with a proper server/client split, reducing confusion and preventing inconsistent runtime behavior.
+- RSC and SSR are now applied across most of the auth route group, improving performance and reducing unnecessary client-side work.
+- Sidebar logic is now cleaner and more maintainable with a server-side wrapper and a dedicated client component.
+
+### Added
+- Server and client variants of the Supabase client.
+- Server-side `AppSidebarWrapper` for providing user context to the sidebar.
+- Server action–based OAuth button workflow.
+- Widespread adoption of React Server Components and SSR in the auth routes.
+
+### Changed
+- Moved Supabase utilities from `utils/supabase` → `lib/supabase` and updated all imports.
+- Refactored the sidebar to run as a client component wrapped in a server layer.
+- Removed the client-side `TaskList` and disabled its usage in the dashboard.
+- Updated to Next.js **16.0.7**.
+- Cleaned up unused imports, components, and legacy code.
+
+### Fixed
+- No direct bug fixes, but the refactor resolves several structural issues linked to mixed client/server usage.
+
+### Deprecated
+- None.
+
+### Security
+- No security-specific changes.
+
+### Breaking Changes
+- Any code referencing the old `utils/supabase` path will break until updated.
+- Removal of the client-side `TaskList` may require updates to any dependent features.
+
+---
+
 ## [0.21.0] - 2024-12-01
 
 ### Highlights
