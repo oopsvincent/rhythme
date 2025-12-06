@@ -2,6 +2,29 @@
 
 ---
 
+## [0.21.0] - 2024-12-01
+
+### Highlights
+- Improved user experience with SEO-friendly task URLs and smarter authentication flow.
+- Performance optimizations with Next.js Image components and code cleanup.
+
+### Added
+- Server component layout for auth pages with automatic redirect for logged-in users.
+- Slug-based URL format for task details (includes task title and ID for better SEO).
+
+### Changed
+- Replaced `<img>` tags with Next.js `<Image>` components in error and not-found pages for optimized image loading.
+- Updated task detail URL structure to include human-readable slugs alongside task IDs.
+- Refactored task fetching logic to handle new slug-based URL format.
+- Improved auth flow to automatically redirect authenticated users away from auth pages to dashboard.
+
+### Fixed
+- Corrected apostrophe escaping in user-facing messages for proper text rendering.
+- Removed unused imports and components for cleaner, more maintainable codebase.
+- Enhanced code organization by eliminating dead code.
+
+---
+
 ## [0.20.0] - 2025-12-01
 
 ### Highlights
