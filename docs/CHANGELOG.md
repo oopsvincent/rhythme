@@ -2,6 +2,38 @@
 
 ---
 
+## [0.19.0] - 2025-12-15
+
+### Highlights
+- Complete landing page overhaul with new feature cards, testimonials, and enhanced hero section for better user engagement.
+- New About and Features pages added to provide comprehensive product information.
+- Improved code organization with dedicated landing components directory for better maintainability.
+
+### Added
+- New About page with detailed company/product information.
+- New Features page showcasing product capabilities.
+- Feature cards component for highlighting key functionalities.
+- Testimonial cards component for social proof.
+- Dedicated `components/landing` directory for landing-related components.
+- Enhanced hero section with improved design and call-to-action elements.
+
+### Changed
+- Replaced `<a>` tags with Next.js `<Link>` components in error and not-found pages for optimized client-side navigation.
+- Refactored landing page layout with improved visual hierarchy and design.
+- Updated typography to use proper HTML entities for apostrophes and dashes across about and pricing components.
+- Reorganized component imports to reflect new directory structure.
+- Enhanced CTA (Call-to-Action) sections throughout landing pages.
+- Updated navigation links to include new About and Features pages.
+
+### Fixed
+- Improved typographic rendering with proper HTML entities replacing straight quotes.
+- Enhanced routing performance by using Next.js Link components instead of anchor tags.
+
+### Deprecated
+- Removed old landing-page component in favor of modularized landing components.
+
+---
+
 ```markdown
 ## [0.18.0] - 2025-12-14
 
