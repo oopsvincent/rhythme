@@ -3,6 +3,8 @@ import { getTasks, getTaskStats } from "@/app/actions/getTasks";
 // import TaskList from "@/components/task-list";
 import TaskForm from "@/components/task-form";
 import { SiteHeader } from "@/components/site-header";
+import TaskList from "@/components/task-list";
+import { TaskStatsGrid } from "@/components/task-stats";
 
 export default async function TasksPage() {
   // Fetch data directly in Server Component
@@ -47,33 +49,11 @@ export default async function TasksPage() {
         {/* Form to create new task */}
         <TaskForm />
         {/* Stats Section */}
-        <div className="flex justify-center flex-wrap gap-4 mb-8 mt-5 [&>*]:w-[40%] lg:[&>*]:w-[23%]">
-          <div className="bg-primary p-4 rounded-lg shadow">
-            <p className="">Total</p>
-            <p className="text-2xl font-bold">{statsResult.data?.total ?? 0}</p>
-          </div>
-          <div className="bg-blue-50 p-4 rounded-lg shadow">
-            <p className="text-gray-600">To Do</p>
-            <p className="text-2xl font-bold text-blue-600">
-              {statsResult.data?.todo ?? 0}
-            </p>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg shadow">
-            <p className="text-gray-600">In Progress</p>
-            <p className="text-2xl font-bold text-yellow-600">
-              {statsResult.data?.in_progress ?? 0}
-            </p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg shadow">
-            <p className="text-gray-600">Completed</p>
-            <p className="text-2xl font-bold text-green-600">
-              {statsResult.data?.completed ?? 0}
-            </p>
-          </div>
-        </div>
+        <TaskStatsGrid stats={statsResult.data ?? { total: 0, pending: 0, in_progress: 0, completed: 0 }} />
 
         {/* Task List */}
         {/* <TaskList initialTasks={tasksResult?.data ?? []} /> */}
+        <TaskList tasks={tasksResult.data} />
       </div>
     </div>
   );

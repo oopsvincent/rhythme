@@ -11,7 +11,6 @@ interface SettingsData {
   account: {
     name: string;
     email: string;
-    bio: string;
   };
   notifications: {
     email: boolean;

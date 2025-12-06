@@ -24,16 +24,15 @@ export default async function DashboardLayout({
 
   if (!user) {
     // Redirect to login with the return URL
-    redirect("/login?redirect=/dashboard")
+    redirect("/login?redirect=/dashboard");
   }
 
   // Fetch user settings from your database
   // This runs on the server, so you can make direct DB queries
   const initialData = {
     account: {
-      name: user.name || "",
-      email: user.email || "",
-      bio: "",
+      name: user.name || "John Doe",
+      email: user.email || "johndoe@gmail.com",
     },
     notifications: {
       email: true,
