@@ -2,6 +2,35 @@
 
 ---
 
+```markdown
+## [0.19.0] - 2024-12-06
+
+### Highlights
+- Major architectural refactor introducing new layout system for better code organization and scalability.
+- Comprehensive UI/UX improvements across the app with enhanced error handling, loading states, and user feedback.
+- New dedicated error and not-found pages with polished animations and modern design.
+
+### Added
+- New `(root)` and `(auth)` layout groups for improved app structure and routing organization.
+- Dedicated loading pages with creative SVG animations and CSS effects for better visual feedback.
+- Custom error pages with improved design and user-friendly messaging.
+- Enhanced 404 not-found page with modern styling and navigation options.
+- Global styles and not-found specific stylesheets for consistent theming.
+
+### Changed
+- Relocated pricing page to align with new directory structure.
+- Redesigned dashboard page with improved layout and user experience.
+- Refactored tasks page for better organization and performance.
+- Updated loading indicators across the app with more engaging visual effects.
+- Improved overall app navigation and routing architecture.
+
+### Fixed
+- Enhanced error boundary handling across different routes.
+- Improved consistency in loading states throughout the application.
+```
+
+---
+
 ## [0.17.0] - 2025-10-27
 
 ### Highlights
