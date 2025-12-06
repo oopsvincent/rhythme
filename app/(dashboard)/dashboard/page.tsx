@@ -8,7 +8,7 @@ import data from "./data.json"
 import { Goals } from "@/sections/Goals"
 import { Habits } from "@/sections/Habits"
 import { Tasks } from "@/sections/Tasks"
-import { getUser } from "../actions/auth"
+import { getUser } from "../../actions/auth"
 import { getGreeting } from "@/utils/getGreetings"
 import { Separator } from "@/components/ui/separator"
 

@@ -37,16 +37,40 @@ export async function updateSession(request: NextRequest) {
 
   const user = data?.claims
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+//   if (
+//     !user &&
+//     !request.nextUrl.pathname.startsWith('/login') &&
+//     !request.nextUrl.pathname.startsWith('/auth')
+//   ) {
+//     // no user, potentially respond by redirecting the user to the login page
+//     const url = request.nextUrl.clone()
+//     url.pathname = '/login'
+//     return NextResponse.redirect(url)
+//   }
+  // Protected routes that require authentication
+  const isProtectedRoute = 
+    request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/settings') ||
+    request.nextUrl.pathname.startsWith('/user')
+
+  // Public routes that logged-in users shouldn't access
+  const isAuthRoute = 
+    request.nextUrl.pathname === '/login' ||
+    request.nextUrl.pathname === '/signup'
+
+  // If user is not logged in and trying to access protected route
+  if (!user && isProtectedRoute) {
+    const redirectUrl = new URL('/login', request.url)
+    // Save the page they were trying to access
+    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+    return NextResponse.redirect(redirectUrl)
   }
+
+  // If user is logged in and trying to access auth pages, redirect to dashboard
+  if (user && isAuthRoute) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:

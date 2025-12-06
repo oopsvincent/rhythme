@@ -57,7 +57,6 @@ interface SettingsData {
   account: {
     name: string;
     email: string;
-    bio: string;
   };
   notifications: {
     email: boolean;
@@ -161,15 +160,6 @@ function AccountSection({ data, onChange }: AccountSectionProps) {
               type="email"
               value={data.email}
               onChange={(e) => onChange("email", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
-            <Input
-              id="bio"
-              placeholder="Tell us about yourself"
-              value={data.bio}
-              onChange={(e) => onChange("bio", e.target.value)}
             />
           </div>
         </div>
@@ -494,7 +484,6 @@ export function SettingsDialog({
     account: {
       name: initialData?.account?.name || "",
       email: initialData?.account?.email || "",
-      bio: initialData?.account?.bio || "",
     },
     notifications: {
       email: initialData?.notifications?.email ?? true,

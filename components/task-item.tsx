@@ -1,123 +1,163 @@
-// app/components/task-item.tsx
-'use client'
-
-import { useState, useTransition } from 'react'
-import { updateTaskStatus, deleteTask } from '@/app/actions/getTasks'
-import type { Task, Status } from '@/types/database'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+"use client"
+import { Status, Task, Priority } from '@/types/database';
+import { useRouter } from 'next/navigation';
+import { Checkbox } from './ui/checkbox';
+import { updateTaskStatus, deleteTask } from '@/app/actions/getTasks';
+import { useState, useTransition } from 'react';
+import { MoreHorizontal, Trash2, Pencil } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from './ui/button';
+import { generateSlug } from '@/lib/slug';
 
 interface TaskItemProps {
-  task: Task
+    task: Task;
 }
 
-export default function TaskItem({ task }: TaskItemProps) {
+const priorityColors: Record<Priority, string> = {
+    high: 'bg-red-500/90 text-white',
+    medium: 'bg-yellow-500/90 text-white',
+    low: 'bg-slate-500/80 text-white',
+};
+
+const TaskItem = ({ task }: TaskItemProps) => {
+    const { title, due_date, status, task_id, description, priority } = task;
     const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+    const [currentStatus, setCurrentStatus] = useState<Status>(status || 'pending');
+    const [isDeleting, setIsDeleting] = useState(false);
 
-  const [isPending, startTransition] = useTransition()
-  const [isExpanded, setIsExpanded] = useState(false)
+    const isCompleted = currentStatus === 'completed';
+    const priorityClass = priority ? priorityColors[priority] : priorityColors.medium;
 
-  const handleStatusChange = (newStatus: Status) => {
-    startTransition(async () => {
-      await updateTaskStatus(task.task_id, newStatus)
-    })
-  }
+    const handleStatusChange = (checked: boolean | 'indeterminate') => {
+        if (checked === 'indeterminate') return;
+        
+        const newStatus: Status = checked ? 'completed' : 'pending';
+        setCurrentStatus(newStatus);
+        
+        startTransition(async () => {
+            await updateTaskStatus(task_id, newStatus);
+        });
+    };
 
-  const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this task?')) {
-      startTransition(async () => {
-        await deleteTask(task.task_id)
-      })
+    const handleNavigate = () => {
+        const slug = generateSlug(title);
+        router.push(`/dashboard/tasks/${slug}-${task_id}`);
+    };
+
+    const handleDelete = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsDeleting(true);
+        await deleteTask(task_id);
+        router.refresh();
+    };
+
+    const formatDueDate = () => {
+        if (!due_date) return null;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dueDate = new Date(due_date);
+        dueDate.setHours(0, 0, 0, 0);
+        
+        const diffTime = dueDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            return { text: 'Overdue', className: 'text-red-400' };
+        } else if (diffDays === 0) {
+            return { text: 'Today', className: 'text-yellow-400' };
+        } else if (diffDays === 1) {
+            return { text: 'Tomorrow', className: 'text-blue-400' };
+        } else {
+            const formatted = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return { text: formatted, className: 'text-muted-foreground' };
+        }
+    };
+
+    const dueDateInfo = formatDueDate();
+
+    if (isDeleting) {
+        return (
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card/50 opacity-50">
+                <span className="text-sm text-muted-foreground">Deleting...</span>
+            </div>
+        );
     }
-  }
 
-  const priorityColors = {
-    low: 'bg-blue-100 text-blue-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    high: 'bg-red-100 text-red-800'
-  }
+    return (
+        <div 
+            className={`group flex items-center gap-3 p-3 sm:p-4 rounded-lg border border-border/40 bg-card hover:bg-accent/30 transition-all ${isCompleted ? 'opacity-60' : ''}`}
+        >
+            {/* Checkbox */}
+            <Checkbox 
+                checked={isCompleted}
+                onCheckedChange={handleStatusChange}
+                disabled={isPending}
+                className="w-5 h-5 rounded-md shrink-0" 
+            />
 
-  const statusColors = {
-    todo: 'bg-gray-100 text-gray-800',
-    in_progress: 'bg-purple-100 text-purple-800',
-    completed: 'bg-green-100 text-green-800'
-  }
+            {/* Content */}
+            <div 
+                className="flex-1 min-w-0 cursor-pointer"
+                onClick={handleNavigate}
+            >
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                    <span className={`font-medium truncate ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
+                        {title}
+                    </span>
+                    {description && (
+                        <span className="hidden md:inline text-muted-foreground text-sm truncate">
+                            {description.length > 50 ? description.slice(0, 50) + '...' : description}
+                        </span>
+                    )}
+                </div>
+            </div>
 
-  return (
-    <div className="p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Link className="text-lg font-semibold hover:underline cursor-pointer" href={`/dashboard/tasks/${task.title.split(' ').splice(0,5).join("-")}-${task.task_id}`}>{task.title}</Link>
-            {/* <h3 className="text-lg font-semibold hover:underline cursor-pointer" onClick={() => router.push(`/dashboard/tasks/${task.task_id}`)}>{task.title}</h3> */}
-            <span className={`px-2 py-1 rounded text-xs font-medium ${priorityColors[task.priority]}`}>
-              {task.priority}
+            {/* Due Date - Mobile shows below, desktop inline */}
+            {dueDateInfo && (
+                <span className={`text-xs font-medium shrink-0 ${dueDateInfo.className}`}>
+                    {dueDateInfo.text}
+                </span>
+            )}
+
+            {/* Priority */}
+            <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase shrink-0 ${priorityClass}`}>
+                {(priority || 'medium').charAt(0).toUpperCase()}
             </span>
-            <span className={`px-2 py-1 rounded text-xs font-medium ${statusColors[task.status]}`}>
-              {task.status.replace('_', ' ')}
-            </span>
-          </div>
 
-          {task.due_date && (
-            <p className="text-sm text-gray-600 mb-2">
-              Due: {new Date(task.due_date).toLocaleDateString()}
-            </p>
-          )}
-
-          {isExpanded && task.description && (
-            <p className="text-gray-700 mt-2">{task.description}</p>
-          )}
-
-          {task.description && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-sm text-blue-600 hover:text-blue-800 mt-1"
-            >
-              {isExpanded ? 'Show less' : 'Show more'}
-            </button>
-          )}
+            {/* Actions */}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    >
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleNavigate}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                        onClick={handleDelete}
+                        className="text-red-600 focus:text-red-600"
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          {/* Status change buttons */}
-          {task.status !== 'todo' && (
-            <button
-              onClick={() => handleStatusChange('todo')}
-              disabled={isPending}
-              className="px-3 py-1 text-sm bg-gray-500 hover:bg-gray-300 rounded disabled:opacity-50"
-            >
-              To Do
-            </button>
-          )}
-          {task.status !== 'in_progress' && (
-            <button
-              onClick={() => handleStatusChange('in_progress')}
-              disabled={isPending}
-              className="px-3 py-1 text-sm bg-purple-500 hover:bg-purple-300 rounded disabled:opacity-50"
-            >
-              In Progress
-            </button>
-          )}
-          {task.status !== 'completed' && (
-            <button
-              onClick={() => handleStatusChange('completed')}
-              disabled={isPending}
-              className="px-3 py-1 text-sm bg-green-500 hover:bg-green-300 rounded disabled:opacity-50"
-            >
-              Complete
-            </button>
-          )}
-          
-          {/* Delete button */}
-          <button
-            onClick={handleDelete}
-            disabled={isPending}
-            className="px-3 py-1 text-sm bg-red-500 hover:bg-red-300 rounded disabled:opacity-50"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+    )
 }
+
+export default TaskItem

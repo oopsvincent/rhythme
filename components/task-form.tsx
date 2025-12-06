@@ -3,13 +3,12 @@
 
 import { useState, useTransition } from 'react'
 import { createTask } from '@/app/actions/getTasks'
-import type { CreateTaskInput, Priority } from '@/types/database'
+import type { CreateTaskInput, Priority, Status } from '@/types/database'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -25,7 +24,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select'
-import { Plus } from 'lucide-react'
+import { Plus, Loader2 } from 'lucide-react'
+import { DateNTimePicker } from './date-n-time-picker'
+
+const priorityOptions: { value: Priority; label: string; color: string }[] = [
+  { value: 'low', label: 'Low', color: 'text-blue-600' },
+  { value: 'medium', label: 'Medium', color: 'text-yellow-600' },
+  { value: 'high', label: 'High', color: 'text-red-600' },
+]
+
+const statusOptions: { value: Status; label: string }[] = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'completed', label: 'Completed' },
+]
 
 export default function TaskForm() {
   const [isPending, startTransition] = useTransition()
@@ -35,9 +47,25 @@ export default function TaskForm() {
   const [formData, setFormData] = useState<CreateTaskInput>({
     title: '',
     description: '',
-    due_date: '',
-    priority: 'medium'
+    due_date: undefined,
+    priority: 'medium',
+    status: 'pending'
   })
+
+  const handleDateNTime = (date: Date | undefined) => {
+    setFormData({...formData , due_date: date})
+  }
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      due_date: undefined,
+      priority: 'medium',
+      status: 'pending'
+    })
+    setError(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,87 +82,77 @@ export default function TaskForm() {
       if (result?.error) {
         setError(result.error)
       } else {
-        // Success - reset form and close dialog
-        setFormData({
-          title: '',
-          description: '',
-          due_date: '',
-          priority: 'medium'
-        })
+        resetForm()
         setShowForm(false)
       }
     })
   }
 
+  const handleOpenChange = (open: boolean) => {
+    setShowForm(open)
+    if (!open) {
+      resetForm()
+    }
+  }
+
   return (
-    <Dialog open={showForm} onOpenChange={setShowForm}>
-          <DialogTrigger asChild>
-            <Button className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 transition-colors">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Task
-            </Button>
+    <Dialog open={showForm} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
+          <Plus className="h-4 w-4" />
+          Add Task
+        </Button>
       </DialogTrigger>
 
-      <DialogContent>
-        <form onSubmit={handleSubmit} className="">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold mb-4">Create New Task</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Create New Task</DialogTitle>
           </DialogHeader>
 
           {error && (
-            <div className="text-red-800 px-4 py-3 rounded mb-4">
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title" className="block text-sm font-medium mb-1">
-                Title *
+          <div className="mt-6 space-y-5">
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-medium">
+                Title <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="title"
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter task title"
+                className="w-full"
+                placeholder="What needs to be done?"
                 disabled={isPending}
+                autoFocus
               />
             </div>
 
-            <div>
-              <Label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
                 Description
               </Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter task description"
-                rows={3}
+                className="w-full min-h-[100px] resize-none"
+                placeholder="Add more details about this task..."
                 disabled={isPending}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="due_date" className="block text-sm font-medium text-gray-700 mb-1">
-                  Due Date
-                </Label>
-                <Input
-                  id="due_date"
-                  type="date"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={isPending}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
+            {/* Priority & Status Row - Stack on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="priority" className="text-sm font-medium">
                   Priority
                 </Label>
                 <Select
@@ -146,34 +164,72 @@ export default function TaskForm() {
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    {priorityOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className={option.color}>{option.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status" className="text-sm font-medium">
+                  Status
+                </Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: Status) => setFormData({ ...formData, status: value })}
+                  disabled={isPending}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
+
+            {/* Due Date - Full width */}
+            <div className="space-y-2">
+              <Label htmlFor="due_date" className="text-sm font-medium">
+                Due Date
+              </Label>
+              <DateNTimePicker value={formData.due_date} onChange={handleDateNTime} />
+            </div>
           </div>
 
-          <DialogFooter className="flex gap-3 mt-6">
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="bg-primary px-6 py-2 rounded-lg hover:bg-accent disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {isPending ? 'Creating...' : 'Create Task'}
-            </Button>
-
-            {/* Use DialogClose to close the modal cleanly */}
+          <DialogFooter className="mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
             <DialogClose asChild>
               <Button
                 type="button"
+                variant="outline"
                 disabled={isPending}
-                className="bg-transparent border-2 text-gray-700 px-6 py-2 rounded-lg hover:bg-transparent disabled:bg-gray-100"
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
             </DialogClose>
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="w-full sm:w-auto"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Task'
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

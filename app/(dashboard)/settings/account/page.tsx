@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label"
 
 export default function AccountSettingsPage() {
   return (
-    <SettingsShell section="account">
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-semibold mb-4">Account Information</h3>
@@ -25,6 +24,5 @@ export default function AccountSettingsPage() {
           </div>
         </div>
       </div>
-    </SettingsShell>
   )
 }

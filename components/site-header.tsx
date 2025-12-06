@@ -8,6 +8,7 @@ import { SearchForm } from "./search-form"
 import { ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { Fragment } from "react"
+import { formatSlugToTitle } from "@/lib/slug"
 
 // Mapping sections to display titles
 const sectionTitles: Record<string, string> = {
@@ -38,7 +39,7 @@ function generateBreadcrumbs(pathname: string) {
     const href = '/' + paths.slice(0, index + 1).join('/')
     
     // Get display name (use title mapping or format the path)
-    const label = sectionTitles[path] || formatPathSegment(path)
+    const label = sectionTitles[path] || formatSlugToTitle(path)
     
     return {
       label,
@@ -48,21 +49,6 @@ function generateBreadcrumbs(pathname: string) {
   })
   
   return breadcrumbs
-}
-
-// Format path segments that aren't in the mapping (like slugs or IDs)
-function formatPathSegment(segment: string): string {
-  const parts = segment.split("-");
-
-  // Remove trailing numeric ID (BIGSERIAL)
-  const last = parts[parts.length - 1];
-  if (/^\d+$/.test(last)) {
-    parts.pop();
-  }
-
-  return parts
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
 }
 
 export function SiteHeader() {
@@ -80,11 +66,11 @@ export function SiteHeader() {
         
         {/* Breadcrumb Navigation */}
         <nav className="flex items-center gap-1 text-sm overflow-hidden">
-          {breadcrumbs.map((crumb, index) => (
+          {breadcrumbs.map((crumb) => (
             <Fragment key={crumb.href}>
               {crumb.isLast ? (
                 // Last item - not clickable, bold
-                <span className="font-medium text-base truncate">
+                <span className="font-medium text-base truncate max-w-[200px] sm:max-w-[300px]">
                   {crumb.label}
                 </span>
               ) : (
@@ -92,11 +78,11 @@ export function SiteHeader() {
                 <>
                   <Link
                     href={crumb.href}
-                    className="text-muted-foreground hover:text-foreground transition-colors truncate"
+                    className="text-muted-foreground hover:text-foreground transition-colors truncate hidden sm:inline"
                   >
                     {crumb.label}
                   </Link>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 hidden sm:block" />
                 </>
               )}
             </Fragment>
