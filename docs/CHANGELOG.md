@@ -3,7 +3,7 @@
 ---
 
 ```markdown
-## [0.19.0] - 2024-12-06
+## [0.18.0] - 2024-12-06
 
 ### Highlights
 - Major architectural refactor introducing new layout system for better code organization and scalability.
