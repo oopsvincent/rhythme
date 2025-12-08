@@ -9,7 +9,6 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import CalendarDrawer from "@/components/calender-drawer";
 import { SettingsProvider } from "@/components/providers/settings";
 import OnboardingCheck from "@/components/OnboardingCheck";
 import AppSidebarWrapper from "@/components/providers/appSidebarWrapper";
@@ -66,7 +65,6 @@ export default async function DashboardLayout({
         <AppSidebarWrapper variant="inset" />
         <SidebarInset>
           <div className="fixed bottom-3 right-3 lg:hidden z-50">
-            <CalendarDrawer />
           </div>
           <ContextMenu>
             <ContextMenuTrigger asChild>

@@ -16,10 +16,6 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { useRouter, usePathname } from "next/navigation"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -114,10 +110,9 @@ export function SettingsShell({ section, children }: SettingsShellProps) {
 
   return (
     <>
-      <DialogTitle className="sr-only">Settings - {currentSection?.name}</DialogTitle>
-      <DialogDescription className="sr-only">
-        {currentSection?.description}
-      </DialogDescription>
+      {/* Screen reader only title and description */}
+      <span className="sr-only">Settings - {currentSection?.name}</span>
+      <span className="sr-only">{currentSection?.description}</span>
       
       <div className="flex h-[85vh] md:h-[600px]">
         {/* Desktop Sidebar - Always visible on desktop */}
@@ -269,23 +264,6 @@ export function SettingsShell({ section, children }: SettingsShellProps) {
                 {children}
               </div>
             </ScrollArea>
-
-            {/* Footer */}
-            <div className="border-t p-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => router.back()} 
-                className="w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={() => router.back()} 
-                className="w-full sm:w-auto"
-              >
-                Save Changes
-              </Button>
-            </div>
           </div>
         )}
       </div>

@@ -3,8 +3,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* @import "tailwindcss"; */
-
 @layer base {
   :root {
     color-scheme: light;
@@ -14,8 +12,6 @@
     color-scheme: dark;
   }
 }
-
-/* Rest of your CSS */
 
 html,
 body {
@@ -27,11 +23,11 @@ body {
   /* FONTS */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  --font-marketing: var(--font-playfair-display); /* Marketing/brand voice */
-  --font-body: var(--font-inter);                 /* UI & body */
-  --font-primary: var(--font-clash-display);      /* Headlines, timers */
+  --font-marketing: var(--font-playfair-display);
+  --font-body: var(--font-inter);
+  --font-primary: var(--font-clash-display);
 
-  /* COLORS (semantic mapping → real values below) */
+  /* COLORS (semantic mapping) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
@@ -82,114 +78,195 @@ body {
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ============================================
+   PREMIUM BLACK GLASSMORPHISM PALETTE
+   Primary: Bold Orange (#FF6B35)
+   Accent: Electric Cyan (#00D9FF)
+   Base: Deep Black with glass effects
+   ============================================ */
+
 /* --- LIGHT MODE ROOT --- */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
-  /* BRAND ORANGE PALETTE */
-  --background: #FEFEFE;
-  --foreground: #1A1D29;
+  /* DEEP CONTRAST LIGHT MODE */
+  --background: #FAFAFA;
+  --foreground: #0A0A0B;
 
+  /* Bold Orange Primary */
   --primary: #FF6B35;
   --primary-foreground: #FFFFFF;
 
-  --secondary: #FF8F65;
-  --secondary-foreground: #FFFFFF;
+  /* Warm Orange Secondary */
+  --secondary: #FF8A5C;
+  --secondary-foreground: #0A0A0B;
 
-  --accent: #FFB195;
-  --accent-foreground: #1A1D29;
+  /* Electric Cyan Accent */
+  --accent: #00D9FF;
+  --accent-foreground: #0A0A0B;
 
-  --muted: #F8F9FA;
-  --muted-foreground: #6B7280;
+  /* Minimal Muted Tones */
+  --muted: #F0F0F2;
+  --muted-foreground: #5C5C66;
 
-  --card: #FFFFFF;
-  --card-foreground: #1A1D29;
+  /* Glass-inspired Cards */
+  --card: rgba(255, 255, 255, 0.85);
+  --card-foreground: #0A0A0B;
 
-  --popover: #FFFFFF;
-  --popover-foreground: #1A1D29;
+  --popover: rgba(255, 255, 255, 0.92);
+  --popover-foreground: #0A0A0B;
 
-  --destructive: #EF4444;
-  --border: #E5E7EB;
-  --input: #E5E7EB;
+  --destructive: #FF3B30;
+  --border: rgba(10, 10, 11, 0.08);
+  --input: rgba(10, 10, 11, 0.06);
   --ring: #FF6B35;
 
-  /* Charts */
+  /* Charts - Orange to Cyan spectrum */
   --chart-1: #FF6B35;
-  --chart-2: #FF8F65;
-  --chart-3: #FFB195;
-  --chart-4: #10B981;
-  --chart-5: #F59E0B;
+  --chart-2: #FF8A5C;
+  --chart-3: #00D9FF;
+  --chart-4: #00B8D9;
+  --chart-5: #00A3BF;
 
-  /* Sidebar */
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #1A1D29;
+  /* Sidebar - Sleek minimal */
+  --sidebar: rgba(255, 255, 255, 0.75);
+  --sidebar-foreground: #0A0A0B;
   --sidebar-primary: #FF6B35;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #FF8F65;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #E5E7EB;
+  --sidebar-accent: #00D9FF;
+  --sidebar-accent-foreground: #0A0A0B;
+  --sidebar-border: rgba(10, 10, 11, 0.06);
   --sidebar-ring: #FF6B35;
+
+  /* Glassmorphism variables */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-blur: 20px;
 }
 
-/* --- DARK MODE --- */
+/* --- DARK MODE - BLACK GLASSMORPHISM --- */
 .dark {
-  --background: #0F1114;
-  --foreground: #F9FAFB;
+  /* Pure black base */
+  --background: #050506;
+  --foreground: #FAFAFA;
 
-  --primary: #FF7849;
-  --primary-foreground: #0F1114;
+  /* Vibrant Orange Primary */
+  --primary: #FF6B35;
+  --primary-foreground: #050506;
 
-  --secondary: #FF9570;
-  --secondary-foreground: #0F1114;
+  /* Lighter Orange Secondary */
+  --secondary: #FF8A5C;
+  --secondary-foreground: #050506;
 
-  --accent: #FFBC9A;
-  --accent-foreground: #0F1114;
+  /* Electric Cyan Accent */
+  --accent: #00D9FF;
+  --accent-foreground: #050506;
 
-  --muted: #1A1D23;
-  --muted-foreground: #D1D5DB;
+  /* Dark glass muted */
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: rgba(255, 255, 255, 0.6);
 
-  --card: #1A1D23;
-  --card-foreground: #F9FAFB;
+  /* Glassmorphism Cards */
+  --card: rgba(255, 255, 255, 0.03);
+  --card-foreground: #FAFAFA;
 
-  --popover: #252932;
-  --popover-foreground: #F9FAFB;
+  --popover: rgba(20, 20, 22, 0.95);
+  --popover-foreground: #FAFAFA;
 
-  --destructive: #F87171;
-  --border: #374151;
-  --input: #374151;
-  --ring: #FF7849;
+  --destructive: #FF453A;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #FF6B35;
 
-  /* Charts */
-  --chart-1: #FF7849;
-  --chart-2: #FF9570;
-  --chart-3: #FFBC9A;
-  --chart-4: #34D399;
-  --chart-5: #FBBF24;
+  /* Charts - Bold contrast */
+  --chart-1: #FF6B35;
+  --chart-2: #FF8A5C;
+  --chart-3: #00D9FF;
+  --chart-4: #00E5FF;
+  --chart-5: #00B8D9;
 
-  /* Sidebar */
-  --sidebar: #1A1D23;
-  --sidebar-foreground: #F9FAFB;
-  --sidebar-primary: #FF7849;
-  --sidebar-primary-foreground: #0F1114;
-  --sidebar-accent: #FF9570;
-  --sidebar-accent-foreground: #0F1114;
-  --sidebar-border: #374151;
-  --sidebar-ring: #FF7849;
+  /* Sidebar - Dark glass */
+  --sidebar: rgba(10, 10, 12, 0.85);
+  --sidebar-foreground: #FAFAFA;
+  --sidebar-primary: #FF6B35;
+  --sidebar-primary-foreground: #050506;
+  --sidebar-accent: #00D9FF;
+  --sidebar-accent-foreground: #050506;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #FF6B35;
+
+  /* Dark Glassmorphism variables */
+  --glass-bg: rgba(10, 10, 12, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 24px;
 }
 
 /* --- BASE LAYER --- */
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body antialiased;
   }
 }
 
-/* --- Theming --- */
-
+/* --- GLASSMORPHISM UTILITIES --- */
 @layer utilities {
+  /* Primary glass effect */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+  }
+
+  /* Intense glass for cards */
+  .glass-card {
+    background: var(--card);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-border);
+  }
+
+  /* Subtle glass for overlays */
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .dark .glass-subtle {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  /* Glow effects for primary elements */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.3),
+                0 0 40px rgba(255, 107, 53, 0.1);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3),
+                0 0 40px rgba(0, 217, 255, 0.1);
+  }
+
+  /* Premium text gradient */
+  .text-gradient-primary {
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8A5C 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-accent {
+    background: linear-gradient(135deg, #00D9FF 0%, #00B8D9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Icon theme transitions */
   .icon-light {
     transform: rotate(0) scale(1);
     opacity: 1;
@@ -208,14 +285,5 @@ body {
   .dark .icon-dark {
     transform: rotate(0) scale(1);
     opacity: 1;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
