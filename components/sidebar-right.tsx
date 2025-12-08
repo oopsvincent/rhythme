@@ -1,16 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Plus, CalendarDays, Calendar1 } from "lucide-react"
+import { CalendarDays, PanelRightClose, PanelRightOpen } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { CalendarWithFilters } from "./calendar-with-filters"
 import { Task } from "@/types/database"
@@ -23,6 +18,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 export function SidebarRight({
   ...props
@@ -30,6 +32,7 @@ export function SidebarRight({
   const [tasks, setTasks] = React.useState<Task[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [sheetOpen, setSheetOpen] = React.useState(false)
+  const [isCollapsed, setIsCollapsed] = React.useState(false)
 
   // Fetch tasks on mount
   React.useEffect(() => {
@@ -55,57 +58,99 @@ export function SidebarRight({
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <Sidebar
-        collapsible="none"
-        className="sticky top-0 hidden h-svh border-l lg:flex w-[280px]"
-        {...props}
+      {/* Desktop Sidebar - Collapsible */}
+      <div
+        className={cn(
+          "sticky top-0 hidden h-svh transition-all duration-300 ease-in-out lg:block",
+          isCollapsed ? "w-0" : "w-[300px]"
+        )}
       >
-        <SidebarHeader className="border-sidebar-border h-16 border-b flex flex-row items-center justify-center">
-            <Calendar1 className="h-8 w-8" />
-            <span className="text-4xl font-semibold">Calendar</span>
-        </SidebarHeader>
-        <SidebarContent className="overflow-y-auto">
-          <SidebarSeparator className="mx-0" />
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-pulse text-sm text-muted-foreground">Loading...</div>
-            </div>
-          ) : (
-            <CalendarWithFilters tasks={tasks} />
+        {/* Toggle Button - Always visible */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className={cn(
+                  "absolute top-4 z-50 h-8 w-8 rounded-lg border border-border/50 bg-background/80 backdrop-blur-sm transition-all hover:bg-muted",
+                  isCollapsed ? "-left-10" : "left-3"
+                )}
+              >
+                {isCollapsed ? (
+                  <PanelRightOpen className="h-4 w-4" />
+                ) : (
+                  <PanelRightClose className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              {isCollapsed ? "Show calendar" : "Hide calendar"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Sidebar Content */}
+        <Sidebar
+          collapsible="none"
+          className={cn(
+            "h-full border-l border-border/50 bg-sidebar/80 backdrop-blur-xl transition-all duration-300",
+            isCollapsed ? "opacity-0" : "opacity-100"
           )}
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Plus />
-                <span>New Calendar</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
+          {...props}
+        >
+          {/* Minimal Header */}
+          <SidebarHeader className="flex flex-row items-center gap-2 px-4 py-4">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <CalendarDays className="h-4 w-4 text-primary" />
+            </div>
+            <span className="text-sm font-semibold tracking-tight">Calendar</span>
+          </SidebarHeader>
+
+          {/* Subtle divider */}
+          <div className="mx-4 h-px bg-border/50" />
+
+          {/* Calendar Content */}
+          <SidebarContent className="overflow-y-auto px-2 py-3">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <span className="text-xs text-muted-foreground">Loading calendar...</span>
+              </div>
+            ) : (
+              <CalendarWithFilters tasks={tasks} />
+            )}
+          </SidebarContent>
+        </Sidebar>
+      </div>
 
       {/* Mobile Calendar Floating Button & Drawer */}
-      <div className="fixed bottom-2 right-2 lg:hidden z-50">
+      <div className="fixed bottom-4 right-4 z-50 lg:hidden">
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button 
               size="icon" 
-              className="h-10 w-10 rounded-full shadow-lg"
+              className="h-12 w-12 rounded-full bg-primary shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 transition-all"
             >
-              <CalendarDays className="h-6 w-6" />
+              <CalendarDays className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[320px] sm:w-[380px] p-0">
-            <SheetHeader className="p-4 border-b">
-              <SheetTitle>Calendar</SheetTitle>
+          <SheetContent 
+            side="right" 
+            className="w-[320px] border-l border-border/50 bg-background/95 backdrop-blur-xl p-0 sm:w-[380px]"
+          >
+            <SheetHeader className="flex flex-row items-center gap-2 border-b border-border/50 px-4 py-4">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                <CalendarDays className="h-4 w-4 text-primary" />
+              </div>
+              <SheetTitle className="text-sm font-semibold">Calendar</SheetTitle>
             </SheetHeader>
-            <div className="overflow-y-auto max-h-[calc(100vh-80px)]">
+            <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: 'calc(100vh - 80px)' }}>
               {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-pulse text-sm text-muted-foreground">Loading...</div>
+                <div className="flex flex-col items-center justify-center gap-2 py-12">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span className="text-xs text-muted-foreground">Loading calendar...</span>
                 </div>
               ) : (
                 <CalendarWithFilters tasks={tasks} showTitle={false} onTaskClick={handleTaskClick} />

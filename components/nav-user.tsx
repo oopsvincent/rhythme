@@ -107,7 +107,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => redirect("/user")}>
+              <DropdownMenuItem onClick={() => redirect("/settings/account")}>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
@@ -115,7 +115,7 @@ export function NavUser({
                 <CreditCard />
                 Billing
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => redirect("/settings/notifications")}>
                 <Bell />
                 Notifications
               </DropdownMenuItem>

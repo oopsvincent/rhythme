@@ -1,28 +1,39 @@
-// app/settings/account/page.tsx
-import { SettingsShell } from "@/components/setting-shell"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+// app/(dashboard)/settings/account/page.tsx
+import { getUser, getFullUser, getUserIdentities } from "@/app/actions/auth"
+import { getUserPreferences } from "@/app/actions/settings"
+import { redirect } from "next/navigation"
+import AccountSettingsContent from "./account-settings-content"
+import ConnectedAccounts from "./connected-accounts"
+import { Separator } from "@/components/ui/separator"
 
-export default function AccountSettingsPage() {
+export default async function AccountSettingsPage() {
+  const user = await getUser()
+  const fullUser = await getFullUser()
+  const preferences = await getUserPreferences()
+  const identities = await getUserIdentities()
+  
+  if (!user || !fullUser) {
+    redirect("/login")
+  }
+
+  const onboardingData = preferences?.onboarding_data || null
+
   return (
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Account Information</h3>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Display Name</Label>
-              <Input id="name" placeholder="Your name" defaultValue="John Doe" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input id="email" type="email" defaultValue="john@example.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Input id="bio" placeholder="Tell us about yourself" />
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-8">
+      <AccountSettingsContent 
+        user={{
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          createdAt: fullUser.created_at,
+        }}
+        onboardingData={onboardingData}
+      />
+      
+      <Separator />
+      
+      <ConnectedAccounts identities={identities} />
+    </div>
   )
 }
