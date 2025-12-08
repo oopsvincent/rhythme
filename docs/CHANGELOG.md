@@ -133,6 +133,7 @@
 
 ---
 
+
 ## [0.22.0] - 2025-12-04
 ### Highlights
 - Supabase integration has been fully reorganized with a proper server/client split, reducing confusion and preventing inconsistent runtime behavior.
