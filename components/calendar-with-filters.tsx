@@ -229,7 +229,7 @@ export const CalendarWithFilters = ({
           mode="single"
           selected={date}
           onSelect={handleDateChange}
-          className="rounded-md border w-full max-w-[280px] [&_table]:w-full [&_th]:w-8 [&_td]:w-8 [&_button]:w-8 [&_button]:h-8 text-sm"
+          className="rounded-md border w-full"
           modifiers={{
             hasTask: taskDates
           }}

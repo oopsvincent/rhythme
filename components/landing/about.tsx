@@ -6,13 +6,14 @@ import Link from "next/link";
 import {
   Target,
   Heart,
-  Users,
   Lightbulb,
   Sparkles,
-  Award,
   Shield,
   ArrowRight,
-  Rocket,
+  Compass,
+  Brain,
+  Zap,
+  Users,
 } from "lucide-react";
 
 interface ValueCard {
@@ -21,16 +22,11 @@ interface ValueCard {
   description: string;
 }
 
-interface Stat {
-  number: string;
-  label: string;
-  icon: React.ReactNode;
-}
-
 interface TimelineItem {
-  year: string;
+  stage: string;
   title: string;
   description: string;
+  status: "completed" | "current" | "upcoming";
 }
 
 const AboutPage: React.FC = () => {
@@ -42,75 +38,62 @@ const AboutPage: React.FC = () => {
 
   const values: ValueCard[] = [
     {
+      icon: <Lightbulb className="w-6 h-6" />,
+      title: "Clarity First",
+      description: "Every feature we build guides you toward action.  No confusion, no overwhelm—just clear next steps.",
+    },
+    {
       icon: <Heart className="w-6 h-6" />,
-      title: "Human-Centered Design",
-      description: "We design for real people with real challenges. Every feature is built with empathy and care.",
+      title: "Emotional Safety",
+      description: "We speak like a supportive friend, never a demanding taskmaster. Your well-being matters more than your output.",
+    },
+    {
+      icon: <Target className="w-6 h-6" />,
+      title: "Meaningful Progress",
+      description: "Small wins build lasting change. We help you see how every tiny action moves you toward who you want to become.",
     },
     {
       icon: <Shield className="w-6 h-6" />,
-      title: "Privacy First",
-      description: "Your data is yours. We never sell your information and use end-to-end encryption to protect it.",
+      title: "Privacy by Design",
+      description: "Your journey is personal. We never sell your data, and we protect your reflections with serious encryption.",
     },
     {
-      icon: <Lightbulb className="w-6 h-6" />,
-      title: "Continuous Innovation",
-      description: "We&rsquo;re constantly learning, iterating, and improving based on your feedback and needs.",
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: "Community Driven",
-      description: "Our community shapes our roadmap. Your voice matters in building the future of Rhythmé.",
-    },
-  ];
-
-  const stats: Stat[] = [
-    {
-      number: "10K+",
-      label: "Active Users",
-      icon: <Users className="w-5 h-5" />,
-    },
-    {
-      number: "1M+",
-      label: "Habits Tracked",
-      icon: <Target className="w-5 h-5" />,
-    },
-    {
-      number: "98%",
-      label: "Satisfaction Rate",
-      icon: <Award className="w-5 h-5" />,
-    },
-    {
-      number: "24/7",
-      label: "Support Available",
-      icon: <Sparkles className="w-5 h-5" />,
+      icon: <Zap className="w-6 h-6" />,
+      title: "Imperfect Action",
+      description: "Done is better than perfect. We encourage you to start before you're ready, because momentum creates confidence.",
     },
   ];
 
   const timeline: TimelineItem[] = [
     {
-      year: "2024",
-      title: "The Beginning",
-      description: "Rhythmé was born from a simple idea: productivity tools shouldn&rsquo;t be complicated. Started as a side project by developers frustrated with existing solutions.",
+      stage: "Phase 1",
+      title: "MVP - Foundation",
+      description: "Core goal workspace, tasks, habits, journaling, and basic insights. The foundation of clarity.",
+      status: "current",
     },
     {
-      year: "Q2 2024",
-      title: "Beta Launch",
-      description: "Released our beta to 100 early adopters. Their feedback shaped everything from our UI to core features.",
+      stage: "Phase 2",
+      title: "Next Best Action Engine",
+      description: "AI-powered daily micro-actions with reasoning. The heart of Rhythmé's direction system.",
+      status: "upcoming",
     },
     {
-      year: "Q3 2024",
-      title: "Public Launch",
-      description: "Opened Rhythmé to the public. Reached 1,000 users in the first month, exceeding all expectations.",
+      stage: "Phase 3",
+      title: "Emotionally Intelligent AI",
+      description: "Deeper sentiment analysis, adaptive difficulty, and truly supportive dialogue.",
+      status: "upcoming",
     },
     {
-      year: "Q4 2024",
-      title: "Major Updates",
-      description: "Launched AI-powered insights, advanced analytics, and mobile apps. Community grew to 10,000+ users.",
+      stage: "Phase 4",
+      title: "Social & Community",
+      description: "Optional accountability features, shared journeys, and community support.",
+      status: "upcoming",
     },
     {
-      year: "2025",
-      title: "The Future",
-      description: "Working on team collaboration features, advanced integrations, and expanding our AI capabilities.",
+      stage: "Future",
+      title: "Identity Engine & Beyond",
+      description: "Advanced identity tracking, behavioral patterns, and features we'll discover along the way.",
+      status: "upcoming",
     },
   ];
 
@@ -140,22 +123,25 @@ const AboutPage: React.FC = () => {
             </div>
 
             {/* Hero Text */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent">
-              Building the Future of Productivity
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 font-primary">
+              <span className="text-foreground">Helping you finally</span>
+              <br />
+              <span className="text-gradient-primary">know where to start</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              We believe that building better habits and achieving goals shouldn&rsquo;t require juggling multiple apps or complicated systems. Rhythmé is our answer to that challenge.
+              Rhythmé is a productivity and well-being companion built around one simple promise: 
+              remove the overwhelm and give you clear direction, one small step at a time.
             </p>
 
             {/* Quick Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup/intro">
                 <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg font-semibold hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 group flex items-center justify-center gap-2">
-                  Join Our Community
+                  Start Your Journey
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </button>
               </Link>
-              <Link href="#story">
+              <Link href="#our-story">
                 <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 backdrop-blur-xl bg-background/60 border-2 border-border hover:border-primary/50 rounded-lg font-semibold transition-all duration-300">
                   Read Our Story
                 </button>
@@ -164,52 +150,52 @@ const AboutPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Stats Section */}
+        {/* Philosophy Banner */}
         <section className="py-8 sm:py-12 px-4 sm:px-6">
-          <div className={`max-w-6xl mx-auto transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {stats.map((stat, index) => (
-                <div
-                  key={index}
-                  className="backdrop-blur-xl bg-background/40 border border-border rounded-2xl p-6 text-center hover:border-primary/50 transition-all duration-300 hover:scale-105 group"
-                >
-                  <div className="inline-flex p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <div className="text-primary">
-                      {stat.icon}
-                    </div>
-                  </div>
-                  <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
-                    {stat.number}
-                  </div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </div>
-              ))}
+          <div className="max-w-4xl mx-auto">
+            <div className="backdrop-blur-xl bg-gradient-to-r from-primary/10 via-background/60 to-accent/10 border border-border rounded-2xl p-6 sm:p-8 text-center">
+              <blockquote className="text-lg sm:text-xl md:text-2xl font-marketing text-muted-foreground leading-relaxed">
+                &ldquo;Imperfect action builds confidence. Confidence creates momentum. Momentum shapes identity.&rdquo;
+              </blockquote>
+              <div className="flex flex-wrap justify-center gap-2 mt-6">
+                {["Confidence", "Direction", "Discipline", "Safety", "Meaning"].map((value, index) => (
+                  <span 
+                    key={index}
+                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium"
+                  >
+                    {value}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
         {/* Mission Section */}
-        <section id="story" className="py-12 sm:py-20 px-4 sm:px-6">
+        <section id="our-story" className="py-12 sm:py-20 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="backdrop-blur-xl bg-background/60 border-2 border-border rounded-3xl p-8 sm:p-12 md:p-16">
               <div className="text-center mb-8 sm:mb-12">
                 <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-primary to-accent mb-6">
-                  <Rocket className="w-8 h-8 text-white" />
+                  <Compass className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
                   Our Mission
                 </h2>
               </div>
 
               <div className="space-y-6 text-muted-foreground">
                 <p className="text-base sm:text-lg leading-relaxed">
-                  We started Rhythmé because we were tired of productivity apps that promised everything but delivered complexity. We tried them all&mdash;habit trackers that forgot about journaling, task managers that ignored focus time, analytics tools that overwhelmed rather than inspired.
+                  We started Rhythmé because we know what it feels like to be overwhelmed. You have a goal—maybe learning a new skill, building a habit, or changing your life—but you don&apos;t know where to begin. The advice out there says &ldquo;just start,&rdquo; but start <em>where</em>?
                 </p>
                 <p className="text-base sm:text-lg leading-relaxed">
-                  The truth is, building better habits and achieving your goals shouldn&rsquo;t require a PhD in productivity systems. It should feel natural, even enjoyable. That&rsquo;s why we created Rhythmé&mdash;a single, beautifully designed space where habits, tasks, focus, and reflection come together seamlessly.
+                  That question—<strong className="text-foreground">&ldquo;where do I start?&rdquo;</strong>—is the one we&apos;re obsessed with answering. Not with a complicated system or a feature-packed app, but with something simple: one goal, one day, one small step.
                 </p>
                 <p className="text-base sm:text-lg leading-relaxed">
-                  Our mission is simple: <strong className="text-foreground">empower everyone to build the life they want, one small habit at a time.</strong> We believe that with the right tools and support, anyone can transform their daily routine and achieve extraordinary things.
+                  Rhythmé is our answer. A direction system that meets you where you are, understands your energy, and guides you forward—not with pressure, but with clarity and care.
+                </p>
+                <p className="text-base sm:text-lg leading-relaxed">
+                  <strong className="text-foreground">Our mission is simple:</strong> help everyone finally know where to start, and trust that imperfect action will take them where they want to go.
                 </p>
               </div>
             </div>
@@ -220,19 +206,22 @@ const AboutPage: React.FC = () => {
         <section className="py-12 sm:py-20 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent">
-                Our Values
+              <span className="inline-block px-4 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium mb-4">
+                What We Believe
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
+                Our Core Values
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                 These principles guide every decision we make and every feature we build
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {values.map((value, index) => (
                 <div
                   key={index}
-                  className="group backdrop-blur-xl bg-background/40 border-2 border-border hover:border-primary/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:scale-105"
+                  className={`group backdrop-blur-xl bg-background/40 border-2 border-border hover:border-primary/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.02] ${index === 4 ? 'md:col-span-2 lg:col-span-1' : ''}`}
                 >
                   <div className="inline-flex p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 mb-4 group-hover:scale-110 transition-transform duration-300">
                     <div className="text-primary">
@@ -251,21 +240,24 @@ const AboutPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Timeline Section */}
+        {/* Roadmap Section */}
         <section className="py-12 sm:py-20 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent">
+              <span className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
                 Our Journey
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
+                The Road Ahead
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground">
-                From idea to impact&mdash;here&rsquo;s how we got here
+                We&apos;re building Rhythmé in phases—learning what works as we go
               </p>
             </div>
 
             <div className="relative">
               {/* Timeline Line */}
-              <div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-primary transform sm:-translate-x-1/2"></div>
+              <div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-border transform sm:-translate-x-1/2"></div>
 
               {/* Timeline Items */}
               <div className="space-y-8 sm:space-y-12">
@@ -277,15 +269,41 @@ const AboutPage: React.FC = () => {
                     }`}
                   >
                     {/* Timeline Dot */}
-                    <div className="absolute left-4 sm:left-1/2 w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center transform sm:-translate-x-1/2 shadow-lg shadow-primary/50">
-                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    <div className={`absolute left-4 sm:left-1/2 w-8 h-8 rounded-full flex items-center justify-center transform sm:-translate-x-1/2 shadow-lg ${
+                      item.status === 'current' 
+                        ? 'bg-gradient-to-br from-primary to-accent shadow-primary/50' 
+                        : item.status === 'completed' 
+                          ? 'bg-green-500 shadow-green-500/50' 
+                          : 'bg-muted border-2 border-border'
+                    }`}>
+                      {item.status === 'current' && (
+                        <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                      )}
+                      {item.status === 'completed' && (
+                        <div className="w-3 h-3 bg-white rounded-full"></div>
+                      )}
                     </div>
 
                     {/* Content Card */}
                     <div className={`ml-16 sm:ml-0 sm:w-5/12 ${index % 2 === 0 ? 'sm:pr-12' : 'sm:pl-12'}`}>
-                      <div className="backdrop-blur-xl bg-background/60 border-2 border-border hover:border-primary/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
-                        <div className="inline-block px-3 py-1 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-full text-sm font-semibold mb-3">
-                          {item.year}
+                      <div className={`backdrop-blur-xl bg-background/60 border-2 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl ${
+                        item.status === 'current' 
+                          ? 'border-primary/50 shadow-lg shadow-primary/10' 
+                          : 'border-border hover:border-primary/30 hover:shadow-primary/10'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            item.status === 'current'
+                              ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground'
+                              : item.status === 'completed'
+                                ? 'bg-green-500/20 text-green-600'
+                                : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {item.stage}
+                          </span>
+                          {item.status === 'current' && (
+                            <span className="text-xs text-primary font-medium animate-pulse">Now</span>
+                          )}
                         </div>
                         <h3 className="text-xl font-bold mb-2 text-foreground">
                           {item.title}
@@ -304,37 +322,28 @@ const AboutPage: React.FC = () => {
 
         {/* Team Section */}
         <section className="py-12 sm:py-20 px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent">
-                Built by Makers, For Makers
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                We&rsquo;re a small, passionate team dedicated to helping you achieve your goals
-              </p>
-            </div>
-
+          <div className="max-w-4xl mx-auto">
             <div className="backdrop-blur-xl bg-background/60 border-2 border-border rounded-3xl p-8 sm:p-12">
               <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
                 <div className="flex-shrink-0">
                   <div className="relative w-32 h-32 sm:w-40 sm:h-40">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-full blur-xl"></div>
                     <div className="relative w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center border-4 border-background">
-                      <Users className="w-16 h-16 sm:w-20 sm:h-20 text-primary" />
+                      <Heart className="w-16 h-16 sm:w-20 sm:h-20 text-primary" />
                     </div>
                   </div>
                 </div>
                 <div className="flex-1 text-center md:text-left">
-                  <h3 className="text-2xl font-bold mb-4">We&rsquo;re Growing!</h3>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">
-                    Rhythmé started as a side project and has grown into a product used by thousands. We&rsquo;re bootstrapped, indie, and focused on building something that genuinely helps people. If you&rsquo;re passionate about productivity and want to join us on this journey, we&rsquo;d love to hear from you.
+                  <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-3">
+                    Passion Project
+                  </span>
+                  <h3 className="text-2xl font-bold mb-4 font-primary">Built with Heart</h3>
+                  <p className="text-muted-foreground mb-4 leading-relaxed">
+                    Rhythmé is built by people who personally understand the struggle of not knowing where to start. We&apos;re not a big company—we&apos;re a small team of passionate creators building something we wish existed when we needed it most.
                   </p>
-                  <Link href="/careers">
-                    <button className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg font-semibold hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 group">
-                      View Open Positions
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                    </button>
-                  </Link>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Every feature, every word, every interaction is crafted with the care of people who genuinely want to help you find your direction.
+                  </p>
                 </div>
               </div>
             </div>
@@ -350,11 +359,11 @@ const AboutPage: React.FC = () => {
                 <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-primary to-accent mb-6">
                   <Sparkles className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent">
-                  Join Us on This Journey
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
+                  Ready to Find Your Direction?
                 </h2>
                 <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Be part of a community that&rsquo;s building better habits and achieving extraordinary things, one day at a time.
+                  Join us on this journey. Start with one goal, take one step, and see where clarity takes you.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link href="/signup/intro">

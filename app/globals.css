@@ -18,6 +18,13 @@ body {
   height: 100%;
 }
 
+@layer utilities {
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+}
+
+
 /* --- THEME TOKENS --- */
 @theme inline {
   /* FONTS */
@@ -128,19 +135,19 @@ body {
   --chart-4: #00B8D9;
   --chart-5: #00A3BF;
 
-  /* Sidebar - Sleek minimal */
-  --sidebar: rgba(255, 255, 255, 0.75);
+  /* Sidebar - Premium Glass (higher opacity for readability) */
+  --sidebar: rgba(252, 252, 253, 0.95);
   --sidebar-foreground: #0A0A0B;
   --sidebar-primary: #FF6B35;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #00D9FF;
   --sidebar-accent-foreground: #0A0A0B;
-  --sidebar-border: rgba(10, 10, 11, 0.06);
+  --sidebar-border: rgba(10, 10, 11, 0.08);
   --sidebar-ring: #FF6B35;
 
   /* Glassmorphism variables */
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-bg: rgba(252, 252, 253, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.06);
   --glass-blur: 20px;
 }
 
@@ -185,19 +192,19 @@ body {
   --chart-4: #00E5FF;
   --chart-5: #00B8D9;
 
-  /* Sidebar - Dark glass */
-  --sidebar: rgba(10, 10, 12, 0.85);
+  /* Sidebar - Premium Dark Glass */
+  --sidebar: rgba(8, 8, 10, 0.92);
   --sidebar-foreground: #FAFAFA;
   --sidebar-primary: #FF6B35;
   --sidebar-primary-foreground: #050506;
   --sidebar-accent: #00D9FF;
   --sidebar-accent-foreground: #050506;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #FF6B35;
 
   /* Dark Glassmorphism variables */
-  --glass-bg: rgba(10, 10, 12, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(8, 8, 10, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
   --glass-blur: 24px;
 }
 

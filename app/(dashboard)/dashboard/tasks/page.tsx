@@ -1,6 +1,5 @@
 // app/tasks/page.tsx
 import { getTasks, getTaskStats } from "@/app/actions/getTasks";
-// import TaskList from "@/components/task-list";
 import TaskForm from "@/components/task-form";
 import { SiteHeader } from "@/components/site-header";
 import TaskList from "@/components/task-list";
@@ -35,24 +34,24 @@ export default async function TasksPage() {
   }
 
   return (
-    <div className="container mx-auto px-5">
-        <SiteHeader />
-      <div className="flex flex-col justify-between gap-4 py-5">
+    <div className="container mx-auto px-4 sm:px-5">
+      <SiteHeader />
+      <div className="flex flex-col gap-6 py-5">
+        {/* Header */}
         <div>
-          <h1 className="text-2xl md:text-3xl">Tasks</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Tasks</h1>
           <p className="text-muted-foreground text-sm md:text-base">
             Manage and organize your tasks efficiently
           </p>
         </div>
-        {/* <h1 className="text-3xl font-bold mb-8">My Tasks</h1> */}
 
-        {/* Form to create new task */}
-        <TaskForm />
         {/* Stats Section */}
         <TaskStatsGrid stats={statsResult.data ?? { total: 0, pending: 0, in_progress: 0, completed: 0 }} />
 
+        {/* Add New Task Button - Now after stats */}
+        <TaskForm />
+
         {/* Task List */}
-        {/* <TaskList initialTasks={tasksResult?.data ?? []} /> */}
         <TaskList tasks={tasksResult.data} />
       </div>
     </div>

@@ -9,7 +9,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { useState } from "react"
-import { Button } from "./ui/button"
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -65,22 +64,22 @@ function categorizeByTime(tasks: Task[]): TaskSection[] {
     
     const sections: TaskSection[] = []
     
+    if (todayTasks.length > 0) {
+        sections.push({
+            id: 'today',
+            title: 'Today',
+            icon: <Clock className="w-4 h-4 text-primary" />,
+            tasks: todayTasks,
+            defaultOpen: true
+        })
+    }
+    
     if (overdue.length > 0) {
         sections.push({
             id: 'overdue',
             title: 'Overdue',
             icon: <AlertCircle className="w-4 h-4 text-red-500" />,
             tasks: overdue,
-            defaultOpen: true
-        })
-    }
-    
-    if (todayTasks.length > 0) {
-        sections.push({
-            id: 'today',
-            title: 'Today',
-            icon: <Clock className="w-4 h-4 text-yellow-500" />,
-            tasks: todayTasks,
             defaultOpen: true
         })
     }
@@ -170,23 +169,29 @@ function TaskSectionComponent({ section }: { section: TaskSection }) {
     const [isOpen, setIsOpen] = useState(section.defaultOpen)
     
     return (
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-accent/50 transition-colors">
-                <div className="flex items-center gap-2">
-                    {section.icon}
-                    <span className="font-medium">{section.title}</span>
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                        {section.tasks.length}
-                    </span>
-                </div>
-                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 mt-2 pl-1">
-                {section.tasks.map((task) => (
-                    <TaskItem key={task.task_id} task={task} />
-                ))}
-            </CollapsibleContent>
-        </Collapsible>
+        <div className="bg-card">
+            <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 hover:bg-accent/30 transition-colors">
+                    <div className="flex items-center gap-2">
+                        {section.icon}
+                        <span className="font-semibold">{section.title}</span>
+                        <span className="text-sm text-muted-foreground">
+                            - {section.tasks.length} task{section.tasks.length !== 1 ? 's' : ''}
+                        </span>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <div className="border-t border-border">
+                        {section.tasks.map((task, index) => (
+                            <div key={task.task_id} className={index !== section.tasks.length - 1 ? 'border-b border-border' : ''}>
+                                <TaskItem task={task} />
+                            </div>
+                        ))}
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
+        </div>
     )
 }
 
@@ -195,8 +200,8 @@ const TaskList = ({ tasks = [] }: TaskListProps) => {
     
     if (tasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 rounded-full bg-accent/50 flex items-center justify-center mb-4">
+            <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-dashed border-border">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                     <ListTodo className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h3 className="font-medium text-lg mb-1">No tasks yet</h3>
@@ -210,7 +215,7 @@ const TaskList = ({ tasks = [] }: TaskListProps) => {
         : categorizeByStatus(tasks)
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {/* Grouping Toggle */}
             <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Group by:</span>
@@ -223,7 +228,7 @@ const TaskList = ({ tasks = [] }: TaskListProps) => {
                     <ToggleGroupItem 
                         value="time" 
                         aria-label="Group by time"
-                        className="data-[state=on]:bg-blue-500 data-[state=on]:text-white px-3 py-1.5 text-xs rounded-md transition-colors"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground px-3 py-1.5 text-xs rounded-md transition-colors"
                     >
                         <Calendar className="w-3.5 h-3.5 mr-1.5" />
                         Time
@@ -231,7 +236,7 @@ const TaskList = ({ tasks = [] }: TaskListProps) => {
                     <ToggleGroupItem 
                         value="status" 
                         aria-label="Group by status"
-                        className="data-[state=on]:bg-purple-500 data-[state=on]:text-white px-3 py-1.5 text-xs rounded-md transition-colors"
+                        className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground px-3 py-1.5 text-xs rounded-md transition-colors"
                     >
                         <ListChecks className="w-3.5 h-3.5 mr-1.5" />
                         Status
@@ -239,10 +244,14 @@ const TaskList = ({ tasks = [] }: TaskListProps) => {
                 </ToggleGroup>
             </div>
             
-            {/* Task Sections */}
-            {sections.map((section) => (
-                <TaskSectionComponent key={section.id} section={section} />
-            ))}
+            {/* Task Sections - Parent container with border */}
+            <div className="rounded-xl border border-border p-3 flex flex-col gap-3">
+                {sections.map((section) => (
+                    <div key={section.id} className="rounded-lg border border-border overflow-hidden">
+                        <TaskSectionComponent section={section} />
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }
