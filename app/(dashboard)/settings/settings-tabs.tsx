@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Paintbrush, Bell, Lock, CreditCard } from "lucide-react"
+import { User, Paintbrush, Bell, Lock, CreditCard, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const tabs = [
@@ -26,6 +26,11 @@ const tabs = [
     name: "Privacy",
     href: "/settings/privacy",
     icon: Lock,
+  },
+  {
+    name: "Security",
+    href: "/settings/security",
+    icon: Shield,
   },
   {
     name: "Billing",

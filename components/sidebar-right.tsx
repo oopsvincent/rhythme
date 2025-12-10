@@ -124,41 +124,6 @@ export function SidebarRight({
           </SidebarContent>
         </Sidebar>
       </div>
-
-      {/* Mobile Calendar Floating Button & Drawer */}
-      <div className="fixed bottom-4 right-4 z-50 lg:hidden">
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild>
-            <Button 
-              size="icon" 
-              className="h-12 w-12 rounded-full bg-primary shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 transition-all"
-            >
-              <CalendarDays className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent 
-            side="right" 
-            className="w-[320px] border-l border-border/50 bg-background/95 backdrop-blur-xl p-0 sm:w-[380px]"
-          >
-            <SheetHeader className="flex flex-row items-center gap-2 border-b border-border/50 px-4 py-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                <CalendarDays className="h-4 w-4 text-primary" />
-              </div>
-              <SheetTitle className="text-sm font-semibold">Calendar</SheetTitle>
-            </SheetHeader>
-            <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: 'calc(100vh - 80px)' }}>
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <span className="text-xs text-muted-foreground">Loading calendar...</span>
-                </div>
-              ) : (
-                <CalendarWithFilters tasks={tasks} showTitle={false} onTaskClick={handleTaskClick} />
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
     </>
   )
 }

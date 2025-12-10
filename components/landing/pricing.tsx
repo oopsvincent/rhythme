@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
-import { Check, Sparkles, Zap, Brain, Cloud, Shield, TrendingUp, Award } from 'lucide-react';
-import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { Check, Sparkles, Zap, Brain, Cloud, Shield, Compass, Target, Heart, BookOpen, TrendingUp } from 'lucide-react';
 
 interface CardProps {
   children: React.ReactNode;
@@ -45,8 +45,6 @@ const Card: React.FC<CardProps> = ({ children, className = '' }) => (
     {children}
   </div>
 );
-
-    // redirect
 
 const CardHeader: React.FC<CardHeaderProps> = ({ children }) => (
   <div className="p-6 border-b border-border/50">{children}</div>
@@ -98,11 +96,15 @@ export default function PricingComponent() {
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
       
       <div className="max-w-7xl mx-auto text-center relative z-10 font-marketing">
-        <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]">
-          Choose Your Rhythm
+        {/* Section Header */}
+        <span className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+          Simple Pricing
+        </span>
+        <h2 className="text-4xl md:text-5xl font-bold mb-4 font-primary">
+          Choose Your Path
         </h2>
-        <p className="text-xl text-muted-foreground mb-8">
-          One simple plan for everything you need
+        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          Start free. Upgrade when you&apos;re ready for deeper clarity and AI-powered direction.
         </p>
 
         {/* Billing Toggle */}
@@ -139,13 +141,17 @@ export default function PricingComponent() {
               <div className="text-5xl font-bold mb-2 bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
                 ${pricing[billingCycle].free}
                 <span className="text-lg text-muted-foreground font-normal">
-                  /{billingCycle === 'monthly' ? 'mo' : 'yr'}
+                  /forever
                 </span>
               </div>
-              <p className="text-muted-foreground">Perfect to get started</p>
+              <p className="text-muted-foreground">Start finding your direction</p>
             </CardHeader>
             <CardContent className="text-left">
               <div className="space-y-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <Target className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground"><strong className="text-foreground">1 Goal workspace</strong> to stay focused</span>
+                </div>
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Track up to <strong className="text-foreground">3 habits</strong></span>
@@ -155,29 +161,27 @@ export default function PricingComponent() {
                   <span className="text-muted-foreground"><strong className="text-foreground">10 tasks</strong> per day</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <BookOpen className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Daily journaling (<strong className="text-foreground">10 entries/month</strong>)</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">Basic focus & Pomodoro timer</span>
+                  <Compass className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground"><strong className="text-foreground">Basic Next Best Action</strong> suggestions</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground">Basic focus timer</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Weekly progress overview</span>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">Basic goal tracking</span>
-                </div>
               </div>
-              <Button variant="outline" className="w-full" onClick={
-                () => {
-                 redirect('/dashboard') 
-                }
-              }>
-                Get Started Free
-              </Button>
+              <Link href="/signup/intro">
+                <Button variant="outline" className="w-full">
+                  Get Started Free
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -185,7 +189,7 @@ export default function PricingComponent() {
           <Card className="border-primary/50 relative shadow-2xl shadow-primary/10 hover:shadow-primary/20 transition-all duration-300 hover:scale-[1.02]">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm border border-primary/30">
-                MOST POPULAR
+                RECOMMENDED
               </span>
             </div>
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl pointer-events-none"></div>
@@ -193,7 +197,7 @@ export default function PricingComponent() {
               <CardTitle className="text-3xl mb-2 flex items-center justify-center gap-2">
                 PLUS <Sparkles className="w-6 h-6 text-accent" />
               </CardTitle>
-              <div className="text-5xl font-bold mb-2 bg-gradient-to-br from-primary via-accent to-foreground bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]">
+              <div className="text-5xl font-bold mb-2 bg-gradient-to-br from-primary via-accent to-foreground bg-clip-text text-transparent">
                 ${pricing[billingCycle].plus}
                 <span className="text-lg text-muted-foreground font-normal">
                   /{billingCycle === 'monthly' ? 'mo' : 'yr'}
@@ -204,45 +208,37 @@ export default function PricingComponent() {
                   ${(pricing.yearly.plus / 12).toFixed(2)}/month billed yearly
                 </p>
               )}
-              <p className="text-muted-foreground mt-1">Everything you need to thrive</p>
+              <p className="text-muted-foreground mt-1">Full clarity and AI-powered direction</p>
             </CardHeader>
             <CardContent className="text-left relative">
               <div className="space-y-4 mb-6">
                 <div className="flex items-start gap-3 group">
-                  <Zap className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">Unlimited habits</strong> tracking</span>
+                  <Target className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
+                  <span className="text-muted-foreground"><strong className="text-foreground">Unlimited goal workspaces</strong></span>
                 </div>
                 <div className="flex items-start gap-3 group">
                   <Zap className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">Unlimited tasks</strong> & to-dos</span>
+                  <span className="text-muted-foreground"><strong className="text-foreground">Unlimited habits</strong> & tasks</span>
                 </div>
                 <div className="flex items-start gap-3 group">
-                  <Zap className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">Unlimited journal</strong> entries</span>
+                  <BookOpen className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
+                  <span className="text-muted-foreground"><strong className="text-foreground">Unlimited journaling</strong></span>
                 </div>
                 <div className="flex items-start gap-3 group">
-                  <Brain className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">AI-powered insights</strong> for wellbeing</span>
-                </div>
-                <div className="flex items-start gap-3 group">
-                  <Brain className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">AI habit suggestions</strong> & optimization</span>
+                  <Compass className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
+                  <span className="text-muted-foreground"><strong className="text-foreground">AI-powered Next Best Action</strong> with reasoning</span>
                 </div>
                 <div className="flex items-start gap-3 group">
                   <Brain className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">AI journal prompts</strong> & mood analysis</span>
+                  <span className="text-muted-foreground"><strong className="text-foreground">Micro-reflections</strong> & sentiment analysis</span>
                 </div>
                 <div className="flex items-start gap-3 group">
                   <TrendingUp className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">Advanced analytics</strong> & progress tracking</span>
+                  <span className="text-muted-foreground"><strong className="text-foreground">Weekly & monthly insights</strong></span>
                 </div>
                 <div className="flex items-start gap-3 group">
-                  <Award className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">Advanced goal management</strong> with milestones</span>
-                </div>
-                <div className="flex items-start gap-3 group">
-                  <Zap className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">Advanced Pomodoro</strong> with custom sessions</span>
+                  <Heart className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors" />
+                  <span className="text-muted-foreground"><strong className="text-foreground">Identity reinforcement</strong> & tracking</span>
                 </div>
                 <div className="flex items-start gap-3 group">
                   <Cloud className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
@@ -256,38 +252,27 @@ export default function PricingComponent() {
                   <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
                   <span className="text-muted-foreground"><strong className="text-foreground">Custom themes</strong> & personalization</span>
                 </div>
-                <div className="flex items-start gap-3 group">
-                  <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 group-hover:text-accent transition-colors" />
-                  <span className="text-muted-foreground"><strong className="text-foreground">Export data</strong> in multiple formats</span>
-                </div>
               </div>
-              <Button className="w-full" >
-                Upgrade to Plus
-              </Button>
+              <Link href="/signup/intro">
+                <Button className="w-full bg-gradient-to-r from-primary to-accent hover:shadow-xl hover:shadow-primary/30">
+                  Upgrade to Plus
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
 
         {/* Bottom Message */}
-        <div className="mt-16 space-y-2">
-          <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]">
-            Free to begin, limitless when you&lsquo;re ready
+        <div className="mt-16 space-y-4">
+          <p className="text-3xl md:text-4xl font-bold font-primary">
+            <span className="text-foreground">Start free, </span>
+            <span className="text-gradient-primary">grow with clarity</span>
           </p>
           <p className="text-muted-foreground text-lg">
             No credit card required • Cancel anytime • 30-day money-back guarantee
           </p>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-        .animate-shimmer {
-          animation: shimmer 8s linear infinite;
-        }
-      `}</style>
     </section>
   );
 }

@@ -1,18 +1,20 @@
 "use client";
 import {
-  Activity,
-  BarChart3,
-  BookOpen,
+  Compass,
+  Target,
+  Lightbulb,
+  Heart,
   Brain,
-  CheckCircle,
-  ChevronRight,
+  TrendingUp,
+  BookOpen,
+  Sparkles,
+  Shield,
   Cloud,
   Palette,
-  Shield,
-  Target,
-  Timer,
-  TrendingUp,
-  Trophy,
+  Clock,
+  CheckCircle,
+  MessageCircle,
+  ChevronRight,
 } from "lucide-react";
 import React, { useState } from "react";
 
@@ -26,6 +28,7 @@ interface Feature {
 
 interface Category {
   name: string;
+  description: string;
   features: Feature[];
 }
 
@@ -34,148 +37,151 @@ const FeaturesSection = () => {
 
   const categories: Category[] = [
     {
-      name: "Productivity",
+      name: "Core Experience",
+      description: "The heart of your daily flow",
       features: [
         {
           icon: <Target className="w-8 h-8" />,
-          title: "Habit Tracking",
-          description:
-            "Build lasting habits with our intelligent tracking system",
+          title: "Goal Workspace",
+          description: "One dedicated space for your long-term goal, with everything aligned to move you forward",
           highlights: [
-            "Track unlimited habits",
-            "Visual streak counters",
-            "Customizable reminders",
-            "Habit insights & patterns",
+            "Single goal focus",
+            "Sub-goal breakdown",
+            "Visual progress tracking",
+            "AI-assisted goal mapping",
           ],
           gradient: "from-primary to-accent",
         },
         {
-          icon: <Timer className="w-8 h-8" />,
-          title: "Focus Mode & Pomodoro",
-          description: "Stay in the zone with advanced focus tools",
+          icon: <Compass className="w-8 h-8" />,
+          title: "Next Best Action Engine",
+          description: "Every day, get one small, doable step tailored to your energy and progress",
           highlights: [
-            "Customizable work sessions",
-            "Break time management",
-            "Focus statistics",
-            "Distraction blocking",
+            "AI-powered daily action",
+            "Difficulty-adjusted tasks",
+            "Clear reasoning provided",
+            "Momentum-aware suggestions",
           ],
           gradient: "from-accent to-primary",
         },
         {
           icon: <CheckCircle className="w-8 h-8" />,
-          title: "Smart Task Management",
-          description: "Organize your day with intelligent prioritization",
+          title: "Action Completion Loop",
+          description: "Simple, satisfying completion with encouragement that keeps you going",
           highlights: [
-            "AI-powered task sorting",
-            "Deadline tracking",
-            "Subtasks & dependencies",
-            "Calendar integration",
+            "One-tap completion",
+            "Micro-celebrations",
+            "Progress visualization",
+            "Streak maintenance",
           ],
           gradient: "from-primary via-accent to-primary",
         },
       ],
     },
     {
-      name: "Insights",
+      name: "Intelligence",
+      description: "AI that understands your journey",
       features: [
         {
-          icon: <Brain className="w-8 h-8" />,
-          title: "AI-Powered Analysis",
-          description: "Get personalized insights about your productivity",
+          icon: <Lightbulb className="w-8 h-8" />,
+          title: "AI Reasoning",
+          description: "Every action comes with a 'why'—understand how each step connects to your goal",
           highlights: [
-            "Behavior pattern detection",
-            "Productivity recommendations",
-            "Mood correlation analysis",
-            "Goal achievement predictions",
+            "Context-aware explanations",
+            "Goal connection clarity",
+            "Momentum insights",
+            "Pattern recognition",
           ],
           gradient: "from-purple-500 to-pink-500",
         },
         {
-          icon: <BarChart3 className="w-8 h-8" />,
-          title: "Advanced Analytics",
-          description: "Visualize your progress with beautiful charts",
+          icon: <Brain className="w-8 h-8" />,
+          title: "Micro-Reflections",
+          description: "AI-generated insights from your daily check-ins that help you understand yourself",
           highlights: [
-            "Daily, weekly, monthly views",
-            "Habit completion rates",
-            "Time spent analytics",
-            "Export reports (PDF/CSV)",
+            "Sentiment analysis",
+            "Behavior patterns",
+            "Personalized feedback",
+            "Adaptive suggestions",
           ],
           gradient: "from-blue-500 to-cyan-500",
         },
         {
           icon: <TrendingUp className="w-8 h-8" />,
-          title: "Progress Tracking",
-          description: "Monitor your growth journey over time",
+          title: "Weekly & Monthly Insights",
+          description: "Deeper analysis of your progress, struggles, and growth over time",
           highlights: [
-            "Goal milestone tracking",
-            "Achievement unlocks",
-            "Comparative statistics",
-            "Personal best records",
+            "Weekly accomplishments",
+            "Struggle identification",
+            "Goal adjustments",
+            "Identity reinforcement",
           ],
           gradient: "from-green-500 to-emerald-500",
         },
       ],
     },
     {
-      name: "Wellbeing",
+      name: "Reflection & Growth",
+      description: "Build self-awareness and meaning",
       features: [
         {
           icon: <BookOpen className="w-8 h-8" />,
-          title: "Journal & Reflection",
-          description: "Capture your thoughts and track your mood",
+          title: "Micro-Journaling",
+          description: "Quick daily prompts—'How did today feel?'—that build self-awareness over time",
           highlights: [
-            "Rich text journaling",
+            "One-question prompts",
             "Mood tracking",
-            "Prompt suggestions",
-            "Search & tag entries",
+            "Optional deep entries",
+            "Searchable history",
           ],
           gradient: "from-amber-500 to-orange-500",
         },
         {
-          icon: <Activity className="w-8 h-8" />,
-          title: "Wellness Monitoring",
-          description: "Keep track of your physical and mental health",
+          icon: <MessageCircle className="w-8 h-8" />,
+          title: "Supportive Dialogue",
+          description: "Rhythmé speaks like a supportive friend, not a productivity robot",
           highlights: [
-            "Sleep tracking",
-            "Exercise logging",
-            "Water intake reminders",
-            "Stress level monitoring",
+            "Warm, human tone",
+            "Encouraging feedback",
+            "Empathetic responses",
+            "Never overwhelming",
           ],
           gradient: "from-teal-500 to-green-500",
         },
         {
-          icon: <Trophy className="w-8 h-8" />,
-          title: "Gamification",
-          description: "Stay motivated with rewards and challenges",
+          icon: <Sparkles className="w-8 h-8" />,
+          title: "Identity Reinforcement",
+          description: "Track who you're becoming—'You are consistent', 'You are improving'",
           highlights: [
-            "Achievement badges",
-            "Streak maintenance",
-            "Level progression",
-            "Daily challenges",
+            "Positive affirmations",
+            "Growth recognition",
+            "Achievement unlocks",
+            "Confidence building",
           ],
           gradient: "from-yellow-500 to-red-500",
         },
       ],
     },
     {
-      name: "Platform",
+      name: "Foundation",
+      description: "Built for trust and reliability",
       features: [
         {
           icon: <Cloud className="w-8 h-8" />,
           title: "Cloud Sync",
-          description: "Access your data anywhere, anytime",
+          description: "Access your journey anywhere, with real-time synchronization",
           highlights: [
-            "Real-time synchronization",
+            "Real-time sync",
             "Automatic backups",
-            "Version history",
             "Multi-device support",
+            "Offline capable",
           ],
           gradient: "from-sky-500 to-blue-500",
         },
         {
           icon: <Shield className="w-8 h-8" />,
           title: "Privacy & Security",
-          description: "Your data is encrypted and protected",
+          description: "Your personal journey stays private, always",
           highlights: [
             "End-to-end encryption",
             "GDPR compliant",
@@ -186,13 +192,13 @@ const FeaturesSection = () => {
         },
         {
           icon: <Palette className="w-8 h-8" />,
-          title: "Customization",
-          description: "Make Rhythmé truly yours",
+          title: "Personalization",
+          description: "Make Rhythmé feel like yours with themes and customization",
           highlights: [
             "Custom themes",
-            "Widget personalization",
-            "Layout options",
-            "Icon packs",
+            "Difficulty settings",
+            "Notification control",
+            "Layout preferences",
           ],
           gradient: "from-purple-500 to-indigo-500",
         },
@@ -201,10 +207,26 @@ const FeaturesSection = () => {
   ];
 
   return (
-    <div>
-      {" "}
+    <div id="features" className="relative">
+      {/* Section Header */}
+      <section className="px-4 sm:px-6 py-8 text-center">
+        <div className="max-w-3xl mx-auto">
+          <span className="inline-block px-4 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium mb-4">
+            Features
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 font-primary">
+            <span className="text-foreground">Everything you need,</span>
+            <br />
+            <span className="text-gradient-primary">nothing you don&apos;t</span>
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Designed around clarity and direction—not feature overload
+          </p>
+        </div>
+      </section>
+
       {/* Category Tabs */}
-      <section id="features" className="px-4 sm:px-6 pb-8">
+      <section className="px-4 sm:px-6 pb-8">
         <div className="max-w-7xl mx-auto">
           <div className="backdrop-blur-xl bg-background/60 border border-border rounded-2xl p-2 overflow-x-auto">
             <div className="flex gap-2 min-w-max sm:min-w-0 sm:grid sm:grid-cols-4">
@@ -212,31 +234,35 @@ const FeaturesSection = () => {
                 <button
                   key={index}
                   onClick={() => setActiveCategory(index)}
-                  className={`px-4 sm:px-6 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
+                  className={`px-4 sm:px-6 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap flex flex-col items-center sm:items-start gap-0.5 ${
                     activeCategory === index
                       ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg"
                       : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                   }`}
                 >
-                  {category.name}
+                  <span>{category.name}</span>
+                  <span className={`text-xs ${activeCategory === index ? "text-primary-foreground/70" : "text-muted-foreground/70"}`}>
+                    {category.description}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
         </div>
       </section>
+
       {/* Features Grid */}
-      <section className="px-4 sm:px-6 pb-12 sm:pb-20 font-marketing">
+      <section className="px-4 sm:px-6 pb-20 sm:pb-28 font-marketing">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {categories[activeCategory].features.map((feature, index) => (
               <div
                 key={index}
-                className="group backdrop-blur-xl bg-background/40 border-2 border-border hover:border-primary/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:scale-105"
+                className="group backdrop-blur-xl bg-background/40 border-2 border-border hover:border-primary/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:scale-[1.02]"
               >
                 {/* Icon */}
                 <div
-                  className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} mb-6 group-hover:scale-110 transition-transform duration-300`}
+                  className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
                 >
                   <div className="text-white">{feature.icon}</div>
                 </div>
@@ -245,7 +271,7 @@ const FeaturesSection = () => {
                 <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground mb-6 text-sm">
+                <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
                   {feature.description}
                 </p>
 

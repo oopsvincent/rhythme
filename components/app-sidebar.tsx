@@ -1,6 +1,7 @@
 "use client";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
+// import { SidebarQuickStats } from "@/components/sidebar-quick-stats"; // Hidden for MVP
 import Image from "next/image";
 
 import {
@@ -8,6 +9,8 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarGroup,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import {
   CalendarSync,
@@ -19,8 +22,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
-// Streamlined navigation - removed Goals and Projects
-const navItems = [
+// Main navigation items
+const mainNavItems = [
   {
     title: "Home",
     url: "/dashboard",
@@ -52,15 +55,19 @@ const navItems = [
     icon: NotebookPen,
     section: "journal",
   },
+];
+
+// Secondary navigation items
+const secondaryNavItems = [
   {
     title: "Ask AI",
     url: "/dashboard/ai",
     icon: Sparkles,
-    section: "analytics",
+    section: "ai",
   },
   {
     title: "Settings",
-    url: "/settings/account",
+    url: "/settings",
     icon: Settings,
     section: "settings",
   },
@@ -79,7 +86,7 @@ export function AppSidebarClient({
   return (
     <Sidebar
       collapsible="offcanvas"
-      className="fixed left-0 top-0 z-40 h-screen border-r-0 bg-sidebar/80 backdrop-blur-xl"
+      className="fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border glass"
       {...props}
     >
       {/* Logo Header - Premium minimal */}
@@ -96,8 +103,25 @@ export function AppSidebarClient({
       <div className="mx-4 h-px bg-border/50" />
 
       {/* Main Navigation */}
-      <SidebarContent className="px-2 py-4">
-        <NavMain items={navItems} />
+      <SidebarContent className="flex flex-col gap-0">
+        {/* Primary Navigation */}
+        <SidebarGroup className="px-2 py-3">
+          <SidebarGroupLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-1">
+            Menu
+          </SidebarGroupLabel>
+          <NavMain items={mainNavItems} />
+        </SidebarGroup>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Secondary Navigation */}
+        <SidebarGroup className="px-2 py-2">
+          <SidebarGroupLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-1">
+            More
+          </SidebarGroupLabel>
+          <NavMain items={secondaryNavItems} />
+        </SidebarGroup>
       </SidebarContent>
 
       {/* User Footer - Glass effect */}
