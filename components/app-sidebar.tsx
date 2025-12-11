@@ -92,7 +92,7 @@ export function AppSidebarClient({
       {/* Logo Header - Premium minimal */}
       <SidebarHeader className="flex flex-row items-center gap-2 px-4 py-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-          <Image alt="R" src="/rhythme.svg" width={20} height={20} />
+          <Image alt="R" src="/Rhythme.svg" width={20} height={20} />
         </div>
         <span className="font-primary text-lg font-bold tracking-tight">
           Rhythmé
