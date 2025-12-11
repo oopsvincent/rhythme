@@ -5,6 +5,7 @@ import './loading.css';
 import './styles/not-found.css'
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/components/query-provider";
 
 const clashDisplay = localFont({
   src: [
@@ -143,17 +144,19 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-                    <div className="absolute top-2 right-2 z-[100]">
-            {/* <ModeToggle /> */}
-          </div>
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+                      <div className="absolute top-2 right-2 z-[100]">
+              {/* <ModeToggle /> */}
+            </div>
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );
