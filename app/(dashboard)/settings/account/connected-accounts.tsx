@@ -74,9 +74,10 @@ export default function ConnectedAccounts({ identities }: ConnectedAccountsProps
     
     try {
       await linkProvider(provider)
-    } catch (err: any) {
-      setError(err.message || "Failed to link account")
-      setLinkingProvider(null)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to link account";
+      setError(message);
+      setLinkingProvider(null);
     }
   }
 

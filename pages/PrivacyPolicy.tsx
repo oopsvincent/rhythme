@@ -1,303 +1,258 @@
-import React from 'react';
-// import { Shield, Lock, Eye, Database, UserCheck, AlertTriangle } from 'lucide-react';
+import React from "react";
+import LegalLayout from "@/components/legal/legal-layout";
 
 const PrivacyPolicy = () => {
   return (
-    // <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 text-primary font-primary">
-    //   <div className="max-w-4xl mx-auto">
-    //     {/* Header */}
-    //     <div className="text-center mb-12">
-    //       <div className="flex justify-center mb-4">
-    //         <Shield className="h-12 w-12 text-primary" />
-    //       </div>
-    //       <h1 className="text-4xl font-bold text-gray-900 mb-4">Privacy Policy</h1>
-    //       <p className="text-lg text-gray-600">
-    //         Rhythmé by <span className="font-semibold">Nintonic</span>
+    <LegalLayout 
+      title="Privacy Policy" 
+      type="privacy" 
+      lastUpdated="December 2025"
+    >
+      {/* Section 1 */}
+      <section>
+        <h2>1. Introduction</h2>
+        <p>
+          Welcome to Rhythmé (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your privacy 
+          and ensuring transparency about how we handle your personal information. This Privacy 
+          Policy explains what data we collect, how we use it, and your rights regarding your information.
+        </p>
+        <p>
+          By using Rhythmé (the &quot;Service&quot;), you agree to the collection and use of information 
+          in accordance with this policy.
+        </p>
+      </section>
 
-    //         <br />
+      {/* Section 2 */}
+      <section>
+        <h2>2. Information We Collect</h2>
+        
+        <h3>2.1 Information You Provide</h3>
+        <p>We collect the following personal information when you create an account and use our Service:</p>
+        <ul>
+          <li><strong>Name:</strong> To personalize your experience</li>
+          <li><strong>Email Address:</strong> For account authentication and essential communications</li>
+        </ul>
+        
+        <h3>2.2 Information Collected Automatically</h3>
+        <p>When you use our Service, we automatically collect:</p>
+        <ul>
+          <li><strong>Authentication Data:</strong> Session tokens and authentication cookies managed through our backend infrastructure</li>
+          <li><strong>Local Storage Data:</strong> Certain preferences and temporary data stored in your browser&apos;s localStorage for functionality purposes</li>
+        </ul>
+        
+        <h3>2.3 Social Login Information</h3>
+        <p>
+          If you choose to authenticate through third-party providers (Google, GitHub, Meta/Facebook, 
+          or Discord), we receive basic profile information from these providers as permitted by 
+          their policies and your privacy settings.
+        </p>
+      </section>
 
-    //                     <h1 className='text-red-600 font-bold text-3xl' >
-    //             These will come to action after production in September 2026. Before that these policies are uselesss, they don't mean a thing to anyone, we are not even a company yet.
-    //         </h1>
-    //       </p>
-    //       <p className="text-sm text-gray-500 mt-2">
-    //         Last updated: {new Date().toLocaleDateString()}
-    //       </p>
-    //     </div>
+      {/* Section 3 */}
+      <section>
+        <h2>3. How We Collect Your Information</h2>
+        <p>We collect information through:</p>
+        <ul>
+          <li><strong>Account Registration:</strong> During the signup process</li>
+          <li><strong>Third-Party Authentication:</strong> When you log in using Google, GitHub, Meta, or Discord</li>
+          <li><strong>Backend Services:</strong> Through Supabase, our database and authentication provider</li>
+          <li><strong>Application Usage:</strong> As you interact with tasks, habits, and other features</li>
+        </ul>
+      </section>
 
-    //     {/* Content */}
-    //     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-    //       <div className="prose max-w-none">
-            
-    //         {/* Introduction */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <UserCheck className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">Introduction</h2>
-    //           </div>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             Welcome to Rhythmé, a productivity ecosystem operated by Nintonic ("we," "our," or "us"). 
-    //             This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you 
-    //             use our web application, mobile application, and related services (collectively, the "Service").
-    //           </p>
-    //           <p className="text-gray-700 leading-relaxed mt-4">
-    //             By accessing or using our Service, you agree to the collection and use of information in accordance 
-    //             with this Privacy Policy. If you do not agree with our policies and practices, do not use our Service.
-    //           </p>
-    //         </section>
+      {/* Section 4 */}
+      <section>
+        <h2>4. How We Use Your Information</h2>
+        <p>We use your personal information solely to:</p>
+        <ul>
+          <li>Provide and maintain the Service</li>
+          <li>Authenticate your account and manage user sessions</li>
+          <li>Enable core productivity features including tasks and habits tracking</li>
+          <li>Send essential communications such as a welcome email to new users</li>
+          <li>Process and store your data securely through our backend infrastructure</li>
+          <li>Provide ML-powered habit predictions (processed anonymously)</li>
+        </ul>
+        <p>
+          <strong>We do not track your behavior, sell your data, or use your information for marketing purposes.</strong>
+        </p>
+      </section>
 
-    //         {/* Information We Collect */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <Database className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">Information We Collect</h2>
-    //           </div>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Personal Information</h3>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
-    //             <li>Account information (name, email address, password)</li>
-    //             <li>Profile information (profile picture, preferences, settings)</li>
-    //             <li>Payment information (processed securely through third-party providers)</li>
-    //             <li>Communication data (support requests, feedback)</li>
-    //           </ul>
+      {/* Section 5 */}
+      <section>
+        <h2>5. Machine Learning Processing</h2>
+        <p>Our habit tracking feature includes an ML model that predicts the likelihood of habit completion. This process:</p>
+        <ul>
+          <li>Takes habit data from your account stored in our database</li>
+          <li>Sends it <strong>anonymously</strong> to our ML service hosted on Render</li>
+          <li>Returns predictions which are stored back in our database</li>
+          <li>Never shares your personal identifying information with the ML service</li>
+        </ul>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Usage Information</h3>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
-    //             <li>Habit tracking data (habits, completion status, streaks)</li>
-    //             <li>Journal entries and mood tracking information</li>
-    //             <li>Focus session data (duration, productivity metrics)</li>
-    //             <li>Goal setting and progress information</li>
-    //             <li>Gamification data (XP points, achievements, levels)</li>
-    //             <li>Social interaction data (accountability partners, challenges)</li>
-    //           </ul>
+      {/* Section 6 */}
+      <section>
+        <h2>6. Data Sharing and Third Parties</h2>
+        
+        <h3>6.1 Service Providers</h3>
+        <p>We share your information only with the following trusted service providers necessary to operate our Service:</p>
+        <ul>
+          <li><strong>Supabase:</strong> Backend infrastructure, database, and authentication services</li>
+          <li><strong>Vercel:</strong> Hosting and deployment infrastructure</li>
+          <li><strong>Render:</strong> Anonymous ML model processing for habit predictions</li>
+          <li><strong>Social Login Providers:</strong> Google, GitHub, Meta, and Discord for authentication purposes only</li>
+        </ul>
+        <p>These providers process data on our behalf and are contractually obligated to protect your information.</p>
+        
+        <h3>6.2 Legal Requirements</h3>
+        <p>We may disclose your information if required by law or in response to valid legal processes.</p>
+        
+        <h3>6.3 No Data Sales</h3>
+        <p>We do not sell, rent, or trade your personal information to third parties for any purpose.</p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Technical Information</h3>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li>Device information (IP address, browser type, operating system)</li>
-    //             <li>Usage analytics (pages visited, features used, session duration)</li>
-    //             <li>Cookies and similar tracking technologies</li>
-    //             <li>Error logs and performance data</li>
-    //           </ul>
-    //         </section>
+      {/* Section 7 */}
+      <section>
+        <h2>7. Cookies and Tracking Technologies</h2>
+        
+        <h3>7.1 Cookies We Use</h3>
+        <p>We use cookies and similar technologies only for:</p>
+        <ul>
+          <li><strong>Authentication:</strong> Managing your login sessions</li>
+          <li><strong>Functionality:</strong> Enabling essential Service features through Next.js and Supabase</li>
+        </ul>
+        
+        <h3>7.2 No Tracking</h3>
+        <p>
+          We do not use cookies or any other technologies to track your behavior, build user profiles, 
+          or serve advertisements.
+        </p>
+        
+        <h3>7.3 Local Storage</h3>
+        <p>
+          Our application stores certain data in your browser&apos;s localStorage to enhance functionality 
+          and user experience. This data remains on your device and can be cleared through your browser settings.
+        </p>
+      </section>
 
-    //         {/* How We Use Information */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <Eye className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">How We Use Your Information</h2>
-    //           </div>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We use the information we collect for various purposes, including:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li>Providing, operating, and maintaining our Service</li>
-    //             <li>Processing transactions and managing subscriptions</li>
-    //             <li>Personalizing your experience and providing tailored recommendations</li>
-    //             <li>Generating AI-powered insights and productivity analytics</li>
-    //             <li>Facilitating social features and accountability partnerships</li>
-    //             <li>Sending administrative information and service updates</li>
-    //             <li>Responding to customer support requests</li>
-    //             <li>Improving our Service through analytics and user feedback</li>
-    //             <li>Detecting and preventing fraud, abuse, and security issues</li>
-    //             <li>Complying with legal obligations</li>
-    //           </ul>
-    //         </section>
+      {/* Section 8 */}
+      <section>
+        <h2>8. Data Security</h2>
+        <p>We take data security seriously and implement appropriate measures including:</p>
+        <ul>
+          <li>Server-Side Rendering (SSR) with React Server Components (RSC)</li>
+          <li>Industry-standard security practices through Vercel and Supabase</li>
+          <li>Secure authentication protocols</li>
+          <li>Encrypted data transmission</li>
+        </ul>
+        <p>However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.</p>
+      </section>
 
-    //         {/* Information Sharing */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <Lock className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">Information Sharing and Disclosure</h2>
-    //           </div>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We do not sell, trade, or otherwise transfer your personal information to third parties except in the following circumstances:
-    //           </p>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Service Providers</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We may share your information with trusted third-party service providers who assist us in operating our Service, 
-    //             including hosting providers, payment processors, analytics services, and customer support tools.
-    //           </p>
+      {/* Section 9 */}
+      <section>
+        <h2>9. Data Retention</h2>
+        <p>
+          We retain your personal information for as long as you maintain an active account with us. 
+          Your data is stored indefinitely until you request deletion.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Social Features</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             When you participate in social features like accountability partnerships or challenges, 
-    //             certain information may be shared with other users as part of the intended functionality.
-    //           </p>
+      {/* Section 10 */}
+      <section>
+        <h2>10. Your Rights and Choices</h2>
+        <p>You have the following rights regarding your personal information:</p>
+        
+        <h3>10.1 Access</h3>
+        <p>You can access all your personal data through the application interface.</p>
+        
+        <h3>10.2 Modification</h3>
+        <p>You can modify your information at any time through the app&apos;s settings and relevant sections.</p>
+        
+        <h3>10.3 Deletion</h3>
+        <p>
+          You can delete your data and account at any time through the app&apos;s settings. Upon deletion 
+          request, your information will be removed immediately and permanently from our systems.
+        </p>
+        
+        <h3>10.4 Data Portability</h3>
+        <p>You can export your data through the application interface.</p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Legal Requirements</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We may disclose your information if required by law or in response to valid legal processes, 
-    //             such as court orders or government requests.
-    //           </p>
+      {/* Section 11 */}
+      <section>
+        <h2>11. Children&apos;s Privacy</h2>
+        <p>
+          Rhythmé is a productivity application not specifically directed at children. Users under 
+          the age of 18 should use this Service only with parental supervision and consent. We do 
+          not knowingly collect personal information from children without parental consent.
+        </p>
+        <p>
+          If you are a parent or guardian and believe your child has provided us with personal 
+          information without your consent, please contact us at rhythmeauth@gmail.com, and we will 
+          take steps to remove such information.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Business Transfers</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             In the event of a merger, acquisition, or sale of assets, your information may be transferred 
-    //             to the acquiring entity, subject to the same privacy protections.
-    //           </p>
-    //         </section>
+      {/* Section 12 */}
+      <section>
+        <h2>12. International Users</h2>
+        <p>
+          Rhythmé is available globally. By using our Service, you consent to the transfer of your 
+          information to our service providers&apos; locations, which may be outside your country of 
+          residence. We ensure that appropriate safeguards are in place to protect your data.
+        </p>
+        
+        <h3>12.1 GDPR Rights (European Users)</h3>
+        <p>If you are located in the European Economic Area (EEA), you have additional rights under GDPR including:</p>
+        <ul>
+          <li>Right to access your data</li>
+          <li>Right to rectification</li>
+          <li>Right to erasure (&quot;right to be forgotten&quot;)</li>
+          <li>Right to data portability</li>
+          <li>Right to object to processing</li>
+        </ul>
+        
+        <h3>12.2 CCPA Rights (California Users)</h3>
+        <p>If you are a California resident, you have rights under CCPA including:</p>
+        <ul>
+          <li>Right to know what personal information is collected</li>
+          <li>Right to delete personal information</li>
+          <li>Right to opt-out of the sale of personal information (Note: We do not sell personal information)</li>
+        </ul>
+      </section>
 
-    //         {/* Data Security */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <Shield className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">Data Security</h2>
-    //           </div>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We implement appropriate technical and organizational security measures to protect your personal information against 
-    //             unauthorized access, alteration, disclosure, or destruction. These measures include:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li>Encryption of data in transit and at rest</li>
-    //             <li>Regular security assessments and updates</li>
-    //             <li>Access controls and authentication measures</li>
-    //             <li>Secure hosting infrastructure</li>
-    //             <li>Regular backups and disaster recovery procedures</li>
-    //           </ul>
-    //           <p className="text-gray-700 leading-relaxed mt-4">
-    //             However, no method of transmission over the Internet or electronic storage is 100% secure. 
-    //             While we strive to protect your personal information, we cannot guarantee absolute security.
-    //           </p>
-    //         </section>
+      {/* Section 13 */}
+      <section>
+        <h2>13. Changes to This Privacy Policy</h2>
+        <p>We may update this Privacy Policy from time to time. We will notify you of any changes by:</p>
+        <ul>
+          <li>Updating the &quot;Last Updated&quot; date at the top of this policy</li>
+          <li>Sending an email notification for material changes (if applicable)</li>
+        </ul>
+        <p>Your continued use of the Service after changes constitutes acceptance of the updated policy.</p>
+      </section>
 
-    //         {/* Data Retention */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">Data Retention</h2>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             We retain your personal information for as long as necessary to provide our Service and fulfill the purposes 
-    //             outlined in this Privacy Policy. We may retain certain information for longer periods as required by law or 
-    //             for legitimate business purposes, such as fraud prevention and service improvement.
-    //           </p>
-    //         </section>
+      {/* Section 14 */}
+      <section>
+        <h2>14. Contact Us</h2>
+        <p>
+          If you have any questions, concerns, or requests regarding this Privacy Policy or our 
+          data practices, please contact us at:
+        </p>
+        <p>
+          <strong>Email:</strong> rhythmeauth@gmail.com<br />
+          <strong>Service:</strong> Rhythmé
+        </p>
+      </section>
 
-    //         {/* Your Rights */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Rights and Choices</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             Depending on your jurisdiction, you may have the following rights regarding your personal information:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li><strong>Access:</strong> Request access to your personal information</li>
-    //             <li><strong>Rectification:</strong> Request correction of inaccurate or incomplete information</li>
-    //             <li><strong>Erasure:</strong> Request deletion of your personal information</li>
-    //             <li><strong>Portability:</strong> Request transfer of your data to another service</li>
-    //             <li><strong>Restriction:</strong> Request limitation of processing of your information</li>
-    //             <li><strong>Objection:</strong> Object to processing of your information</li>
-    //             <li><strong>Withdrawal:</strong> Withdraw consent where processing is based on consent</li>
-    //           </ul>
-    //           <p className="text-gray-700 leading-relaxed mt-4">
-    //             To exercise these rights, please contact us at privacy@[yourcompany].com. We will respond to your request 
-    //             within a reasonable timeframe and in accordance with applicable laws.
-    //           </p>
-    //         </section>
-
-    //         {/* Cookies */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">Cookies and Tracking Technologies</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We use cookies and similar tracking technologies to enhance your experience on our Service. 
-    //             These technologies help us:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li>Remember your preferences and settings</li>
-    //             <li>Authenticate your account and maintain security</li>
-    //             <li>Analyze usage patterns and improve our Service</li>
-    //             <li>Provide personalized content and recommendations</li>
-    //           </ul>
-    //           <p className="text-gray-700 leading-relaxed mt-4">
-    //             You can control cookies through your browser settings, but disabling certain cookies may affect 
-    //             the functionality of our Service.
-    //           </p>
-    //         </section>
-
-    //         {/* Third-Party Services */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">Third-Party Services</h2>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             Our Service may contain links to third-party websites or integrate with third-party services. 
-    //             We are not responsible for the privacy practices of these third parties. We encourage you to 
-    //             review their privacy policies before providing any information.
-    //           </p>
-    //         </section>
-
-    //         {/* Children's Privacy */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">Children's Privacy</h2>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             Our Service is not intended for children under the age of 13. We do not knowingly collect 
-    //             personal information from children under 13. If we become aware that we have collected personal 
-    //             information from a child under 13, we will take steps to delete such information promptly.
-    //           </p>
-    //         </section>
-
-    //         {/* International Transfers */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">International Data Transfers</h2>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             Your information may be transferred to and processed in countries other than your own. 
-    //             We ensure that such transfers comply with applicable data protection laws and implement 
-    //             appropriate safeguards to protect your information.
-    //           </p>
-    //         </section>
-
-    //         {/* Changes to Policy */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">Changes to This Privacy Policy</h2>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             We may update this Privacy Policy from time to time to reflect changes in our practices or 
-    //             applicable laws. We will notify you of any material changes by posting the updated policy on 
-    //             our Service and updating the "Last updated" date. Your continued use of our Service after 
-    //             such changes constitutes acceptance of the updated policy.
-    //           </p>
-    //         </section>
-
-    //         {/* Disclaimer */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <AlertTriangle className="h-6 w-6 text-amber-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">Disclaimer</h2>
-    //           </div>
-    //           <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
-    //             <p className="text-gray-700 leading-relaxed">
-    //               <strong>IMPORTANT DISCLAIMER:</strong> Rhythmé by Nintonic is provided as a productivity tool. 
-    //               While we strive to provide accurate and reliable service, we make no warranties or guarantees regarding 
-    //               the effectiveness, accuracy, or reliability of our Service. Use of our Service is at your own risk, 
-    //               and we shall not be liable for any damages arising from your use of the Service, including but not 
-    //               limited to data loss, productivity impacts, or any other direct or indirect damages.
-    //             </p>
-    //           </div>
-    //         </section>
-
-    //         {/* Contact Information */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact Information</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, 
-    //             please contact us:
-    //           </p>
-    //           <div className="bg-gray-50 rounded-lg p-6">
-    //             <p className="text-gray-700"><strong>Email:</strong> privacy@[yourcompany].com</p>
-    //             <p className="text-gray-700"><strong>Support:</strong> support@[yourcompany].com</p>
-    //             <p className="text-gray-700"><strong>Address:</strong> [Your Company Address]</p>
-    //             <p className="text-gray-700"><strong>Phone:</strong> [Your Phone Number]</p>
-    //           </div>
-    //         </section>
-
-    //       </div>
-    //     </div>
-
-    //     {/* Back to App Button */}
-    //     <div className="text-center mt-8">
-    //       <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
-    //         Back to App
-    //       </button>
-    //     </div>
-    //   </div>
-    // </div>
-    <div className='font-primary font-bold'>
-        Privacy Policy
-    </div>
+      {/* Note */}
+      <section>
+        <hr className="my-8" />
+        <p className="text-sm text-muted-foreground">
+          <em>Note: As we are currently in development, this Privacy Policy may be updated before 
+          official launch. We recommend reviewing this policy periodically for any changes.</em>
+        </p>
+      </section>
+    </LegalLayout>
   );
 };
 

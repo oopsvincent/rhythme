@@ -6,6 +6,7 @@ import './styles/not-found.css'
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
+import { Analytics } from "@vercel/analytics/react";
 
 const clashDisplay = localFont({
   src: [
@@ -152,11 +153,12 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
-                      <div className="absolute top-2 right-2 z-[100]">
+            <div className="absolute top-2 right-2 z-[100]">
               {/* <ModeToggle /> */}
             </div>
           </ThemeProvider>
         </QueryProvider>
+        <Analytics />
       </body>
     </html>
   );

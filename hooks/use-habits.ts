@@ -21,14 +21,15 @@ export const habitKeys = {
   all: ["habits"] as const,
   detail: (id: number) => ["habit", id] as const,
   stats: (id: number) => ["habit-stats", id] as const,
+  prediction: (id: number) => ["habit-prediction", id] as const,
 };
 
 // ==================== HOOKS ====================
 
 /**
  * Fetch all habits with caching
- * - Cached for 5 minutes
- * - Automatically loads ML predictions
+ * - Returns habits immediately WITHOUT waiting for ML predictions
+ * - Predictions are loaded separately via useHabitPrediction hook
  */
 export function useHabits() {
   return useQuery({
@@ -37,23 +38,38 @@ export function useHabits() {
       const result = await getHabits();
       if (result.error) throw new Error(result.error);
       
-      // Load predictions for eligible habits
-      const habitsWithPredictions = await Promise.all(
-        (result.data || []).map(async (habit) => {
-          if (canUsePrediction(habit)) {
-            const prediction = await getCachedPrediction(
-              habit.habit_id,
-              habit,
-              habit.completionLogs
-            );
-            return { ...habit, prediction, daysUntilPrediction: 0 };
-          }
-          return { ...habit, daysUntilPrediction: getDaysUntilPrediction(habit) };
-        })
-      );
-      
-      return habitsWithPredictions;
+      // Return habits immediately with prediction eligibility info
+      // Actual predictions are loaded separately to avoid blocking
+      return (result.data || []).map((habit) => ({
+        ...habit,
+        daysUntilPrediction: canUsePrediction(habit) ? 0 : getDaysUntilPrediction(habit),
+        canPredict: canUsePrediction(habit),
+      }));
     },
+  });
+}
+
+/**
+ * Fetch ML prediction for a single habit
+ * - Loads prediction independently to not block habit list rendering
+ * - Cached separately and can be slow (Render cold start)
+ * - Only enabled if habit is eligible for prediction
+ */
+export function useHabitPrediction(habit: HabitWithStats | undefined) {
+  return useQuery({
+    queryKey: habitKeys.prediction(habit?.habit_id ?? 0),
+    queryFn: async () => {
+      if (!habit) return null;
+      const prediction = await getCachedPrediction(
+        habit.habit_id,
+        habit,
+        habit.completionLogs
+      );
+      return prediction;
+    },
+    enabled: !!habit && canUsePrediction(habit),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 

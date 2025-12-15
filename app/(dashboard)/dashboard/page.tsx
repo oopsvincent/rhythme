@@ -4,20 +4,13 @@ import { SiteHeader } from "@/components/site-header"
 import { Separator } from "@/components/ui/separator"
 import { getUser } from "../../actions/auth"
 import { getGreeting } from "@/utils/getGreetings"
-import { getTaskStats } from "@/app/actions/getTasks"
 
 // Dashboard components
 import {
-  DashboardStats,
   QuickActions,
   TodayOverview,
-  ActivityFeed,
-  ProductivityCharts,
-  DashboardStatsSkeleton,
   QuickActionsSkeleton,
   TodayOverviewSkeleton,
-  ActivityFeedSkeleton,
-  ChartSkeleton,
 } from "@/components/dashboard"
 
 export default async function DashboardPage() {
@@ -61,46 +54,19 @@ export default async function DashboardPage() {
               <QuickActions />
             </Suspense>
 
-            {/* Stats Cards Grid */}
-            <Suspense fallback={<DashboardStatsSkeleton />}>
-              <DashboardStats />
+            {/* Today's Overview - Full width for now */}
+            <Suspense fallback={<TodayOverviewSkeleton />}>
+              <TodayOverview />
             </Suspense>
 
-            {/* Main Content Grid */}
-            <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
-              {/* Today's Overview - Takes 2 columns on large screens */}
-              <div className="lg:col-span-2 min-w-0">
-                <Suspense fallback={<TodayOverviewSkeleton />}>
-                  <TodayOverview />
-                </Suspense>
-              </div>
-
-              {/* Activity Feed - Takes 1 column */}
-              <div className="lg:col-span-1 min-w-0">
-                <Suspense fallback={<ActivityFeedSkeleton />}>
-                  <ActivityFeed />
-                </Suspense>
-              </div>
-            </div>
-
-            {/* Charts Section */}
-            <section className="mt-2">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold font-primary">Analytics</h2>
-                <span className="text-sm text-muted-foreground">
-                  Track your progress
-                </span>
-              </div>
-              <Suspense fallback={
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <ChartSkeleton />
-                  <ChartSkeleton />
-                  <ChartSkeleton />
-                </div>
-              }>
-                <ProductivityCharts />
-              </Suspense>
-            </section>
+            {/* 
+              HIDDEN FOR NOW - Analytics Section
+              TODO: Enable when ready to show real analytics data
+              
+              <DashboardStats />
+              <ActivityFeed />
+              <ProductivityCharts />
+            */}
           </div>
         </div>
       </div>

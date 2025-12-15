@@ -63,6 +63,7 @@ import {
   useDeleteHabit,
   useLogCompletion,
   useRemoveCompletion,
+  useHabitPrediction,
 } from "@/hooks/use-habits";
 
 export default function HabitsPage() {
@@ -506,13 +507,18 @@ function HabitItem({
   isPending,
   index,
 }: {
-  habit: HabitWithStats;
+  habit: HabitWithStats & { canPredict?: boolean };
   onComplete: () => void;
   onDelete: () => void;
   onNavigate: () => void;
   isPending: boolean;
   index: number;
 }) {
+  // Load prediction independently - doesn't block rendering
+  const { data: prediction, isLoading: isPredictionLoading } = useHabitPrediction(
+    habit.canPredict ? habit : undefined
+  );
+
   return (
     <motion.div
       layout
@@ -567,14 +573,22 @@ function HabitItem({
               {habit.streak_count}
             </Badge>
 
-            {habit.prediction && (
-              <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
-                <Brain className="mr-1 h-3 w-3" />
-                {habit.prediction.probability_percent}
-              </Badge>
+            {/* Prediction Badge - Independent loading */}
+            {habit.canPredict && (
+              isPredictionLoading ? (
+                <Badge variant="outline" className="bg-accent/5 text-accent/60 border-accent/20 animate-pulse">
+                  <Brain className="mr-1 h-3 w-3" />
+                  <span className="inline-block w-6 h-3 bg-accent/20 rounded"></span>
+                </Badge>
+              ) : prediction ? (
+                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
+                  <Brain className="mr-1 h-3 w-3" />
+                  {prediction.probability_percent}
+                </Badge>
+              ) : null
             )}
 
-            {habit.daysUntilPrediction && habit.daysUntilPrediction > 0 && (
+            {habit.daysUntilPrediction !== undefined && habit.daysUntilPrediction > 0 && (
               <Badge variant="outline" className="border-accent/30 text-muted-foreground">
                 <Sparkles className="mr-1 h-3 w-3 text-accent" />
                 AI in {habit.daysUntilPrediction}d
@@ -611,11 +625,19 @@ function HabitItem({
             <Flame className="mr-1 h-3 w-3" />
             {habit.streak_count} streak
           </Badge>
-          {habit.prediction && (
-            <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-xs">
-              <Brain className="mr-1 h-3 w-3" />
-              {habit.prediction.probability_percent}
-            </Badge>
+          {/* Mobile Prediction Badge */}
+          {habit.canPredict && (
+            isPredictionLoading ? (
+              <Badge variant="outline" className="bg-accent/5 text-accent/60 border-accent/20 text-xs animate-pulse">
+                <Brain className="mr-1 h-3 w-3" />
+                <span className="inline-block w-6 h-2 bg-accent/20 rounded"></span>
+              </Badge>
+            ) : prediction ? (
+              <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-xs">
+                <Brain className="mr-1 h-3 w-3" />
+                {prediction.probability_percent}
+              </Badge>
+            ) : null
           )}
         </div>
       </div>

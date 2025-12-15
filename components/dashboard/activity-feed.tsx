@@ -72,37 +72,14 @@ export async function ActivityFeed() {
     })
   })
 
-  // Placeholder activities for habits, focus, journal
-  // TODO: Replace with real data when tables are ready
-  const placeholderActivities: ActivityItem[] = [
-    {
-      id: "habit-activity-1",
-      action: "habit",
-      title: 'Completed "Morning Meditation"',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      icon: getActionIcon("habit").icon,
-      iconBg: getActionIcon("habit").bg
-    },
-    {
-      id: "focus-activity-1",
-      action: "focus",
-      title: "Focus session: 45 minutes",
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-      icon: getActionIcon("focus").icon,
-      iconBg: getActionIcon("focus").bg
-    },
-    {
-      id: "journal-activity-1",
-      action: "journal",
-      title: "Added journal entry",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
-      icon: getActionIcon("journal").icon,
-      iconBg: getActionIcon("journal").bg
-    }
-  ]
+  // DEV LOG: Placeholders removed - show only real data
+  // TODO: Fetch real habit/focus/journal activities when APIs are ready
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[ActivityFeed] Showing real task activities only - placeholders removed');
+  }
 
-  // Combine and sort by timestamp (most recent first)
-  const allActivities = [...taskActivities, ...placeholderActivities]
+  // Only show real task activities (sorted by most recent)
+  const allActivities = taskActivities
     .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
     .slice(0, 6)
 

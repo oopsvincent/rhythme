@@ -23,7 +23,7 @@ const NavbarClient: React.FC<NavbarProps> = ({ user }) => {
     { label: "Features", href: "features" },
     { label: "Pricing", href: "pricing" },
     { label: "About", href: "about" },
-    { label: "Docs", href: "#docs" },
+    { label: "Beta ✨", href: "beta" },
   ];
 
   const toggleMobileMenu = () => {
