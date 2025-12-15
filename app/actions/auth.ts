@@ -154,6 +154,7 @@ export async function unlinkProvider(identityId: string): Promise<{ success: boo
     return { success: false, error: "Cannot remove your only login method. Add another account first." }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase.auth.unlinkIdentity({
     id: identityId,
     provider: user.identities.find(i => i.id === identityId)?.provider || '',

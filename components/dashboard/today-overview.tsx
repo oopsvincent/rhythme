@@ -82,20 +82,13 @@ export async function TodayOverview() {
     }) : undefined
   }))
 
-  // Placeholder habits for today
-  // TODO: Replace with real data when habits table is ready
-  const habitItems: OverviewItem[] = [
-    { id: "habit-1", title: "Morning Meditation", type: "habit", status: "completed" },
-    { id: "habit-2", title: "Read 30 minutes", type: "habit", status: "pending" },
-  ]
+  // DEV LOG: Placeholders removed - show only real data
+  // TODO: Fetch real habits/focus data here when APIs are ready
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[TodayOverview] Showing real task data only - placeholders removed');
+  }
 
-  // Placeholder focus session
-  const focusItems: OverviewItem[] = [
-    { id: "focus-1", title: "Deep Work Session", type: "focus", status: "pending", dueTime: "2:00 PM" }
-  ]
-
-  const allItems = [...taskItems, ...habitItems.slice(0, 1), ...focusItems.slice(0, 1)]
-    .slice(0, 5)
+  const allItems = taskItems.slice(0, 5)
 
   const completedCount = allItems.filter(i => i.status === "completed").length
   const totalCount = allItems.length

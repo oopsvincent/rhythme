@@ -1,497 +1,535 @@
-import React from 'react';
-// import { FileText, AlertTriangle, Shield, CreditCard, Users, Gavel, Ban } from 'lucide-react';
+import React from "react";
+import LegalLayout from "@/components/legal/legal-layout";
 
 const TermsOfService = () => {
   return (
-    // <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 text-primary font-primary">
-    //   <div className="max-w-4xl mx-auto">
-    //     {/* Header */}
-    //     <div className="text-center mb-12">
-    //       <div className="flex justify-center mb-4">
-    //         <FileText className="h-12 w-12 text-blue-600" />
-    //       </div>
-    //       <h1 className="text-4xl font-bold text-gray-900 mb-4">Terms of Service</h1>
-    //       <p className="text-lg text-gray-600">
-    //         Rhythmé by <span className="font-semibold">Nintonic</span> <br />
+    <LegalLayout 
+      title="Terms of Service" 
+      type="terms" 
+      lastUpdated="December 2025"
+    >
+      {/* Section 1 */}
+      <section>
+        <h2>1. Acceptance of Terms</h2>
+        <p>
+          These Terms of Service (&quot;Terms&quot;) constitute a legally binding agreement between you and 
+          Rhythmé (&quot;we,&quot; &quot;us,&quot; &quot;our,&quot; or the &quot;Service&quot;) regarding your use of our productivity 
+          application. By accessing or using Rhythmé, you agree to be bound by these Terms.
+        </p>
+        <p>
+          If you do not agree to these Terms, you must not access or use the Service.
+        </p>
+      </section>
 
-    //         <h1 className='text-red-600 font-bold text-3xl' >
-    //             These will come to action after production in September 2026. Before that these terms are uselesss, they don't mean a thing to anyone, we are not even a company yet.
-    //         </h1>
+      {/* Section 2 */}
+      <section>
+        <h2>2. About Rhythmé</h2>
+        <p>
+          Rhythmé is operated by an individual doing business as Rhythmé team. We provide a 
+          productivity application designed to help users manage tasks and habits effectively.
+        </p>
+      </section>
 
-    //       </p>
-    //       <p className="text-sm text-gray-500 mt-2">
-    //         Last updated: {new Date().toLocaleDateString()}
-    //       </p>
-    //     </div>
+      {/* Section 3 */}
+      <section>
+        <h2>3. Eligibility and Age Requirements</h2>
+        
+        <h3>3.1 Age Restrictions</h3>
+        <p>
+          You must be at least 18 years old to use Rhythmé without restriction. Users between 
+          the ages of 16 and 18 may only use the Service with explicit parental or legal guardian 
+          consent and supervision.
+        </p>
+        <p><strong>USERS UNDER 16 ARE STRICTLY PROHIBITED FROM USING THIS SERVICE.</strong></p>
+        
+        <h3>3.2 Verification</h3>
+        <p>
+          We reserve the right to request proof of age and parental consent at any time. Failure 
+          to provide such proof may result in immediate account termination.
+        </p>
+        
+        <h3>3.3 No Liability for Minors</h3>
+        <p>
+          We explicitly disclaim all liability for any use of the Service by minors without proper 
+          consent or supervision. By creating an account, you represent and warrant that you meet 
+          the age requirements and have obtained necessary parental consent if applicable.
+        </p>
+      </section>
 
-    //     {/* Content */}
-    //     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-    //       <div className="prose max-w-none">
+      {/* Section 4 */}
+      <section>
+        <h2>4. Account Registration and Security</h2>
+        
+        <h3>4.1 Account Creation</h3>
+        <p>
+          To use certain features of Rhythmé, you must create an account by providing accurate 
+          and complete information including your name and email address. You may register 
+          directly or through third-party authentication providers (Google, GitHub, Meta, or Discord).
+        </p>
+        
+        <h3>4.2 One Account Per User</h3>
+        <p>
+          Each user is permitted only ONE account. Creating, operating, or maintaining multiple 
+          accounts is strictly prohibited and will result in immediate termination of all 
+          associated accounts without warning or refund.
+        </p>
+        
+        <h3>4.3 Account Security</h3>
+        <p>You are responsible for:</p>
+        <ul>
+          <li>Maintaining the confidentiality of your account credentials</li>
+          <li>All activities that occur under your account</li>
+          <li>Notifying us immediately of any unauthorized access or security breach</li>
+        </ul>
+        
+        <h3>4.4 Account Information</h3>
+        <p>
+          You agree to provide accurate, current, and complete information and to update such 
+          information to maintain its accuracy.
+        </p>
+      </section>
 
-    //         {/* Acceptance Notice */}
-    //         <section className="mb-8">
-    //           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-    //             <div className="flex items-center mb-3">
-    //               <AlertTriangle className="h-5 w-5 text-blue-600 mr-2" />
-    //               <h3 className="text-lg font-semibold text-blue-900">Important Notice</h3>
-    //             </div>
-    //             <p className="text-blue-800 leading-relaxed">
-    //               <strong>BY ACCESSING OR USING RHYTHMÉ, YOU AGREE TO BE BOUND BY THESE TERMS OF SERVICE.</strong> 
-    //               If you do not agree to these terms, please do not use our service. Your acceptance of these 
-    //               terms is required to use our application.
-    //             </p>
-    //           </div>
-    //         </section>
-            
-    //         {/* Introduction */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Agreement to Terms</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             These Terms of Service ("Terms") govern your use of Rhythmé, a productivity ecosystem web and 
-    //             mobile application operated by Nintonic ("Company," "we," "our," or "us"). 
-    //             These Terms apply to all visitors, users, and others who access or use our Service.
-    //           </p>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             By clicking "I Accept" or by accessing or using our Service, you agree to be bound by these Terms 
-    //             and our Privacy Policy. If you disagree with any part of these terms, then you may not access the Service.
-    //           </p>
-    //         </section>
+      {/* Section 5 */}
+      <section>
+        <h2>5. Service Model and Pricing</h2>
+        
+        <h3>5.1 Freemium Model</h3>
+        <p>Rhythmé operates on a freemium model:</p>
+        <ul>
+          <li><strong>Free Plan:</strong> Certain features are available for free, forever, with no credit card required</li>
+          <li><strong>Paid Plans:</strong> Additional premium features require payment</li>
+        </ul>
+        
+        <h3>5.2 Free Plan Limitations</h3>
+        <p>
+          The free plan has usage limitations. Access to premium features requires upgrading to a paid plan.
+        </p>
+        
+        <h3>5.3 Pricing Changes</h3>
+        <p>
+          We reserve the right to modify pricing for our paid plans at any time. Changes will 
+          not affect your current billing cycle if you are already subscribed, but will apply upon renewal.
+        </p>
+        
+        <h3>5.4 Payment Terms</h3>
+        <ul>
+          <li>All payments are processed through our secure payment providers</li>
+          <li>You authorize us to charge your payment method for all fees incurred</li>
+          <li>All fees are non-refundable unless required by applicable law</li>
+        </ul>
+        
+        <h3>5.5 No Refunds</h3>
+        <p>
+          <strong>ALL PAYMENTS ARE FINAL AND NON-REFUNDABLE.</strong> Once a payment is processed, 
+          we do not offer refunds, returns, or credits for any reason, including but not limited to:
+        </p>
+        <ul>
+          <li>Dissatisfaction with the Service</li>
+          <li>Failure to use the Service</li>
+          <li>Termination of your account</li>
+          <li>Service modifications or discontinuation</li>
+        </ul>
+        <p>By making a payment, you acknowledge and accept this no-refund policy.</p>
+      </section>
 
-    //         {/* Description of Service */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Description of Service</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             Rhythmé is a comprehensive productivity platform that offers:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li>Habit tracking and streak management</li>
-    //             <li>Digital journaling with AI-powered insights</li>
-    //             <li>Focus session tools and productivity tracking</li>
-    //             <li>Goal setting and progress management</li>
-    //             <li>Gamification features (XP, achievements, levels)</li>
-    //             <li>Social accountability and community features</li>
-    //             <li>Analytics and personalized recommendations</li>
-    //           </ul>
-    //         </section>
+      {/* Section 6 */}
+      <section>
+        <h2>6. User Content and Ownership</h2>
+        
+        <h3>6.1 Your Content</h3>
+        <p>
+          You retain all ownership rights to the content you create, upload, or store through 
+          Rhythmé, including but not limited to tasks, habits, notes, and any other data (&quot;User Content&quot;).
+        </p>
+        
+        <h3>6.2 Limited License to Us</h3>
+        <p>
+          By using the Service, you grant us a limited, non-exclusive license to store, process, 
+          and display your User Content solely for the purpose of providing the Service to you. 
+          This license terminates when you delete your content or account.
+        </p>
+        
+        <h3>6.3 Our Intellectual Property</h3>
+        <p>
+          All rights, title, and interest in and to the Service, including all software, code, 
+          designs, graphics, logos, branding, user interface, features, functionality, and other 
+          elements (collectively, &quot;Our IP&quot;) are and will remain the exclusive property of Rhythmé 
+          and its licensors.
+        </p>
+        <p>You may not:</p>
+        <ul>
+          <li>Copy, modify, distribute, sell, or lease any part of Our IP</li>
+          <li>Reverse engineer or attempt to extract the source code of the Service</li>
+          <li>Use Our IP for any commercial purpose without explicit written permission</li>
+          <li>Remove, alter, or obscure any proprietary notices</li>
+        </ul>
+        
+        <h3>6.4 Data Export</h3>
+        <p>
+          While data export functionality is not currently available, we plan to implement this 
+          feature in the future. You will be able to export your User Content when this feature 
+          becomes available.
+        </p>
+      </section>
 
-    //         {/* User Accounts */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <Users className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">3. User Accounts and Registration</h2>
-    //           </div>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Account Creation</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             To use certain features of our Service, you must register for an account. You agree to:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
-    //             <li>Provide accurate, current, and complete information during registration</li>
-    //             <li>Maintain and update your account information</li>
-    //             <li>Keep your account credentials secure and confidential</li>
-    //             <li>Notify us immediately of any unauthorized use of your account</li>
-    //             <li>Accept responsibility for all activities under your account</li>
-    //           </ul>
+      {/* Section 7 */}
+      <section>
+        <h2>7. Machine Learning Features</h2>
+        
+        <h3>7.1 Habit Prediction</h3>
+        <p>
+          Rhythmé includes machine learning functionality that analyzes your habit data to 
+          provide predictions about habit completion likelihood.
+        </p>
+        
+        <h3>7.2 No Guarantees</h3>
+        <p>
+          The ML-powered predictions are provided for informational and motivational purposes 
+          only. We make no guarantees, representations, or warranties about:
+        </p>
+        <ul>
+          <li>The accuracy, reliability, or completeness of predictions</li>
+          <li>The suitability of predictions for your specific circumstances</li>
+          <li>Any outcomes resulting from relying on these predictions</li>
+        </ul>
+        
+        <h3>7.3 Not Professional Advice</h3>
+        <p>
+          The ML predictions and any other features of Rhythmé do not constitute professional 
+          advice of any kind, including but not limited to medical, psychological, therapeutic, 
+          or health advice. Always consult qualified professionals for such matters.
+        </p>
+        
+        <h3>7.4 Anonymous Processing</h3>
+        <p>
+          Habit data is processed anonymously through our ML service. No personally identifying 
+          information is shared with the ML processing system.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Age Requirements</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             You must be at least 13 years old to use our Service. If you are between 13 and 18 years old, 
-    //             you represent that your legal guardian has reviewed and agreed to these Terms.
-    //           </p>
+      {/* Section 8 */}
+      <section>
+        <h2>8. Acceptable Use</h2>
+        
+        <h3>8.1 User Freedom</h3>
+        <p>
+          We generally do not monitor or restrict how you use your personal productivity features 
+          within the Service. You are free to use Rhythmé for lawful personal productivity purposes.
+        </p>
+        
+        <h3>8.2 Prohibited Conduct</h3>
+        <p>While we do not actively monitor user activity, you agree NOT to:</p>
+        <ul>
+          <li>Create or maintain multiple accounts</li>
+          <li>Violate any applicable laws or regulations</li>
+          <li>Attempt to gain unauthorized access to the Service or other users&apos; accounts</li>
+          <li>Interfere with or disrupt the Service or servers</li>
+          <li>Use automated systems (bots, scrapers) without authorization</li>
+          <li>Attempt to reverse engineer, decompile, or hack the Service</li>
+          <li>Impersonate others or provide false information</li>
+          <li>Use the Service for any illegal or unauthorized purpose</li>
+        </ul>
+        
+        <h3>8.3 Enforcement</h3>
+        <p>
+          While we do not actively monitor all user activity, violations that come to our 
+          attention may result in account suspension or termination without notice or refund.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Account Termination</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             We reserve the right to suspend or terminate your account at any time, with or without cause, 
-    //             with or without notice, for any reason including violation of these Terms.
-    //           </p>
-    //         </section>
+      {/* Section 9 */}
+      <section>
+        <h2>9. Service Availability and Modifications</h2>
+        
+        <h3>9.1 No Uptime Guarantee</h3>
+        <p>
+          We rely on third-party service providers including Vercel and Supabase for hosting 
+          and infrastructure. While we strive for reliability, we do not guarantee uninterrupted, 
+          timely, secure, or error-free service availability.
+        </p>
+        
+        <h3>9.2 Right to Modify</h3>
+        <p>We reserve the right at any time to:</p>
+        <ul>
+          <li>Modify, suspend, or discontinue any feature or aspect of the Service</li>
+          <li>Change pricing or subscription terms (with notice for existing subscribers)</li>
+          <li>Update these Terms (with notice as described in Section 16)</li>
+          <li>Impose limits on certain features or restrict access to parts of the Service</li>
+        </ul>
+        
+        <h3>9.3 Notification of Changes</h3>
+        <p>
+          We will make reasonable efforts to notify users of material changes to the Service 
+          through email or in-app notifications.
+        </p>
+        
+        <h3>9.4 No Liability for Changes</h3>
+        <p>
+          We shall not be liable to you or any third party for any modification, suspension, 
+          or discontinuance of the Service or any feature thereof.
+        </p>
+      </section>
 
-    //         {/* Acceptable Use */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <Shield className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">4. Acceptable Use Policy</h2>
-    //           </div>
-              
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             You agree to use our Service only for lawful purposes and in accordance with these Terms. 
-    //             You agree NOT to:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li>Violate any applicable federal, state, local, or international law or regulation</li>
-    //             <li>Transmit or share harmful, offensive, or inappropriate content</li>
-    //             <li>Harass, abuse, or harm other users</li>
-    //             <li>Impersonate any person or entity or misrepresent your identity</li>
-    //             <li>Attempt to gain unauthorized access to our systems or other users' accounts</li>
-    //             <li>Upload viruses, malware, or other malicious code</li>
-    //             <li>Spam other users or engage in unsolicited marketing</li>
-    //             <li>Scrape, crawl, or harvest data from our Service without permission</li>
-    //             <li>Reverse engineer, decompile, or attempt to extract source code</li>
-    //             <li>Use automated tools to access or interact with our Service</li>
-    //             <li>Interfere with or disrupt the Service or servers</li>
-    //           </ul>
-    //         </section>
+      {/* Section 10 */}
+      <section>
+        <h2>10. Third-Party Services</h2>
+        
+        <h3>10.1 Service Providers</h3>
+        <p>Rhythmé utilizes third-party service providers including:</p>
+        <ul>
+          <li>Supabase (database and authentication)</li>
+          <li>Vercel (hosting)</li>
+          <li>Render (ML processing)</li>
+          <li>Social login providers (Google, GitHub, Meta, Discord)</li>
+        </ul>
+        
+        <h3>10.2 Third-Party Terms</h3>
+        <p>
+          Your use of third-party authentication services is subject to those providers&apos; 
+          respective terms of service and privacy policies. We are not responsible for the 
+          practices of these third-party providers.
+        </p>
+        
+        <h3>10.3 No Endorsement</h3>
+        <p>
+          Reference to any third-party service does not constitute our endorsement or 
+          recommendation of such service.
+        </p>
+      </section>
 
-    //         {/* Content and Data */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">5. User Content and Data</h2>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Your Content</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             You retain ownership of all content you create, upload, or share through our Service, including 
-    //             journal entries, habit data, goals, and other personal information ("User Content").
-    //           </p>
+      {/* Section 11 */}
+      <section>
+        <h2>11. Account Termination</h2>
+        
+        <h3>11.1 Termination by You</h3>
+        <p>
+          You may terminate your account at any time through the account settings. Upon 
+          termination, your data will be deleted immediately and permanently. No refunds 
+          will be provided for any unused subscription periods.
+        </p>
+        
+        <h3>11.2 Termination by Us</h3>
+        <p>
+          We reserve the right to suspend or terminate your account immediately, without 
+          notice or refund, for any reason including but not limited to:
+        </p>
+        <ul>
+          <li>Violation of these Terms</li>
+          <li>Maintaining multiple accounts</li>
+          <li>Fraudulent or illegal activity</li>
+          <li>Abusive behavior</li>
+          <li>Extended inactivity</li>
+          <li>Any reason at our sole discretion</li>
+        </ul>
+        
+        <h3>11.3 Effect of Termination</h3>
+        <p>Upon termination:</p>
+        <ul>
+          <li>Your right to access and use the Service immediately ceases</li>
+          <li>Your User Content will be deleted from our systems</li>
+          <li>All licenses granted to you under these Terms will terminate</li>
+          <li>No refunds will be provided</li>
+        </ul>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">License to Us</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             By using our Service, you grant us a limited, non-exclusive, royalty-free license to use, 
-    //             store, and process your User Content solely for the purpose of providing and improving our Service, 
-    //             including generating insights and recommendations.
-    //           </p>
+      {/* Section 12 */}
+      <section>
+        <h2>12. Disclaimers and Limitation of Liability</h2>
+        
+        <h3>12.1 &quot;AS IS&quot; Service</h3>
+        <p>
+          THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, 
+          EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
+        </p>
+        <ul>
+          <li>Warranties of merchantability, fitness for a particular purpose, or non-infringement</li>
+          <li>Warranties that the Service will be uninterrupted, secure, or error-free</li>
+          <li>Warranties regarding the accuracy, reliability, or completeness of content or predictions</li>
+          <li>Warranties that defects will be corrected</li>
+        </ul>
+        
+        <h3>12.2 Third-Party Reliability</h3>
+        <p>
+          WE RELY ON THIRD-PARTY SERVICE PROVIDERS (SUPABASE, VERCEL, RENDER) FOR CRITICAL 
+          INFRASTRUCTURE. WE MAKE NO WARRANTIES REGARDING THE SECURITY, RELIABILITY, OR 
+          AVAILABILITY OF THESE SERVICES.
+        </p>
+        
+        <h3>12.3 Data Loss</h3>
+        <p>
+          WHILE WE USE INDUSTRY-STANDARD SECURITY PRACTICES, WE CANNOT GUARANTEE THE ABSOLUTE 
+          SECURITY OF YOUR DATA. WE ARE NOT LIABLE FOR:
+        </p>
+        <ul>
+          <li>Unauthorized access to your account</li>
+          <li>Data loss, corruption, or breaches</li>
+          <li>Security vulnerabilities in third-party services</li>
+          <li>Any damages resulting from data-related incidents</li>
+        </ul>
+        
+        <h3>12.4 Limitation of Liability</h3>
+        <p>
+          TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW: WE (INCLUDING OUR OPERATOR, 
+          AFFILIATES, LICENSORS, AND SERVICE PROVIDERS) SHALL NOT BE LIABLE FOR ANY INDIRECT, 
+          INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES.
+        </p>
+        <p>
+          OUR TOTAL LIABILITY TO YOU FOR ANY CLAIMS ARISING FROM OR RELATED TO THE SERVICE 
+          SHALL NOT EXCEED THE AMOUNT YOU PAID US IN THE TWELVE (12) MONTHS PRECEDING THE 
+          CLAIM, OR ONE HUNDRED US DOLLARS ($100), WHICHEVER IS LESS.
+        </p>
+        
+        <h3>12.5 Individual Operation</h3>
+        <p>
+          You acknowledge that Rhythmé is operated by an individual doing business as Rhythmé. 
+          We are not a corporation and have limited resources. This limitation of liability is 
+          essential to our ability to provide the Service.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Content Standards</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             You are solely responsible for your User Content and agree that it will not:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li>Contain illegal, harmful, or offensive material</li>
-    //             <li>Infringe on intellectual property rights of others</li>
-    //             <li>Violate privacy rights of others</li>
-    //             <li>Contain confidential information of third parties</li>
-    //             <li>Be used to harm, threaten, or harass others</li>
-    //           </ul>
-    //         </section>
+      {/* Section 13 */}
+      <section>
+        <h2>13. Indemnification</h2>
+        <p>
+          You agree to indemnify, defend, and hold harmless Rhythmé, its operator, affiliates, 
+          licensors, and service providers from and against any claims, liabilities, damages, 
+          losses, costs, expenses, or fees arising from:
+        </p>
+        <ul>
+          <li>Your use or misuse of the Service</li>
+          <li>Your violation of these Terms</li>
+          <li>Your violation of any rights of another party</li>
+          <li>Your User Content</li>
+          <li>Use of the Service by minors without proper consent</li>
+        </ul>
+      </section>
 
-    //         {/* Subscription and Payment */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <CreditCard className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">6. Subscription and Payment Terms</h2>
-    //           </div>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Subscription Plans</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We offer both free and paid subscription plans. Paid plans provide access to premium features 
-    //             and enhanced functionality. Current pricing and features are displayed on our website.
-    //           </p>
+      {/* Section 14 */}
+      <section>
+        <h2>14. Governing Law and Dispute Resolution</h2>
+        
+        <h3>14.1 Governing Law</h3>
+        <p>
+          These Terms shall be governed by and construed in accordance with the laws of India, 
+          without regard to its conflict of law provisions.
+        </p>
+        
+        <h3>14.2 Jurisdiction</h3>
+        <p>
+          You agree to submit to the personal and exclusive jurisdiction of the courts located 
+          in India for the resolution of any disputes arising from or relating to these Terms 
+          or your use of the Service.
+        </p>
+        
+        <h3>14.3 Informal Resolution</h3>
+        <p>
+          Before initiating formal legal proceedings, you agree to first contact us at 
+          rhythmeauth@gmail.com to attempt to resolve the dispute informally.
+        </p>
+        
+        <h3>14.4 Individual Actions Only</h3>
+        <p>
+          TO THE EXTENT PERMITTED BY APPLICABLE LAW, YOU AGREE THAT ANY DISPUTE RESOLUTION 
+          PROCEEDINGS WILL BE CONDUCTED ONLY ON AN INDIVIDUAL BASIS AND NOT IN A CLASS, 
+          CONSOLIDATED, OR REPRESENTATIVE ACTION.
+        </p>
+        
+        <h3>14.5 Time Limitation</h3>
+        <p>
+          Any claim or cause of action arising from or related to the Service or these Terms 
+          must be filed within one (1) year after the claim or cause of action arose, or it 
+          will be permanently barred.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Billing and Payments</h3>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
-    //             <li>Subscription fees are billed in advance on a recurring basis (monthly or annually)</li>
-    //             <li>Payment is due immediately upon subscription activation</li>
-    //             <li>We use third-party payment processors (such as Stripe) for secure payment processing</li>
-    //             <li>You authorize us to charge your payment method for applicable fees</li>
-    //             <li>All fees are non-refundable except as required by law</li>
-    //           </ul>
+      {/* Section 15 */}
+      <section>
+        <h2>15. Severability and Waiver</h2>
+        
+        <h3>15.1 Severability</h3>
+        <p>
+          If any provision of these Terms is found to be invalid, illegal, or unenforceable, 
+          the remaining provisions shall continue in full force and effect.
+        </p>
+        
+        <h3>15.2 Waiver</h3>
+        <p>
+          Our failure to enforce any right or provision of these Terms shall not constitute 
+          a waiver of such right or provision.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Price Changes</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We reserve the right to modify subscription prices with 30 days' notice. Price changes 
-    //             will not affect your current billing cycle but will apply to subsequent renewals.
-    //           </p>
+      {/* Section 16 */}
+      <section>
+        <h2>16. Changes to Terms</h2>
+        
+        <h3>16.1 Right to Modify</h3>
+        <p>We reserve the right to modify these Terms at any time. We will notify users of material changes by:</p>
+        <ul>
+          <li>Updating the &quot;Last Updated&quot; date at the top of these Terms</li>
+          <li>Sending an email notification to the address associated with your account</li>
+          <li>Posting a notice within the Service</li>
+        </ul>
+        
+        <h3>16.2 Acceptance of Changes</h3>
+        <p>
+          Your continued use of the Service after such modifications constitutes your acceptance 
+          of the revised Terms. If you do not agree to the modified Terms, you must stop using 
+          the Service and may terminate your account.
+        </p>
+        
+        <h3>16.3 Review Responsibility</h3>
+        <p>
+          It is your responsibility to review these Terms periodically for changes.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Cancellation</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             You may cancel your subscription at any time through your account settings. Cancellation 
-    //             will be effective at the end of your current billing period. You will retain access to 
-    //             premium features until the end of your paid period.
-    //           </p>
-    //         </section>
+      {/* Section 17 */}
+      <section>
+        <h2>17. Entire Agreement</h2>
+        <p>
+          These Terms, together with our Privacy Policy, constitute the entire agreement between 
+          you and Rhythmé regarding the Service and supersede all prior agreements, representations, 
+          and understandings.
+        </p>
+      </section>
 
-    //         {/* Intellectual Property */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Intellectual Property Rights</h2>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Our Rights</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             The Service and its original content, features, and functionality are and will remain the 
-    //             exclusive property of Nintonic and its licensors. The Service is protected by 
-    //             copyright, trademark, and other intellectual property laws.
-    //           </p>
+      {/* Section 18 */}
+      <section>
+        <h2>18. Contact Information</h2>
+        <p>
+          If you have any questions, concerns, or disputes regarding these Terms, please contact us at:
+        </p>
+        <p>
+          <strong>Email:</strong> rhythmeauth@gmail.com<br />
+          <strong>Service:</strong> Rhythmé
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Trademarks</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             "Rhythmé" and our logos are trademarks of Nintonic. You may not use our trademarks 
-    //             without our prior written permission.
-    //           </p>
+      {/* Section 19 */}
+      <section>
+        <h2>19. Survival</h2>
+        <p>
+          The provisions of these Terms that by their nature should survive termination shall 
+          survive, including but not limited to: ownership provisions, warranty disclaimers, 
+          indemnification obligations, limitations of liability, and dispute resolution provisions.
+        </p>
+      </section>
 
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">DMCA Compliance</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             We respect intellectual property rights and will respond to legitimate copyright infringement 
-    //             claims in accordance with the Digital Millennium Copyright Act (DMCA).
-    //           </p>
-    //         </section>
-
-    //         {/* Privacy and Data Protection */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Privacy and Data Protection</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             Your privacy is important to us. Our collection and use of personal information is governed 
-    //             by our Privacy Policy, which is incorporated into these Terms by reference.
-    //           </p>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             By using our Service, you consent to the collection, use, and sharing of your information 
-    //             as described in our Privacy Policy.
-    //           </p>
-    //         </section>
-
-    //         {/* Service Availability */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Service Availability and Modifications</h2>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Service Availability</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We strive to maintain high availability of our Service but cannot guarantee uninterrupted access. 
-    //             The Service may be temporarily unavailable due to maintenance, updates, or technical issues.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Modifications to Service</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             We reserve the right to modify, suspend, or discontinue any part of our Service at any time, 
-    //             with or without notice. We will not be liable for any modification, suspension, or discontinuation.
-    //           </p>
-    //         </section>
-
-    //         {/* Prohibited Uses */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <Ban className="h-6 w-6 text-red-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">10. Prohibited Uses and Enforcement</h2>
-    //           </div>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Enforcement Actions</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We reserve the right to take appropriate action against users who violate these Terms, including:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
-    //             <li>Warning or temporarily suspending your account</li>
-    //             <li>Permanently terminating your account</li>
-    //             <li>Removing or modifying prohibited content</li>
-    //             <li>Restricting access to certain features</li>
-    //             <li>Taking legal action when necessary</li>
-    //           </ul>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Reporting Violations</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             If you become aware of any violations of these Terms, please report them to us at 
-    //             abuse@[yourcompany].com. We will investigate all reports and take appropriate action.
-    //           </p>
-    //         </section>
-
-    //         {/* Third-Party Services */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Third-Party Services and Links</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             Our Service may integrate with or contain links to third-party services, websites, or applications. 
-    //             These third-party services have their own terms of service and privacy policies.
-    //           </p>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We are not responsible for the content, privacy policies, or practices of any third-party services. 
-    //             You acknowledge and agree that we shall not be liable for any damage or loss caused by your use 
-    //             of any third-party services.
-    //           </p>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             We encourage you to read the terms and privacy policies of any third-party services you access 
-    //             through our platform.
-    //           </p>
-    //         </section>
-
-    //         {/* Disclaimers and Limitations */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <AlertTriangle className="h-6 w-6 text-amber-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">12. Disclaimers and Limitations of Liability</h2>
-    //           </div>
-              
-    //           <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-6">
-    //             <h3 className="text-xl font-semibold text-amber-900 mb-3">IMPORTANT DISCLAIMERS</h3>
-    //             <div className="space-y-4 text-amber-800">
-    //               <p className="font-semibold">
-    //                 THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT ANY WARRANTIES OF ANY KIND.
-    //               </p>
-    //               <p>
-    //                 TO THE FULLEST EXTENT PERMITTED BY LAW, Nintonic DISCLAIMS ALL WARRANTIES, 
-    //                 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, 
-    //                 FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-    //               </p>
-    //             </div>
-    //           </div>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">No Warranties</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We do not warrant that:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
-    //             <li>The Service will meet your specific requirements or expectations</li>
-    //             <li>The Service will be uninterrupted, timely, secure, or error-free</li>
-    //             <li>The results obtained from using the Service will be accurate or reliable</li>
-    //             <li>Any errors in the Service will be corrected</li>
-    //             <li>The AI-powered insights or recommendations will be accurate or effective</li>
-    //           </ul>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Limitation of Liability</h3>
-    //           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-    //             <p className="text-red-800 leading-relaxed font-semibold">
-    //               IN NO EVENT SHALL Nintonic, ITS DIRECTORS, EMPLOYEES, PARTNERS, AGENTS, 
-    //               SUPPLIERS, OR AFFILIATES BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, 
-    //               OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, 
-    //               OR OTHER INTANGIBLE LOSSES, RESULTING FROM YOUR USE OF THE SERVICE, EVEN IF WE HAVE BEEN 
-    //               ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-    //             </p>
-    //             <p className="text-red-800 leading-relaxed mt-4">
-    //               OUR TOTAL LIABILITY FOR ANY CLAIMS ARISING FROM OR RELATING TO THESE TERMS OR THE SERVICE 
-    //               SHALL NOT EXCEED THE AMOUNT YOU PAID US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
-    //             </p>
-    //           </div>
-    //         </section>
-
-    //         {/* Indemnification */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">13. Indemnification</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             You agree to defend, indemnify, and hold harmless Nintonic and its officers, 
-    //             directors, employees, contractors, agents, licensors, suppliers, successors, and assigns 
-    //             from and against any claims, liabilities, damages, judgments, awards, losses, costs, 
-    //             expenses, or fees (including reasonable attorneys' fees) arising out of or relating to:
-    //           </p>
-    //           <ul className="list-disc list-inside text-gray-700 space-y-2">
-    //             <li>Your use of the Service</li>
-    //             <li>Your violation of these Terms</li>
-    //             <li>Your violation of any rights of another party</li>
-    //             <li>Your User Content or any content you post or share</li>
-    //             <li>Your conduct in connection with the Service</li>
-    //           </ul>
-    //         </section>
-
-    //         {/* Dispute Resolution */}
-    //         <section className="mb-8">
-    //           <div className="flex items-center mb-4">
-    //             <Gavel className="h-6 w-6 text-blue-600 mr-3" />
-    //             <h2 className="text-2xl font-bold text-gray-900">14. Dispute Resolution</h2>
-    //           </div>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Governing Law</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             These Terms shall be governed by and construed in accordance with the laws of [Your State/Country], 
-    //             without regard to its conflict of law provisions.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Jurisdiction</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             Any disputes arising from these Terms or your use of the Service shall be resolved exclusively 
-    //             in the courts of [Your Jurisdiction]. You consent to the personal jurisdiction of such courts.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Informal Resolution</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             Before filing any formal legal proceedings, you agree to first contact us at legal@[yourcompany].com 
-    //             to seek an informal resolution of any dispute.
-    //           </p>
-    //         </section>
-
-    //         {/* Termination */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">15. Termination</h2>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Termination by You</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             You may terminate your account at any time by following the account deletion process in your 
-    //             account settings or by contacting us at support@[yourcompany].com.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Termination by Us</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We may terminate or suspend your account immediately, without prior notice or liability, 
-    //             for any reason, including if you breach these Terms.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Effect of Termination</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             Upon termination, your right to use the Service will cease immediately. We may delete your 
-    //             account and all associated data. Provisions that by their nature should survive termination 
-    //             shall survive, including ownership provisions, warranty disclaimers, and limitations of liability.
-    //           </p>
-    //         </section>
-
-    //         {/* General Provisions */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">16. General Provisions</h2>
-              
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Entire Agreement</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             These Terms, together with our Privacy Policy, constitute the entire agreement between you 
-    //             and Nintonic regarding the Service.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Modifications</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             We reserve the right to modify these Terms at any time. We will provide notice of material 
-    //             changes by posting the updated Terms on our Service and updating the "Last updated" date. 
-    //             Your continued use after such changes constitutes acceptance of the new Terms.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Severability</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             If any provision of these Terms is held to be invalid or unenforceable, the remaining 
-    //             provisions will remain in full force and effect.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Waiver</h3>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             No waiver of any term or condition shall be deemed a further or continuing waiver of such 
-    //             term or any other term or condition.
-    //           </p>
-
-    //           <h3 className="text-xl font-semibold text-gray-800 mb-3">Assignment</h3>
-    //           <p className="text-gray-700 leading-relaxed">
-    //             You may not assign or transfer these Terms or your rights hereunder without our prior written 
-    //             consent. We may assign these Terms without restriction.
-    //           </p>
-    //         </section>
-
-    //         {/* Contact Information */}
-    //         <section className="mb-8">
-    //           <h2 className="text-2xl font-bold text-gray-900 mb-4">17. Contact Information</h2>
-    //           <p className="text-gray-700 leading-relaxed mb-4">
-    //             If you have any questions about these Terms of Service, please contact us:
-    //           </p>
-    //           <div className="bg-gray-50 rounded-lg p-6">
-    //             <p className="text-gray-700"><strong>Email:</strong> legal@[yourcompany].com</p>
-    //             <p className="text-gray-700"><strong>Support:</strong> support@[yourcompany].com</p>
-    //             <p className="text-gray-700"><strong>Address:</strong> [Your Company Address]</p>
-    //             <p className="text-gray-700"><strong>Phone:</strong> [Your Phone Number]</p>
-    //           </div>
-    //         </section>
-
-    //         {/* Final Acceptance */}
-    //         <section className="mb-8">
-    //           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-    //             <h3 className="text-lg font-semibold text-blue-900 mb-3">Acknowledgment of Terms</h3>
-    //             <p className="text-blue-800 leading-relaxed">
-    //               BY USING RHYTHMÉ, YOU ACKNOWLEDGE THAT YOU HAVE READ THESE TERMS OF SERVICE, 
-    //               UNDERSTAND THEM, AND AGREE TO BE BOUND BY THEM. IF YOU DO NOT AGREE TO THESE TERMS, 
-    //               YOU MUST NOT USE OUR SERVICE.
-    //             </p>
-    //           </div>
-    //         </section>
-
-    //       </div>
-    //     </div>
-
-    //     {/* Action Buttons */}
-    //     <div className="flex justify-center space-x-4 mt-8">
-    //       <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
-    //         Back to App
-    //       </button>
-    //       <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
-    //         I Accept These Terms
-    //       </button>
-    //     </div>
-    //   </div>
-    // </div>
-        <div className='font-primary font-bold'>
-        Terms of Service
-    </div>
+      {/* Acknowledgment */}
+      <section>
+        <hr className="my-8" />
+        <p><strong>ACKNOWLEDGMENT</strong></p>
+        <p>
+          BY CLICKING &quot;I AGREE,&quot; CREATING AN ACCOUNT, OR USING THE SERVICE, YOU ACKNOWLEDGE THAT 
+          YOU HAVE READ, UNDERSTOOD, AND AGREE TO BE BOUND BY THESE TERMS OF SERVICE.
+        </p>
+        <p className="text-sm text-muted-foreground mt-4">
+          <em>Note: As Rhythmé is currently in development and operated by an individual, these 
+          Terms may be updated before official launch. We recommend reviewing these Terms periodically.</em>
+        </p>
+      </section>
+    </LegalLayout>
   );
 };
 

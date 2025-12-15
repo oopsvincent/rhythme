@@ -158,10 +158,14 @@ export default function IntroPage() {
             </Button>
           </div>
         </div>
-            <p className="text-sm sm:text-base text-muted-foreground flex items-center justify-center gap-2 mt-3">
-              <span>By continuing, You agree to our Terms and Privacy Policy</span>
-              <ArrowRight className="w-4 h-4 animate-pulse" />
-            </p>
+        
+        {/* Legal Links */}
+        <p className="text-xs sm:text-sm text-muted-foreground text-center mt-4 px-4">
+          By continuing, you agree to our{" "}
+          <a href="/legal/terms" className="text-primary hover:underline">Terms of Service</a>,{" "}
+          <a href="/legal/privacy" className="text-primary hover:underline">Privacy Policy</a>, and{" "}
+          <a href="/legal/cookie" className="text-primary hover:underline">Cookie Policy</a>
+        </p>
 
         {/* Bottom Spacing */}
         <div className="h-4"></div>
