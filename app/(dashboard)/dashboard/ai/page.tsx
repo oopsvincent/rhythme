@@ -121,7 +121,7 @@ export default function AIPage() {
                 <Brain className="w-5 h-5 text-primary" />
                 <div className="text-left">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">First Model</p>
-                  <p className="text-lg font-bold font-primary text-gradient-primary">rv01</p>
+                  <p className="text-lg font-bold font-primary text-gradient-primary">rvo1</p>
                 </div>
                 <Zap className="w-4 h-4 text-accent" />
               </div>

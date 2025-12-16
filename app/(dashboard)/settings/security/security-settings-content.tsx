@@ -13,8 +13,15 @@ import {
   Clock,
   Monitor
 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function SecuritySettingsContent() {
+  const handleComingSoon = (feature: string) => {
+    toast.info(`${feature} - Coming Soon!`, {
+      description: "This feature will be available in a future update.",
+    })
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -42,7 +49,11 @@ export default function SecuritySettingsContent() {
                 Last changed: Never
               </p>
             </div>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleComingSoon("Update Password")}
+            >
               Update
             </Button>
           </CardContent>
@@ -65,7 +76,11 @@ export default function SecuritySettingsContent() {
                 Add an extra layer of security to your account
               </p>
             </div>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleComingSoon("Enable MFA")}
+            >
               Enable
             </Button>
           </CardContent>
@@ -121,3 +136,4 @@ export default function SecuritySettingsContent() {
     </div>
   )
 }
+

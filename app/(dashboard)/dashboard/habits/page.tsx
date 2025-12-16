@@ -66,6 +66,22 @@ import {
   useHabitPrediction,
 } from "@/hooks/use-habits";
 
+/**
+ * Generate SEO-friendly slug from habit name + id
+ * Example: "Morning Exercise" + 123 => "morning-exercise-123"
+ */
+function generateHabitSlug(name: string, id: number): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-")          // Replace spaces with hyphens
+    .replace(/-+/g, "-")           // Replace multiple hyphens with single
+    .trim()
+    .slice(0, 35);                 // Limit to ~35 chars for the title part
+  
+  return `${slug}-${id}`;
+}
+
 export default function HabitsPage() {
   const router = useRouter();
   
@@ -97,12 +113,11 @@ export default function HabitsPage() {
 
   const openCompleteDialog = (habit: HabitWithStats) => {
     if (habit.completedToday) {
-      // If already completed, just remove it
-      removeMutation.mutate({ habitId: habit.habit_id, date: today });
-    } else {
-      setCompleteDialogHabit(habit);
-      setCompletionNote("");
+      // If already completed, do nothing - user must go to detail page to undo
+      return;
     }
+    setCompleteDialogHabit(habit);
+    setCompletionNote("");
   };
 
   const handleCompleteWithNote = () => {
@@ -132,8 +147,9 @@ export default function HabitsPage() {
     deleteMutation.mutate(habitId);
   };
 
-  const navigateToHabit = (habitId: number) => {
-    router.push(`/dashboard/habits/${habitId}`);
+  const navigateToHabit = (habit: HabitWithStats) => {
+    const slug = generateHabitSlug(habit.name, habit.habit_id);
+    router.push(`/dashboard/habits/${slug}`);
   };
 
   const dailyHabits = habits.filter((h) => h.frequency === "daily");
@@ -462,7 +478,7 @@ function HabitSection({
   habits: HabitWithStats[];
   onComplete: (habit: HabitWithStats) => void;
   onDelete: (id: number) => void;
-  onNavigate: (id: number) => void;
+  onNavigate: (habit: HabitWithStats) => void;
   isPending: boolean;
   delay: number;
 }) {
@@ -487,7 +503,7 @@ function HabitSection({
               habit={habit}
               onComplete={() => onComplete(habit)}
               onDelete={() => onDelete(habit.habit_id)}
-              onNavigate={() => onNavigate(habit.habit_id)}
+              onNavigate={() => onNavigate(habit)}
               isPending={isPending}
               index={index}
             />

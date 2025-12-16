@@ -11,7 +11,6 @@ import { Switch } from "@/components/ui/switch";
 import { 
   Loader2, 
   User, 
-  Bell, 
   Briefcase, 
   GraduationCap, 
   Laptop, 
@@ -22,8 +21,10 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
-  Check
+  Check,
+  Goal
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { OnboardingData } from "@/types/database";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -70,7 +71,8 @@ export default function OnboardingPage() {
   const [role, setRole] = useState<Role | null>(null);
   const [dailyTasksTarget, setDailyTasksTarget] = useState(3);
   const [dailyHabitsTarget, setDailyHabitsTarget] = useState(3);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [longTermGoal, setLongTermGoal] = useState("");
+  const [longTermGoalDescription, setLongTermGoalDescription] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -122,6 +124,10 @@ export default function OnboardingPage() {
       setErrorMsg("Please select your role");
       return;
     }
+    if (step === 4 && !longTermGoal.trim()) {
+      setErrorMsg("Please enter your long-term goal");
+      return;
+    }
     setErrorMsg(null);
     setStep(s => Math.min(s + 1, totalSteps - 1));
   }
@@ -155,14 +161,24 @@ export default function OnboardingPage() {
         role: role!,
         daily_tasks_target: dailyTasksTarget,
         daily_habits_target: dailyHabitsTarget,
+        long_term_goal: longTermGoal.trim(),
+        long_term_goal_description: longTermGoalDescription.trim() || undefined,
       };
+
+      // Save goal to localStorage for quick access in nav-user
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user_goal", JSON.stringify({
+          title: longTermGoal.trim(),
+          description: longTermGoalDescription.trim() || undefined,
+        }));
+      }
 
       // Create user preferences with onboarding data
       const { error: prefsError } = await supabase
         .from("user_preferences")
         .insert({
           user_id: userId,
-          notifications_enabled: notificationsEnabled,
+          notifications_enabled: true,
           onboarding_data: onboardingData,
         });
 
@@ -364,65 +380,57 @@ export default function OnboardingPage() {
                 </>
               )}
 
-              {/* Step 4: Notifications & Complete */}
+              {/* Step 4: Long-term Goal */}
               {step === 4 && (
                 <>
                   <div className="text-center space-y-2">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-2">
-                      <Bell className="w-8 h-8" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 text-primary mb-2">
+                      <Goal className="w-8 h-8" />
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-bold">
-                      Stay on track
+                      Your long-term goal
                     </h2>
                     <p className="text-muted-foreground">
-                      Get reminders to keep your momentum
+                      What&apos;s the one thing you want to achieve?
                     </p>
                   </div>
 
-                  <div className="bg-card rounded-2xl p-6 border shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-xl bg-primary/10 text-primary">
-                          <Bell className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <p className="font-semibold">Push Notifications</p>
-                          <p className="text-sm text-muted-foreground">
-                            Daily reminders & updates
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={notificationsEnabled}
-                        onCheckedChange={setNotificationsEnabled}
+                  <div className="space-y-4 bg-card rounded-2xl p-6 border shadow-lg">
+                    <div className="space-y-2">
+                      <Label htmlFor="longTermGoal" className="text-base font-medium">
+                        Your Goal
+                      </Label>
+                      <Input
+                        id="longTermGoal"
+                        type="text"
+                        placeholder="e.g., Launch my startup, Get fit, Learn a new skill"
+                        value={longTermGoal}
+                        onChange={(e) => {
+                          setLongTermGoal(e.target.value);
+                          setErrorMsg(null);
+                        }}
+                        className="text-lg h-14 rounded-xl"
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="goalDescription" className="text-sm text-muted-foreground">
+                        Description (optional)
+                      </Label>
+                      <Textarea
+                        id="goalDescription"
+                        placeholder="Why is this goal important to you?"
+                        value={longTermGoalDescription}
+                        onChange={(e) => setLongTermGoalDescription(e.target.value)}
+                        className="min-h-[100px] rounded-xl resize-none"
                       />
                     </div>
                   </div>
 
-                  {/* Summary */}
-                  <div className="bg-muted/50 rounded-2xl p-6 space-y-3">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                      Your Setup
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Name</p>
-                        <p className="font-medium">{displayName}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Role</p>
-                        <p className="font-medium capitalize">{role?.replace("_", " ")}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Daily Tasks</p>
-                        <p className="font-medium">{dailyTasksTarget} tasks/day</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Daily Habits</p>
-                        <p className="font-medium">{dailyHabitsTarget} habits/day</p>
-                      </div>
-                    </div>
-                  </div>
+                  <p className="text-center text-sm text-muted-foreground">
+                    Everything in Rhythmé will help you work towards this goal
+                  </p>
                 </>
               )}
 

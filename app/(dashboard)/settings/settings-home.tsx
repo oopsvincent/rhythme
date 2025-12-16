@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut } from "@/app/actions/auth"
 import { 
-  Bell, 
   CreditCard, 
   Shield, 
   HelpCircle, 
@@ -39,12 +38,6 @@ const menuItems = [
     description: "Theme, display settings",
     href: "/settings/appearance",
     icon: Paintbrush,
-  },
-  {
-    name: "Notifications",
-    description: "Alerts, email preferences",
-    href: "/settings/notifications",
-    icon: Bell,
   },
   {
     name: "Billing",

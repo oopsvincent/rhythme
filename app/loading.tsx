@@ -127,7 +127,7 @@ export default function Loading() {
             <Skeleton className="h-2 w-3/5 rounded-full" />
           </div>
 
-          <p className="mt-2 text-[11px] opacity-60 text-center">Optimizing rhythm • Connecting to cloud</p>
+          <p className="mt-2 text-[11px] opacity-60 text-center">Loading Rhythmé</p>
         </div>
       </div>
 

@@ -41,6 +41,36 @@ import { logHabitCompletion, removeHabitCompletion } from "@/app/actions/habits"
 import { getCachedPrediction, canUsePrediction, getDaysUntilPrediction } from "@/lib/habit-prediction";
 import { useEffect } from "react";
 
+/**
+ * Get motivational message based on prediction probability
+ * Different messages for each 10% range
+ */
+function getPredictionMessage(probability: number): string {
+  const percent = probability * 100;
+  
+  if (percent <= 10) {
+    return "🌱 Every journey starts somewhere. One step at a time!";
+  } else if (percent <= 20) {
+    return "🔥 Building momentum! Keep showing up.";
+  } else if (percent <= 30) {
+    return "💪 You're forming a pattern. Stay consistent!";
+  } else if (percent <= 40) {
+    return "⭐ Almost halfway there! Your effort is paying off.";
+  } else if (percent <= 50) {
+    return "🎯 Solid foundation! You're becoming reliable.";
+  } else if (percent <= 60) {
+    return "📈 Above average! This habit is sticking.";
+  } else if (percent <= 70) {
+    return "🌟 Strong commitment! You're building real momentum.";
+  } else if (percent <= 80) {
+    return "🏆 Excellent consistency! This is becoming second nature.";
+  } else if (percent <= 90) {
+    return "💎 Outstanding! You've nearly mastered this habit.";
+  } else {
+    return "🚀 Unstoppable! This habit is now part of your identity.";
+  }
+}
+
 interface HabitStats {
   completion_rate_7d: number;
   completion_rate_30d: number;
@@ -352,7 +382,7 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">
-                          {prediction.prediction === "Complete" ? "Completion Likelihood" : "Skip Likelihood"}
+                          Completion Likelihood
                         </span>
                         <span className="text-2xl font-primary text-accent">
                           {prediction.probability_percent}
@@ -360,9 +390,7 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                       </div>
                       <Progress value={prediction.probability * 100} className="h-2" />
                       <p className="text-sm text-muted-foreground">
-                        {prediction.prediction === "Complete"
-                          ? "🎯 You're likely to complete this habit today!"
-                          : "💪 Push through! Every completion builds momentum."}
+                        {getPredictionMessage(prediction.probability)}
                       </p>
                       <div className="flex items-center gap-2 pt-2 border-t border-border/30">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground" />

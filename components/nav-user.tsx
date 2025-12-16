@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
@@ -17,6 +18,7 @@ import {
   Sparkles,
   Sun,
   User,
+  Goal,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,19 +45,11 @@ import {
 } from "@/components/ui/sidebar";
 import { useTheme } from "next-themes";
 
-// Workspace type for future multi-workspace support
-type Workspace = {
-  id: string;
-  name: string;
-  icon: string;
-  plan: "free" | "pro" | "team";
-};
-
-// Sample workspaces - in production, fetch from API
-const workspaces: Workspace[] = [
-  { id: "1", name: "Personal", icon: "🏠", plan: "free" },
-  { id: "2", name: "Work", icon: "💼", plan: "pro" },
-];
+// Goal from localStorage
+interface UserGoal {
+  title: string;
+  description?: string;
+}
 
 export function NavUser({
   user,
@@ -69,6 +63,21 @@ export function NavUser({
   const router = useRouter();
   const { isMobile, state, setOpenMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
+  const [userGoal, setUserGoal] = useState<UserGoal | null>(null);
+
+  // Load goal from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedGoal = localStorage.getItem("user_goal");
+      if (storedGoal) {
+        try {
+          setUserGoal(JSON.parse(storedGoal));
+        } catch {
+          setUserGoal(null);
+        }
+      }
+    }
+  }, []);
 
   const handleSignOut = () => {
     if (isMobile) setOpenMobile(false);
@@ -86,25 +95,6 @@ export function NavUser({
       return (words[0][0] + words[1][0]).toUpperCase();
     }
     return name.slice(0, 2).toUpperCase();
-  };
-
-  const getPlanBadge = (plan: Workspace["plan"]) => {
-    switch (plan) {
-      case "pro":
-        return (
-          <Badge variant="secondary" className="ml-auto text-[10px] bg-primary/10 text-primary border-0 px-1.5 py-0">
-            PRO
-          </Badge>
-        );
-      case "team":
-        return (
-          <Badge variant="secondary" className="ml-auto text-[10px] bg-accent/10 text-accent border-0 px-1.5 py-0">
-            TEAM
-          </Badge>
-        );
-      default:
-        return null;
-    }
   };
 
   const isCollapsed = state === "collapsed";
@@ -172,31 +162,33 @@ export function NavUser({
 
             <DropdownMenuSeparator className="mx-1 my-1 bg-border/50" />
 
-            {/* Workspace Switcher */}
+            {/* Workspace Switcher - Goal Workspace */}
             <DropdownMenuGroup>
               <DropdownMenuLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
                 Workspaces
               </DropdownMenuLabel>
-              {workspaces.map((workspace) => (
-                <DropdownMenuItem
-                  key={workspace.id}
-                  className="flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer"
-                >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-muted text-sm">
-                    {workspace.icon}
-                  </span>
-                  <span className="flex-1 text-sm">{workspace.name}</span>
-                  {getPlanBadge(workspace.plan)}
-                  {workspace.id === "1" && (
-                    <Check className="h-4 w-4 text-primary" />
+              <DropdownMenuItem
+                className="flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-sm">
+                  <Goal className="h-3.5 w-3.5 text-primary" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm truncate">{userGoal?.title || "My Goal"}</p>
+                  {userGoal?.description && (
+                    <p className="text-[10px] text-muted-foreground truncate">{userGoal.description}</p>
                   )}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuItem className="flex items-center gap-2 rounded-lg px-2 py-2 text-muted-foreground cursor-pointer">
+                </div>
+                <Check className="h-4 w-4 text-primary" />
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="flex items-center gap-2 rounded-lg px-2 py-2 text-muted-foreground cursor-pointer"
+                onClick={() => handleNavigation("/settings/billing")}
+              >
                 <span className="flex h-6 w-6 items-center justify-center rounded-md border border-dashed border-muted-foreground/50">
                   <Plus className="h-3 w-3" />
                 </span>
-                <span className="text-sm">Add workspace</span>
+                <span className="text-sm">Add Goal Workspace</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
