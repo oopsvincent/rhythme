@@ -7,8 +7,11 @@ interface HabitDetailPageProps {
 }
 
 export default async function HabitDetailPage({ params }: HabitDetailPageProps) {
-  const { habitId } = await params;
-  const habitIdNum = parseInt(habitId, 10);
+  const { habitId: slug } = await params;
+  
+  // Extract ID from slug (e.g., "morning-exercise-123" -> "123")
+  const idFromSlug = slug.split("-").pop();
+  const habitIdNum = parseInt(idFromSlug || "", 10);
 
   if (isNaN(habitIdNum)) {
     notFound();
@@ -30,3 +33,4 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
     />
   );
 }
+

@@ -148,7 +148,7 @@ body {
   /* Glassmorphism variables */
   --glass-bg: rgba(252, 252, 253, 0.85);
   --glass-border: rgba(0, 0, 0, 0.06);
-  --glass-blur: 20px;
+  --glass-blur: 50px;
 }
 
 /* --- DARK MODE - BLACK GLASSMORPHISM --- */

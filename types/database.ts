@@ -113,4 +113,6 @@ export interface OnboardingData {
   role: "student" | "working_professional" | "freelancer" | "entrepreneur" | "other"
   daily_habits_target: number
   daily_tasks_target: number
+  long_term_goal: string
+  long_term_goal_description?: string
 }
