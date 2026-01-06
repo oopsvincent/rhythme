@@ -1,22 +1,16 @@
 // app/(dashboard)/settings/appearance/appearance-settings-content.tsx
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { ModeToggle } from "@/components/theme-button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Paintbrush, Type, Monitor, Moon, Sun } from "lucide-react"
+import { Paintbrush, Monitor, Moon, Sun, Palette, Check } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Card, CardContent } from "@/components/ui/card"
+import { useColorTheme, colorThemes, type ColorTheme } from "@/contexts/theme-context"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function AppearanceSettingsContent() {
   const { theme, setTheme } = useTheme()
+  const { colorTheme, setColorTheme } = useColorTheme()
 
   return (
     <div className="space-y-8">
@@ -79,47 +73,95 @@ export default function AppearanceSettingsContent() {
 
       <Separator />
 
-      {/* Font Size Section */}
+      {/* Color Theme Section */}
       <div className="space-y-4">
         <div className="space-y-1">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Type className="h-5 w-5 text-primary" />
-            Font Size
+            <Palette className="h-5 w-5 text-primary" />
+            Color Theme
           </h3>
           <p className="text-sm text-muted-foreground">
-            Adjust the font size for better readability.
+            Choose a color palette that matches your vibe. Colors apply across the entire app.
           </p>
         </div>
         
-        <div className="max-w-md">
-          <Select defaultValue="medium">
-            <SelectTrigger className="bg-background">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="small">
-                <span className="flex items-center gap-2">
-                  <span className="text-xs">A</span>
-                  Small
-                </span>
-              </SelectItem>
-              <SelectItem value="medium">
-                <span className="flex items-center gap-2">
-                  <span className="text-sm">A</span>
-                  Medium (Default)
-                </span>
-              </SelectItem>
-              <SelectItem value="large">
-                <span className="flex items-center gap-2">
-                  <span className="text-base">A</span>
-                  Large
-                </span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground mt-2">
-            Font size preference will be applied on your next visit.
-          </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {colorThemes.map((t) => {
+            const isSelected = colorTheme === t.id
+            
+            return (
+              <motion.div
+                key={t.id}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >
+                <Card 
+                  className={`cursor-pointer overflow-hidden transition-all duration-300 ${
+                    isSelected 
+                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg" 
+                      : "hover:shadow-md hover:border-muted-foreground/30"
+                  }`}
+                  onClick={() => setColorTheme(t.id as ColorTheme)}
+                >
+                  <CardContent className="p-0">
+                    {/* Gradient Preview */}
+                    <div 
+                      className="h-20 relative overflow-hidden"
+                      style={{ background: t.gradient }}
+                    >
+                      {/* Animated glow effect on selection */}
+                      <AnimatePresence>
+                        {isSelected && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="absolute inset-0 flex items-center justify-center"
+                          >
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 30, delay: 0.1 }}
+                              className="bg-white/90 dark:bg-black/80 rounded-full p-1.5 shadow-lg backdrop-blur-sm"
+                            >
+                              <Check className="h-4 w-4 text-primary" />
+                            </motion.div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      
+                      {/* Subtle shine animation */}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                        initial={{ x: "-100%" }}
+                        animate={isSelected ? { x: "100%" } : { x: "-100%" }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                      />
+                    </div>
+                    
+                    {/* Theme Info */}
+                    <div className="p-3 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{t.name}</span>
+                        <div className="flex gap-1">
+                          <div 
+                            className="w-3 h-3 rounded-full border border-border/50 shadow-sm"
+                            style={{ backgroundColor: t.primary }}
+                          />
+                          <div 
+                            className="w-3 h-3 rounded-full border border-border/50 shadow-sm"
+                            style={{ backgroundColor: t.accent }}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{t.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </div>
