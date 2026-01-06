@@ -208,6 +208,311 @@ body {
   --glass-blur: 24px;
 }
 
+/* ============================================
+   SUNSET THEME - Warm Ruby & Golden Glow
+   ============================================ */
+:root[data-color-theme="RTX-ST-946-F7B"] {
+  --primary: #E63946;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FF6B6B;
+  --secondary-foreground: #0A0A0B;
+  --accent: #F7B32B;
+  --accent-foreground: #0A0A0B;
+  --ring: #E63946;
+  --chart-1: #E63946;
+  --chart-2: #FF6B6B;
+  --chart-3: #F7B32B;
+  --chart-4: #FFD166;
+  --chart-5: #FF9F1C;
+  --sidebar-primary: #E63946;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F7B32B;
+  --sidebar-accent-foreground: #0A0A0B;
+  --sidebar-ring: #E63946;
+}
+
+.dark[data-color-theme="RTX-ST-946-F7B"] {
+  --primary: #E63946;
+  --primary-foreground: #050506;
+  --secondary: #FF6B6B;
+  --secondary-foreground: #050506;
+  --accent: #F7B32B;
+  --accent-foreground: #050506;
+  --ring: #E63946;
+  --chart-1: #E63946;
+  --chart-2: #FF6B6B;
+  --chart-3: #F7B32B;
+  --chart-4: #FFD166;
+  --chart-5: #FF9F1C;
+  --sidebar-primary: #E63946;
+  --sidebar-primary-foreground: #050506;
+  --sidebar-accent: #F7B32B;
+  --sidebar-accent-foreground: #050506;
+  --sidebar-ring: #E63946;
+}
+
+/* ============================================
+   OCEAN THEME - Deep Blue & Sky Calm
+   ============================================ */
+:root[data-color-theme="RTX-ON-7B6-90E"] {
+  --primary: #0077B6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #00B4D8;
+  --secondary-foreground: #0A0A0B;
+  --accent: #90E0EF;
+  --accent-foreground: #0A0A0B;
+  --ring: #0077B6;
+  --chart-1: #0077B6;
+  --chart-2: #00B4D8;
+  --chart-3: #90E0EF;
+  --chart-4: #CAF0F8;
+  --chart-5: #03045E;
+  --sidebar-primary: #0077B6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #90E0EF;
+  --sidebar-accent-foreground: #0A0A0B;
+  --sidebar-ring: #0077B6;
+}
+
+.dark[data-color-theme="RTX-ON-7B6-90E"] {
+  --primary: #00B4D8;
+  --primary-foreground: #050506;
+  --secondary: #0077B6;
+  --secondary-foreground: #FAFAFA;
+  --accent: #90E0EF;
+  --accent-foreground: #050506;
+  --ring: #00B4D8;
+  --chart-1: #00B4D8;
+  --chart-2: #0077B6;
+  --chart-3: #90E0EF;
+  --chart-4: #CAF0F8;
+  --chart-5: #48CAE4;
+  --sidebar-primary: #00B4D8;
+  --sidebar-primary-foreground: #050506;
+  --sidebar-accent: #90E0EF;
+  --sidebar-accent-foreground: #050506;
+  --sidebar-ring: #00B4D8;
+}
+
+/* ============================================
+   LAVENDER THEME - Creative Purple Serenity
+   ============================================ */
+:root[data-color-theme="RTX-LR-EDD-E0A"] {
+  --primary: #9D4EDD;
+  --primary-foreground: #FFFFFF;
+  --secondary: #C77DFF;
+  --secondary-foreground: #0A0A0B;
+  --accent: #E0AAFF;
+  --accent-foreground: #0A0A0B;
+  --ring: #9D4EDD;
+  --chart-1: #9D4EDD;
+  --chart-2: #C77DFF;
+  --chart-3: #E0AAFF;
+  --chart-4: #7B2CBF;
+  --chart-5: #5A189A;
+  --sidebar-primary: #9D4EDD;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E0AAFF;
+  --sidebar-accent-foreground: #0A0A0B;
+  --sidebar-ring: #9D4EDD;
+}
+
+.dark[data-color-theme="RTX-LR-EDD-E0A"] {
+  --primary: #C77DFF;
+  --primary-foreground: #050506;
+  --secondary: #9D4EDD;
+  --secondary-foreground: #FAFAFA;
+  --accent: #E0AAFF;
+  --accent-foreground: #050506;
+  --ring: #C77DFF;
+  --chart-1: #C77DFF;
+  --chart-2: #9D4EDD;
+  --chart-3: #E0AAFF;
+  --chart-4: #7B2CBF;
+  --chart-5: #5A189A;
+  --sidebar-primary: #C77DFF;
+  --sidebar-primary-foreground: #050506;
+  --sidebar-accent: #E0AAFF;
+  --sidebar-accent-foreground: #050506;
+  --sidebar-ring: #C77DFF;
+}
+
+/* ============================================
+   COLORLESS THEME - Minimal Monochrome
+   A "dead" feeling with pure grayscale
+   ============================================ */
+:root[data-color-theme="RTX-CS-280-9CA"] {
+  --primary: #6B7280;
+  --primary-foreground: #FFFFFF;
+  --secondary: #9CA3AF;
+  --secondary-foreground: #111827;
+  --accent: #D1D5DB;
+  --accent-foreground: #111827;
+  --ring: #6B7280;
+  --chart-1: #374151;
+  --chart-2: #4B5563;
+  --chart-3: #6B7280;
+  --chart-4: #9CA3AF;
+  --chart-5: #D1D5DB;
+  --sidebar-primary: #6B7280;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #9CA3AF;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-ring: #6B7280;
+}
+
+.dark[data-color-theme="RTX-CS-280-9CA"] {
+  --primary: #9CA3AF;
+  --primary-foreground: #111827;
+  --secondary: #6B7280;
+  --secondary-foreground: #F9FAFB;
+  --accent: #4B5563;
+  --accent-foreground: #F9FAFB;
+  --ring: #9CA3AF;
+  --chart-1: #9CA3AF;
+  --chart-2: #6B7280;
+  --chart-3: #4B5563;
+  --chart-4: #374151;
+  --chart-5: #D1D5DB;
+  --sidebar-primary: #9CA3AF;
+  --sidebar-primary-foreground: #111827;
+  --sidebar-accent: #4B5563;
+  --sidebar-accent-foreground: #F9FAFB;
+  --sidebar-ring: #9CA3AF;
+}
+
+/* ============================================
+   COLORFUL THEME - Joyful Rainbow Mix
+   Vibrant colors that bring joy and creativity
+   ============================================ */
+:root[data-color-theme="RTX-CL-899-8B5"] {
+  --primary: #EC4899;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F59E0B;
+  --secondary-foreground: #0A0A0B;
+  --accent: #8B5CF6;
+  --accent-foreground: #FFFFFF;
+  --ring: #EC4899;
+  --chart-1: #EC4899;
+  --chart-2: #F59E0B;
+  --chart-3: #8B5CF6;
+  --chart-4: #10B981;
+  --chart-5: #06B6D4;
+  --sidebar-primary: #EC4899;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #8B5CF6;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-ring: #EC4899;
+}
+
+.dark[data-color-theme="RTX-CL-899-8B5"] {
+  --primary: #F472B6;
+  --primary-foreground: #050506;
+  --secondary: #FBBF24;
+  --secondary-foreground: #050506;
+  --accent: #A78BFA;
+  --accent-foreground: #050506;
+  --ring: #F472B6;
+  --chart-1: #F472B6;
+  --chart-2: #FBBF24;
+  --chart-3: #A78BFA;
+  --chart-4: #34D399;
+  --chart-5: #22D3EE;
+  --sidebar-primary: #F472B6;
+  --sidebar-primary-foreground: #050506;
+  --sidebar-accent: #A78BFA;
+  --sidebar-accent-foreground: #050506;
+  --sidebar-ring: #F472B6;
+}
+
+/* ============================================
+   FOREST THEME - Natural Green Serenity
+   Earthy and grounded nature vibes
+   ============================================ */
+:root[data-color-theme="RTX-FT-669-34D"] {
+  --primary: #059669;
+  --primary-foreground: #FFFFFF;
+  --secondary: #10B981;
+  --secondary-foreground: #0A0A0B;
+  --accent: #34D399;
+  --accent-foreground: #0A0A0B;
+  --ring: #059669;
+  --chart-1: #059669;
+  --chart-2: #10B981;
+  --chart-3: #34D399;
+  --chart-4: #6EE7B7;
+  --chart-5: #047857;
+  --sidebar-primary: #059669;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #34D399;
+  --sidebar-accent-foreground: #0A0A0B;
+  --sidebar-ring: #059669;
+}
+
+.dark[data-color-theme="RTX-FT-669-34D"] {
+  --primary: #10B981;
+  --primary-foreground: #050506;
+  --secondary: #059669;
+  --secondary-foreground: #FAFAFA;
+  --accent: #34D399;
+  --accent-foreground: #050506;
+  --ring: #10B981;
+  --chart-1: #10B981;
+  --chart-2: #059669;
+  --chart-3: #34D399;
+  --chart-4: #6EE7B7;
+  --chart-5: #047857;
+  --sidebar-primary: #10B981;
+  --sidebar-primary-foreground: #050506;
+  --sidebar-accent: #34D399;
+  --sidebar-accent-foreground: #050506;
+  --sidebar-ring: #10B981;
+}
+
+/* ============================================
+   MIDNIGHT THEME - Deep Dark Blue Mystery
+   Deep indigo for late night focus
+   ============================================ */
+:root[data-color-theme="RTX-MT-0A3-636"] {
+  --primary: #4F46E5;
+  --primary-foreground: #FFFFFF;
+  --secondary: #6366F1;
+  --secondary-foreground: #FFFFFF;
+  --accent: #818CF8;
+  --accent-foreground: #0A0A0B;
+  --ring: #4F46E5;
+  --chart-1: #4F46E5;
+  --chart-2: #6366F1;
+  --chart-3: #818CF8;
+  --chart-4: #3730A3;
+  --chart-5: #1E1B4B;
+  --sidebar-primary: #4F46E5;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #818CF8;
+  --sidebar-accent-foreground: #0A0A0B;
+  --sidebar-ring: #4F46E5;
+}
+
+.dark[data-color-theme="RTX-MT-0A3-636"] {
+  --primary: #6366F1;
+  --primary-foreground: #050506;
+  --secondary: #4F46E5;
+  --secondary-foreground: #FAFAFA;
+  --accent: #818CF8;
+  --accent-foreground: #050506;
+  --ring: #6366F1;
+  --chart-1: #6366F1;
+  --chart-2: #4F46E5;
+  --chart-3: #818CF8;
+  --chart-4: #A5B4FC;
+  --chart-5: #3730A3;
+  --sidebar-primary: #6366F1;
+  --sidebar-primary-foreground: #050506;
+  --sidebar-accent: #818CF8;
+  --sidebar-accent-foreground: #050506;
+  --sidebar-ring: #6366F1;
+}
+
 /* --- BASE LAYER --- */
 @layer base {
   * {

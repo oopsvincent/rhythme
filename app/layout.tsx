@@ -5,6 +5,7 @@ import './loading.css';
 import './styles/not-found.css'
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ColorThemeProvider } from "@/contexts/theme-context";
 import { QueryProvider } from "@/components/query-provider";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -146,17 +147,19 @@ export default function RootLayout({
         className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased`}
       >
         <QueryProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-            <div className="absolute top-2 right-2 z-[100]">
-              {/* <ModeToggle /> */}
-            </div>
-          </ThemeProvider>
+          <ColorThemeProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+              <div className="absolute top-2 right-2 z-[100]">
+                {/* <ModeToggle /> */}
+              </div>
+            </ThemeProvider>
+          </ColorThemeProvider>
         </QueryProvider>
         <Analytics />
       </body>
