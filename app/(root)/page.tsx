@@ -5,9 +5,9 @@ export default function Home() {
   return (
     <div className="relative min-h-screen flex flex-col justify-center items-center text-center bg-background overflow-hidden">
       <LandingPageWrapper/>
-      <div id="pricing" className="mb-10">
+      {/* <div id="pricing" className="mb-10">
     <PricingComponent/>
-      </div>
+      </div> */}
 
       {/* Decorative graphics */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>

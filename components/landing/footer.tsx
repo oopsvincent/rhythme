@@ -1,5 +1,7 @@
+"use client";
+
 import React from 'react';
-import { Twitter, Linkedin, Github, Mail, Heart, Compass } from 'lucide-react';
+import { Twitter, Linkedin, Github, Mail, Heart, Shield, Lock, Brain } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -32,11 +34,11 @@ const Footer: React.FC = () => {
       ],
     },
     {
-      title: 'Resources',
+      title: 'Company',
       links: [
-        { label: 'Help Center', href: '#help' },
-        { label: 'Blog', href: '#blog' },
-        { label: 'Community', href: '#community' },
+        { label: 'Our Vision', href: '/about#vision' },
+        { label: 'Research', href: '/about#research' },
+        { label: 'Careers', href: '#careers' },
       ],
     },
     {
@@ -44,153 +46,152 @@ const Footer: React.FC = () => {
       links: [
         { label: 'Privacy Policy', href: '/legal/privacy' },
         { label: 'Terms of Service', href: '/legal/terms' },
-        { label: 'Cookie Policy', href: '#cookies' },
+        { label: 'Cookie Policy', href: '/legal/cookie' },
       ],
     },
   ];
 
   const socialLinks: SocialLink[] = [
     {
-      icon: <Twitter className="w-5 h-5" />,
+      icon: <Twitter className="w-4 h-4" />,
       href: '#twitter',
       label: 'Twitter',
     },
     {
-      icon: <Linkedin className="w-5 h-5" />,
+      icon: <Linkedin className="w-4 h-4" />,
       href: '#linkedin',
       label: 'LinkedIn',
     },
     {
-      icon: <Github className="w-5 h-5" />,
+      icon: <Github className="w-4 h-4" />,
       href: '#github',
       label: 'GitHub',
     },
     {
-      icon: <Mail className="w-5 h-5" />,
-      href: '#email',
+      icon: <Mail className="w-4 h-4" />,
+      href: 'mailto:hello@rhythme.app',
       label: 'Email',
     },
   ];
 
   return (
-    <footer className="relative bg-background border-t border-border overflow-hidden">
-      {/* Ambient glow effects */}
-      <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-primary/5 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-accent/5 rounded-full blur-3xl"></div>
+    <footer className="relative bg-background border-t border-border/50 overflow-hidden">
+      {/* Subtle glow effects */}
+      <div className="absolute top-0 left-1/4 w-64 h-64 bg-primary/3 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-accent/3 rounded-full blur-3xl"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 relative z-10">
-        {/* Top Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10 mb-12">
+      <div className="max-w-6xl mx-auto px-6 py-16 relative z-10">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-12">
           {/* Brand Column */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-2">
-            <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
+          <div className="lg:col-span-5">
+            <Link href="/" className="inline-flex items-center gap-3 mb-6 group">
               <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/30 transition-all duration-300"></div>
-                <div className="relative backdrop-blur-sm bg-background/50 border border-primary/30 rounded-lg p-1.5 group-hover:border-primary/50 transition-all duration-300">
+                <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/30 transition-all duration-500"></div>
+                <div className="relative backdrop-blur-sm bg-background/50 border border-primary/30 rounded-xl p-2 group-hover:border-primary/50 transition-all duration-500">
                   <Image 
                     src="/Rhythme.svg" 
                     alt="Rhythmé logo" 
-                    width={25} 
-                    height={25}
-                    className="group-hover:brightness-110 transition-all duration-300"
+                    width={24} 
+                    height={24}
                   />
                 </div>
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent group-hover:from-primary group-hover:via-accent group-hover:to-foreground transition-all duration-300 font-primary">
-                Rhythmé
-              </h3>
+              <span className="text-xl font-bold font-primary">Rhythmé</span>
             </Link>
-            <p className="text-muted-foreground text-sm mb-4 max-w-sm">
-              Know where to start. Take the next step. Build the confidence to keep going.
-            </p>
             
-            {/* Tagline */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Compass className="w-4 h-4 text-primary" />
-              <span>Your personal direction system</span>
-            </div>
-          </div>
+            <p className="text-muted-foreground text-sm mb-6 max-w-sm leading-relaxed">
+              Building human-aware systems that understand attention, motivation, and focus. 
+              Helping people take meaningful action toward their goals.
+            </p>
 
-          {/* Link Columns */}
-          {footerSections.map((section) => (
-            <div key={section.title} className="min-w-0">
-              <h4 className="text-sm font-semibold mb-3 sm:mb-4 text-foreground">
-                {section.title}
-              </h4>
-              <ul className="space-y-2 sm:space-y-3">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 inline-flex items-center group"
-                    >
-                      <span className="relative">
-                        {link.label}
-                        <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Divider */}
-        <div className="relative mb-8">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border"></div>
-          </div>
-          <div className="relative flex justify-center">
-            <div className="bg-background px-4">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Section */}
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
-            {/* Copyright */}
-            <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 text-center sm:text-left">
-              <span>© {currentYear} Rhythmé. Made with</span>
-              <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-primary fill-primary animate-pulse flex-shrink-0" />
-              <span>for clarity</span>
+            {/* Mission Statement */}
+            <div className="glass-card rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <Brain className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium mb-1">Our Mission</p>
+                  <p className="text-xs text-muted-foreground">
+                    Research and develop AI that genuinely understands human psychology 
+                    in the age of endless distraction.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Social Links */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
-                  className="backdrop-blur-xl bg-background/40 border border-border rounded-lg p-2 sm:p-2.5 text-muted-foreground hover:text-primary hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 group"
+                  className="backdrop-blur-sm bg-muted/50 border border-border rounded-lg p-2.5 text-muted-foreground hover:text-primary hover:border-primary/50 transition-all duration-300 hover:bg-primary/5"
                 >
-                  <div className="group-hover:scale-110 transition-transform duration-300">
-                    {social.icon}
-                  </div>
+                  {social.icon}
                 </a>
               ))}
             </div>
           </div>
+
+          {/* Link Columns */}
+          <div className="lg:col-span-7 grid grid-cols-3 gap-8">
+            {footerSections.map((section) => (
+              <div key={section.title}>
+                <h4 className="text-sm font-semibold mb-4 text-foreground">
+                  {section.title}
+                </h4>
+                <ul className="space-y-3">
+                  {section.links.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors duration-300"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Trust Badges */}
-        <div className="mt-8 pt-8 border-t border-border/50">
-          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2 backdrop-blur-xl bg-background/40 border border-border rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
-              <span className="whitespace-nowrap">99.9% Uptime</span>
+        {/* Trust & Security Badges */}
+        <div className="border-t border-border/50 pt-8 mb-8">
+          <div className="flex flex-wrap justify-center gap-6 text-xs">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span>99.9% Uptime</span>
             </div>
-            <div className="flex items-center gap-2 backdrop-blur-xl bg-background/40 border border-border rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-              <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0"></div>
-              <span className="whitespace-nowrap">GDPR Compliant</span>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Shield className="w-3.5 h-3.5 text-primary" />
+              <span>GDPR Compliant</span>
             </div>
-            <div className="flex items-center gap-2 backdrop-blur-xl bg-background/40 border border-border rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-              <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-              <span className="whitespace-nowrap">256-bit Encryption</span>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Lock className="w-3.5 h-3.5 text-primary" />
+              <span>End-to-End Encryption</span>
             </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Heart className="w-3.5 h-3.5 text-primary" />
+              <span>No Data Selling</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span>© {currentYear} Rhythmé Inc.</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="hidden sm:inline">All rights reserved</span>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <Link href="/legal/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+            <Link href="/legal/terms" className="hover:text-primary transition-colors">Terms</Link>
+            <Link href="/about#partner" className="hover:text-primary transition-colors">Partner</Link>
           </div>
         </div>
       </div>

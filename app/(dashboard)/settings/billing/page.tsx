@@ -3,7 +3,7 @@ import BillingSettingsContent from "./billing-settings-content"
 
 export default function BillingPage() {
   // In future, fetch current subscription from database
-  const currentPlan = "free" // or "plus"
+  const currentPlan = "starter" // or "premium"
   
   return <BillingSettingsContent currentPlan={currentPlan} />
 }
