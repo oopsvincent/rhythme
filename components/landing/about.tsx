@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,11 +13,16 @@ import {
   Compass,
   Brain,
   Zap,
-  Users,
+  Lock,
+  Eye,
+  TrendingUp,
+  Rocket,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface ValueCard {
-  icon: React.ReactNode;
+  icon: React.ElementType;
   title: string;
   description: string;
 }
@@ -30,37 +35,35 @@ interface TimelineItem {
 }
 
 const AboutPage: React.FC = () => {
-  const [mounted, setMounted] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    setMousePosition({
+      x: e.clientX,
+      y: e.clientY,
+    });
+  };
 
   const values: ValueCard[] = [
     {
-      icon: <Lightbulb className="w-6 h-6" />,
+      icon: Lightbulb,
       title: "Clarity First",
-      description: "Every feature we build guides you toward action.  No confusion, no overwhelm—just clear next steps.",
+      description: "Every feature we build guides you toward action. No confusion, no overwhelm—just clear next steps.",
     },
     {
-      icon: <Heart className="w-6 h-6" />,
+      icon: Heart,
       title: "Emotional Safety",
       description: "We speak like a supportive friend, never a demanding taskmaster. Your well-being matters more than your output.",
     },
     {
-      icon: <Target className="w-6 h-6" />,
+      icon: Target,
       title: "Meaningful Progress",
       description: "Small wins build lasting change. We help you see how every tiny action moves you toward who you want to become.",
     },
     {
-      icon: <Shield className="w-6 h-6" />,
+      icon: Shield,
       title: "Privacy by Design",
       description: "Your journey is personal. We never sell your data, and we protect your reflections with serious encryption.",
-    },
-    {
-      icon: <Zap className="w-6 h-6" />,
-      title: "Imperfect Action",
-      description: "Done is better than perfect. We encourage you to start before you're ready, because momentum creates confidence.",
     },
   ];
 
@@ -68,13 +71,13 @@ const AboutPage: React.FC = () => {
     {
       stage: "Phase 1",
       title: "MVP - Foundation",
-      description: "Core goal workspace, tasks, habits, journaling, and basic insights. The foundation of clarity.",
+      description: "Core goal workspace, tasks, habits, journaling, and basic insights.",
       status: "current",
     },
     {
       stage: "Phase 2",
       title: "Next Best Action Engine",
-      description: "AI-powered daily micro-actions with reasoning. The heart of Rhythmé's direction system.",
+      description: "AI-powered daily micro-actions with reasoning and context awareness.",
       status: "upcoming",
     },
     {
@@ -85,301 +88,434 @@ const AboutPage: React.FC = () => {
     },
     {
       stage: "Phase 4",
-      title: "Social & Community",
-      description: "Optional accountability features, shared journeys, and community support.",
-      status: "upcoming",
-    },
-    {
-      stage: "Future",
-      title: "Identity Engine & Beyond",
-      description: "Advanced identity tracking, behavioral patterns, and features we'll discover along the way.",
+      title: "Research Platform",
+      description: "Tools for studying human attention and focus in the digital age.",
       status: "upcoming",
     },
   ];
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-background via-accent/5 to-background relative overflow-hidden">
+    <div 
+      className="min-h-screen w-full bg-background relative overflow-hidden"
+      onMouseMove={handleMouseMove}
+    >
+      {/* Mouse-following Glow */}
+      <div 
+        className="pointer-events-none fixed w-[400px] h-[400px] rounded-full opacity-10 blur-[120px] transition-all duration-700 ease-out z-0"
+        style={{ 
+          background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)",
+          left: mousePosition.x - 200,
+          top: mousePosition.y - 200,
+        }}
+      />
+
       {/* Background effects */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-3xl"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl"></div>
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl"></div>
 
       <div className="relative z-10">
         {/* Hero Section */}
-        <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 px-4 sm:px-6">
-          <div className={`max-w-4xl mx-auto text-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
+        <section className="pt-28 sm:pt-36 pb-16 px-4 sm:px-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-4xl mx-auto text-center"
+          >
             {/* Logo */}
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 sm:mb-8 group">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-300"></div>
-              <div className="relative w-full h-full backdrop-blur-xl bg-background/60 border-2 border-primary/30 rounded-full flex items-center justify-center group-hover:border-primary/50 transition-all duration-300 group-hover:scale-110 shadow-lg shadow-primary/10">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-8 group">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-full blur-2xl"></div>
+              <div className="relative w-full h-full backdrop-blur-xl bg-background/60 border-2 border-primary/30 rounded-full flex items-center justify-center shadow-2xl shadow-primary/20">
                 <Image 
                   src="/Rhythme.svg" 
                   alt="Rhythmé logo" 
-                  width={70} 
-                  height={70}
-                  className="group-hover:brightness-110 transition-all duration-300"
+                  width={50} 
+                  height={50}
                 />
               </div>
             </div>
 
-            {/* Hero Text */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 font-primary">
-              <span className="text-foreground">Helping you finally</span>
-              <br />
-              <span className="text-gradient-primary">know where to start</span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 font-primary">
+              <span className="text-foreground">About </span>
+              <span className="text-gradient-primary">Rhythmé</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Rhythmé is a productivity and well-being companion built around one simple promise: 
-              remove the overwhelm and give you clear direction, one small step at a time.
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Building human-aware systems that understand attention, motivation, and focus 
+              in the age of endless distraction.
             </p>
 
-            {/* Quick Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup/intro">
-                <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg font-semibold hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 group flex items-center justify-center gap-2">
+                <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl font-semibold hover:shadow-2xl hover:shadow-primary/30 transition-all duration-500 hover:scale-105 group flex items-center justify-center gap-2">
                   Start Your Journey
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </button>
               </Link>
-              <Link href="#our-story">
-                <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 backdrop-blur-xl bg-background/60 border-2 border-border hover:border-primary/50 rounded-lg font-semibold transition-all duration-300">
-                  Read Our Story
+              <a href="#partner">
+                <button className="w-full sm:w-auto px-8 py-4 glass-card border-primary/30 rounded-xl font-semibold transition-all duration-500 hover:border-primary/50">
+                  Partner With Us
                 </button>
-              </Link>
+              </a>
             </div>
-          </div>
+          </motion.div>
         </section>
 
-        {/* Philosophy Banner */}
-        <section className="py-8 sm:py-12 px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="backdrop-blur-xl bg-gradient-to-r from-primary/10 via-background/60 to-accent/10 border border-border rounded-2xl p-6 sm:p-8 text-center">
-              <blockquote className="text-lg sm:text-xl md:text-2xl font-marketing text-muted-foreground leading-relaxed">
-                &ldquo;Imperfect action builds confidence. Confidence creates momentum. Momentum shapes identity.&rdquo;
-              </blockquote>
-              <div className="flex flex-wrap justify-center gap-2 mt-6">
-                {["Confidence", "Direction", "Discipline", "Safety", "Meaning"].map((value, index) => (
-                  <span 
-                    key={index}
-                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium"
-                  >
-                    {value}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Mission Section */}
-        <section id="our-story" className="py-12 sm:py-20 px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="backdrop-blur-xl bg-background/60 border-2 border-border rounded-3xl p-8 sm:p-12 md:p-16">
-              <div className="text-center mb-8 sm:mb-12">
-                <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-primary to-accent mb-6">
-                  <Compass className="w-8 h-8 text-white" />
+        {/* Vision Section */}
+        <section id="vision" className="py-20 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="glass-card rounded-3xl p-8 sm:p-12 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-60 h-60 bg-primary/10 rounded-full blur-3xl"></div>
+              
+              <div className="relative z-10">
+                <div className="inline-flex p-3 rounded-xl bg-primary/10 mb-6">
+                  <Rocket className="w-6 h-6 text-primary" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
-                  Our Mission
+                
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 font-primary">
+                  Our Vision
                 </h2>
+                
+                <div className="space-y-6 text-muted-foreground text-lg leading-relaxed">
+                  <p>
+                    <span className="text-foreground font-medium">The problem is clear:</span> We live in an era of unprecedented 
+                    distraction. Short-form content, infinite scrolling, and instant gratification have rewired how we interact 
+                    with technology—and with our own goals.
+                  </p>
+                  <p>
+                    Traditional productivity apps assume you know what to do and just need a place to write it down. 
+                    <span className="text-primary font-medium"> But the real problem is deeper:</span> people struggle to start, 
+                    to maintain focus, and to build lasting momentum.
+                  </p>
+                  <p>
+                    <span className="text-foreground font-medium">Rhythmé exists to solve this.</span> We're building AI that 
+                    genuinely understands human psychology—attention, motivation, procrastination, and emotional state. 
+                    Not to exploit these patterns, but to help people work with their natural rhythms.
+                  </p>
+                </div>
               </div>
+            </motion.div>
+          </div>
+        </section>
 
-              <div className="space-y-6 text-muted-foreground">
-                <p className="text-base sm:text-lg leading-relaxed">
-                  We started Rhythmé because we know what it feels like to be overwhelmed. You have a goal—maybe learning a new skill, building a habit, or changing your life—but you don&apos;t know where to begin. The advice out there says &ldquo;just start,&rdquo; but start <em>where</em>?
-                </p>
-                <p className="text-base sm:text-lg leading-relaxed">
-                  That question—<strong className="text-foreground">&ldquo;where do I start?&rdquo;</strong>—is the one we&apos;re obsessed with answering. Not with a complicated system or a feature-packed app, but with something simple: one goal, one day, one small step.
-                </p>
-                <p className="text-base sm:text-lg leading-relaxed">
-                  Rhythmé is our answer. A direction system that meets you where you are, understands your energy, and guides you forward—not with pressure, but with clarity and care.
-                </p>
-                <p className="text-base sm:text-lg leading-relaxed">
-                  <strong className="text-foreground">Our mission is simple:</strong> help everyone finally know where to start, and trust that imperfect action will take them where they want to go.
-                </p>
-              </div>
+        {/* Research Focus Section */}
+        <section id="research" className="py-20 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-4">
+                <Brain className="w-4 h-4 inline mr-2" />
+                Research Focus
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
+                Building Human-Aware AI
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Our research pillars shape every feature we build.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { 
+                  icon: Eye, 
+                  title: "Attention Science", 
+                  description: "Understanding how human attention works in the digital age, and building tools that respect it rather than exploit it." 
+                },
+                { 
+                  icon: Brain, 
+                  title: "Procrastination Research", 
+                  description: "Studying the psychological roots of procrastination to create interventions that actually work." 
+                },
+                { 
+                  icon: Heart, 
+                  title: "Emotional Intelligence", 
+                  description: "Developing AI that can detect emotional state and adapt its approach—supportive when you're struggling, motivating when you're ready." 
+                },
+                { 
+                  icon: Zap, 
+                  title: "Behavior Change", 
+                  description: "Applying behavioral science to help people build lasting habits and break procrastination cycles." 
+                },
+              ].map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="glass-card rounded-2xl p-6 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-accent" />
+                    </div>
+                    <h3 className="text-lg font-bold font-primary mb-2">{item.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Trust Section */}
+        <section className="py-20 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <span className="inline-block px-4 py-1.5 rounded-full bg-green-500/10 text-green-500 text-sm font-medium mb-4">
+                <Shield className="w-4 h-4 inline mr-2" />
+                Trust & Ethics
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
+                Our Commitment
+              </h2>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { icon: Lock, title: "No Data Selling", description: "Your personal data is never sold to third parties. Ever." },
+                { icon: Eye, title: "Transparent AI", description: "When AI makes suggestions, we show exactly why." },
+                { icon: Shield, title: "Privacy First", description: "End-to-end encryption. Anonymous by default." },
+              ].map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="glass-card rounded-2xl p-6 border-green-500/20 text-center"
+                  >
+                    <div className="w-12 h-12 mx-auto rounded-xl bg-green-500/10 flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-green-500" />
+                    </div>
+                    <h3 className="text-lg font-bold font-primary mb-2">{item.title}</h3>
+                    <p className="text-muted-foreground text-sm">{item.description}</p>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>
 
         {/* Values Section */}
-        <section className="py-12 sm:py-20 px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <span className="inline-block px-4 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium mb-4">
+        <section className="py-20 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
                 What We Believe
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
-                Our Core Values
+                Core Values
               </h2>
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                These principles guide every decision we make and every feature we build
-              </p>
-            </div>
+            </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {values.map((value, index) => (
-                <div
-                  key={index}
-                  className={`group backdrop-blur-xl bg-background/40 border-2 border-border hover:border-primary/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.02] ${index === 4 ? 'md:col-span-2 lg:col-span-1' : ''}`}
-                >
-                  <div className="inline-flex p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <div className="text-primary">
-                      {value.icon}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {values.map((value, index) => {
+                const Icon = value.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="glass-card rounded-2xl p-8 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-primary" />
                     </div>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
-                    {value.title}
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {value.description}
-                  </p>
-                </div>
-              ))}
+                    <h3 className="text-xl font-bold font-primary mb-2">{value.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{value.description}</p>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>
 
         {/* Roadmap Section */}
-        <section className="py-12 sm:py-20 px-4 sm:px-6">
+        <section className="py-20 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <span className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                <TrendingUp className="w-4 h-4 inline mr-2" />
                 Our Journey
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
-                The Road Ahead
+                Product Roadmap
               </h2>
-              <p className="text-base sm:text-lg text-muted-foreground">
-                We&apos;re building Rhythmé in phases—learning what works as we go
-              </p>
-            </div>
+            </motion.div>
 
-            <div className="relative">
-              {/* Timeline Line */}
-              <div className="absolute left-4 sm:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-border transform sm:-translate-x-1/2"></div>
-
-              {/* Timeline Items */}
-              <div className="space-y-8 sm:space-y-12">
-                {timeline.map((item, index) => (
-                  <div
-                    key={index}
-                    className={`relative flex items-start ${
-                      index % 2 === 0 ? 'sm:flex-row' : 'sm:flex-row-reverse'
-                    }`}
-                  >
-                    {/* Timeline Dot */}
-                    <div className={`absolute left-4 sm:left-1/2 w-8 h-8 rounded-full flex items-center justify-center transform sm:-translate-x-1/2 shadow-lg ${
-                      item.status === 'current' 
-                        ? 'bg-gradient-to-br from-primary to-accent shadow-primary/50' 
-                        : item.status === 'completed' 
-                          ? 'bg-green-500 shadow-green-500/50' 
-                          : 'bg-muted border-2 border-border'
-                    }`}>
-                      {item.status === 'current' && (
+            <div className="space-y-4">
+              {timeline.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className={cn(
+                    "glass-card rounded-2xl p-6 transition-all duration-500",
+                    item.status === "current" && "border-primary/50 shadow-lg shadow-primary/10"
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                      item.status === "current" && "bg-gradient-to-br from-primary to-accent text-primary-foreground",
+                      item.status === "upcoming" && "bg-muted text-muted-foreground"
+                    )}>
+                      {item.status === "current" ? (
                         <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                      )}
-                      {item.status === 'completed' && (
-                        <div className="w-3 h-3 bg-white rounded-full"></div>
+                      ) : (
+                        <span className="text-sm font-bold">{index + 1}</span>
                       )}
                     </div>
-
-                    {/* Content Card */}
-                    <div className={`ml-16 sm:ml-0 sm:w-5/12 ${index % 2 === 0 ? 'sm:pr-12' : 'sm:pl-12'}`}>
-                      <div className={`backdrop-blur-xl bg-background/60 border-2 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl ${
-                        item.status === 'current' 
-                          ? 'border-primary/50 shadow-lg shadow-primary/10' 
-                          : 'border-border hover:border-primary/30 hover:shadow-primary/10'
-                      }`}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                            item.status === 'current'
-                              ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground'
-                              : item.status === 'completed'
-                                ? 'bg-green-500/20 text-green-600'
-                                : 'bg-muted text-muted-foreground'
-                          }`}>
-                            {item.stage}
-                          </span>
-                          {item.status === 'current' && (
-                            <span className="text-xs text-primary font-medium animate-pulse">Now</span>
-                          )}
-                        </div>
-                        <h3 className="text-xl font-bold mb-2 text-foreground">
-                          {item.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                          {item.description}
-                        </p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded text-xs font-semibold",
+                          item.status === "current" && "bg-primary text-primary-foreground",
+                          item.status === "upcoming" && "bg-muted text-muted-foreground"
+                        )}>
+                          {item.stage}
+                        </span>
+                        {item.status === "current" && (
+                          <span className="text-xs text-primary font-medium">Now</span>
+                        )}
                       </div>
+                      <h3 className="text-lg font-bold">{item.title}</h3>
+                      <p className="text-muted-foreground text-sm">{item.description}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Team Section */}
-        <section className="py-12 sm:py-20 px-4 sm:px-6">
+        {/* Partner Section - For Investors/VCs */}
+        <section id="partner" className="py-20 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="backdrop-blur-xl bg-background/60 border-2 border-border rounded-3xl p-8 sm:p-12">
-              <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-                <div className="flex-shrink-0">
-                  <div className="relative w-32 h-32 sm:w-40 sm:h-40">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-full blur-xl"></div>
-                    <div className="relative w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center border-4 border-background">
-                      <Heart className="w-16 h-16 sm:w-20 sm:h-20 text-primary" />
-                    </div>
-                  </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                <Rocket className="w-4 h-4 inline mr-2" />
+                Partner With Us
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
+                Building the Future Together
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                We're on a mission to redefine how people interact with productivity tools. 
+                We welcome partners who share our vision for human-aware technology.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="glass-card rounded-2xl p-8 sm:p-10"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary mb-1">$2T+</div>
+                  <div className="text-sm text-muted-foreground">Global productivity market</div>
                 </div>
-                <div className="flex-1 text-center md:text-left">
-                  <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-3">
-                    Passion Project
-                  </span>
-                  <h3 className="text-2xl font-bold mb-4 font-primary">Built with Heart</h3>
-                  <p className="text-muted-foreground mb-4 leading-relaxed">
-                    Rhythmé is built by people who personally understand the struggle of not knowing where to start. We&apos;re not a big company—we&apos;re a small team of passionate creators building something we wish existed when we needed it most.
-                  </p>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Every feature, every word, every interaction is crafted with the care of people who genuinely want to help you find your direction.
-                  </p>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-accent mb-1">72%</div>
+                  <div className="text-sm text-muted-foreground">Adults struggle with focus</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-foreground mb-1">Novel</div>
+                  <div className="text-sm text-muted-foreground">Human-aware AI approach</div>
                 </div>
               </div>
-            </div>
+              
+              <p className="text-muted-foreground text-center mb-6">
+                Interested in our mission? We'd love to share our deck and discuss how we're approaching this space.
+              </p>
+              
+              <div className="flex justify-center">
+                <a href="mailto:hello@rhythme.app?subject=Partnership%20Inquiry">
+                  <button className="px-8 py-4 glass-card border-primary/30 rounded-xl font-semibold transition-all duration-500 hover:border-primary/50 hover:bg-primary/5">
+                    Get in Touch
+                  </button>
+                </a>
+              </div>
+            </motion.div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-12 sm:py-20 px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="backdrop-blur-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 rounded-3xl p-8 sm:p-12 md:p-16 text-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 animate-pulse"></div>
+        <section className="py-20 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="glass-card rounded-3xl p-8 sm:p-12 border-primary/30 relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5"></div>
+              
               <div className="relative z-10">
-                <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-primary to-accent mb-6">
-                  <Sparkles className="w-8 h-8 text-white" />
+                <div className="inline-flex p-3 rounded-xl bg-gradient-to-br from-primary to-accent mb-6">
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 font-primary">
                   Ready to Find Your Direction?
                 </h2>
-                <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Join us on this journey. Start with one goal, take one step, and see where clarity takes you.
+                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                  Join thousands who've discovered clarity. Start your journey today.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/signup/intro">
-                    <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg font-semibold hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 group flex items-center justify-center gap-2">
-                      Get Started Free
-                      <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-                    </button>
-                  </Link>
-                  <Link href="/features">
-                    <button className="w-full sm:w-auto px-8 py-4 backdrop-blur-xl bg-background/60 border-2 border-border hover:border-primary/50 rounded-lg font-semibold transition-all duration-300">
-                      Explore Features
-                    </button>
-                  </Link>
-                </div>
+                
+                <Link href="/signup/intro">
+                  <button className="px-10 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl font-semibold hover:shadow-2xl hover:shadow-primary/30 transition-all duration-500 hover:scale-105">
+                    Get Started Free
+                  </button>
+                </Link>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
       </div>
