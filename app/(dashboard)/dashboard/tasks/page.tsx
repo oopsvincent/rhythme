@@ -53,6 +53,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Kbd } from "@/components/ui/kbd";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Task, CreateTaskInput, Priority, Status } from "@/types/database";
 import {
@@ -154,95 +155,105 @@ export default function TasksPage() {
                   </button>
                 </DialogTrigger>
                 <DialogContent className="glass border-border sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="font-primary text-xl">
-                      Create New Task
-                    </DialogTitle>
-                    <DialogDescription>
-                      Add a new task to your list
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Task Title</Label>
-                      <Input
-                        placeholder="e.g., Complete project report"
-                        value={newTask.title}
-                        onChange={(e) =>
-                          setNewTask({ ...newTask, title: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">
-                        Description{" "}
-                        <span className="text-muted-foreground">(optional)</span>
-                      </Label>
-                      <Textarea
-                        placeholder="Add details about this task..."
-                        value={newTask.description}
-                        onChange={(e) =>
-                          setNewTask({ ...newTask, description: e.target.value })
-                        }
-                        rows={3}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  <form onSubmit={(e) => { e.preventDefault(); handleAddTask(); }}>
+                    <DialogHeader>
+                      <DialogTitle className="font-primary text-xl">
+                        Create New Task
+                      </DialogTitle>
+                      <DialogDescription>
+                        Add a new task to your list
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Priority</Label>
-                        <Select
-                          value={newTask.priority}
-                          onValueChange={(value) =>
-                            setNewTask({ ...newTask, priority: value as Priority })
+                        <Label className="text-sm font-medium">Task Title</Label>
+                        <Input
+                          placeholder="e.g., Complete project report"
+                          value={newTask.title}
+                          onChange={(e) =>
+                            setNewTask({ ...newTask, title: e.target.value })
                           }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          autoFocus
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Status</Label>
-                        <Select
-                          value={newTask.status}
-                          onValueChange={(value) =>
-                            setNewTask({ ...newTask, status: value as Status })
+                        <Label className="text-sm font-medium">
+                          Description{" "}
+                          <span className="text-muted-foreground">(optional)</span>
+                        </Label>
+                        <Textarea
+                          placeholder="Add details about this task..."
+                          value={newTask.description}
+                          onChange={(e) =>
+                            setNewTask({ ...newTask, description: e.target.value })
                           }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          rows={3}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Priority</Label>
+                          <Select
+                            value={newTask.priority}
+                            onValueChange={(value) =>
+                              setNewTask({ ...newTask, priority: value as Priority })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="low">Low</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="high">High</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Status</Label>
+                          <Select
+                            value={newTask.status}
+                            onValueChange={(value) =>
+                              setNewTask({ ...newTask, status: value as Status })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="in_progress">In Progress</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <DialogFooter className="gap-2 sm:gap-0">
-                    <button
-                      className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
-                      onClick={() => setIsAddDialogOpen(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-                      onClick={handleAddTask}
-                      disabled={createMutation.isPending || !newTask.title}
-                    >
-                      {createMutation.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Create Task
-                    </button>
-                  </DialogFooter>
+                    <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+                      <div className="hidden sm:flex items-center text-xs text-muted-foreground">
+                        <Kbd>Enter</Kbd>
+                        <span className="ml-1.5">to save</span>
+                      </div>
+                      <div className="flex flex-col-reverse sm:flex-row gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+                          onClick={() => setIsAddDialogOpen(false)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          disabled={createMutation.isPending || !newTask.title}
+                        >
+                          {createMutation.isPending && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Create Task
+                        </button>
+                      </div>
+                    </DialogFooter>
+                  </form>
                 </DialogContent>
               </Dialog>
             </motion.div>

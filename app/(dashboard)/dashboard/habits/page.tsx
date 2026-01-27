@@ -50,6 +50,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Kbd } from "@/components/ui/kbd";
 import { motion, AnimatePresence } from "framer-motion";
 import type {
   HabitWithStats,
@@ -191,76 +192,86 @@ export default function HabitsPage() {
                   </button>
                 </DialogTrigger>
                 <DialogContent className="glass border-border sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="font-primary text-xl">
-                      Create New Habit
-                    </DialogTitle>
-                    <DialogDescription>
-                      Start building a positive habit today
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Habit Name</Label>
-                      <Input
-                        placeholder="e.g., Morning Exercise"
-                        value={newHabit.name}
-                        onChange={(e) =>
-                          setNewHabit({ ...newHabit, name: e.target.value })
-                        }
-                      />
+                  <form onSubmit={(e) => { e.preventDefault(); handleAddHabit(); }}>
+                    <DialogHeader>
+                      <DialogTitle className="font-primary text-xl">
+                        Create New Habit
+                      </DialogTitle>
+                      <DialogDescription>
+                        Start building a positive habit today
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Habit Name</Label>
+                        <Input
+                          placeholder="e.g., Morning Exercise"
+                          value={newHabit.name}
+                          onChange={(e) =>
+                            setNewHabit({ ...newHabit, name: e.target.value })
+                          }
+                          autoFocus
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">
+                          Description{" "}
+                          <span className="text-muted-foreground">(optional)</span>
+                        </Label>
+                        <Input
+                          placeholder="Brief description"
+                          value={newHabit.description}
+                          onChange={(e) =>
+                            setNewHabit({ ...newHabit, description: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Frequency</Label>
+                        <Select
+                          value={newHabit.frequency}
+                          onValueChange={(value) =>
+                            setNewHabit({
+                              ...newHabit,
+                              frequency: value as HabitFrequency,
+                            })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">
-                        Description{" "}
-                        <span className="text-muted-foreground">(optional)</span>
-                      </Label>
-                      <Input
-                        placeholder="Brief description"
-                        value={newHabit.description}
-                        onChange={(e) =>
-                          setNewHabit({ ...newHabit, description: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Frequency</Label>
-                      <Select
-                        value={newHabit.frequency}
-                        onValueChange={(value) =>
-                          setNewHabit({
-                            ...newHabit,
-                            frequency: value as HabitFrequency,
-                          })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <DialogFooter className="gap-2 sm:gap-0">
-                    <button
-                      className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
-                      onClick={() => setIsAddDialogOpen(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-                      onClick={handleAddHabit}
-                      disabled={createMutation.isPending || !newHabit.name}
-                    >
-                      {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Create Habit
-                    </button>
-                  </DialogFooter>
+                    <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+                      <div className="hidden sm:flex items-center text-xs text-muted-foreground">
+                        <Kbd>Enter</Kbd>
+                        <span className="ml-1.5">to save</span>
+                      </div>
+                      <div className="flex flex-col-reverse sm:flex-row gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+                          onClick={() => setIsAddDialogOpen(false)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          disabled={createMutation.isPending || !newHabit.name}
+                        >
+                          {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Create Habit
+                        </button>
+                      </div>
+                    </DialogFooter>
+                  </form>
                 </DialogContent>
               </Dialog>
             </motion.div>
@@ -268,45 +279,55 @@ export default function HabitsPage() {
             {/* Completion Dialog */}
             <Dialog open={!!completeDialogHabit} onOpenChange={(open) => !open && setCompleteDialogHabit(null)}>
               <DialogContent className="glass border-border sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="font-primary text-xl flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                    Complete Habit
-                  </DialogTitle>
-                  <DialogDescription>
-                    {completeDialogHabit?.name}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">
-                      Notes{" "}
-                      <span className="text-muted-foreground">(optional)</span>
-                    </Label>
-                    <Textarea
-                      placeholder="How did it go? Any reflections..."
-                      value={completionNote}
-                      onChange={(e) => setCompletionNote(e.target.value)}
-                      rows={3}
-                    />
+                <form onSubmit={(e) => { e.preventDefault(); handleCompleteWithNote(); }}>
+                  <DialogHeader>
+                    <DialogTitle className="font-primary text-xl flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                      Complete Habit
+                    </DialogTitle>
+                    <DialogDescription>
+                      {completeDialogHabit?.name}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Notes{" "}
+                        <span className="text-muted-foreground">(optional)</span>
+                      </Label>
+                      <Textarea
+                        placeholder="How did it go? Any reflections..."
+                        value={completionNote}
+                        onChange={(e) => setCompletionNote(e.target.value)}
+                        rows={3}
+                        autoFocus
+                      />
+                    </div>
                   </div>
-                </div>
-                <DialogFooter className="gap-2 sm:gap-0">
-                  <button
-                    className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
-                    onClick={() => setCompleteDialogHabit(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-                    onClick={handleCompleteWithNote}
-                    disabled={logMutation.isPending}
-                  >
-                    {logMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Mark Complete
-                  </button>
-                </DialogFooter>
+                  <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+                    <div className="hidden sm:flex items-center text-xs text-muted-foreground">
+                      <Kbd>Enter</Kbd>
+                      <span className="ml-1.5">to complete</span>
+                    </div>
+                    <div className="flex flex-col-reverse sm:flex-row gap-2">
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+                        onClick={() => setCompleteDialogHabit(null)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        disabled={logMutation.isPending}
+                      >
+                        {logMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Mark Complete
+                      </button>
+                    </div>
+                  </DialogFooter>
+                </form>
               </DialogContent>
             </Dialog>
 

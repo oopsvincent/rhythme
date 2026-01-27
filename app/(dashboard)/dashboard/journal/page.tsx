@@ -1,551 +1,376 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SiteHeader } from "@/components/site-header";
-import { TextGradient } from "@/components/text-gradient";
+import { JournalCard } from "@/components/journal/journal-card";
+import { EmotionalAura, moodColors } from "@/components/journal/emotional-aura";
+import { MoodType, moodIcons } from "@/components/journal/mood-selector";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Sparkles, 
-  Brain, 
-  Heart, 
-  BookOpen,
-  PenLine,
-  BarChart3,
-  Calendar,
-  Crown,
-  ArrowRight,
-  Check,
-  Zap,
-  TrendingUp,
-  MessageCircle,
-  Lightbulb,
-  Target,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  PenLine,
+  Search,
+  Filter,
+  Flame,
+  Sparkles,
+  BookOpen,
+  Calendar,
+  TrendingUp,
+  X,
+} from "lucide-react";
 
-// Mock journal entry for demo
-const mockJournalEntry = {
-  title: "Reflecting on Today",
-  excerpt: "Today was challenging but rewarding. I managed to complete my workout even though I felt tired. The meeting went better than expected...",
-  date: "January 6, 2026",
-};
+// Local storage key
+const JOURNALS_STORAGE_KEY = "rhythme_journals";
 
-// Mock analysis results for demo
-const mockAnalysis = {
-  overallMood: "Positive",
-  moodScore: 78,
-  emotions: [
-    { name: "Accomplished", percentage: 45, color: "bg-green-500" },
-    { name: "Tired", percentage: 25, color: "bg-amber-500" },
-    { name: "Hopeful", percentage: 30, color: "bg-blue-500" },
-  ],
-  insights: [
-    "You showed great resilience by completing your workout despite fatigue",
-    "Your positive outlook on the meeting suggests growing confidence",
-    "Consider noting what made the meeting successful for future reference",
-  ],
-  patterns: {
-    weeklyTrend: "+12%",
-    dominantEmotion: "Accomplished",
-    journalStreak: 5,
-  },
-};
-
-// Sentiment analysis models
-interface SentimentModel {
+interface JournalEntry {
   id: string;
-  name: string;
-  codeName: string;
-  description: string;
-  tier: "free" | "limited" | "premium";
-  freeUsage?: string;
-  icon: React.ElementType;
+  title: string;
+  body: string;
+  mood: MoodType;
+  moodIntensity?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const sentimentModels: SentimentModel[] = [
-  {
-    id: "rvo2",
-    name: "Standard",
-    codeName: "rvo2",
-    description: "Fast and reliable sentiment analysis for everyday journaling",
-    tier: "free",
-    icon: Brain,
-  },
-  {
-    id: "rvo2-sentiment",
-    name: "Advanced",
-    codeName: "rvo2-sentiment",
-    description: "Deep contextual understanding with nuanced emotional insights",
-    tier: "limited",
-    freeUsage: "5 analyses/month",
-    icon: Heart,
-  },
+// Mood filter options
+const moodFilters: { type: MoodType | "all"; label: string }[] = [
+  { type: "all", label: "All" },
+  { type: "happy", label: "Happy" },
+  { type: "calm", label: "Calm" },
+  { type: "excited", label: "Excited" },
+  { type: "neutral", label: "Neutral" },
+  { type: "sad", label: "Sad" },
+  { type: "anxious", label: "Anxious" },
+  { type: "frustrated", label: "Frustrated" },
 ];
 
+// Calculate streak
+function calculateStreak(entries: JournalEntry[]): number {
+  if (entries.length === 0) return 0;
+  
+  const sortedEntries = [...entries].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  for (let i = 0; i < 30; i++) {
+    const checkDate = new Date(today);
+    checkDate.setDate(checkDate.getDate() - i);
+    
+    const hasEntry = sortedEntries.some((entry) => {
+      const entryDate = new Date(entry.createdAt);
+      entryDate.setHours(0, 0, 0, 0);
+      return entryDate.getTime() === checkDate.getTime();
+    });
+    
+    if (hasEntry) {
+      streak++;
+    } else if (i > 0) {
+      break;
+    }
+  }
+  
+  return streak;
+}
+
 export default function JournalPage() {
-  const [selectedModel, setSelectedModel] = useState<string>("rvo2");
-  const [activeDemo, setActiveDemo] = useState<"writing" | "analysis">("writing");
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [moodFilter, setMoodFilter] = useState<MoodType | "all">("all");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Load entries
+  useEffect(() => {
+    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setEntries(parsed);
+      } catch (e) {
+        console.error("Failed to parse journals:", e);
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  // Filter entries
+  const filteredEntries = entries
+    .filter((entry) => {
+      if (moodFilter !== "all" && entry.mood !== moodFilter) return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          entry.title.toLowerCase().includes(query) ||
+          entry.body.toLowerCase().includes(query)
+        );
+      }
+      return true;
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const streak = calculateStreak(entries);
+  const totalEntries = entries.length;
+  const thisWeekEntries = entries.filter((e) => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return new Date(e.createdAt) > weekAgo;
+  }).length;
+
+  if (isLoading) {
+    return (
+      <>
+        <SiteHeader />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-sm text-muted-foreground">Loading journals...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <SiteHeader />
       <div className="flex flex-1 flex-col overflow-hidden overflow-y-auto">
-        <div className="flex flex-1 flex-col items-center px-4 sm:px-6 lg:px-8 py-8 md:py-12 relative">
+        <div className="flex flex-1 flex-col px-4 md:px-8 lg:px-10 py-6 md:py-8 relative">
           
-          {/* Animated Background Effects */}
+          {/* Background Effects */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div 
-              className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full opacity-20 blur-[120px] animate-pulse"
-              style={{ 
-                background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)",
-                animationDuration: "4s"
-              }}
+              className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-10 blur-[120px]"
+              style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }}
             />
             <div 
-              className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full opacity-15 blur-[100px] animate-pulse"
-              style={{ 
-                background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)",
-                animationDuration: "5s",
-                animationDelay: "1s"
-              }}
+              className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full opacity-10 blur-[100px]"
+              style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
             />
           </div>
 
-          {/* Main Content */}
-          <div className="relative z-10 flex flex-col items-center max-w-5xl w-full space-y-10 md:space-y-14">
+          <div className="relative z-10 max-w-6xl mx-auto w-full space-y-8">
             
             {/* Header Section */}
-            <div className="text-center space-y-4">
-              <Badge 
-                variant="outline" 
-                className="px-4 py-1.5 text-sm font-medium border-primary/30 bg-primary/5 text-primary backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700"
-              >
-                <Sparkles className="w-3.5 h-3.5 mr-2" />
-                Coming March 2026
-              </Badge>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col md:flex-row md:items-end justify-between gap-6"
+            >
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold font-primary tracking-tight mb-2">
+                  Your Journal
+                </h1>
+                <p className="text-muted-foreground">
+                  Capture your thoughts, track your emotions
+                </p>
+              </div>
 
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold font-primary tracking-tight animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
-                <TextGradient 
-                  highlightColor="var(--primary)"
-                  baseColor="var(--foreground)"
-                  duration={3}
-                  spread={40}
+              {/* New Entry Button */}
+              <Link href="/dashboard/journal/new">
+                <Button
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:scale-105"
                 >
-                  Smart Journaling
-                </TextGradient>
-              </h1>
-              
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                Write your thoughts. Get <span className="text-primary font-semibold">AI-powered insights</span> that help you understand your emotions.
-              </p>
-            </div>
+                  <PenLine className="w-4 h-4" />
+                  New Entry
+                </Button>
+              </Link>
+            </motion.div>
 
-            {/* Demo Section - How It Works */}
-            <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold font-primary mb-2">How It Works</h2>
-                <p className="text-muted-foreground">See your reflection come to life</p>
+            {/* Stats Row */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="grid grid-cols-3 gap-4"
+            >
+              {/* Streak */}
+              <div className="glass-card rounded-2xl p-4 md:p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center">
+                  <Flame className="w-6 h-6 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-2xl md:text-3xl font-bold font-primary">{streak}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Day streak</p>
+                </div>
               </div>
 
-              {/* Demo Toggle */}
-              <div className="flex justify-center gap-2">
-                <button
-                  onClick={() => setActiveDemo("writing")}
-                  className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
-                    activeDemo === "writing"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <PenLine className="w-4 h-4 inline mr-2" />
-                  1. Write
-                </button>
-                <button
-                  onClick={() => setActiveDemo("analysis")}
-                  className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
-                    activeDemo === "analysis"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Brain className="w-4 h-4 inline mr-2" />
-                  2. Get Insights
-                </button>
+              {/* Total Entries */}
+              <div className="glass-card rounded-2xl p-4 md:p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl md:text-3xl font-bold font-primary">{totalEntries}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Total entries</p>
+                </div>
               </div>
 
-              {/* Demo Content */}
-              <div className="relative min-h-[500px]">
-                <AnimatePresence mode="wait">
-                  {activeDemo === "writing" ? (
-                    <motion.div
-                      key="writing"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ duration: 0.3 }}
-                      className="glass-card rounded-2xl p-6 md:p-8"
-                    >
-                      {/* Mock Journal Editor */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">{mockJournalEntry.date}</span>
-                          <Badge variant="secondary" className="bg-accent/10 text-accent border-0">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            Auto-analyzing...
-                          </Badge>
-                        </div>
-                        
-                        <h3 className="text-2xl md:text-3xl font-bold font-primary">
-                          {mockJournalEntry.title}
-                        </h3>
-                        
-                        <div className="prose prose-neutral dark:prose-invert max-w-none">
-                          <p className="text-lg leading-relaxed text-muted-foreground">
-                            {mockJournalEntry.excerpt}
-                          </p>
-                          <div className="mt-4 flex items-center gap-1">
-                            <span className="w-2 h-5 bg-primary animate-pulse rounded-full" />
-                            <span className="text-muted-foreground/50">Keep writing...</span>
-                          </div>
-                        </div>
-
-                        <div className="pt-6 border-t border-border/30 flex items-center justify-between">
-                          <p className="text-xs text-muted-foreground">
-                            <MessageCircle className="w-3 h-3 inline mr-1" />
-                            Your thoughts are being analyzed in real-time
-                          </p>
-                          <Button 
-                            onClick={() => setActiveDemo("analysis")}
-                            className="bg-primary hover:bg-primary/90"
-                          >
-                            View Analysis
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="analysis"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-                    >
-                      {/* Mood Overview Card */}
-                      <div className="glass-card rounded-2xl p-6 space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-bold font-primary text-lg">Mood Analysis</h4>
-                          <Badge className="bg-green-500/10 text-green-500 border-0">
-                            {mockAnalysis.overallMood}
-                          </Badge>
-                        </div>
-
-                        {/* Mood Score */}
-                        <div className="text-center py-4">
-                          <div className="relative inline-flex items-center justify-center">
-                            <svg className="w-32 h-32 transform -rotate-90">
-                              <circle
-                                cx="64"
-                                cy="64"
-                                r="56"
-                                stroke="currentColor"
-                                strokeWidth="8"
-                                fill="none"
-                                className="text-muted/30"
-                              />
-                              <circle
-                                cx="64"
-                                cy="64"
-                                r="56"
-                                stroke="url(#gradient)"
-                                strokeWidth="8"
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeDasharray={`${mockAnalysis.moodScore * 3.52} 352`}
-                              />
-                              <defs>
-                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                  <stop offset="0%" stopColor="var(--primary)" />
-                                  <stop offset="100%" stopColor="var(--accent)" />
-                                </linearGradient>
-                              </defs>
-                            </svg>
-                            <div className="absolute flex flex-col items-center">
-                              <span className="text-3xl font-bold font-primary">{mockAnalysis.moodScore}</span>
-                              <span className="text-xs text-muted-foreground">out of 100</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Emotion Breakdown */}
-                        <div className="space-y-3">
-                          <p className="text-sm font-medium text-muted-foreground">Emotions Detected</p>
-                          {mockAnalysis.emotions.map((emotion) => (
-                            <div key={emotion.name} className="space-y-1">
-                              <div className="flex justify-between text-sm">
-                                <span>{emotion.name}</span>
-                                <span className="text-muted-foreground">{emotion.percentage}%</span>
-                              </div>
-                              <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${emotion.percentage}%` }}
-                                  transition={{ duration: 0.8, delay: 0.2 }}
-                                  className={cn("h-full rounded-full", emotion.color)}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Insights Card */}
-                      <div className="space-y-6">
-                        {/* AI Insights */}
-                        <div className="glass-card rounded-2xl p-6 space-y-4">
-                          <div className="flex items-center gap-2">
-                            <Lightbulb className="w-5 h-5 text-accent" />
-                            <h4 className="font-bold font-primary text-lg">AI Insights</h4>
-                          </div>
-                          <ul className="space-y-3">
-                            {mockAnalysis.insights.map((insight, index) => (
-                              <motion.li
-                                key={index}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 + index * 0.1 }}
-                                className="flex items-start gap-3 text-sm text-muted-foreground"
-                              >
-                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                                  <span className="text-xs font-bold text-primary">{index + 1}</span>
-                                </div>
-                                {insight}
-                              </motion.li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Pattern Stats */}
-                        <div className="glass-card rounded-2xl p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <BarChart3 className="w-5 h-5 text-primary" />
-                            <h4 className="font-bold font-primary text-lg">Your Patterns</h4>
-                          </div>
-                          <div className="grid grid-cols-3 gap-4">
-                            <div className="text-center">
-                              <div className="flex items-center justify-center gap-1 text-green-500 font-bold text-xl">
-                                <TrendingUp className="w-4 h-4" />
-                                {mockAnalysis.patterns.weeklyTrend}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">Weekly Mood</p>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xl font-bold text-primary">
-                                {mockAnalysis.patterns.dominantEmotion}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">Top Emotion</p>
-                            </div>
-                            <div className="text-center">
-                              <div className="flex items-center justify-center gap-1 text-accent font-bold text-xl">
-                                <Target className="w-4 h-4" />
-                                {mockAnalysis.patterns.journalStreak}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">Day Streak</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              {/* This Week */}
+              <div className="glass-card rounded-2xl p-4 md:p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-2xl md:text-3xl font-bold font-primary">{thisWeekEntries}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">This week</p>
+                </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Model Selection Section */}
-            <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold font-primary mb-2">Choose Your Analysis Engine</h2>
-                <p className="text-muted-foreground">Pick the model that fits your needs</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
-                {sentimentModels.map((model) => {
-                  const Icon = model.icon;
-                  const isSelected = selectedModel === model.id;
-                  
-                  return (
+            {/* Search & Filters */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-4"
+            >
+              {/* Search Bar */}
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search your journals..."
+                    className="w-full h-12 pl-11 pr-4 rounded-xl bg-card/60 border border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/60"
+                  />
+                  {searchQuery && (
                     <button
-                      key={model.id}
-                      onClick={() => setSelectedModel(model.id)}
-                      className={cn(
-                        "relative group text-left p-6 rounded-2xl transition-all duration-300",
-                        "glass-card border-2",
-                        isSelected 
-                          ? "border-primary shadow-lg shadow-primary/20" 
-                          : "border-transparent hover:border-border"
-                      )}
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      {isSelected && (
-                        <div className="absolute top-4 right-4">
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <Check className="w-4 h-4 text-primary-foreground" />
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex items-start gap-4">
-                        <div className={cn(
-                          "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
-                          isSelected ? "bg-primary/20" : "bg-muted"
-                        )}>
-                          <Icon className={cn(
-                            "w-6 h-6",
-                            isSelected ? "text-primary" : "text-muted-foreground"
-                          )} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold font-primary text-lg">{model.name}</h3>
-                            {model.tier === "free" && (
-                              <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-0 text-xs">
-                                Free Forever
-                              </Badge>
-                            )}
-                            {model.tier === "limited" && (
-                              <Badge variant="secondary" className="bg-accent/10 text-accent border-0 text-xs">
-                                <Crown className="w-3 h-3 mr-1" />
-                                Premium
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm font-mono text-muted-foreground mb-2">{model.codeName}</p>
-                          <p className="text-sm text-muted-foreground">{model.description}</p>
-                          
-                          <div className="mt-3 pt-3 border-t border-border/30">
-                            {model.tier === "free" ? (
-                              <p className="text-sm text-green-500 font-medium flex items-center gap-2">
-                                <Check className="w-4 h-4" />
-                                Unlimited free usage
-                              </p>
-                            ) : (
-                              <p className="text-sm text-muted-foreground">
-                                <span className="text-accent font-medium">{model.freeUsage}</span> free • Unlimited for <span className="text-primary">Premium</span>
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      <X className="w-4 h-4" />
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* What's Coming Card + Hanging Premium CTA */}
-            <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700">
-              {/* What's Coming Card */}
-              <div className="glass-card rounded-2xl p-8 space-y-6 text-center relative">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <BookOpen className="w-8 h-8 text-primary" />
+                  )}
                 </div>
-                
-                <div className="space-y-3">
-                  <h3 className="text-xl font-bold font-primary">What&apos;s Coming</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Our journaling feature uses advanced <span className="text-accent font-medium">sentiment analysis</span> powered 
-                    by our proprietary models to help you understand your emotional patterns, track your mental wellness journey, 
-                    and provide personalized insights from your daily reflections—all in real-time as you write.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-border/30">
-                  <p className="text-sm text-muted-foreground">
-                    <Sparkles className="w-4 h-4 inline mr-2 text-primary" />
-                    Launching <span className="text-primary font-semibold">March 2026</span>
-                  </p>
-                </div>
-
-                {/* Hanging rope connectors */}
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-start gap-32">
-                  {/* Left rope */}
-                  <div className="w-0.5 h-8 bg-gradient-to-b from-border to-primary/50 rounded-full" />
-                  {/* Right rope */}
-                  <div className="w-0.5 h-8 bg-gradient-to-b from-border to-primary/50 rounded-full" />
-                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "h-12 w-12 rounded-xl",
+                    showFilters && "bg-primary/10 border-primary text-primary"
+                  )}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="w-4 h-4" />
+                </Button>
               </div>
 
-              {/* Hanging Premium CTA */}
-              <div className="relative mt-8 flex justify-center">
-                {/* Horizontal bar connecting ropes */}
-                <div className="absolute -top-0 left-1/2 -translate-x-1/2 w-36 h-0.5 bg-gradient-to-r from-primary/50 via-accent/50 to-primary/50 rounded-full" />
-                
-                {/* Swinging card */}
-                <div className="w-full max-w-md animate-swing origin-top">
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-2xl blur-lg opacity-40 group-hover:opacity-70 transition-all duration-500 animate-gradient" />
-                    <Link href="/settings/billing">
-                      <div className="relative glass-card rounded-2xl p-6 space-y-4 cursor-pointer transition-all duration-300 hover:scale-[1.02]">
-                        {/* Hanging knob */}
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
-                          <div className="w-2 h-2 rounded-full bg-white/80" />
-                        </div>
-                        
-                        <div className="flex items-center justify-center gap-2 pt-2">
-                          <Crown className="w-6 h-6 text-primary" />
-                          <h3 className="text-xl font-bold font-primary">Get Premium Access</h3>
-                        </div>
-                        <p className="text-muted-foreground text-center text-sm">
-                          Unlock <span className="text-accent font-semibold">unlimited</span> advanced analysis 
-                          and be the first to experience Rhythmé Journaling.
-                        </p>
-                        <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white font-semibold py-3 rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-primary/30">
-                          Upgrade to Premium
-                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+              {/* Mood Filters */}
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex flex-wrap gap-2 py-2">
+                      {moodFilters.map((filter) => (
+                        <button
+                          key={filter.type}
+                          onClick={() => setMoodFilter(filter.type)}
+                          className={cn(
+                            "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                            moodFilter === filter.type
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          )}
+                        >
+                          {filter.type !== "all" && (() => {
+                            const Icon = moodIcons[filter.type as MoodType];
+                            return <Icon className="w-4 h-4 mr-1" />;
+                          })()}
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
 
+            {/* Journal Grid */}
+            {filteredEntries.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+              >
+                {filteredEntries.map((entry, index) => (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
+                  >
+                    <JournalCard
+                      entry={entry}
+                      variant={index === 0 && filteredEntries.length > 3 ? "featured" : "default"}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : entries.length === 0 ? (
+              /* Empty State - No entries at all */
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="glass-card rounded-3xl p-12 text-center"
+              >
+                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <Sparkles className="w-10 h-10 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold font-primary mb-3">
+                  Start Your Journaling Journey
+                </h3>
+                <p className="text-muted-foreground max-w-md mx-auto mb-8">
+                  Capture your thoughts, track your emotions, and discover insights about yourself 
+                  through the power of reflective writing.
+                </p>
+                <Link href="/dashboard/journal/new">
+                  <Button size="lg" className="gap-2">
+                    <PenLine className="w-4 h-4" />
+                    Write Your First Entry
+                  </Button>
+                </Link>
+              </motion.div>
+            ) : (
+              /* No results for filter */
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="glass-card rounded-2xl p-8 text-center"
+              >
+                <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                <h3 className="text-lg font-bold font-primary mb-2">No Matches Found</h3>
+                <p className="text-muted-foreground mb-4">
+                  Try adjusting your search or filters
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setMoodFilter("all");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Custom Animations */}
-      <style jsx>{`
-        @keyframes gradient {
-          0%, 100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-        @keyframes swing {
-          0%, 100% {
-            transform: rotate(-2deg);
-          }
-          50% {
-            transform: rotate(2deg);
-          }
-        }
-        .animate-gradient {
-          background-size: 200% 200%;
-          animation: gradient 3s ease infinite;
-        }
-        .animate-swing {
-          animation: swing 4s ease-in-out infinite;
-        }
-      `}</style>
     </>
   );
 }
