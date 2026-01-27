@@ -65,7 +65,7 @@ export async function signInWithProviderAction(
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `https://${process.env.VERCEL_URL}/auth/callback`,
+      redirectTo: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/auth/callback`,
     },
   })
 
@@ -120,7 +120,7 @@ export async function linkProvider(provider: OAuthProvider) {
   const { data, error } = await supabase.auth.linkIdentity({
     provider,
     options: {
-      redirectTo: `https://${process.env.VERCEL_URL}/settings/account?linked=${provider}`,
+      redirectTo: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/settings/account?linked=${provider}`,
     },
   })
 
