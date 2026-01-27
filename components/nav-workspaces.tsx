@@ -1,4 +1,4 @@
-import { ChevronRight, MoreHorizontal, Plus } from "lucide-react"
+import { ChevronRight, MoreHorizontal, Plus, LucideIcon } from "lucide-react"
 
 import {
   Collapsible,
@@ -23,10 +23,10 @@ export function NavWorkspaces({
 }: {
   workspaces: {
     name: string
-    emoji: React.ReactNode
+    icon: LucideIcon
     pages: {
       name: string
-      emoji: React.ReactNode
+      icon: LucideIcon
     }[]
   }[]
 }) {
@@ -35,43 +35,49 @@ export function NavWorkspaces({
       <SidebarGroupLabel>Workspaces</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {workspaces.map((workspace) => (
-            <Collapsible key={workspace.name}>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#">
-                    <span>{workspace.emoji}</span>
-                    <span>{workspace.name}</span>
-                  </a>
-                </SidebarMenuButton>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuAction
-                    className="bg-sidebar-accent text-sidebar-accent-foreground left-2 data-[state=open]:rotate-90"
-                    showOnHover
-                  >
-                    <ChevronRight />
+          {workspaces.map((workspace) => {
+            const WorkspaceIcon = workspace.icon
+            return (
+              <Collapsible key={workspace.name}>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="#">
+                      <WorkspaceIcon className="w-4 h-4" />
+                      <span>{workspace.name}</span>
+                    </a>
+                  </SidebarMenuButton>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuAction
+                      className="bg-sidebar-accent text-sidebar-accent-foreground left-2 data-[state=open]:rotate-90"
+                      showOnHover
+                    >
+                      <ChevronRight />
+                    </SidebarMenuAction>
+                  </CollapsibleTrigger>
+                  <SidebarMenuAction showOnHover>
+                    <Plus />
                   </SidebarMenuAction>
-                </CollapsibleTrigger>
-                <SidebarMenuAction showOnHover>
-                  <Plus />
-                </SidebarMenuAction>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {workspace.pages.map((page) => (
-                      <SidebarMenuSubItem key={page.name}>
-                        <SidebarMenuSubButton asChild>
-                          <a href="#">
-                            <span>{page.emoji}</span>
-                            <span>{page.name}</span>
-                          </a>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          ))}
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {workspace.pages.map((page) => {
+                        const PageIcon = page.icon
+                        return (
+                          <SidebarMenuSubItem key={page.name}>
+                            <SidebarMenuSubButton asChild>
+                              <a href="#">
+                                <PageIcon className="w-4 h-4" />
+                                <span>{page.name}</span>
+                              </a>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )
+                      })}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            )
+          })}
           <SidebarMenuItem>
             <SidebarMenuButton className="text-sidebar-foreground/70">
               <MoreHorizontal />

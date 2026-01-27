@@ -26,6 +26,7 @@ import {
 } from './ui/select'
 import { Plus, Loader2 } from 'lucide-react'
 import { DateNTimePicker } from './date-n-time-picker'
+import { Kbd } from './ui/kbd'
 
 const priorityOptions: { value: Priority; label: string; color: string }[] = [
   { value: 'low', label: 'Low', color: 'text-blue-600' },
@@ -205,31 +206,37 @@ export default function TaskForm() {
             </div>
           </div>
 
-          <DialogFooter className="mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
-            <DialogClose asChild>
+          <DialogFooter className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+            <div className="hidden sm:flex items-center text-xs text-muted-foreground">
+              <Kbd>Enter</Kbd>
+              <span className="ml-1.5">to save</span>
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row gap-2">
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isPending}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
               <Button
-                type="button"
-                variant="outline"
+                type="submit"
                 disabled={isPending}
                 className="w-full sm:w-auto"
               >
-                Cancel
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Task'
+                )}
               </Button>
-            </DialogClose>
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="w-full sm:w-auto"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                'Create Task'
-              )}
-            </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -103,6 +103,21 @@ export interface HabitWithStats extends Habit {
   daysUntilPrediction?: number // Days remaining until AI predictions are available
 }
 
+// Journals 
+
+export interface Journal{
+    journal_id: number
+    user_id: string
+    title: string
+    content: string
+    sentiment_score: number
+    created_at: string
+    mood_tages: object
+}
+
+// export type MoodTags = "happy" | "sad" | "anxious" | "moody" | "desperate" | "angry" | "other" | ""
+
+
 // Generic API response type
 export type ActionResponse<T = object> = 
   | { data: T; error?: never }
