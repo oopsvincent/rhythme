@@ -22,7 +22,7 @@ export default function ResetPasswordRequestPage() {
 
     const supabase = createClient();
     const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+      process.env.VERCEL_URL ?? window.location.origin;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${baseUrl}/auth/update-password`,
