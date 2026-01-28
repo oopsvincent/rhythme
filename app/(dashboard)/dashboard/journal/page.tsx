@@ -22,18 +22,10 @@ import {
   X,
 } from "lucide-react";
 
-// Local storage key
-const JOURNALS_STORAGE_KEY = "rhythme_journals";
-
-interface JournalEntry {
-  id: string;
-  title: string;
-  body: string;
-  mood: MoodType;
-  moodIntensity?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import {
+  getStoredJournals,
+  JournalEntry
+} from "@/lib/journal-storage";
 
 // Mood filter options
 const moodFilters: { type: MoodType | "all"; label: string }[] = [
@@ -88,15 +80,8 @@ export default function JournalPage() {
 
   // Load entries
   useEffect(() => {
-    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setEntries(parsed);
-      } catch (e) {
-        console.error("Failed to parse journals:", e);
-      }
-    }
+    const storedEntries = getStoredJournals();
+    setEntries(storedEntries);
     setIsLoading(false);
   }, []);
 

@@ -11,11 +11,57 @@ import {
   Globe,
   AlertCircle,
   Clock,
-  Monitor
+  Monitor,
+  CheckCircle2,
+  Loader2
 } from "lucide-react"
 import { toast } from "sonner"
+import { SessionInfo } from "@/components/settings/session-info"
+import { updatePassword } from "@/app/actions/auth"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { useState } from "react"
 
 export default function SecuritySettingsContent() {
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+
+  const handlePasswordUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+    
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters")
+      return
+    }
+
+    setIsUpdatingPassword(true)
+    const result = await updatePassword(newPassword)
+    setIsUpdatingPassword(false)
+
+    if (result.success) {
+      toast.success("Password updated successfully")
+      setIsPasswordModalOpen(false)
+      setNewPassword("")
+      setConfirmPassword("")
+    } else {
+      toast.error(result.error || "Failed to update password")
+    }
+  }
+
   const handleComingSoon = (feature: string) => {
     toast.info(`${feature} - Coming Soon!`, {
       description: "This feature will be available in a future update.",
@@ -46,16 +92,52 @@ export default function SecuritySettingsContent() {
             <div>
               <p className="font-medium text-sm">Change Password</p>
               <p className="text-xs text-muted-foreground">
-                Last changed: Never
+                Ensure your account is using a long, random password to stay secure.
               </p>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => handleComingSoon("Update Password")}
-            >
-              Update
-            </Button>
+            
+            <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Update
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Update Password</DialogTitle>
+                  <DialogDescription>
+                    Enter your new password below.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input 
+                      id="new-password" 
+                      type="password" 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Input 
+                      id="confirm-password" 
+                      type="password" 
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setIsPasswordModalOpen(false)}>Cancel</Button>
+                  <Button onClick={handlePasswordUpdate} disabled={isUpdatingPassword}>
+                    {isUpdatingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Update Password
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>
@@ -64,11 +146,14 @@ export default function SecuritySettingsContent() {
 
       {/* Two-Factor Authentication */}
       <div className="space-y-4">
-        <h4 className="font-medium flex items-center gap-2">
-          <Smartphone className="h-4 w-4 text-muted-foreground" />
-          Two-Factor Authentication
-        </h4>
-        <Card className="border-muted">
+        <div className="flex items-center justify-between">
+            <h4 className="font-medium flex items-center gap-2">
+            <Smartphone className="h-4 w-4 text-muted-foreground" />
+            Two-Factor Authentication
+            </h4>
+            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Coming Soon</span>
+        </div>
+        <Card className="border-muted opacity-60">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="font-medium text-sm">2FA Status</p>
@@ -79,6 +164,7 @@ export default function SecuritySettingsContent() {
             <Button 
               variant="outline" 
               size="sm"
+              disabled
               onClick={() => handleComingSoon("Enable MFA")}
             >
               Enable
@@ -95,44 +181,15 @@ export default function SecuritySettingsContent() {
           <Monitor className="h-4 w-4 text-muted-foreground" />
           Active Sessions
         </h4>
-        <Card className="border-muted">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Globe className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">Current Session</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    Active now
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs text-green-500 font-medium">Active</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-          Sign out of all other sessions
-        </Button>
-      </div>
+        
+        <SessionInfo />
 
-      {/* Coming Soon Notice */}
-      <Card className="border-muted bg-muted/30">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="font-medium text-sm">Security Features Coming Soon</p>
-              <p className="text-xs text-muted-foreground">
-                Password changes, 2FA, and session management will be available in a future update.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <div className="flex justify-end">
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleComingSoon("Sign out all devices")}>
+            Sign out of all other sessions
+            </Button>
+        </div>
+      </div>
     </div>
   )
 }
