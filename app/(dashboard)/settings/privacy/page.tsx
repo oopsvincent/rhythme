@@ -1,6 +1,8 @@
 // app/(dashboard)/settings/privacy/page.tsx
-import { PrivacySettingsContent } from "./privacy-settings-content"
+// Privacy settings page
+
+import { PrivacySection } from "./_components/privacy-section"
 
 export default function PrivacyPage() {
-  return <PrivacySettingsContent />
+  return <PrivacySection />
 }

@@ -1,9 +1,8 @@
 // app/(dashboard)/settings/billing/page.tsx
-import BillingSettingsContent from "./billing-settings-content"
+// Redirect from old /settings/billing to new /settings/subscription
 
-export default function BillingPage() {
-  // In future, fetch current subscription from database
-  const currentPlan = "starter" // or "premium"
-  
-  return <BillingSettingsContent currentPlan={currentPlan} />
+import { redirect } from "next/navigation"
+
+export default function BillingRedirect() {
+  redirect("/settings/subscription")
 }

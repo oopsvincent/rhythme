@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ColorThemeProvider } from "@/contexts/theme-context";
 import { QueryProvider } from "@/components/query-provider";
 import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from "@/components/ui/sonner";
 
 const clashDisplay = localFont({
   src: [
@@ -155,6 +156,7 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               {children}
+              <Toaster richColors position="bottom-right" />
               <div className="absolute top-2 right-2 z-[100]">
                 {/* <ModeToggle /> */}
               </div>
