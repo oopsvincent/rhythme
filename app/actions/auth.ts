@@ -4,9 +4,40 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 
 // Supported OAuth providers
 export type OAuthProvider = 'google' | 'github' | 'discord' | 'spotify' | 'apple' | 'facebook'
+
+/**
+ * Get the base URL from environment or headers (for server actions)
+ */
+async function getBaseUrl(): Promise<string> {
+  // First try NEXT_PUBLIC_APP_URL (explicit app URL)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+  
+  // Then try Vercel production URL
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  }
+  
+  // Try to get from headers (works during requests)
+  try {
+    const headersList = await headers()
+    const host = headersList.get('host')
+    const protocol = headersList.get('x-forwarded-proto') || 'https'
+    if (host) {
+      return `${protocol}://${host}`
+    }
+  } catch {
+    // Headers not available
+  }
+  
+  // Default fallback
+  return 'http://localhost:3000'
+}
 
 export async function signOut() {
   const supabase = await createClient()
@@ -61,11 +92,12 @@ export async function signInWithProviderAction(
   provider: OAuthProvider,
 ) {
   const supabase = await createClient()
+  const baseUrl = await getBaseUrl()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/auth/callback`,
+      redirectTo: `${baseUrl}/auth/callback`,
     },
   })
 
@@ -116,12 +148,13 @@ export async function getUserIdentities(): Promise<LinkedIdentity[]> {
  */
 export async function linkProvider(provider: OAuthProvider) {
   const supabase = await createClient()
+  const baseUrl = await getBaseUrl()
 
   const { data, error } = await supabase.auth.linkIdentity({
     provider,
     options: {
-      // Use current window location for redirection handling if possible, or fallback
-      redirectTo: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/settings/account?linked=${provider}`,
+      // Redirect back to callback which will detect linked param and redirect to settings
+      redirectTo: `${baseUrl}/auth/callback?linked=${provider}`,
     },
   })
 
@@ -139,6 +172,9 @@ export async function linkProvider(provider: OAuthProvider) {
 
 /**
  * Unlink an OAuth provider from the current user's account
+ * 
+ * IMPORTANT: This requires "Enable Manual Linking" to be enabled in 
+ * Supabase Dashboard > Authentication > Providers
  */
 export async function unlinkProvider(identityId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient()
@@ -155,16 +191,27 @@ export async function unlinkProvider(identityId: string): Promise<{ success: boo
     return { success: false, error: "Cannot remove your only login method. Add another account first." }
   }
 
-   
-  const { error } = await supabase.auth.unlinkIdentity({
-    id: identityId,
-    provider: user.identities.find(i => i.id === identityId)?.provider || '',
-  } as any) // Type assertion needed due to Supabase types
+  // Find the identity to unlink
+  const identity = user.identities.find(i => i.id === identityId)
+  
+  if (!identity) {
+    return { success: false, error: "Identity not found" }
+  }
+
+  // Supabase unlinkIdentity requires passing the identity object directly
+  // See: https://supabase.com/docs/reference/javascript/auth-unlinkidentity
+  const { error } = await supabase.auth.unlinkIdentity(identity)
 
   if (error) {
+    console.error("Unlink error:", error)
+    // Common error: Manual linking not enabled
+    if (error.message.includes('manual linking')) {
+      return { success: false, error: "Account unlinking is not enabled. Please contact support." }
+    }
     return { success: false, error: error.message }
   }
 
+  revalidatePath('/settings/connections')
   revalidatePath('/settings/account')
   return { success: true }
 }
@@ -196,33 +243,7 @@ export async function deleteAccount(): Promise<{ success: boolean; error?: strin
     return { success: false, error: "User not authenticated" }
   }
 
-  // Delete user from auth (RPC override often needed for "delete own account" or utilize service role if available in different context, 
-  // but standard user deletion usually works if RLS allows or if strictly creating a deletion request. 
-  // Assuming standard "delete user" capability or cascade from public table if configured.)
-  
-  // Note: Standard Supabase client might not allow deleting SELF directly via API without admin flag. 
-  // However, removing from `public.users` usually triggers cascade if set up, OR we call specific function.
-  // For now, we try standard auth deletion which effectively signs them out too.
-  
-  // Actually, standard `supabase.auth.admin.deleteUser` requires service role.
-  // `supabase.rpc('delete_user')` is a common pattern.
-  // IF NOT AVAILABLE, we can only sign out and "mark" for deletion in a real app, 
-  // but let's assume we can clean up public.users first if that triggers cascade.
-  
-  // Attempting to delete from public.users first (if RLS allows users to delete themselves)
-  // which implies cascade deletion on auth.users if trigger is bidirectional (rare) 
-  // OR usually deleting from auth.users cascades to public.users.
-  
-  // Since we don't have the service key exposed here safely without "use server" + environment variable check,
-  // we will try to use a Supabase Admin client if the implementation allows, 
-  // otherwise we might need to rely on a database function.
-
-  // NOTE: For this specific environment, we assume a server-side delete function exists or RLS allows "delete self".
-  
-  // PLAN B: Using a direct PostgreSQL call if we had one.
-  // PLAN C (Safe Default): We'll assume the goal is "Sign Out and Wipe Data".
-  
-  // Trying an RPC call if it exists, typical for this stack.
+  // Try RPC call first
   const { error } = await supabase.rpc('delete_own_account');
 
   if (error) {
@@ -236,7 +257,23 @@ export async function deleteAccount(): Promise<{ success: boolean; error?: strin
   }
 
   await supabase.auth.signOut()
-  redirect('/login')  // This will throw error in Server Action if not caught, but here return type suggests object. 
-  // Ideally client handles redirect. But `redirect` throws so function exits.
-  // We'll trust the client side redirect for cleaner UX or let the `redirect` happen.
+  redirect('/login')
+}
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient()
+  const baseUrl = await getBaseUrl()
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${baseUrl}/account/update-password`,
+  })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
 }

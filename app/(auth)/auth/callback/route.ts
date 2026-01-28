@@ -1,4 +1,4 @@
-// app/auth/callback/route.ts
+// app/(auth)/auth/callback/route.ts
 
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
@@ -8,6 +8,10 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const origin = requestUrl.origin
+  
+  // Check if this is an account linking callback
+  const next = requestUrl.searchParams.get('next')
+  const linked = requestUrl.searchParams.get('linked')
 
   if (code) {
     const supabase = await createClient()
@@ -19,6 +23,16 @@ export async function GET(request: NextRequest) {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (user) {
+        // If this is an account linking callback, redirect back to settings with success message
+        if (linked) {
+          return NextResponse.redirect(`${origin}/settings/connections?linked=${linked}`)
+        }
+        
+        // If there's a specific next URL, use it
+        if (next) {
+          return NextResponse.redirect(`${origin}${next}`)
+        }
+        
         // Check if user has completed onboarding
         const { data: preferences } = await supabase
           .from('user_preferences')

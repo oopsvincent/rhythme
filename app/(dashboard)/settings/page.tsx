@@ -1,25 +1,9 @@
 // app/(dashboard)/settings/page.tsx
-import { getUser, getFullUser } from "@/app/actions/auth"
+// Main settings page - redirects to profile
+
 import { redirect } from "next/navigation"
-import { SettingsHome } from "./settings-home"
+import { defaultSettingsPath } from "./_config/settings-sections"
 
-export default async function SettingsPage() {
-  const user = await getUser()
-  const fullUser = await getFullUser()
-  
-  if (!user || !fullUser) {
-    redirect("/login")
-  }
-
-  return (
-    <SettingsHome 
-      user={{
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        createdAt: fullUser.created_at,
-      }}
-    />
-  )
+export default function SettingsPage() {
+  redirect(defaultSettingsPath)
 }

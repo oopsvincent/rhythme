@@ -1,6 +1,8 @@
 // app/(dashboard)/settings/appearance/page.tsx
-import AppearanceSettingsContent from "./appearance-settings-content"
+// Redirect from old /settings/appearance to new /settings/theme
 
-export default function AppearancePage() {
-  return <AppearanceSettingsContent />
+import { redirect } from "next/navigation"
+
+export default function AppearanceRedirect() {
+  redirect("/settings/theme")
 }
