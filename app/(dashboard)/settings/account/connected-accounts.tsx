@@ -19,14 +19,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { 
-  Link2, 
-  Unlink,
-  Loader2,
   Plus,
   Check,
-  AlertCircle
+  ShieldCheck,
+  Globe,
+  Link2, 
+  Unlink,
+  Loader2
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 // Provider configuration with icons and colors
 const PROVIDERS: Record<OAuthProvider, { name: string; icon: string; color: string }> = {
@@ -45,24 +47,26 @@ interface ConnectedAccountsProps {
 }
 
 export default function ConnectedAccounts({ identities }: ConnectedAccountsProps) {
-  const router = useRouter()
+  const [router] = useState(useRouter()) // Fix potential hook issue or just use useRouter
+  // const router = useRouter() 
   const [unlinkingId, setUnlinkingId] = useState<string | null>(null)
   const [linkingProvider, setLinkingProvider] = useState<OAuthProvider | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   const connectedProviders = identities.map(i => i.provider)
   const availableProviders = ALL_PROVIDERS.filter(p => !connectedProviders.includes(p))
 
   const handleUnlink = async (identityId: string) => {
     setUnlinkingId(identityId)
-    setError(null)
     
+    // Optimistic UI could be here, but we wait for result
     const result = await unlinkProvider(identityId)
     
     if (!result.success) {
-      setError(result.error || "Failed to unlink account")
+      toast.error(result.error || "Failed to disconnect account")
     } else {
-      router.refresh()
+      toast.success("Account disconnected successfully")
+      // Force refresh for data update
+      window.location.reload() 
     }
     
     setUnlinkingId(null)
@@ -70,35 +74,35 @@ export default function ConnectedAccounts({ identities }: ConnectedAccountsProps
 
   const handleLink = async (provider: OAuthProvider) => {
     setLinkingProvider(provider)
-    setError(null)
     
     try {
-      await linkProvider(provider)
+      const result = await linkProvider(provider)
+      if (result && !result.success) {
+         toast.error(result.error || "Failed to initiate connection")
+         setLinkingProvider(null)
+      }
+      // If success, it redirects, so loading state persists is fine
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to link account";
-      setError(message);
+      toast.error(message);
       setLinkingProvider(null);
     }
   }
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Link2 className="h-5 w-5 text-primary" />
-          Connected Accounts
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Manage your linked social accounts for easy sign-in.
-        </p>
-      </div>
-
-      {error && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          <AlertCircle className="h-4 w-4" />
-          {error}
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            Connected Accounts
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Manage your linked social accounts for easier sign-in.
+          </p>
         </div>
-      )}
+      </div>
 
       {/* Connected Accounts List */}
       <div className="space-y-3">

@@ -10,8 +10,12 @@ import {
   BookOpen
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  getStoredJournals,
+  addJournalEntry,
+  JournalEntry
+} from "@/lib/journal-storage";
 
-const JOURNALS_STORAGE_KEY = "rhythme_journals";
 const QUICK_JOURNAL_KEY = "rhythme_quick_journal_draft";
 
 // Writing prompts for quick journal
@@ -29,15 +33,6 @@ function getRandomPrompt(): string {
 
 function getTodayKey(): string {
   return new Date().toISOString().split('T')[0];
-}
-
-interface JournalEntry {
-  id: string;
-  title: string;
-  body: string;
-  mood: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export function QuickJournalCard() {
@@ -59,20 +54,17 @@ export function QuickJournalCard() {
     }
     
     // Check for today's entry
-    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    if (stored) {
-      try {
-        const entries: JournalEntry[] = JSON.parse(stored);
-        const today = getTodayKey();
-        const existing = entries.find(e => 
-          e.createdAt.startsWith(today)
-        );
-        if (existing) {
-          setTodayEntry(existing);
-        }
-      } catch (e) {
-        console.error("Failed to parse journals:", e);
+    try {
+      const entries = getStoredJournals();
+      const today = getTodayKey();
+      const existing = entries.find(e => 
+        e.createdAt.startsWith(today)
+      );
+      if (existing) {
+        setTodayEntry(existing);
       }
+    } catch (e) {
+      console.error("Failed to load journals:", e);
     }
     setIsLoading(false);
   }, []);
@@ -101,13 +93,8 @@ export function QuickJournalCard() {
       updatedAt: new Date().toISOString(),
     };
     
-    // Get existing entries
-    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    const entries: JournalEntry[] = stored ? JSON.parse(stored) : [];
-    
     // Add new entry
-    entries.unshift(newEntry);
-    localStorage.setItem(JOURNALS_STORAGE_KEY, JSON.stringify(entries));
+    addJournalEntry(newEntry);
     
     // Clear draft
     localStorage.removeItem(QUICK_JOURNAL_KEY);

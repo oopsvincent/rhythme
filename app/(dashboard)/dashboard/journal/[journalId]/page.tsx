@@ -41,22 +41,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// Local storage key
-const JOURNALS_STORAGE_KEY = "rhythme_journals";
+import {
+  getStoredJournals,
+  updateJournalEntry,
+  deleteJournalEntry,
+  JournalEntry
+} from "@/lib/journal-storage";
 
 // Get mood icon component
 function getMoodIcon(mood: MoodType) {
   return moodIcons[mood];
-}
-
-interface JournalEntry {
-  id: string;
-  title: string;
-  body: string;
-  mood: MoodType;
-  moodIntensity?: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
 // Calculate reading time
@@ -105,20 +99,13 @@ export default function JournalDetailPage({
 
   // Load journal on mount
   useEffect(() => {
-    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    if (stored) {
-      try {
-        const journals: JournalEntry[] = JSON.parse(stored);
-        const found = journals.find((j) => j.id === resolvedParams.journalId);
-        if (found) {
-          setJournal(found);
-          setEditTitle(found.title);
-          setEditBody(found.body);
-          setEditMood(found.mood);
-        }
-      } catch (e) {
-        console.error("Failed to load journal:", e);
-      }
+    const journals = getStoredJournals();
+    const found = journals.find((j) => j.id === resolvedParams.journalId);
+    if (found) {
+      setJournal(found);
+      setEditTitle(found.title);
+      setEditBody(found.body);
+      setEditMood(found.mood);
     }
     setIsLoading(false);
   }, [resolvedParams.journalId]);
@@ -150,15 +137,7 @@ export default function JournalDetailPage({
       updatedAt: new Date().toISOString(),
     };
 
-    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    if (stored) {
-      const journals: JournalEntry[] = JSON.parse(stored);
-      const index = journals.findIndex((j) => j.id === journal.id);
-      if (index !== -1) {
-        journals[index] = updatedEntry;
-        localStorage.setItem(JOURNALS_STORAGE_KEY, JSON.stringify(journals));
-      }
-    }
+    updateJournalEntry(updatedEntry);
 
     setJournal(updatedEntry);
     setIsSaving(false);
@@ -174,12 +153,7 @@ export default function JournalDetailPage({
     setIsDeleting(true);
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    if (stored) {
-      const journals: JournalEntry[] = JSON.parse(stored);
-      const filtered = journals.filter((j) => j.id !== journal.id);
-      localStorage.setItem(JOURNALS_STORAGE_KEY, JSON.stringify(filtered));
-    }
+    deleteJournalEntry(journal.id);
 
     router.push("/dashboard/journal");
   };

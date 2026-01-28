@@ -22,19 +22,13 @@ import {
   CloudOff,
 } from "lucide-react";
 
-// Local storage key
-const JOURNALS_STORAGE_KEY = "rhythme_journals";
-const DRAFT_STORAGE_KEY = "rhythme_journal_draft";
+import {
+  addJournalEntry,
+  JournalEntry
+} from "@/lib/journal-storage";
 
-interface JournalEntry {
-  id: string;
-  title: string;
-  body: string;
-  mood: MoodType;
-  moodIntensity?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+// Local storage key
+const DRAFT_STORAGE_KEY = "rhythme_journal_draft";
 
 // Calculate word count from text
 function calculateWordCount(content: string): number {
@@ -106,10 +100,7 @@ export default function NewJournalPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    const existing = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    const journals: JournalEntry[] = existing ? JSON.parse(existing) : [];
-    journals.push(newEntry);
-    localStorage.setItem(JOURNALS_STORAGE_KEY, JSON.stringify(journals));
+    addJournalEntry(newEntry);
     localStorage.removeItem(DRAFT_STORAGE_KEY);
 
     setIsSaving(false);

@@ -83,7 +83,7 @@ export default async function DashboardPage() {
               </div>
 
               {/* Right Column - Journal, Tasks */}
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 mb-8 sm:mb-0">
                 {/* Quick Journal */}
                 <Suspense fallback={<QuickJournalSkeleton />}>
                   <QuickJournalCard />
