@@ -19,15 +19,9 @@ interface FocusSession {
   completedAt: string;
 }
 
-interface TaskData {
-  completed: number;
-  total: number;
-}
-
 export function ProductivitySummary() {
   const { data: habits = [], isLoading: habitsLoading } = useHabits();
   const [focusMinutes, setFocusMinutes] = useState(0);
-  const [taskData, setTaskData] = useState<TaskData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -121,7 +115,7 @@ export function ProductivitySummary() {
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="w-4 h-4 text-accent" />
-        <h3 className="font-semibold font-primary text-sm">Today's Progress</h3>
+        <h3 className="font-semibold font-primary text-sm">Today&apos;s Progress</h3>
       </div>
 
       {/* Stats grid */}

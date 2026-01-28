@@ -136,7 +136,7 @@ export function QuickJournalCard() {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-accent" />
-            <h3 className="font-semibold font-primary text-sm">Today's Journal</h3>
+            <h3 className="font-semibold font-primary text-sm">Today&apos;s Journal</h3>
           </div>
           <button
             onClick={() => router.push("/dashboard/journal/new")}

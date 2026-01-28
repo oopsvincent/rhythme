@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+// import { cn } from "@/lib/utils";
 import { MoodType } from "./mood-selector";
 import { moodColors } from "./emotional-aura";
 import { JournalCard } from "./journal-card";
@@ -207,7 +207,7 @@ export function SidebarJournalContent() {
           <span className="text-xs font-medium text-primary">Prompt</span>
         </div>
         <p className="text-sm text-muted-foreground italic leading-relaxed">
-          "{prompt}"
+          {prompt}
         </p>
       </div>
 

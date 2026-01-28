@@ -556,7 +556,7 @@ export default function AIPage() {
                               <Badge variant="outline" className="text-xs">Pattern Analysis</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              You're most productive between <span className="text-green-500 font-medium">9-11 AM</span>. 
+                              You&apos;re most productive between <span className="text-green-500 font-medium">9-11 AM</span>. 
                               Your habit completion rate increases on <span className="text-green-500 font-medium">Tuesdays and Thursdays</span>.
                             </p>
                           </div>

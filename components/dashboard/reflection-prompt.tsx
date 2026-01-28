@@ -69,7 +69,7 @@ export function ReflectionPrompt() {
             animate={{ opacity: 1 }}
             className="text-sm sm:text-base font-medium leading-relaxed"
           >
-            "{content.text}"
+            {content.text}
           </motion.p>
           
           {content.type === "quote" && "author" in content && (

@@ -11,7 +11,6 @@ import {
   Angry, 
   Star, 
   AlertCircle,
-  Check,
   LucideIcon
 } from "lucide-react";
 import Link from "next/link";
@@ -97,7 +96,7 @@ export function MoodInputCard() {
               {selectedMoodData && <selectedMoodData.icon className={cn("w-5 h-5", selectedMoodData.color)} />}
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Today you're feeling</p>
+              <p className="text-sm text-muted-foreground">Today you&apos;re feeling</p>
               <p className="font-medium font-primary capitalize">{selectedMood}</p>
             </div>
           </div>
