@@ -8,6 +8,7 @@ import { ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { Fragment } from "react"
 import { formatSlugToTitle } from "@/lib/slug"
+import { ServiceStatusIndicator } from "@/components/service-status-indicator"
 
 // Mapping sections to display titles
 const sectionTitles: Record<string, string> = {
@@ -90,6 +91,11 @@ export function SiteHeader() {
             </Fragment>
           ))}
         </nav>
+
+        {/* Subtle ML service status indicator - disappears when ready */}
+        <div className="ml-auto">
+          <ServiceStatusIndicator />
+        </div>
       </div>
     </header>
   )

@@ -10,7 +10,6 @@ import {
   Sparkles,
   Shield,
   ArrowRight,
-  Compass,
   Brain,
   Zap,
   Lock,
@@ -193,7 +192,7 @@ const AboutPage: React.FC = () => {
                     to maintain focus, and to build lasting momentum.
                   </p>
                   <p>
-                    <span className="text-foreground font-medium">Rhythmé exists to solve this.</span> We're building AI that 
+                    <span className="text-foreground font-medium">Rhythmé exists to solve this.</span> We&apos;re building AI that 
                     genuinely understands human psychology—attention, motivation, procrastination, and emotional state. 
                     Not to exploit these patterns, but to help people work with their natural rhythms.
                   </p>
@@ -444,7 +443,7 @@ const AboutPage: React.FC = () => {
                 Building the Future Together
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                We're on a mission to redefine how people interact with productivity tools. 
+                We&apos;re on a mission to redefine how people interact with productivity tools. 
                 We welcome partners who share our vision for human-aware technology.
               </p>
             </motion.div>
@@ -472,7 +471,7 @@ const AboutPage: React.FC = () => {
               </div>
               
               <p className="text-muted-foreground text-center mb-6">
-                Interested in our mission? We'd love to share our deck and discuss how we're approaching this space.
+                Interested in our mission? We&apos;d love to share our deck and discuss how we&apos;re approaching this space.
               </p>
               
               <div className="flex justify-center">
@@ -506,7 +505,7 @@ const AboutPage: React.FC = () => {
                   Ready to Find Your Direction?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Join thousands who've discovered clarity. Start your journey today.
+                  Join thousands who&apos;ve discovered clarity. Start your journey today.
                 </p>
                 
                 <Link href="/signup/intro">

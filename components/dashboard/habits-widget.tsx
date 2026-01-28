@@ -68,7 +68,7 @@ export function HabitsWidget() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold font-primary text-sm">Today's Habits</h3>
+          <h3 className="font-semibold font-primary text-sm">Today&apos;s Habits</h3>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
