@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 
 // Supported OAuth providers
-export type OAuthProvider = 'google' | 'github' | 'discord' | 'spotify' | 'apple' | 'facebook'
+export type OAuthProvider = 'google' | 'github' | 'discord' | 'apple' | 'facebook'
 
 /**
  * Get the base URL from environment or headers (for server actions)

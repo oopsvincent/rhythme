@@ -106,7 +106,7 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="group relative rounded-lg px-2 py-2 transition-all duration-200 hover:bg-muted/50 data-[state=open]:bg-muted/50"
+              className="group relative rounded-lg px-2 py-2 transition-all duration-200 data-[state=open]:bg-muted/50"
             >
               {/* Avatar with online status */}
               <div className="relative">
