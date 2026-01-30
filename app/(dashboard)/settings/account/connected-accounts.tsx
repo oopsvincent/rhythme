@@ -35,12 +35,12 @@ const PROVIDERS: Record<OAuthProvider, { name: string; icon: string; color: stri
   google: { name: "Google", icon: "G", color: "bg-red-500" },
   github: { name: "GitHub", icon: "GH", color: "bg-gray-800" },
   discord: { name: "Discord", icon: "D", color: "bg-indigo-500" },
-  spotify: { name: "Spotify", icon: "S", color: "bg-green-500" },
+//   spotify: { name: "Spotify", icon: "S", color: "bg-green-500" },
   apple: { name: "Apple", icon: "A", color: "bg-gray-900" },
   facebook: { name: "Facebook", icon: "F", color: "bg-blue-600" },
 }
 
-const ALL_PROVIDERS: OAuthProvider[] = ["google", "github", "discord", "spotify"]
+const ALL_PROVIDERS: OAuthProvider[] = ["google", "github", "discord"]
 
 interface ConnectedAccountsProps {
   identities: LinkedIdentity[]
