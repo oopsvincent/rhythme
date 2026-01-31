@@ -9,6 +9,8 @@ import { ColorThemeProvider } from "@/contexts/theme-context";
 import { QueryProvider } from "@/components/query-provider";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
+import { OfflineIndicator } from "@/components/offline-indicator";
+
 
 const clashDisplay = localFont({
   src: [
@@ -133,8 +135,6 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   //   themeColor: "#0f172a",
-
-  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({
@@ -156,6 +156,7 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               {children}
+              <OfflineIndicator />
               <Toaster richColors position="bottom-right" />
               <div className="absolute top-2 right-2 z-[100]">
                 {/* <ModeToggle /> */}
