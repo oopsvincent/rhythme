@@ -138,13 +138,13 @@ export function HabitsWidget() {
             </Link>
 
             {/* Streak badge */}
-            {habit.streak_count > 0 && (
+            {habit.current_streak > 0 && (
               <Badge 
                 variant="secondary" 
                 className="shrink-0 bg-primary/10 text-primary border-0 text-xs px-2"
               >
                 <Flame className="w-3 h-3 mr-1" />
-                {habit.streak_count}
+                {habit.current_streak}
               </Badge>
             )}
           </motion.div>

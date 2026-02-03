@@ -9,6 +9,40 @@ import type {
   HabitWithStats,
 } from "@/types/database";
 
+// UTC-safe one day subtract
+function subtractOneDayUTC(dateStr: string): string {
+  const date = new Date(`${dateStr}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().split("T")[0];
+}
+
+// Compute current streak from array of UTC date strings (unique + desc sorted)
+function computeCurrentStreak(dateStrs: string[]): number {
+  if (dateStrs.length === 0) return 0;
+
+  const today = new Date().toISOString().split("T")[0];
+  const yesterdayDate = new Date();
+  yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
+  const yesterday = yesterdayDate.toISOString().split("T")[0];
+
+  const latest = dateStrs[0];
+  if (latest !== today && latest !== yesterday) return 0; // broken & old
+
+  let streak = 0;
+  let expected = latest;
+
+  for (const date of dateStrs) {
+    if (date === expected) {
+      streak++;
+      expected = subtractOneDayUTC(expected);
+    } else {
+      break; // gap found
+    }
+  }
+
+  return streak;
+}
+
 // === Authentication Helper ===
 async function getAuthenticatedUser() {
   const supabase = await createClient();
@@ -37,6 +71,7 @@ function daysSince(date: Date): number {
 }
 
 const MIN_DAYS_FOR_PREDICTION = 7;
+const AT_RISK_THRESHOLD = 0.6; // Ties to PRD success metric (3x/week ~0.43 daily, but buffer for weekly/custom)
 
 // === CRUD Operations ===
 
@@ -60,15 +95,11 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
       return { data: [] };
     }
 
-    // Fetch recent logs for all habits (last 30 days for stats)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
+    // Fetch all logs for all habits (no limit for accurate streak)
     const { data: logs, error: logsError } = await supabase
       .from("habit_logs")
       .select("*")
       .eq("user_id", user.id)
-      .gte("completed_at", thirtyDaysAgo.toISOString())
       .order("completed_at", { ascending: false });
 
     if (logsError) {
@@ -78,16 +109,21 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
     // Map habits with their stats
     const habitsWithStats: HabitWithStats[] = habits.map((habit: Habit) => {
       const habitLogs = (logs || []).filter(
-        (log: HabitLog) => log.habit_id === habit.habit_id
+        (log: HabitLog) => log.habit_id === habit.habit_id,
       );
       const daysOld = daysSince(new Date(habit.created_at));
       const canPredict = daysOld >= MIN_DAYS_FOR_PREDICTION;
+      const uniqueDatesDesc = [
+        ...new Set(habitLogs.map((log) => log.completed_at.split("T")[0])),
+      ].sort((a, b) => b.localeCompare(a));
+      const currentStreak = computeCurrentStreak(uniqueDatesDesc);
 
       return {
         ...habit,
         completedToday: isCompletedToday(habitLogs),
         completionLogs: habitLogs,
-        prediction: null, // Will be populated by prediction service
+        current_streak: currentStreak,
+        prediction: null, // Placeholder; populated in stats if needed
         daysUntilPrediction: canPredict
           ? undefined
           : MIN_DAYS_FOR_PREDICTION - daysOld,
@@ -103,7 +139,7 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
 }
 
 export async function getHabit(
-  habitId: number
+  habitId: number,
 ): Promise<ActionResponse<HabitWithStats>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -119,16 +155,12 @@ export async function getHabit(
       return { error: habitError.message };
     }
 
-    // Fetch logs for this habit (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
+    // Fetch all logs for this habit (no 30d limit for streak)
     const { data: logs, error: logsError } = await supabase
       .from("habit_logs")
       .select("*")
       .eq("habit_id", habitId)
       .eq("user_id", user.id)
-      .gte("completed_at", thirtyDaysAgo.toISOString())
       .order("completed_at", { ascending: false });
 
     if (logsError) {
@@ -137,12 +169,17 @@ export async function getHabit(
 
     const daysOld = daysSince(new Date(habit.created_at));
     const canPredict = daysOld >= MIN_DAYS_FOR_PREDICTION;
+    const uniqueDatesDesc = [
+      ...new Set((logs || []).map((log) => log.completed_at.split("T")[0])),
+    ].sort((a, b) => b.localeCompare(a));
+    const currentStreak = computeCurrentStreak(uniqueDatesDesc);
 
     return {
       data: {
         ...habit,
         completedToday: isCompletedToday(logs || []),
         completionLogs: logs || [],
+        current_streak: currentStreak,
         prediction: null,
         daysUntilPrediction: canPredict
           ? undefined
@@ -157,7 +194,7 @@ export async function getHabit(
 }
 
 export async function createHabit(
-  input: CreateHabitInput
+  input: CreateHabitInput,
 ): Promise<ActionResponse<Habit>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -169,7 +206,6 @@ export async function createHabit(
         name: input.name,
         description: input.description || null,
         frequency: input.frequency || "daily",
-        streak_count: 0,
         is_active: true,
       })
       .select()
@@ -189,7 +225,7 @@ export async function createHabit(
 
 export async function updateHabit(
   habitId: number,
-  input: UpdateHabitInput
+  input: UpdateHabitInput,
 ): Promise<ActionResponse<Habit>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -218,7 +254,7 @@ export async function updateHabit(
 }
 
 export async function deleteHabit(
-  habitId: number
+  habitId: number,
 ): Promise<ActionResponse<{ success: boolean }>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -246,7 +282,7 @@ export async function deleteHabit(
 
 export async function logHabitCompletion(
   habitId: number,
-  note?: string
+  note?: string,
 ): Promise<ActionResponse<HabitLog>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -266,18 +302,6 @@ export async function logHabitCompletion(
       return { error: "Habit already completed today" };
     }
 
-    // Get current habit to get streak count
-    const { data: habit, error: habitError } = await supabase
-      .from("habits")
-      .select("streak_count")
-      .eq("habit_id", habitId)
-      .eq("user_id", user.id)
-      .single();
-
-    if (habitError) {
-      return { error: habitError.message };
-    }
-
     // Insert the completion log
     const { data: log, error: logError } = await supabase
       .from("habit_logs")
@@ -294,33 +318,40 @@ export async function logHabitCompletion(
       return { error: logError.message };
     }
 
-    // Increment streak count directly
-    const newStreakCount = (habit?.streak_count || 0) + 1;
-    const { error: updateError } = await supabase
+    // Recalculate streak and update in database
+    const { data: allLogs } = await supabase
+      .from("habit_logs")
+      .select("completed_at")
+      .eq("habit_id", habitId)
+      .eq("user_id", user.id)
+      .order("completed_at", { ascending: false });
+
+    const uniqueDatesDesc = [
+      ...new Set((allLogs || []).map((l) => l.completed_at.split("T")[0])),
+    ].sort((a, b) => b.localeCompare(a));
+    const newStreak = computeCurrentStreak(uniqueDatesDesc);
+
+    // Update streak_count in habits table
+    await supabase
       .from("habits")
-      .update({
-        streak_count: newStreakCount,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ streak_count: newStreak, updated_at: new Date().toISOString() })
       .eq("habit_id", habitId)
       .eq("user_id", user.id);
-
-    if (updateError) {
-      console.error("Failed to update streak:", updateError);
-    }
 
     return { data: log };
   } catch (error) {
     return {
       error:
-        error instanceof Error ? error.message : "Failed to log habit completion",
+        error instanceof Error
+          ? error.message
+          : "Failed to log habit completion",
     };
   }
 }
 
 export async function removeHabitCompletion(
   habitId: number,
-  date: string
+  date: string,
 ): Promise<ActionResponse<{ success: boolean }>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -338,13 +369,23 @@ export async function removeHabitCompletion(
       return { error: error.message };
     }
 
-    // Reset streak to 0 when a completion is removed (streak is broken)
+    // Recalculate streak after removal and update in database
+    const { data: remainingLogs } = await supabase
+      .from("habit_logs")
+      .select("completed_at")
+      .eq("habit_id", habitId)
+      .eq("user_id", user.id)
+      .order("completed_at", { ascending: false });
+
+    const uniqueDatesDesc = [
+      ...new Set((remainingLogs || []).map((l) => l.completed_at.split("T")[0])),
+    ].sort((a, b) => b.localeCompare(a));
+    const newStreak = computeCurrentStreak(uniqueDatesDesc);
+
+    // Update streak_count in habits table
     await supabase
       .from("habits")
-      .update({
-        streak_count: 0,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ streak_count: newStreak, updated_at: new Date().toISOString() })
       .eq("habit_id", habitId)
       .eq("user_id", user.id);
 
@@ -368,6 +409,7 @@ export async function getHabitStats(habitId: number): Promise<
     current_streak: number;
     days_since_start: number;
     total_completions: number;
+    prediction: string | null; // Rule-based 'at risk' (PRD)
   }>
 > {
   try {
@@ -404,16 +446,16 @@ export async function getHabitStats(habitId: number): Promise<
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const logs7d = (logs || []).filter(
-      (log: HabitLog) => new Date(log.completed_at) >= sevenDaysAgo
+      (log: HabitLog) => new Date(log.completed_at) >= sevenDaysAgo,
     );
     const logs30d = (logs || []).filter(
-      (log: HabitLog) => new Date(log.completed_at) >= thirtyDaysAgo
+      (log: HabitLog) => new Date(log.completed_at) >= thirtyDaysAgo,
     );
 
     // Calculate expected completions based on frequency
     const getExpectedCompletions = (
       frequency: string,
-      days: number
+      days: number,
     ): number => {
       switch (frequency) {
         case "daily":
@@ -430,16 +472,31 @@ export async function getHabitStats(habitId: number): Promise<
     const expected7d = getExpectedCompletions(habit.frequency, 7);
     const expected30d = getExpectedCompletions(habit.frequency, 30);
 
+    const completionRate30d = Math.min(
+      logs30d.length / Math.max(expected30d, 1),
+      1,
+    );
+
+    const uniqueDatesDesc = [
+      ...new Set((logs || []).map((log) => log.completed_at.split("T")[0])),
+    ].sort((a, b) => b.localeCompare(a));
+    const currentStreak = computeCurrentStreak(uniqueDatesDesc);
+
+    // Rule-based prediction (PRD: lightweight, rule-based risk)
+    const prediction =
+      completionRate30d >= AT_RISK_THRESHOLD ? "safe" : "at risk";
+
     return {
       data: {
-        completion_rate_7d: Math.min(logs7d.length / Math.max(expected7d, 1), 1),
-        completion_rate_30d: Math.min(
-          logs30d.length / Math.max(expected30d, 1),
-          1
+        completion_rate_7d: Math.min(
+          logs7d.length / Math.max(expected7d, 1),
+          1,
         ),
-        current_streak: habit.streak_count,
+        completion_rate_30d: completionRate30d,
+        current_streak: currentStreak,
         days_since_start: daysSince(new Date(habit.created_at)),
         total_completions: logs?.length || 0,
+        prediction,
       },
     };
   } catch (error) {

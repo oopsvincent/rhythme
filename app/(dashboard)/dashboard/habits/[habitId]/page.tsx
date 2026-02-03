@@ -6,9 +6,11 @@ interface HabitDetailPageProps {
   params: Promise<{ habitId: string }>;
 }
 
-export default async function HabitDetailPage({ params }: HabitDetailPageProps) {
+export default async function HabitDetailPage({
+  params,
+}: HabitDetailPageProps) {
   const { habitId: slug } = await params;
-  
+
   // Extract ID from slug (e.g., "morning-exercise-123" -> "123")
   const idFromSlug = slug.split("-").pop();
   const habitIdNum = parseInt(idFromSlug || "", 10);
@@ -17,6 +19,7 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
     notFound();
   }
 
+  // Fetch habit and stats in parallel
   const [habitResult, statsResult] = await Promise.all([
     getHabit(habitIdNum),
     getHabitStats(habitIdNum),
@@ -33,4 +36,3 @@ export default async function HabitDetailPage({ params }: HabitDetailPageProps) 
     />
   );
 }
-

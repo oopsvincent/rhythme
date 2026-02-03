@@ -8,12 +8,17 @@ import {
   getHabit,
   getHabitStats,
   createHabit,
+  updateHabit,
   deleteHabit,
   logHabitCompletion,
   removeHabitCompletion,
 } from "@/app/actions/habits";
-import type { HabitWithStats, CreateHabitInput } from "@/types/database";
-import { getCachedPrediction, canUsePrediction, getDaysUntilPrediction } from "@/lib/habit-prediction";
+import type { HabitWithStats, CreateHabitInput, UpdateHabitInput } from "@/types/database";
+import {
+  getCachedPrediction,
+  canUsePrediction,
+  getDaysUntilPrediction,
+} from "@/lib/habit-prediction";
 
 // ==================== QUERY KEYS ====================
 // Centralized query keys for consistency
@@ -37,15 +42,18 @@ export function useHabits() {
     queryFn: async () => {
       const result = await getHabits();
       if (result.error) throw new Error(result.error);
-      
+
       // Return habits immediately with prediction eligibility info
       // Actual predictions are loaded separately to avoid blocking
       return (result.data || []).map((habit) => ({
         ...habit,
-        daysUntilPrediction: canUsePrediction(habit) ? 0 : getDaysUntilPrediction(habit),
+        daysUntilPrediction: canUsePrediction(habit)
+          ? 0
+          : getDaysUntilPrediction(habit),
         canPredict: canUsePrediction(habit),
       }));
     },
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -60,16 +68,23 @@ export function useHabitPrediction(habit: HabitWithStats | undefined) {
     queryKey: habitKeys.prediction(habit?.habit_id ?? 0),
     queryFn: async () => {
       if (!habit) return null;
-      const prediction = await getCachedPrediction(
-        habit.habit_id,
-        habit,
-        habit.completionLogs
-      );
-      return prediction;
+      
+      try {
+        const prediction = await getCachedPrediction(
+          habit.habit_id,
+          habit,
+          habit.completionLogs
+        );
+        return prediction;
+      } catch (error) {
+        console.error("Failed to fetch prediction:", error);
+        return null;
+      }
     },
     enabled: !!habit && canUsePrediction(habit),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
+    retry: 1, // Only retry once for predictions
   });
 }
 
@@ -84,6 +99,7 @@ export function useHabit(habitId: number) {
       if (result.error) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -98,6 +114,7 @@ export function useHabitStats(habitId: number) {
       if (result.error) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -133,13 +150,35 @@ export function useDeleteHabit() {
       return result.data;
     },
     onSuccess: () => {
+      // Invalidate habits list to refetch
       queryClient.invalidateQueries({ queryKey: habitKeys.all });
     },
   });
 }
 
 /**
+ * Update habit mutation with cache invalidation
+ */
+export function useUpdateHabit() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ habitId, input }: { habitId: number; input: UpdateHabitInput }) => {
+      const result = await updateHabit(habitId, input);
+      if (result.error) throw new Error(result.error);
+      return result.data;
+    },
+    onSuccess: (_, { habitId }) => {
+      // Invalidate both list and detail queries
+      queryClient.invalidateQueries({ queryKey: habitKeys.all });
+      queryClient.invalidateQueries({ queryKey: habitKeys.detail(habitId) });
+    },
+  });
+}
+
+/**
  * Log habit completion mutation
+ * Invalidates both the list and detail queries
  */
 export function useLogCompletion() {
   const queryClient = useQueryClient();
@@ -151,16 +190,19 @@ export function useLogCompletion() {
       return result.data;
     },
     onSuccess: (_, { habitId }) => {
-      // Invalidate both list and detail
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: habitKeys.all });
       queryClient.invalidateQueries({ queryKey: habitKeys.detail(habitId) });
       queryClient.invalidateQueries({ queryKey: habitKeys.stats(habitId) });
+      // Also invalidate prediction as completion affects it
+      queryClient.invalidateQueries({ queryKey: habitKeys.prediction(habitId) });
     },
   });
 }
 
 /**
  * Remove habit completion mutation
+ * Invalidates both the list and detail queries
  */
 export function useRemoveCompletion() {
   const queryClient = useQueryClient();
@@ -172,9 +214,12 @@ export function useRemoveCompletion() {
       return result.data;
     },
     onSuccess: (_, { habitId }) => {
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: habitKeys.all });
       queryClient.invalidateQueries({ queryKey: habitKeys.detail(habitId) });
       queryClient.invalidateQueries({ queryKey: habitKeys.stats(habitId) });
+      // Also invalidate prediction as removal affects it
+      queryClient.invalidateQueries({ queryKey: habitKeys.prediction(habitId) });
     },
   });
 }
@@ -184,6 +229,9 @@ export function useRemoveCompletion() {
 /**
  * Subscribe to realtime changes on habits table
  * Invalidates cache when changes occur
+ * 
+ * Usage: Call this hook once at the top level of your habits page
+ * to enable realtime updates across all habit-related queries
  */
 export function useHabitsRealtime() {
   const queryClient = useQueryClient();
@@ -198,8 +246,16 @@ export function useHabitsRealtime() {
         { event: "*", schema: "public", table: "habits" },
         (payload) => {
           console.log("[Realtime] Habits table changed:", payload.eventType);
+          
           // Invalidate cache to refetch fresh data
           queryClient.invalidateQueries({ queryKey: habitKeys.all });
+          
+          // If we know which habit changed, invalidate its detail query too
+          if (payload.new && 'habit_id' in payload.new) {
+            const habitId = (payload.new as any).habit_id;
+            queryClient.invalidateQueries({ queryKey: habitKeys.detail(habitId) });
+            queryClient.invalidateQueries({ queryKey: habitKeys.stats(habitId) });
+          }
         }
       )
       .on(
@@ -207,7 +263,17 @@ export function useHabitsRealtime() {
         { event: "*", schema: "public", table: "habit_logs" },
         (payload) => {
           console.log("[Realtime] Habit logs changed:", payload.eventType);
+          
+          // Invalidate all habits as logs affect stats
           queryClient.invalidateQueries({ queryKey: habitKeys.all });
+          
+          // If we know which habit's log changed, invalidate its queries
+          if (payload.new && 'habit_id' in payload.new) {
+            const habitId = (payload.new as any).habit_id;
+            queryClient.invalidateQueries({ queryKey: habitKeys.detail(habitId) });
+            queryClient.invalidateQueries({ queryKey: habitKeys.stats(habitId) });
+            queryClient.invalidateQueries({ queryKey: habitKeys.prediction(habitId) });
+          }
         }
       )
       .subscribe();
