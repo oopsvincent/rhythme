@@ -38,10 +38,10 @@ const PROVIDERS: Record<
   github: { name: "GitHub", icon: "GitHub_Lockup_Black.svg", color: "bg-gray-800" },
   discord: { name: "Discord", icon: "Discord-Logo-Blurple.svg", color: "bg-indigo-500" },
   apple: { name: "Apple", icon: "Apple.svg", color: "bg-gray-900" },
-  facebook: { name: "Facebook", icon: "F", color: "bg-blue-600" },
+  facebook: { name: "Facebook", icon: "Facebook_Logo_Primary.png", color: "bg-blue-600" },
 };
 
-const ALL_PROVIDERS: OAuthProvider[] = ["google", "github", "discord", "apple"];
+const ALL_PROVIDERS: OAuthProvider[] = ["google", "github", "discord", "apple", "facebook"];
 
 interface ConnectionsSectionProps {
   identities: LinkedIdentity[];
@@ -137,7 +137,7 @@ return (
                   {/* Icon + avatar area */}
                   <div className="w-full h-full flex flex-col items-center justify-center gap-3">
                     <div className="relative">
-                      <div className="w-20 h-20 rounded-xl bg-foreground border border-border/70 grid place-items-center overflow-hidden shadow-sm">
+                      <div className="w-20 h-20 rounded-xl bg-background dark:bg-foreground border border-border/70 grid place-items-center overflow-hidden shadow-sm">
                         <Image
                           width={64}
                           height={64}
@@ -217,7 +217,7 @@ return (
                   )}
                 >
                   <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                    <div className="w-[90%] h-20 rounded-xl bg-foreground border border-border/70 grid place-items-center overflow-hidden shadow-sm">
+                    <div className="w-[90%] h-20 rounded-xl bg-background dark:bg-foreground border border-border/70 grid place-items-center overflow-hidden shadow-sm">
                       <Image
                         className={clsx(
                           "object-contain",
@@ -226,6 +226,7 @@ return (
                             "w-42 ": provider.name === "Github",
                             "w-42": provider.name !== "Apple",
                             "p-3": provider.name === "Discord",
+                            "w-[25%]": provider.name === "Facebook",
                           }
                         )}
                         width={64}

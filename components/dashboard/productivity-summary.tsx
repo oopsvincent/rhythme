@@ -45,7 +45,7 @@ export function ProductivitySummary() {
   const dailyHabits = habits.filter(h => h.frequency === "daily");
   const completedHabits = dailyHabits.filter(h => h.completedToday).length;
   const totalHabits = dailyHabits.length;
-  const bestStreak = Math.max(...habits.map(h => h.streak_count), 0);
+  const bestStreak = Math.max(...habits.map(h => h.current_streak), 0);
 
   // Don't show if no data available
   const hasData = totalHabits > 0 || focusMinutes > 0;
