@@ -1,6 +1,8 @@
 // app/(dashboard)/settings/security/page.tsx
-import SecuritySettingsContent from "./security-settings-content"
+// Security settings page
+
+import SecuritySection from "./_components/security-section"
 
 export default function SecurityPage() {
-  return <SecuritySettingsContent />
+  return <SecuritySection />
 }

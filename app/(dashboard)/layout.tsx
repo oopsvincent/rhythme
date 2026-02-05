@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/app/actions/auth";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Metadata } from "next";
-import { SidebarRight } from "@/components/sidebar-right";
+import { SidebarRightWrapper } from "@/components/sidebar-right-wrapper";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -76,7 +76,7 @@ export default async function DashboardLayout({
             </ContextMenuContent>
           </ContextMenu>
         </SidebarInset>
-        <SidebarRight />
+        <SidebarRightWrapper />
       </SidebarProvider>
     </SettingsProvider>
   );

@@ -79,3 +79,81 @@ export function ChartSkeleton() {
     </div>
   )
 }
+
+export function MoodInputSkeleton() {
+  return (
+    <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-border/50">
+      <Skeleton className="h-4 w-40 mb-3" />
+      <div className="flex flex-wrap gap-2">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-9 w-20 rounded-full" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function HabitsWidgetSkeleton() {
+  return (
+    <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-border/50">
+      <div className="flex items-center justify-between mb-3">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-4 w-16" />
+      </div>
+      <Skeleton className="h-1 w-full rounded-full mb-3" />
+      <div className="space-y-2">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-4 flex-1 max-w-32" />
+            <Skeleton className="h-5 w-12 rounded-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function QuickJournalSkeleton() {
+  return (
+    <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-border/50">
+      <div className="flex items-center justify-between mb-3">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-16" />
+      </div>
+      <Skeleton className="h-3 w-48 mb-2" />
+      <Skeleton className="h-20 w-full rounded-lg" />
+    </div>
+  )
+}
+
+export function ProductivitySummarySkeleton() {
+  return (
+    <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-border/50">
+      <Skeleton className="h-4 w-28 mb-3" />
+      <div className="grid grid-cols-2 gap-2">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="p-3 rounded-lg bg-muted/30">
+            <Skeleton className="h-3 w-16 mb-1" />
+            <Skeleton className="h-6 w-12" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function ReflectionPromptSkeleton() {
+  return (
+    <div className="rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-primary/20 bg-gradient-to-br from-primary/5 via-accent/5 to-transparent">
+      <div className="flex items-start gap-3">
+        <Skeleton className="h-8 w-8 rounded-lg" />
+        <div className="flex-1">
+          <Skeleton className="h-4 w-full max-w-64 mb-2" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      </div>
+    </div>
+  )
+}
+

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+// import { cn } from "@/lib/utils";
 import { MoodType } from "./mood-selector";
 import { moodColors } from "./emotional-aura";
 import { JournalCard } from "./journal-card";
@@ -17,18 +17,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// Local storage key
-const JOURNALS_STORAGE_KEY = "rhythme_journals";
-
-interface JournalEntry {
-  id: string;
-  title: string;
-  body: string;
-  mood: MoodType;
-  moodIntensity?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import {
+  getStoredJournals,
+  JournalEntry
+} from "@/lib/journal-storage";
 
 // Writing prompts
 const writingPrompts = [
@@ -107,15 +99,8 @@ export function SidebarJournalContent() {
 
   useEffect(() => {
     // Load entries from localStorage
-    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setEntries(parsed);
-      } catch (e) {
-        console.error("Failed to parse journals:", e);
-      }
-    }
+    const storedEntries = getStoredJournals();
+    setEntries(storedEntries);
     setPrompt(getRandomPrompt());
     setIsLoading(false);
   }, []);
@@ -207,7 +192,7 @@ export function SidebarJournalContent() {
           <span className="text-xs font-medium text-primary">Prompt</span>
         </div>
         <p className="text-sm text-muted-foreground italic leading-relaxed">
-          "{prompt}"
+          {prompt}
         </p>
       </div>
 

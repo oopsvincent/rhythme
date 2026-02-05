@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -27,8 +28,10 @@ import {
   Lightbulb,
   MoreHorizontal,
   CheckCircle2,
-  Loader2
+  Loader2,
+  AlertTriangle
 } from "lucide-react"
+import { DeleteAccountModal } from "@/components/settings/delete-account-modal"
 
 interface AccountSettingsContentProps {
   user: {
@@ -323,6 +326,27 @@ export default function AccountSettingsContent({ user, onboardingData }: Account
           )}
         </Button>
       </form>
+      
+      <Separator />
+
+      {/* Danger Zone */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2 text-destructive">
+          <AlertTriangle className="h-5 w-5" />
+          Danger Zone
+        </h3>
+        <Card className="border-destructive/20 bg-destructive/5 overflow-hidden">
+          <CardContent className="p-4 flex items-center justify-between sm:flex-row flex-col gap-4">
+            <div>
+              <p className="font-medium text-destructive">Delete Account</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                Permanently remove your Personal data, Journal entries, and Settings. This action is not reversible, so please continue with caution.
+              </p>
+            </div>
+            <DeleteAccountModal />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

@@ -22,8 +22,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-// Local storage key
-const JOURNALS_STORAGE_KEY = "rhythme_journals";
+import {
+  getStoredJournals,
+  JournalEntry
+} from "@/lib/journal-storage";
 
 // Mood emoji mappings
 const moodEmojis: Record<MoodType, string> = {
@@ -46,16 +48,6 @@ const moodLabels: Record<MoodType, string> = {
   excited: "Excited",
   anxious: "Anxious",
 };
-
-interface JournalEntry {
-  id: string;
-  title: string;
-  body: string;
-  mood: MoodType;
-  moodIntensity?: number;
-  createdAt: string;
-  updatedAt: string;
-}
 
 // Mock AI analysis generator
 function generateAnalysis(entry: JournalEntry) {
@@ -164,23 +156,16 @@ export default function JournalInsightsPage({
 
   // Load journal
   useEffect(() => {
-    const stored = localStorage.getItem(JOURNALS_STORAGE_KEY);
-    if (stored) {
-      try {
-        const journals: JournalEntry[] = JSON.parse(stored);
-        const found = journals.find((j) => j.id === resolvedParams.journalId);
-        if (found) {
-          setJournal(found);
-          // Simulate AI analysis delay
-          setIsAnalyzing(true);
-          setTimeout(() => {
-            setAnalysis(generateAnalysis(found));
-            setIsAnalyzing(false);
-          }, 1500);
-        }
-      } catch (e) {
-        console.error("Failed to load journal:", e);
-      }
+    const journals = getStoredJournals();
+    const found = journals.find((j) => j.id === resolvedParams.journalId);
+    if (found) {
+      setJournal(found);
+      // Simulate AI analysis delay
+      setIsAnalyzing(true);
+      setTimeout(() => {
+        setAnalysis(generateAnalysis(found));
+        setIsAnalyzing(false);
+      }, 1500);
     }
     setIsLoading(false);
   }, [resolvedParams.journalId]);

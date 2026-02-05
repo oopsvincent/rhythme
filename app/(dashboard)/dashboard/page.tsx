@@ -7,10 +7,18 @@ import { getGreeting } from "@/utils/getGreetings"
 
 // Dashboard components
 import {
-  QuickActions,
   TodayOverview,
-  QuickActionsSkeleton,
   TodayOverviewSkeleton,
+  MoodInputCard,
+  HabitsWidget,
+  QuickJournalCard,
+  ReflectionPrompt,
+  ProductivitySummary,
+  MoodInputSkeleton,
+  HabitsWidgetSkeleton,
+  QuickJournalSkeleton,
+  ProductivitySummarySkeleton,
+  ReflectionPromptSkeleton,
 } from "@/components/dashboard"
 
 export default async function DashboardPage() {
@@ -49,24 +57,44 @@ export default async function DashboardPage() {
 
             <Separator className="my-2" />
 
-            {/* Quick Actions Dock - macOS style */}
-            <Suspense fallback={<QuickActionsSkeleton />}>
-              <QuickActions />
+            {/* Daily Reflection Prompt */}
+            <Suspense fallback={<ReflectionPromptSkeleton />}>
+              <ReflectionPrompt />
             </Suspense>
 
-            {/* Today's Overview - Full width for now */}
-            <Suspense fallback={<TodayOverviewSkeleton />}>
-              <TodayOverview />
-            </Suspense>
+            {/* Main Dashboard Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+              {/* Left Column - Mood, Habits, Summary */}
+              <div className="flex flex-col gap-4">
+                {/* Mood Check-in */}
+                <Suspense fallback={<MoodInputSkeleton />}>
+                  <MoodInputCard />
+                </Suspense>
 
-            {/* 
-              HIDDEN FOR NOW - Analytics Section
-              TODO: Enable when ready to show real analytics data
-              
-              <DashboardStats />
-              <ActivityFeed />
-              <ProductivityCharts />
-            */}
+                {/* Today's Habits */}
+                <Suspense fallback={<HabitsWidgetSkeleton />}>
+                  <HabitsWidget />
+                </Suspense>
+
+                {/* Productivity Summary */}
+                <Suspense fallback={<ProductivitySummarySkeleton />}>
+                  <ProductivitySummary />
+                </Suspense>
+              </div>
+
+              {/* Right Column - Journal, Tasks */}
+              <div className="flex flex-col gap-4 mb-8 sm:mb-0">
+                {/* Quick Journal */}
+                <Suspense fallback={<QuickJournalSkeleton />}>
+                  <QuickJournalCard />
+                </Suspense>
+
+                {/* Today's Tasks Overview */}
+                <Suspense fallback={<TodayOverviewSkeleton />}>
+                  <TodayOverview />
+                </Suspense>
+              </div>
+            </div>
           </div>
         </div>
       </div>

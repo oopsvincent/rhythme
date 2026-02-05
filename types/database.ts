@@ -99,6 +99,7 @@ export interface CachedHabitPrediction {
 export interface HabitWithStats extends Habit {
   completedToday: boolean
   completionLogs: HabitLog[]
+  current_streak: number // Computed from logs, most accurate
   prediction?: HabitPrediction | null
   daysUntilPrediction?: number // Days remaining until AI predictions are available
 }

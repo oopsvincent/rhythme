@@ -308,7 +308,7 @@ const RhythmeLanding: React.FC<RhythmeLandingProps> = ({ user }) => {
               </h2>
               
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-                We're not just building another productivity app. We're researching how AI can truly understand 
+                We&apos;re not just building another productivity app. We&apos;re researching how AI can truly understand 
                 <span className="text-foreground font-medium"> human attention, procrastination, and motivation </span> 
                 in an era dominated by short-form content and instant gratification.
               </p>
@@ -429,7 +429,7 @@ const RhythmeLanding: React.FC<RhythmeLandingProps> = ({ user }) => {
               
               <Link href="/signup/intro">
                 <Button size="lg" className="text-lg px-10 py-6 bg-gradient-to-r from-primary to-accent hover:shadow-2xl hover:shadow-primary/30 transition-all duration-500 hover:scale-105 group">
-                  Start Your Journey — It's Free
+                  Start Your Journey — It&apos;s Free
                   <Sparkles className="w-5 h-5 ml-2 group-hover:rotate-12 transition-transform duration-300" />
                 </Button>
               </Link>

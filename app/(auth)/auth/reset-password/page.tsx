@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function ResetPasswordRequestPage() {
   const [email, setEmail] = useState("");
@@ -21,21 +22,28 @@ export default function ResetPasswordRequestPage() {
     setErrorMsg(null);
 
     const supabase = createClient();
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+    
+    // Get the current origin for the redirect URL
+    const baseUrl = window.location.origin;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${baseUrl}/auth/update-password`,
+      redirectTo: `${baseUrl}/account/update-password`,
     });
 
     if (error) {
       console.error("resetPasswordForEmail error:", error);
       setStatus("error");
       setErrorMsg(error.message);
+      toast.error("Failed to send reset link", {
+        description: error.message
+      });
       return;
     }
 
     setStatus("success");
+    toast.success("Reset link sent!", {
+      description: "Check your inbox for the password reset link."
+    });
   }
 
   return (
@@ -83,7 +91,7 @@ export default function ResetPasswordRequestPage() {
         )}
 
         <p
-          className="text-xs text-muted-foreground text-center cursor-pointer"
+          className="text-xs text-muted-foreground text-center cursor-pointer hover:text-foreground transition-colors"
           onClick={() => router.push("/login")}
         >
           Remember your password? Go back to login

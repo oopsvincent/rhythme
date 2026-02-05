@@ -1,5 +1,6 @@
 "use client";
-import { useState, useTransition } from "react";
+
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -10,7 +11,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -31,23 +40,35 @@ import {
   Calendar,
   Clock,
   Target,
-  Plus,
   MessageSquare,
+  XCircle,
+  Pencil,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
-import type { HabitWithStats, HabitLog, HabitPrediction } from "@/types/database";
-import { logHabitCompletion, removeHabitCompletion } from "@/app/actions/habits";
-import { getCachedPrediction, canUsePrediction, getDaysUntilPrediction } from "@/lib/habit-prediction";
-import { useEffect } from "react";
+import type {
+  HabitWithStats,
+  HabitLog,
+  HabitPrediction,
+  HabitFrequency,
+} from "@/types/database";
+import {
+  useLogCompletion,
+  useRemoveCompletion,
+  useHabitPrediction,
+  useUpdateHabit,
+} from "@/hooks/use-habits";
+import {
+  canUsePrediction,
+  getDaysUntilPrediction,
+} from "@/lib/habit-prediction";
 
 /**
  * Get motivational message based on prediction probability
- * Different messages for each 10% range
  */
 function getPredictionMessage(probability: number): string {
   const percent = probability * 100;
-  
+
   if (percent <= 10) {
     return "🌱 Every journey starts somewhere. One step at a time!";
   } else if (percent <= 20) {
@@ -84,89 +105,142 @@ interface HabitDetailClientProps {
   initialStats: HabitStats | null;
 }
 
-export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailClientProps) {
+export function HabitDetailClient({
+  initialHabit,
+  initialStats,
+}: HabitDetailClientProps) {
   const router = useRouter();
+
+  // Local state for optimistic updates
   const [habit, setHabit] = useState<HabitWithStats>(initialHabit);
   const [stats, setStats] = useState<HabitStats | null>(initialStats);
-  const [prediction, setPrediction] = useState<HabitPrediction | null>(null);
-  const [predictionLoaded, setPredictionLoaded] = useState(false);
-  const [predictionError, setPredictionError] = useState<string | null>(null);
+
+  // Mutations
+  const logMutation = useLogCompletion();
+  const removeMutation = useRemoveCompletion();
+  const updateMutation = useUpdateHabit();
+
+  // Prediction hook
+  const {
+    data: prediction,
+    isLoading: isPredictionLoading,
+    error: predictionError,
+  } = useHabitPrediction(habit);
+
+  // Dialog state
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [completionNote, setCompletionNote] = useState("");
-  const [isPending, startTransition] = useTransition();
+  
+  // Edit form state
+  const [editName, setEditName] = useState(habit.name);
+  const [editDescription, setEditDescription] = useState(habit.description || "");
+  const [editFrequency, setEditFrequency] = useState<HabitFrequency>(habit.frequency);
 
   const today = new Date().toISOString().split("T")[0];
+  const daysUntilPrediction = canUsePrediction(habit)
+    ? 0
+    : getDaysUntilPrediction(habit);
 
-  // Load prediction on mount
-  useEffect(() => {
-    async function loadPrediction() {
-      if (canUsePrediction(habit)) {
-        try {
-          const pred = await getCachedPrediction(
-            habit.habit_id,
-            habit,
-            habit.completionLogs
-          );
-          setPrediction(pred);
-          if (!pred) {
-            setPredictionError("AI service is currently unavailable. Please try again later.");
-          }
-        } catch (error) {
-          console.error("Prediction error:", error);
-          setPredictionError("Failed to connect to AI service.");
-        }
-      }
-      setPredictionLoaded(true);
-    }
-    loadPrediction();
-  }, [habit]);
-
-  const handleComplete = async () => {
-    startTransition(async () => {
-      const result = await logHabitCompletion(habit.habit_id, completionNote || undefined);
-      if (result.data) {
-        setHabit((prev) => ({
-          ...prev,
-          completedToday: true,
-          streak_count: prev.streak_count + 1,
-          completionLogs: [result.data, ...prev.completionLogs],
-        }));
-        if (stats) {
-          setStats((prev) => prev ? {
+  const handleComplete = () => {
+    logMutation.mutate(
+      {
+        habitId: habit.habit_id,
+        note: completionNote || undefined,
+      },
+      {
+        onSuccess: (data) => {
+          // Optimistic update
+          setHabit((prev) => ({
             ...prev,
+            completedToday: true,
             current_streak: prev.current_streak + 1,
-            total_completions: prev.total_completions + 1,
-          } : null);
-        }
-        setIsCompleteDialogOpen(false);
-        setCompletionNote("");
+            completionLogs: data ? [data, ...prev.completionLogs] : prev.completionLogs,
+          }));
+          if (stats) {
+            setStats((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    current_streak: prev.current_streak + 1,
+                    total_completions: prev.total_completions + 1,
+                  }
+                : null
+            );
+          }
+          setIsCompleteDialogOpen(false);
+          setCompletionNote("");
+        },
       }
-    });
+    );
   };
 
-  const handleRemoveCompletion = async () => {
-    startTransition(async () => {
-      const result = await removeHabitCompletion(habit.habit_id, today);
-      if (result.data) {
-        setHabit((prev) => ({
-          ...prev,
-          completedToday: false,
-          streak_count: 0,
-          completionLogs: prev.completionLogs.filter(
-            (log) => !log.completed_at.startsWith(today)
-          ),
-        }));
-        if (stats) {
-          setStats((prev) => prev ? {
-            ...prev,
-            current_streak: 0,
-          } : null);
-        }
+  const handleRemoveCompletion = () => {
+    // Optimistic update - apply immediately for instant UI feedback
+    setHabit((prev) => ({
+      ...prev,
+      completedToday: false,
+      current_streak: Math.max(0, prev.current_streak - 1), // Decrement streak
+      completionLogs: prev.completionLogs.filter(
+        (log) => !log.completed_at.startsWith(today)
+      ),
+    }));
+    if (stats) {
+      setStats((prev) =>
+        prev
+          ? {
+              ...prev,
+              current_streak: Math.max(0, prev.current_streak - 1),
+              total_completions: Math.max(0, prev.total_completions - 1),
+            }
+          : null
+      );
+    }
+    setIsRemoveDialogOpen(false);
+
+    removeMutation.mutate(
+      {
+        habitId: habit.habit_id,
+        date: today,
+      },
+      {
+        onError: () => {
+          // Revert on error - refetch the page to get correct state
+          router.refresh();
+        },
       }
-    });
+    );
   };
 
-  const daysUntilPrediction = canUsePrediction(habit) ? 0 : getDaysUntilPrediction(habit);
+  const handleEdit = () => {
+    if (!editName.trim()) return;
+    
+    updateMutation.mutate(
+      {
+        habitId: habit.habit_id,
+        input: {
+          name: editName.trim(),
+          description: editDescription.trim() || null,
+          frequency: editFrequency,
+        },
+      },
+      {
+        onSuccess: (data) => {
+          if (data) {
+            // Optimistic update
+            setHabit((prev) => ({
+              ...prev,
+              name: data.name,
+              description: data.description,
+              frequency: data.frequency,
+            }));
+          }
+          setIsEditDialogOpen(false);
+        },
+      }
+    );
+  };
 
   // Group logs by date
   const groupedLogs = habit.completionLogs.reduce((acc, log) => {
@@ -179,6 +253,8 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
     acc[date].push(log);
     return acc;
   }, {} as Record<string, HabitLog[]>);
+
+  const isPending = logMutation.isPending || removeMutation.isPending;
 
   return (
     <>
@@ -197,102 +273,237 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
               Back to Habits
             </motion.button>
 
-            {/* Header */}
+            {/* Habit Header Card */}
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col sm:flex-row sm:items-start justify-between gap-4"
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-primary tracking-tight">
-                    {habit.name}
-                  </h1>
-                  {habit.completedToday && (
-                    <Badge className="bg-primary/10 text-primary border-0">
-                      <CheckCircle2 className="mr-1 h-3 w-3" />
-                      Done Today
-                    </Badge>
-                  )}
-                </div>
-                {habit.description && (
-                  <p className="text-muted-foreground">{habit.description}</p>
-                )}
-                <div className="flex items-center gap-2 mt-3">
-                  <Badge variant="outline" className="capitalize">
-                    {habit.frequency}
-                  </Badge>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-0">
-                    <Flame className="mr-1 h-3 w-3" />
-                    {habit.streak_count} streak
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Complete Button */}
-              {habit.completedToday ? (
-                <button
-                  onClick={handleRemoveCompletion}
-                  disabled={isPending}
-                  className="inline-flex items-center justify-center rounded-xl bg-muted px-5 py-2.5 text-sm font-medium hover:bg-muted/80 transition-colors"
-                >
-                  {isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="mr-2 h-4 w-4 text-primary" />
-                  )}
-                  Completed
-                </button>
-              ) : (
-                <button
-                  onClick={() => setIsCompleteDialogOpen(true)}
-                  className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/25"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Complete Today
-                </button>
-              )}
+              <Card className="glass border-border/30">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-2xl font-primary">
+                          {habit.name}
+                        </CardTitle>
+                        <button
+                          onClick={() => {
+                            setEditName(habit.name);
+                            setEditDescription(habit.description || "");
+                            setEditFrequency(habit.frequency);
+                            setIsEditDialogOpen(true);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                          title="Edit habit"
+                        >
+                          <Pencil className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                      </div>
+                      {habit.description && (
+                        <CardDescription className="text-base">
+                          {habit.description}
+                        </CardDescription>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{habit.frequency}</Badge>
+                        <Badge
+                          variant="outline"
+                          className="bg-primary/10 text-primary border-primary/20"
+                        >
+                          <Flame className="mr-1 h-3 w-3" />
+                          {habit.current_streak} day streak
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-3">
+                    {!habit.completedToday ? (
+                      <button
+                        onClick={() => setIsCompleteDialogOpen(true)}
+                        disabled={isPending}
+                        className="flex-1 inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-primary/25"
+                      >
+                        {isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                        )}
+                        Mark Complete for Today
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setIsRemoveDialogOpen(true)}
+                        disabled={isPending}
+                        className="flex-1 inline-flex items-center justify-center rounded-xl bg-muted px-6 py-3 text-sm font-medium hover:bg-muted/80 disabled:opacity-50 transition-colors"
+                      >
+                        {isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <XCircle className="mr-2 h-4 w-4" />
+                        )}
+                        Remove Today's Completion
+                      </button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
 
-            {/* Completion Dialog */}
-            <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
+            {/* Complete Dialog */}
+            <Dialog
+              open={isCompleteDialogOpen}
+              onOpenChange={setIsCompleteDialogOpen}
+            >
               <DialogContent className="glass border-border sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="font-primary text-xl flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                    Complete Habit
+                  <DialogTitle className="font-primary">
+                    Complete {habit.name}
                   </DialogTitle>
-                  <DialogDescription>{habit.name}</DialogDescription>
+                  <DialogDescription>
+                    Add an optional note about today's completion
+                  </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">
-                      Notes <span className="text-muted-foreground">(optional)</span>
-                    </Label>
-                    <Textarea
-                      placeholder="How did it go? Any reflections..."
-                      value={completionNote}
-                      onChange={(e) => setCompletionNote(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
+                <div className="py-4">
+                  <Textarea
+                    placeholder="How did it go? (optional)"
+                    value={completionNote}
+                    onChange={(e) => setCompletionNote(e.target.value)}
+                    rows={3}
+                  />
                 </div>
-                <DialogFooter className="gap-2 sm:gap-0">
+                <DialogFooter>
                   <button
-                    className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+                    type="button"
                     onClick={() => setIsCompleteDialogOpen(false)}
+                    className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
                     onClick={handleComplete}
                     disabled={isPending}
+                    className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
                   >
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Mark Complete
                   </button>
                 </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Remove Completion Dialog */}
+            <Dialog
+              open={isRemoveDialogOpen}
+              onOpenChange={setIsRemoveDialogOpen}
+            >
+              <DialogContent className="glass border-border sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="font-primary">
+                    Remove Completion
+                  </DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to remove today's completion? This will reset your streak if it was active today.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <button
+                    type="button"
+                    onClick={() => setIsRemoveDialogOpen(false)}
+                    className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRemoveCompletion}
+                    disabled={isPending}
+                    className="inline-flex items-center justify-center rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 transition-colors"
+                  >
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Remove
+                  </button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Edit Habit Dialog */}
+            <Dialog
+              open={isEditDialogOpen}
+              onOpenChange={setIsEditDialogOpen}
+            >
+              <DialogContent className="glass border-border sm:max-w-md">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleEdit();
+                  }}
+                >
+                  <DialogHeader>
+                    <DialogTitle className="font-primary">
+                      Edit Habit
+                    </DialogTitle>
+                    <DialogDescription>
+                      Update your habit details
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Habit Name</Label>
+                      <Input
+                        placeholder="e.g., Morning Exercise"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        autoFocus
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Description{" "}
+                        <span className="text-muted-foreground">(optional)</span>
+                      </Label>
+                      <Input
+                        placeholder="Brief description"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Frequency</Label>
+                      <Select
+                        value={editFrequency}
+                        onValueChange={(value: HabitFrequency) => setEditFrequency(value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditDialogOpen(false)}
+                      className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={updateMutation.isPending || !editName.trim()}
+                      className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Changes
+                    </button>
+                  </DialogFooter>
+                </form>
               </DialogContent>
             </Dialog>
 
@@ -313,7 +524,10 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-1">
-                  <Progress value={stats ? stats.completion_rate_7d * 100 : 0} className="h-1" />
+                  <Progress
+                    value={stats ? stats.completion_rate_7d * 100 : 0}
+                    className="h-1"
+                  />
                 </CardContent>
               </Card>
 
@@ -327,7 +541,10 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-1">
-                  <Progress value={stats ? stats.completion_rate_30d * 100 : 0} className="h-1" />
+                  <Progress
+                    value={stats ? stats.completion_rate_30d * 100 : 0}
+                    className="h-1"
+                  />
                 </CardContent>
               </Card>
 
@@ -366,7 +583,9 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Brain className="h-5 w-5 text-accent" />
-                    <CardTitle className="text-lg font-primary">AI Prediction</CardTitle>
+                    <CardTitle className="text-lg font-primary">
+                      AI Prediction
+                    </CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -374,8 +593,23 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                     <div className="flex items-center gap-3 text-muted-foreground">
                       <Sparkles className="h-5 w-5 text-accent" />
                       <span>
-                        AI insights will be available in <strong className="text-foreground">{daysUntilPrediction} days</strong>.
-                        Keep completing your habit to unlock predictions!
+                        AI insights will be available in{" "}
+                        <strong className="text-foreground">
+                          {daysUntilPrediction} days
+                        </strong>
+                        . Keep completing your habit to unlock predictions!
+                      </span>
+                    </div>
+                  ) : isPredictionLoading ? (
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                      <span>Loading prediction...</span>
+                    </div>
+                  ) : predictionError ? (
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <Brain className="h-5 w-5 text-destructive" />
+                      <span>
+                        AI service is currently unavailable. Please try again later.
                       </span>
                     </div>
                   ) : prediction ? (
@@ -388,7 +622,10 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                           {prediction.probability_percent}
                         </span>
                       </div>
-                      <Progress value={prediction.probability * 100} className="h-2" />
+                      <Progress
+                        value={prediction.probability * 100}
+                        className="h-2"
+                      />
                       <p className="text-sm text-muted-foreground">
                         {getPredictionMessage(prediction.probability)}
                       </p>
@@ -398,16 +635,6 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                           Predictions update every 24 hours
                         </span>
                       </div>
-                    </div>
-                  ) : predictionLoaded && predictionError ? (
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <Brain className="h-5 w-5 text-destructive" />
-                      <span>{predictionError}</span>
-                    </div>
-                  ) : !predictionLoaded ? (
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin text-accent" />
-                      <span>Loading prediction...</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 text-muted-foreground">
@@ -429,11 +656,11 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg font-primary">Completion History</CardTitle>
+                    <CardTitle className="text-lg font-primary">
+                      Completion History
+                    </CardTitle>
                   </div>
-                  <CardDescription>
-                    Last 30 days of completions
-                  </CardDescription>
+                  <CardDescription>Last 30 days of completions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {habit.completionLogs.length === 0 ? (
@@ -457,10 +684,13 @@ export function HabitDetailClient({ initialHabit, initialStats }: HabitDetailCli
                                 <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm text-muted-foreground">
-                                    {new Date(log.completed_at).toLocaleTimeString("en-US", {
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                    })}
+                                    {new Date(log.completed_at).toLocaleTimeString(
+                                      "en-US",
+                                      {
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                      }
+                                    )}
                                   </p>
                                   {log.note && (
                                     <div className="flex items-start gap-2 mt-2">

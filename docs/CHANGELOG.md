@@ -133,6 +133,513 @@
 
 ---
 
+## [0.38.0] - 2026-01-28
+
+### Highlights
+- Complete redesign of dashboard settings with a modern flat layout, improved navigation, and modular sections for better organization and user experience.
+
+### Added
+- New modular settings pages for: profile, connections, security, onboarding, privacy, theme, custom themes, notifications, general, subscription, billing history, and delete account.
+- `SidebarRightWrapper` and `SettingsLayoutWrapper` for consistent layout and navigation.
+- Toast notifications for enhanced user feedback.
+- Improved mobile navigation for settings sections.
+
+### Changed
+- Updated routing to redirect legacy settings pages to the new structure.
+- Refactored settings layout for flat-design consistency and improved UX in account linking, notifications, and theme selection.
+- Dashboard layout updated to integrate new sidebar and settings wrappers.
+
+### Fixed
+- Minor UX inconsistencies in previous settings pages.
+
+### Deprecated
+- Legacy settings page files and routing.
+
+### Security
+- Enhanced account and notification settings management.
+
+### Breaking Changes
+- Old settings page URLs are redirected; integrations using previous layout/components need to be updated to use the new wrappers and page structure.
+
+---
+
+## [0.37.0] - 2026-01-28
+
+### Highlights
+- Centralized journal storage and strengthened account security, providing safer data handling and improved user control over account settings.
+
+### Added
+- `lib/journal-storage.ts` for centralized localStorage handling of journal data.
+- Account deletion modal for secure account removal.
+- Session info component to display active session details.
+- Server actions for password updates and account deletion.
+- Enhanced security settings UI for better usability and clarity.
+
+### Changed
+- Updated all journal components and pages to use centralized storage utilities.
+- Refined Supabase middleware for improved route protection.
+- Updated connected accounts logic in settings.
+
+### Fixed
+- None (refactors and new features only).
+
+### Deprecated
+- None.
+
+### Security
+- Strengthened account protection via session handling, password updates, and deletion actions.
+
+### Breaking Changes
+- Components using previous local journal storage methods must now use `lib/journal-storage.ts` utilities.
+
+---
+
+## [0.36.0] - 2026-01-28
+
+### Highlights
+- Added visibility into backend ML service status with a dashboard-integrated indicator and a warm-up hook, improving user feedback and system readiness.
+
+### Added
+- `ServiceStatusIndicator` component to display ML service status.
+- `useWarmServices` hook to pre-warm and manage ML services.
+- Integration of service status indicator into the site header.
+
+### Changed
+- Minor text fixes for apostrophe escaping and quote formatting across dashboard and landing components.
+
+### Fixed
+- None (UI/UX improvements only).
+
+### Deprecated
+- None.
+
+### Security
+- None.
+
+### Breaking Changes
+- None.
+
+---
+
+## [0.35.0] - 2026-01-27
+
+### Highlights
+- Major dashboard update introducing interactive widgets for mood tracking, habits, journaling, and productivity summaries, providing users with richer insights and actionable prompts.
+
+### Added
+- New dashboard components:
+  - `MoodInputCard` for tracking user mood.
+  - `HabitsWidget` for viewing habit progress.
+  - `QuickJournalCard` for rapid journaling.
+  - `ReflectionPrompt` for daily reflection suggestions.
+  - `ProductivitySummary` for summarizing daily productivity.
+- Skeleton loaders for all new dashboard widgets.
+- Updated dashboard grid layout to accommodate the new widgets.
+
+### Changed
+- Refactored `dashboard/index` to export new components and use the new grid layout.
+
+### Fixed
+- None (new features only).
+
+### Deprecated
+- None.
+
+### Security
+- None.
+
+### Breaking Changes
+- Any code relying on the old dashboard layout may need updates to integrate with the new grid and widget structure.
+
+---
+
+## [0.34.0] - 2026-01-27
+
+### Highlights
+- Simplified the calendar interface by removing unused filter and drawer components, improving maintainability and reducing UI clutter.
+
+### Added
+- None.
+
+### Changed
+- Removed calendar filter logic from `CalendarWithFilters`.
+- Deleted unused `calendar-drawer` component.
+- Removed calendar sheet and related logic from `SiteHeader`.
+
+### Fixed
+- None (code cleanup and simplification).
+
+### Deprecated
+- Calendar filter and drawer UI/logic are now removed and no longer supported.
+
+### Security
+- None.
+
+### Breaking Changes
+- Any code or components depending on the removed calendar drawer or filter logic will need to be updated or removed.
+
+---
+
+## [0.33.0] - 2026-01-27
+
+### Highlights
+- Improved reliability of authentication redirects by correctly targeting the production deployment URL on Vercel.
+
+### Added
+- None.
+
+### Changed
+- Updated authentication redirect URL construction to use `VERCEL_PROJECT_PRODUCTION_URL` instead of `VERCEL_URL` for production environments.
+
+### Fixed
+- Incorrect or inconsistent redirect behavior in production caused by environment URL mismatches.
+
+### Deprecated
+- Usage of `VERCEL_URL` for production redirect logic.
+
+### Security
+- Ensures authentication redirects consistently resolve to the intended production domain, reducing the risk of misdirected auth flows.
+
+### Breaking Changes
+- None (requires the `VERCEL_PROJECT_PRODUCTION_URL` environment variable to be set in production).
+
+---
+
+## [0.32.0] - 2026-01-27
+
+### Highlights
+- Introduced a redesigned journal experience with a new AI insights UI, laying the groundwork for future intelligence features while significantly improving writing and reading UX.
+
+### Added
+- New **Journal Insights** page UI showcasing emotional analysis, key phrases, and suggestions (UI-only, static data).
+- New journal UI components including journal cards, emotional aura visualization, reading progress indicator, and sidebar content.
+- Local draft auto-save behavior for journal entries (client-side only).
+- Keyboard shortcuts and keyboard helper UI for habit creation and completion dialogs.
+
+### Changed
+- Refactored journal **new** and **detail** pages for a smoother editing and reading experience.
+- Improved mood selection and visualization in journal entries.
+- Enhanced habit creation and completion dialogs with better form handling and accessibility-focused interactions.
+
+### Fixed
+- Minor layout inconsistencies and UX friction in journal and habit-related views.
+
+### Deprecated
+- None.
+
+### Security
+- None (all features are UI-only and run locally with no persistence or server interaction).
+
+### Breaking Changes
+- None.
+
+---
+
+## [0.31.0] - 2026-01-27
+
+### Highlights
+- Auth redirects now correctly resolve in all Vercel environments, eliminating deployment-specific login issues.
+
+### Added
+- None.
+
+### Changed
+- Updated authentication redirect URL generation to use the `VERCEL_URL` environment variable instead of `NEXT_PUBLIC_SITE_URL`.
+
+### Fixed
+- Incorrect redirect behavior after login, signup, and OAuth flows in Vercel deployments.
+- Edge cases where users were redirected to invalid or non-production URLs.
+
+### Deprecated
+- Using `NEXT_PUBLIC_SITE_URL` for authentication redirects in Vercel-hosted environments.
+
+### Security
+- Ensures authentication flows redirect users only to the correct deployment domain, reducing the risk of misrouted auth callbacks.
+
+### Breaking Changes
+- Deployments must rely on `VERCEL_URL` being available for auth redirects; custom setups should verify environment configuration.
+
+---
+
+## [0.30.0] - 2026-01-07
+### Highlights
+- Major visual and structural overhaul of the AI dashboard, paired with a clear revamp of billing plans to align product direction with monetization.
+
+### Added
+- New AI dashboard sections including:
+  - Roadmap overview
+  - “Next best actions” guidance
+  - Agent-based views for future AI workflows
+- Animated backgrounds and mouse-responsive interactions on the AI dashboard.
+- New Starter and Premium billing plans with updated feature breakdowns.
+
+### Changed
+- AI dashboard UI/UX redesigned for clearer positioning and feature previewing.
+- Billing settings updated with revised pricing structure and plan descriptions.
+- Feature lists adjusted to better differentiate free vs paid tiers.
+
+### Fixed
+- No explicit bug fixes included in this update.
+
+### Deprecated
+- Previous billing plan structure and feature definitions.
+
+### Security
+- No security-related changes.
+
+### Breaking Changes
+- Billing plan changes may affect existing users relying on previous plan definitions and feature availability; manual review of entitlements may be required.
+
+---
+
+## [0.29.0] - 2026-01-06
+### Highlights
+- Introduces a full journal entry CRUD system and significantly upgrades the AI companion demo — laying groundwork for future user-facing features, even though much of this remains code-only for now.
+
+### Added
+- Journal entry CRUD implementation using local storage.
+- New journal entry creation and detail pages.
+- Mood selection support for journal entries.
+- Rich text editor for journal content.
+- Context and supporting components for journal functionality.
+- Enhanced AI companion demo with:
+  - Step-by-step interactive showcase
+  - Animated UI elements
+  - Improved visual presentation
+- Journal listing logic with demo analysis and AI model selection (currently not exposed in UI).
+
+### Changed
+- Journal listing page layout refactored for richer analysis and future AI integration.
+- AI demo UI updated for better storytelling and interaction flow.
+
+### Fixed
+- No user-facing bug fixes; changes are primarily additive and structural.
+
+### Deprecated
+- None.
+
+### Security
+- No security-related changes (journal data currently stored locally only).
+
+### Breaking Changes
+- None externally, but internal journal architecture has changed and may require refactoring when persistence moves from local storage to backend storage.
+
+---
+
+## [0.28.0] - 2025-12-16
+### Highlights
+- Strengthens onboarding by capturing long-term goals and reflecting them across the app.
+- Cleans up and stabilizes habits, journal, and privacy flows with clearer UX and future-ready structure.
+
+### Added
+- Long-term goal step in onboarding.
+- User’s long-term goal displayed in the navigation.
+- SEO-friendly slugs for habits.
+- Updated habit navigation using slug-based routing.
+- “Coming soon” feedback for security-related actions.
+
+### Changed
+- Journal page redesigned with a simplified layout and “coming soon” state.
+- Privacy settings UI simplified by removing toggle-based controls.
+- Security settings updated to use toast feedback instead of inactive actions.
+- Increased glassmorphism blur for improved visual depth.
+- Updated loading messages for better clarity.
+- Removed notifications from onboarding and settings flows.
+- Bumped Next.js to a newer version.
+
+### Fixed
+- Navigation inconsistencies related to habits and onboarding flow.
+- Minor UX issues across onboarding, journal, and settings pages.
+
+### Deprecated
+- Old habit URL structure without slugs.
+- Notification-related UI in onboarding and settings.
+
+### Security
+- No direct security fixes; settings now clearly indicate unavailable features instead of exposing inactive controls.
+
+### Breaking Changes
+- Habit URLs now rely on slug-based routing, which may break existing deep links or bookmarks.
+
+---
+
+## [0.27.0] - 2025-12-15
+### Highlights
+- Introduces a public beta entry point and formal legal compliance pages.
+- Cleans up dashboard placeholders and improves auth-related UX consistency.
+
+### Added
+- New beta landing page at `/beta` with hero, features, and sharing sections.
+- Cookie Policy page at `/legal/cookie`.
+- Reusable legal layout component for policy and compliance pages.
+- Beta entry highlighted in main navigation.
+
+### Changed
+- Login and signup pages updated to include legal links.
+- Dashboard refined to remove placeholder and mock data.
+- Navigation updated to better surface beta access.
+- Minor improvements to authentication and settings flows.
+
+### Fixed
+- Small bugs related to auth handling and settings UI.
+- Inconsistencies caused by leftover placeholder content in the dashboard.
+
+### Security
+- Improved legal compliance by explicitly surfacing cookie usage and policies.
+
+### Breaking Changes
+- None.
+
+---
+
+## [0.26.0] - 2025-12-11
+### Highlights
+- Major overhaul of Habits and Tasks dashboards with modern client-side components.
+- Improves data handling, interaction flow, and visual clarity for daily productivity tracking.
+
+### Added
+- New client-based Habits and Tasks dashboard components.
+- Detailed habit and task views with richer interaction.
+- Custom hooks for habits and tasks data fetching and mutations.
+- Dialog-based interactions for creating and managing habits and tasks.
+- Progress tracking and prediction UI elements for habits.
+
+### Changed
+- Replaced legacy Habits and Tasks dashboard sections with new implementations.
+- Updated data fetching and mutation logic for better performance and consistency.
+- Improved overall UI/UX for habit and task management workflows.
+
+### Fixed
+- UI inconsistencies and interaction issues in the previous Habits and Tasks dashboards.
+- Data sync edge cases caused by older fetching logic.
+
+### Deprecated
+- Old Habits dashboard section and related legacy components.
+
+### Security
+- No direct security-related changes.
+
+### Breaking Changes
+- Removal of legacy Habits components may break any custom integrations or assumptions relying on the old structure.
+
+---
+
+## [0.25.0] - 2025-12-10
+### Highlights
+- Introduces an AI companion entry point, setting the foundation for future AI-powered features.
+- Refactors and modernizes settings navigation and layout for better scalability and usability.
+- Polishes landing, dashboard, and about pages for a more cohesive visual experience.
+
+### Added
+- New AI companion page at `/dashboard/ai` with a “coming soon” interface.
+- New Security section in Settings.
+- Redesigned Settings home page for clearer navigation and discoverability.
+- Client-side layout for Settings to improve navigation responsiveness.
+
+### Changed
+- Sidebar navigation updated to include the AI page and reflect new settings structure.
+- Settings area refactored with improved layout and navigation flow.
+- Landing and dashboard components received UI and layout refinements.
+- About page content and layout polished.
+- Glassmorphism styles improved across relevant UI surfaces.
+
+### Fixed
+- Minor UI inconsistencies across dashboard, landing, and settings pages.
+- Layout edge cases caused by previous settings structure.
+
+### Deprecated
+- Legacy settings home layout.
+
+### Security
+- No direct security fixes, but groundwork laid via the new Security settings section.
+
+### Breaking Changes
+- Any direct links or assumptions tied to the old settings home layout may need updating.
+
+---
+
+## [0.24.0] - 2025-12-08
+### Highlights
+- Complete UI revamp of the dashboard and settings for better clarity, scalability, and maintainability.
+- Dashboard is now modular and data-driven, making it easier to extend and reason about.
+- Settings are transformed into a full-featured control center instead of a basic config page.
+
+### Added
+- Modular dashboard components for:
+  - Stats overview
+  - Quick actions
+  - Activity feed
+  - Charts and summaries
+- New settings sections and components:
+  - Account (profile, goals, connected accounts)
+  - Appearance (theme and UI preferences)
+  - Billing & subscription management
+  - Notifications
+  - Privacy
+- Forms for profile updates, goal management, theme selection, and subscription settings.
+- Loading skeletons across dashboard and settings pages for smoother perceived performance.
+
+### Changed
+- Dashboard layout refactored to use composable, reusable components.
+- Settings pages rebuilt with dedicated content components per section.
+- Navigation and layout logic improved for consistency and usability.
+- Data fetching streamlined to reduce redundancy and improve performance.
+
+### Fixed
+- Inconsistent loading behavior across dashboard and settings pages.
+- Layout and navigation edge cases caused by legacy components.
+- Minor UI glitches introduced by unused or stale code.
+
+### Deprecated
+- Legacy dashboard layout and monolithic settings components.
+
+### Security
+- No direct security-related changes.
+
+### Breaking Changes
+- Custom extensions relying on the old dashboard or settings component structure will need updates.
+- Any direct imports from removed settings components must be refactored.
+
+---
+
+## [0.23.0] - 2025-12-06
+### Highlights
+- Major dashboard and routing reorganization to improve scalability and long-term maintainability.
+- Onboarding is now a guided, multi-step experience that actually captures user intent instead of being a checkbox flow.
+- Task and focus experiences are rebuilt with better UX, clearer states, and real-time feedback.
+
+### Added
+- Nested `(dashboard)` route group for dashboard and settings pages.
+- Multi-step onboarding flow with role selection and daily goals setup.
+- New `TaskDetailEditor` for richer task editing.
+- Loading skeletons for focus, task detail, and dashboard pages.
+- New task statistics and extended task status support.
+- Additional utility libraries and reusable UI components.
+
+### Changed
+- Dashboard and settings routes moved into a `(dashboard)` directory.
+- Focus and task detail pages replaced with redesigned versions.
+- Task actions refactored to support new statuses and analytics.
+- Calendar and task components reworked for improved usability and clarity.
+- Onboarding logic expanded and restructured for better user guidance.
+
+### Fixed
+- UX inconsistencies in task and calendar interactions.
+- Loading state gaps across dashboard-related pages.
+
+### Deprecated
+- Old dashboard route structure and legacy focus/task detail implementations.
+
+### Security
+- No direct security changes.
+
+### Breaking Changes
+- Existing links and imports pointing to the old dashboard or settings routes will break.
+- Any code relying on previous task statuses or task detail components must be updated.
+- Custom onboarding logic must be aligned with the new multi-step flow.
+
+---
+
 
 ## [0.22.0] - 2025-12-04
 ### Highlights
