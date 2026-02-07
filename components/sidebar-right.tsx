@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/sidebar"
 import { CalendarWithFilters } from "./calendar-with-filters"
 import { SidebarJournalContent } from "./journal/sidebar-journal-content"
-import { Task } from "@/types/database"
+import { Task, Journal } from "@/types/database"
 import { getTasks } from "@/app/actions/getTasks"
+import { getJournals } from "@/app/actions/journals"
 import { Button } from "./ui/button"
 import {
   Tooltip,
@@ -27,6 +28,7 @@ export function SidebarRight({
 }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const [tasks, setTasks] = React.useState<Task[]>([])
+  const [journals, setJournals] = React.useState<Journal[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [isMobileExpanded, setIsMobileExpanded] = React.useState(false)
@@ -34,22 +36,29 @@ export function SidebarRight({
   // Check if we're on a journal page
   const isJournalPage = pathname?.startsWith("/dashboard/journal")
 
-  // Fetch tasks on mount (for calendar view)
+  // Fetch data based on current page - only fetch what's needed to save server resources
   React.useEffect(() => {
-    async function fetchTasks() {
+    async function fetchData() {
       try {
-        const result = await getTasks()
-        if (result.data) {
-          setTasks(result.data)
+        if (isJournalPage) {
+          // Only fetch journals on journal pages
+          const journalsData = await getJournals()
+          setJournals(journalsData)
+        } else {
+          // Only fetch tasks on non-journal pages
+          const tasksResult = await getTasks()
+          if (tasksResult.data) {
+            setTasks(tasksResult.data)
+          }
         }
       } catch (error) {
-        console.error('Failed to fetch tasks:', error)
+        console.error('Failed to fetch data:', error)
       } finally {
         setIsLoading(false)
       }
     }
-    fetchTasks()
-  }, [])
+    fetchData()
+  }, [isJournalPage])
 
   return (
     <>
@@ -101,7 +110,7 @@ export function SidebarRight({
               >
                 <div className="max-h-[50vh] overflow-y-auto px-2 pb-4">
                   {isJournalPage ? (
-                    <SidebarJournalContent />
+                    <SidebarJournalContent journals={journals} />
                   ) : isLoading ? (
                     <div className="flex flex-col items-center justify-center gap-2 py-8">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -211,7 +220,7 @@ export function SidebarRight({
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <SidebarJournalContent />
+                  <SidebarJournalContent journals={journals} />
                 </motion.div>
               ) : (
                 <motion.div

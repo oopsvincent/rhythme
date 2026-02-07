@@ -107,16 +107,25 @@ export interface HabitWithStats extends Habit {
 // Journals 
 
 export interface Journal{
-    journal_id: number
+    journal_id: string
     user_id: string
     title: string
     content: string
     sentiment_score: number
     created_at: string
-    mood_tages: object
+    updated_at: string
+    mood_tags: MoodTags[]
 }
 
-// export type MoodTags = "happy" | "sad" | "anxious" | "moody" | "desperate" | "angry" | "other" | ""
+export interface JournalInput {
+    title: string
+    content: string
+    created_at: string
+    updated_at: string
+    mood_tags: MoodTags
+}
+
+export type MoodTags = "happy" | "calm" | "neutral" | "sad" | "frustrated" | "excited" | "anxious"
 
 
 // Generic API response type

@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site-header"
 import { Separator } from "@/components/ui/separator"
 import { getUser } from "../../actions/auth"
 import { getGreeting } from "@/utils/getGreetings"
+import { getJournals } from "@/app/actions/journals"
 
 // Dashboard components
 import {
@@ -24,6 +25,7 @@ import {
 export default async function DashboardPage() {
   const user = await getUser()
   const greetings = getGreeting()
+  const journals = await getJournals()
 
   return (
     <>
@@ -86,7 +88,7 @@ export default async function DashboardPage() {
               <div className="flex flex-col gap-4 mb-8 sm:mb-0">
                 {/* Quick Journal */}
                 <Suspense fallback={<QuickJournalSkeleton />}>
-                  <QuickJournalCard />
+                  <QuickJournalCard journals={journals} />
                 </Suspense>
 
                 {/* Today's Tasks Overview */}

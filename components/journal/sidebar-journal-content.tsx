@@ -1,3 +1,21 @@
+/**
+ * =============================================================================
+ * SIDEBAR JOURNAL CONTENT COMPONENT
+ * =============================================================================
+ * 
+ * SSR Pattern: Receives journals as props from parent SidebarRight component.
+ * Displays journal stats, recent entries, and writing prompts.
+ * 
+ * LOCAL-FIRST MVP INTEGRATION:
+ * - Search for "LOCAL_OPS:" comments for sections to uncomment/modify
+ * - Will need to: merge server data with local storage
+ * - Show offline indicator when not connected
+ * - Display pending sync count if any
+ * 
+ * See @/lib/journal-storage.ts for local storage utilities.
+ * =============================================================================
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,10 +35,35 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import {
-  getStoredJournals,
-  JournalEntry
-} from "@/lib/journal-storage";
+// LOCAL_OPS: Keep for future local-first implementation
+// import {
+//   getStoredJournals,
+//   JournalEntry
+// } from "@/lib/journal-storage";
+import { Journal, MoodTags } from "@/types/database";
+
+// Normalized entry type for component use
+interface NormalizedEntry {
+  id: string;
+  title: string;
+  body: string;
+  mood: MoodTags;
+  moodIntensity?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Convert Journal from DB to normalized entry
+function normalizeJournal(journal: Journal): NormalizedEntry {
+  return {
+    id: journal.journal_id,
+    title: journal.title,
+    body: journal.content,
+    mood: journal.mood_tags?.[0] || "neutral",
+    createdAt: journal.created_at,
+    updatedAt: journal.updated_at,
+  };
+}
 
 // Writing prompts
 const writingPrompts = [
@@ -39,7 +82,7 @@ function getRandomPrompt(): string {
 }
 
 // Calculate streak from entries
-function calculateStreak(entries: JournalEntry[]): number {
+function calculateStreak(entries: NormalizedEntry[]): number {
   if (entries.length === 0) return 0;
   
   const sortedEntries = [...entries].sort(
@@ -71,7 +114,7 @@ function calculateStreak(entries: JournalEntry[]): number {
 }
 
 // Get dominant mood from recent entries
-function getDominantMood(entries: JournalEntry[]): MoodType | null {
+function getDominantMood(entries: NormalizedEntry[]): MoodType | null {
   if (entries.length === 0) return null;
   
   const moodCounts: Partial<Record<MoodType, number>> = {};
@@ -92,17 +135,26 @@ function getDominantMood(entries: JournalEntry[]): MoodType | null {
   return dominant;
 }
 
-export function SidebarJournalContent() {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface SidebarJournalContentProps {
+  journals: Journal[];
+}
+
+export function SidebarJournalContent({ journals }: SidebarJournalContentProps) {
+  // Normalize journals from DB format
+  const entries = journals.map(normalizeJournal);
+  
   const [prompt, setPrompt] = useState("");
 
+  // LOCAL_OPS: useEffect for loading from localStorage - removed for SSR
+  // useEffect(() => {
+  //   const storedEntries = getStoredJournals();
+  //   setEntries(storedEntries);
+  //   setPrompt(getRandomPrompt());
+  //   setIsLoading(false);
+  // }, []);
+
   useEffect(() => {
-    // Load entries from localStorage
-    const storedEntries = getStoredJournals();
-    setEntries(storedEntries);
     setPrompt(getRandomPrompt());
-    setIsLoading(false);
   }, []);
 
   const streak = calculateStreak(entries);
@@ -115,15 +167,6 @@ export function SidebarJournalContent() {
   const recentEntries = entries
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-2 py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <span className="text-xs text-muted-foreground">Loading journal...</span>
-      </div>
-    );
-  }
 
   return (
     <motion.div
