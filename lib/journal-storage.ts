@@ -1,10 +1,33 @@
+/**
+ * =============================================================================
+ * JOURNAL LOCAL STORAGE UTILITIES
+ * =============================================================================
+ * 
+ * LOCAL-FIRST MVP: This file contains all localStorage operations for journals.
+ * Currently UNPLUGGED from the SSR implementation but preserved for future use.
+ * 
+ * TO ENABLE LOCAL-FIRST:
+ * 1. Search for "LOCAL_OPS:" comments in journal client components
+ * 2. Uncomment the imports and function calls
+ * 3. Implement sync logic to merge local/server data
+ * 4. Add offline detection and queue management
+ * 
+ * REQUIRED ADDITIONS FOR LOCAL-FIRST:
+ * - getPendingSyncEntries(): Get entries not yet synced to server
+ * - markAsSynced(id): Mark entry as synced after successful server write
+ * - mergeWithServerData(serverData): Merge local and server journals
+ * - clearLocalData(): Clear local storage after sync
+ * =============================================================================
+ */
+
 import { MoodType } from "@/components/journal/mood-selector";
+import { MoodTags } from "@/types/database";
 
 export interface JournalEntry {
   id: string;
   title: string;
   body: string;
-  mood: MoodType;
+  mood: MoodTags;
   moodIntensity?: number;
   createdAt: string;
   updatedAt: string;

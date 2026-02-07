@@ -3,9 +3,10 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { MoodType } from "./mood-selector";
+import { MoodTags } from "@/types/database";
 
 // Mood color mappings for the aura effect
-const moodColors: Record<MoodType, { primary: string; secondary: string }> = {
+const moodColors: Record<MoodTags, { primary: string; secondary: string }> = {
   happy: { primary: "#FFD93D", secondary: "#F7B32B" },
   calm: { primary: "#6BCB77", secondary: "#4ECCA3" },
   neutral: { primary: "#9CA3AF", secondary: "#6B7280" },

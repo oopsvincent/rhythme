@@ -1,3 +1,21 @@
+/**
+ * =============================================================================
+ * NEW JOURNAL ENTRY PAGE
+ * =============================================================================
+ * 
+ * SSR Pattern: Uses createJournal server action to persist to database.
+ * Draft auto-saving to localStorage is kept for UX (not LOCAL_OPS).
+ * 
+ * LOCAL-FIRST MVP INTEGRATION:
+ * - Search for "LOCAL_OPS:" comments for sections to uncomment/modify
+ * - Will need to: save to local storage AND queue for sync
+ * - Handle offline by saving locally and syncing when online
+ * - Show sync status indicator (pending/synced/failed)
+ * 
+ * See @/lib/journal-storage.ts for local storage utilities.
+ * =============================================================================
+ */
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -22,10 +40,10 @@ import {
   CloudOff,
 } from "lucide-react";
 
-import {
-  addJournalEntry,
-  JournalEntry
-} from "@/lib/journal-storage";
+// LOCAL_OPS: Keep for future local-first implementation
+// import { addJournalEntry, JournalEntry } from "@/lib/journal-storage";
+import { createJournal } from "@/app/actions/journals";
+import { JournalInput, MoodTags } from "@/types/database";
 
 // Local storage key
 const DRAFT_STORAGE_KEY = "rhythme_journal_draft";
@@ -44,7 +62,7 @@ export default function NewJournalPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [mood, setMood] = useState<MoodType | null>(null);
+  const [mood, setMood] = useState<MoodTags | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -68,7 +86,12 @@ export default function NewJournalPage() {
     const draft = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (draft) {
       try {
-        const { title: dTitle, body: dBody, mood: dMood, savedAt } = JSON.parse(draft);
+        const {
+          title: dTitle,
+          body: dBody,
+          mood: dMood,
+          savedAt,
+        } = JSON.parse(draft);
         if (dTitle) setTitle(dTitle);
         if (dBody) setBody(dBody);
         if (dMood) setMood(dMood);
@@ -89,18 +112,32 @@ export default function NewJournalPage() {
     if (!canSave || !mood) return;
 
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const newEntry: JournalEntry = {
-      id: Date.now().toString(),
+    const result = await createJournal({
       title: title.trim(),
-      body,
-      mood,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      content: body,
+      mood_tags: mood,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
-    addJournalEntry(newEntry);
+    if (result.error) {
+      console.error("Failed to create journal:", result.error);
+      setIsSaving(false);
+      return;
+    }
+
+    // LOCAL_OPS: Add to localStorage - commented for SSR
+    // const newEntry: JournalEntry = {
+    //   id: Date.now().toString(),
+    //   title: title.trim(),
+    //   body,
+    //   mood,
+    //   createdAt: new Date().toISOString(),
+    //   updatedAt: new Date().toISOString(),
+    // };
+    // addJournalEntry(newEntry);
+
     localStorage.removeItem(DRAFT_STORAGE_KEY);
 
     setIsSaving(false);
@@ -117,7 +154,7 @@ export default function NewJournalPage() {
     const now = new Date();
     const diffMs = now.getTime() - lastSaved.getTime();
     const diffSec = Math.floor(diffMs / 1000);
-    
+
     if (diffSec < 5) return "just now";
     if (diffSec < 60) return `${diffSec}s ago`;
     const diffMin = Math.floor(diffSec / 60);
@@ -148,7 +185,11 @@ export default function NewJournalPage() {
             >
               <div className="flex items-center gap-3">
                 <Link href="/dashboard/journal">
-                  <Button variant="ghost" size="icon" className="h-9 w-9 md:h-10 md:w-10 rounded-xl">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 md:h-10 md:w-10 rounded-xl"
+                  >
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
                 </Link>
@@ -172,7 +213,7 @@ export default function NewJournalPage() {
                 size="sm"
                 className={cn(
                   "gap-2 transition-all duration-300",
-                  canSave && !isSaving && "shadow-lg hover:shadow-primary/25"
+                  canSave && !isSaving && "shadow-lg hover:shadow-primary/25",
                 )}
               >
                 {isSaving ? (
@@ -198,7 +239,9 @@ export default function NewJournalPage() {
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <HardDrive className="w-3.5 h-3.5 text-primary" />
                 <span>
-                  <span className="font-medium text-foreground">Auto-saved locally</span>
+                  <span className="font-medium text-foreground">
+                    Auto-saved locally
+                  </span>
                   {lastSaved && <span> · {formatLastSaved()}</span>}
                 </span>
               </div>
@@ -267,8 +310,8 @@ export default function NewJournalPage() {
                 {!title.trim() && mood === null
                   ? "Add a title and select your mood to save"
                   : !title.trim()
-                  ? "Add a title to save"
-                  : "Select your mood to save"}
+                    ? "Add a title to save"
+                    : "Select your mood to save"}
               </motion.p>
             )}
           </div>
