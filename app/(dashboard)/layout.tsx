@@ -10,6 +10,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { SettingsProvider } from "@/components/providers/settings";
+import { FocusWidgetProvider } from "@/components/providers/focus-widget-provider";
 import OnboardingCheck from "@/components/OnboardingCheck";
 import AppSidebarWrapper from "@/components/providers/appSidebarWrapper";
 
@@ -53,31 +54,33 @@ export default async function DashboardLayout({
 
   return (
     <SettingsProvider initialData={initialData}>
-      <SidebarProvider
-        style={
-          {
-            "--sidebar-width": "calc(var(--spacing) * 72)",
-            "--header-height": "calc(var(--spacing) * 12)",
-          } as React.CSSProperties
-        }
-      >
-        <AppSidebarWrapper variant="inset" />
-        <SidebarInset>
-          <ContextMenu>
-            <ContextMenuTrigger asChild>
-              
-              <OnboardingCheck><main className="flex flex-1 flex-col">{children}</main></OnboardingCheck>
-            </ContextMenuTrigger>
-            <ContextMenuContent>
-              <ContextMenuItem>Copy</ContextMenuItem>
-              <ContextMenuItem>Paste</ContextMenuItem>
-              <ContextMenuItem>Share</ContextMenuItem>
-              <ContextMenuItem>Delete</ContextMenuItem>
-            </ContextMenuContent>
-          </ContextMenu>
-        </SidebarInset>
-        <SidebarRightWrapper />
-      </SidebarProvider>
+      <FocusWidgetProvider>
+        <SidebarProvider
+          style={
+            {
+              "--sidebar-width": "calc(var(--spacing) * 72)",
+              "--header-height": "calc(var(--spacing) * 12)",
+            } as React.CSSProperties
+          }
+        >
+          <AppSidebarWrapper variant="inset" />
+          <SidebarInset>
+            <ContextMenu>
+              <ContextMenuTrigger asChild>
+                
+                <OnboardingCheck><main className="flex flex-1 flex-col">{children}</main></OnboardingCheck>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem>Copy</ContextMenuItem>
+                <ContextMenuItem>Paste</ContextMenuItem>
+                <ContextMenuItem>Share</ContextMenuItem>
+                <ContextMenuItem>Delete</ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+          </SidebarInset>
+          <SidebarRightWrapper />
+        </SidebarProvider>
+      </FocusWidgetProvider>
     </SettingsProvider>
   );
 }
