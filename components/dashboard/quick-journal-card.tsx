@@ -71,8 +71,9 @@ function normalizeJournal(journal: Journal): NormalizedEntry {
   return {
     id: journal.journal_id,
     title: journal.title,
-    body: journal.content,
-    mood: journal.mood_tags?.[0] || "neutral",
+    // If iv is present, content is encrypted - show placeholder
+    body: journal.iv ? "[Encrypted]" : journal.content,
+    mood: journal.mood_tags?.mood || "neutral",
     createdAt: journal.created_at,
   };
 }

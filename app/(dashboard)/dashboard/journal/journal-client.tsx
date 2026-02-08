@@ -6,23 +6,20 @@
  * SSR Pattern: Receives journals as props from server component page.tsx.
  * No useEffect for data fetching - data comes pre-loaded from server.
  * 
- * LOCAL-FIRST MVP INTEGRATION:
- * - Search for "LOCAL_OPS:" comments for sections to uncomment/modify
- * - Will need to: merge server data with local storage on mount
- * - Handle offline scenarios by falling back to local storage
- * - Sync local changes when coming back online
- * 
- * See @/lib/journal-storage.ts for local storage utilities.
+ * ENCRYPTION: Journals may be encrypted. Content is decrypted client-side
+ * using the key derived from user's password and stored in memory.
  * =============================================================================
  */
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiteHeader } from "@/components/site-header";
 import { JournalCard } from "@/components/journal/journal-card";
 import { MoodType, moodIcons } from "@/components/journal/mood-selector";
+import { JournalUnlockModal } from "@/components/journal/journal-unlock-modal";
+import { JournalPassphraseSetup } from "@/components/journal/journal-passphrase-setup";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -35,14 +32,12 @@ import {
   BookOpen,
   TrendingUp,
   X,
+  Lock,
+  Shield,
 } from "lucide-react";
-
-// LOCAL_OPS: Keep for future local-first implementation
-// import {
-//   getStoredJournals,
-//   JournalEntry
-// } from "@/lib/journal-storage";
 import { Journal, MoodTags } from "@/types/database";
+import { decryptJournal } from "@/lib/crypto";
+import { useJournalEncryptionStore } from "@/store/useJournalEncryptionStore";
 
 // Normalized entry type for component use
 interface NormalizedEntry {
@@ -53,17 +48,22 @@ interface NormalizedEntry {
   moodIntensity?: number;
   createdAt: string;
   updatedAt: string;
+  isEncrypted: boolean;
+  decryptionFailed?: boolean;
 }
 
-// Convert Journal from DB to normalized entry
+// Convert Journal from DB to normalized entry (without decryption)
 function normalizeJournal(journal: Journal): NormalizedEntry {
+  const isEncrypted = !!journal.iv;
   return {
     id: journal.journal_id,
     title: journal.title,
-    body: journal.content,
-    mood: journal.mood_tags?.[0] || "neutral",
+    // For encrypted journals, show placeholder until decrypted
+    body: isEncrypted ? "[Encrypted]" : journal.content,
+    mood: journal.mood_tags?.mood || "neutral",
     createdAt: journal.created_at,
     updatedAt: journal.updated_at,
+    isEncrypted,
   };
 }
 
@@ -113,22 +113,119 @@ function calculateStreak(entries: NormalizedEntry[]): number {
 
 interface JournalPageClientProps {
   journals: Journal[];
+  userEmail: string;
+  userId: string;
+  encryptionToken: string | null;
 }
 
-export default function JournalPageClient({ journals }: JournalPageClientProps) {
-  // Normalize journals from DB format
-  const entries = journals.map(normalizeJournal);
+export default function JournalPageClient({ 
+  journals, 
+  userEmail,
+  userId,
+  encryptionToken 
+}: JournalPageClientProps) {
+  // Encryption state
+  const { key: encryptionKey, isReady: isKeyReady } = useJournalEncryptionStore();
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [showPassphraseSetup, setShowPassphraseSetup] = useState(false);
+  const [decryptedEntries, setDecryptedEntries] = useState<NormalizedEntry[]>([]);
+  const [isDecrypting, setIsDecrypting] = useState(false);
   
+  // Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [moodFilter, setMoodFilter] = useState<MoodType | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  // LOCAL_OPS: useEffect for loading from localStorage - removed for SSR
-  // useEffect(() => {
-  //   const storedEntries = getStoredJournals();
-  //   setEntries(storedEntries);
-  //   setIsLoading(false);
-  // }, []);
+  // Check if any journals need decryption (iv present = encrypted)
+  const hasEncryptedJournals = useMemo(
+    () => journals.some((j) => !!j.iv),
+    [journals]
+  );
+
+  // Decrypt journals when key is available
+  useEffect(() => {
+    async function decryptJournals() {
+      if (!hasEncryptedJournals) {
+        // No encrypted journals, just normalize
+        setDecryptedEntries(journals.map(normalizeJournal));
+        return;
+      }
+
+      if (!encryptionKey) {
+        // Key not available, show placeholder for encrypted journals
+        setDecryptedEntries(journals.map(normalizeJournal));
+        
+        // Determine which modal to show:
+        // - If user has encryption token -> show unlock modal
+        // - If user doesn't have encryption token -> they need to set up passphrase first
+        if (encryptionToken) {
+          setShowUnlockModal(true);
+        } else {
+          // OAuth user without encryption setup - prompt for passphrase setup
+          setShowPassphraseSetup(true);
+        }
+        return;
+      }
+
+      setIsDecrypting(true);
+      const decrypted: NormalizedEntry[] = [];
+
+      for (const journal of journals) {
+        if (journal.iv) {
+          // Encrypted journal - decrypt using content field
+          try {
+            const decryptedPayload = await decryptJournal(
+              encryptionKey,
+              journal.content, // content has encrypted base64
+              journal.iv
+            );
+            
+            // Parse JSON payload which contains both title and body
+            let title: string;
+            let body: string;
+            try {
+              const parsed = JSON.parse(decryptedPayload);
+              title = parsed.title || journal.title;
+              body = parsed.body || decryptedPayload;
+            } catch {
+              // Legacy format: only body was encrypted, title is plaintext
+              title = journal.title;
+              body = decryptedPayload;
+            }
+            
+            decrypted.push({
+              id: journal.journal_id,
+              title,
+              body,
+              mood: journal.mood_tags?.mood || "neutral",
+              createdAt: journal.created_at,
+              updatedAt: journal.updated_at,
+              isEncrypted: true,
+            });
+          } catch (err) {
+            console.error(`Failed to decrypt journal ${journal.journal_id}:`, err);
+            decrypted.push({
+              ...normalizeJournal(journal),
+              decryptionFailed: true,
+              body: "[Decryption failed]",
+            });
+          }
+        } else {
+          decrypted.push(normalizeJournal(journal));
+        }
+      }
+
+      setDecryptedEntries(decrypted);
+      setIsDecrypting(false);
+      setShowUnlockModal(false);
+      setShowPassphraseSetup(false);
+    }
+
+    decryptJournals();
+  }, [journals, encryptionKey, hasEncryptedJournals, encryptionToken]);
+
+  // Use decrypted entries
+  const entries = decryptedEntries;
 
   // Filter entries
   const filteredEntries = entries
@@ -156,6 +253,28 @@ export default function JournalPageClient({ journals }: JournalPageClientProps) 
   return (
     <>
       <SiteHeader />
+      
+      {/* Unlock Modal - only shown when user has encryption setup */}
+      {encryptionToken && (
+        <JournalUnlockModal
+          open={showUnlockModal}
+          onOpenChange={setShowUnlockModal}
+          userId={userId}
+          validationToken={encryptionToken}
+        />
+      )}
+      
+      {/* Passphrase Setup Modal - for OAuth users without encryption setup */}
+      <JournalPassphraseSetup
+        open={showPassphraseSetup}
+        onOpenChange={setShowPassphraseSetup}
+        userId={userId}
+        onSuccess={() => {
+          // After setup, refresh the page to re-fetch with new token
+          window.location.reload();
+        }}
+      />
+      
       <div className="flex flex-1 flex-col overflow-hidden overflow-y-auto">
         <div className="flex flex-1 flex-col px-4 md:px-8 lg:px-10 py-6 md:py-8 relative">
           

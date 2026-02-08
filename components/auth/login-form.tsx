@@ -45,6 +45,10 @@ export function LoginForm({
       return;
     }
 
+    // Note: Journal encryption now uses a separate passphrase for all users.
+    // Users will set up or unlock their encryption passphrase when accessing journals.
+    // This ensures consistent encryption across all login methods (password, OAuth).
+
     router.push("/dashboard");
   }
 

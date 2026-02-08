@@ -6,19 +6,34 @@
  * SSR: Fetches all journals server-side via getJournals() action.
  * Passes data to JournalPageClient for client-side interactivity.
  * 
- * LOCAL-FIRST MVP: For offline support, the client component will need to
- * merge this server data with local storage data. See journal-client.tsx.
+ * ENCRYPTION: Passes user info and encryption token for unlock/setup modals.
  * =============================================================================
  */
 
 import { getJournals } from '@/app/actions/journals'
+import { getUser } from '@/app/actions/auth'
+import { getEncryptionToken } from '@/app/actions/encryption'
 import JournalPageClient from './journal-client'
+import { redirect } from 'next/navigation'
 
 const JournalPage = async () => {
-    const journals = await getJournals();
+    const [journals, user, encryptionToken] = await Promise.all([
+      getJournals(),
+      getUser(),
+      getEncryptionToken()
+    ]);
+    
+    if (!user) {
+      redirect('/login');
+    }
     
   return (
-    <JournalPageClient journals={journals} />
+    <JournalPageClient 
+      journals={journals} 
+      userEmail={user.email} 
+      userId={user.id}
+      encryptionToken={encryptionToken}
+    />
   )
 }
 

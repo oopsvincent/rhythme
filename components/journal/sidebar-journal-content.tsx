@@ -23,9 +23,7 @@ import { motion } from "framer-motion";
 // import { cn } from "@/lib/utils";
 import { MoodType } from "./mood-selector";
 import { moodColors } from "./emotional-aura";
-import { JournalCard } from "./journal-card";
 import {
-  BookOpen,
   Flame,
   Sparkles,
   PenLine,
@@ -58,8 +56,9 @@ function normalizeJournal(journal: Journal): NormalizedEntry {
   return {
     id: journal.journal_id,
     title: journal.title,
-    body: journal.content,
-    mood: journal.mood_tags?.[0] || "neutral",
+    // If iv is present, content is encrypted - show placeholder
+    body: journal.iv ? "[Encrypted]" : journal.content,
+    mood: journal.mood_tags?.mood || "neutral",
     createdAt: journal.created_at,
     updatedAt: journal.updated_at,
   };
@@ -164,9 +163,6 @@ export function SidebarJournalContent({ journals }: SidebarJournalContentProps) 
     weekAgo.setDate(weekAgo.getDate() - 7);
     return new Date(e.createdAt) > weekAgo;
   }).length;
-  const recentEntries = entries
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 3);
 
   return (
     <motion.div
@@ -239,18 +235,7 @@ export function SidebarJournalContent({ journals }: SidebarJournalContentProps) 
         </p>
       </div>
 
-      {/* Recent Entries */}
-      {recentEntries.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 px-1">
-            <BookOpen className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground">Recent</span>
-          </div>
-          {recentEntries.map((entry) => (
-            <JournalCard className="mb-2" key={entry.id} entry={entry} variant="compact" />
-          ))}
-        </div>
-      )}
+      {/* Note: Recent entries removed - they show [Encrypted] which isn't useful */}
 
       {/* Empty State */}
       {entries.length === 0 && (

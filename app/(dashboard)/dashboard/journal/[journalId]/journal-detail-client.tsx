@@ -59,16 +59,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// LOCAL_OPS: Keep for future local-first implementation
-// import {
-//   getStoredJournals,
-//   updateJournalEntry,
-//   deleteJournalEntry,
-//   JournalEntry
-// } from "@/lib/journal-storage";
-
 import { Journal, MoodTags } from "@/types/database";
 import { updateJournal, deleteJournal } from "@/app/actions/journals";
+import { encryptJournal, decryptJournal, isCryptoAvailable } from "@/lib/crypto";
+import { useJournalEncryptionStore } from "@/store/useJournalEncryptionStore";
+import { JournalUnlockModal } from "@/components/journal/journal-unlock-modal";
 
 // Normalized entry type for component use
 interface NormalizedEntry {
@@ -79,17 +74,20 @@ interface NormalizedEntry {
   moodIntensity?: number;
   createdAt: string;
   updatedAt: string;
+  isEncrypted: boolean;
 }
 
-// Convert Journal from DB to normalized entry
+// Convert Journal from DB to normalized entry (placeholder for encrypted)
 function normalizeJournal(journal: Journal): NormalizedEntry {
+  const isEncrypted = !!journal.iv;
   return {
     id: journal.journal_id,
     title: journal.title,
-    body: journal.content,
-    mood: journal.mood_tags?.[0] || "neutral",
+    body: isEncrypted ? "[Encrypted]" : journal.content,
+    mood: journal.mood_tags?.mood || "neutral",
     createdAt: journal.created_at,
     updatedAt: journal.updated_at,
+    isEncrypted,
   };
 }
 
@@ -125,10 +123,23 @@ function formatTime(dateString: string): string {
 
 interface JournalDetailClientProps {
   journal: Journal;
+  userId: string;
+  encryptionToken: string | null;
 }
 
-export default function JournalDetailClient({ journal: initialJournal }: JournalDetailClientProps) {
+export default function JournalDetailClient({ 
+  journal: initialJournal, 
+  userId,
+  encryptionToken 
+}: JournalDetailClientProps) {
   const router = useRouter();
+  
+  // Encryption state
+  const { key: encryptionKey } = useJournalEncryptionStore();
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  
+  // Journal state
   const [journal, setJournal] = useState<NormalizedEntry>(normalizeJournal(initialJournal));
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(journal.title);
@@ -140,18 +151,68 @@ export default function JournalDetailClient({ journal: initialJournal }: Journal
   const [isDeleting, setIsDeleting] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  // LOCAL_OPS: Load journal on mount - removed for SSR
-  // useEffect(() => {
-  //   const journals = getStoredJournals();
-  //   const found = journals.find((j) => j.id === resolvedParams.journalId);
-  //   if (found) {
-  //     setJournal(found);
-  //     setEditTitle(found.title);
-  //     setEditBody(found.body);
-  //     setEditMood(found.mood);
-  //   }
-  //   setIsLoading(false);
-  // }, [resolvedParams.journalId]);
+  // Decrypt journal on load if encrypted (iv presence = encrypted)
+  useEffect(() => {
+    async function decryptContent() {
+      if (!initialJournal.iv) {
+        // Not encrypted, use as-is
+        const normalized = normalizeJournal(initialJournal);
+        setJournal(normalized);
+        setEditBody(normalized.body);
+        return;
+      }
+
+      if (!encryptionKey) {
+        // Need to unlock
+        setShowUnlockModal(true);
+        return;
+      }
+
+      setIsDecrypting(true);
+      try {
+        const decryptedPayload = await decryptJournal(
+          encryptionKey,
+          initialJournal.content, // content has encrypted base64
+          initialJournal.iv
+        );
+        
+        // Parse JSON payload which contains both title and body
+        let title: string;
+        let body: string;
+        try {
+          const parsed = JSON.parse(decryptedPayload);
+          title = parsed.title || initialJournal.title;
+          body = parsed.body || decryptedPayload;
+        } catch {
+          // Legacy format: only body was encrypted, title is plaintext
+          title = initialJournal.title;
+          body = decryptedPayload;
+        }
+        
+        const decrypted: NormalizedEntry = {
+          id: initialJournal.journal_id,
+          title,
+          body,
+          mood: initialJournal.mood_tags?.mood || "neutral",
+          createdAt: initialJournal.created_at,
+          updatedAt: initialJournal.updated_at,
+          isEncrypted: true,
+        };
+        
+        setJournal(decrypted);
+        setEditTitle(title);
+        setEditBody(body);
+        setShowUnlockModal(false);
+      } catch (err) {
+        console.error("Failed to decrypt journal:", err);
+        // Keep placeholder
+      } finally {
+        setIsDecrypting(false);
+      }
+    }
+
+    decryptContent();
+  }, [initialJournal, encryptionKey]);
 
   // Track scroll progress
   useEffect(() => {
@@ -171,42 +232,53 @@ export default function JournalDetailClient({ journal: initialJournal }: Journal
 
     setIsSaving(true);
 
-    // LOCAL_OPS: Update localStorage - commented for SSR
-    // const updatedEntry: JournalEntry = {
-    //   ...journal,
-    //   title: editTitle.trim(),
-    //   body: editBody,
-    //   mood: editMood,
-    //   updatedAt: new Date().toISOString(),
-    // };
-    // updateJournalEntry(updatedEntry);
+    try {
+      // Encrypt content if we have a key
+      let updateInput: Parameters<typeof updateJournal>[1];
+      
+      if (encryptionKey && isCryptoAvailable()) {
+        const { encrypted, iv } = await encryptJournal(encryptionKey, editBody);
+        updateInput = {
+          title: editTitle.trim(),
+          content: encrypted, // Encrypted base64 goes in content
+          iv: iv,
+          mood_tags: editMood,
+        };
+      } else {
+        // Fallback to plaintext (shouldn't happen normally)
+        updateInput = {
+          title: editTitle.trim(),
+          content: editBody,
+          mood_tags: editMood,
+        };
+      }
 
-    const result = await updateJournal(journal.id, {
-      title: editTitle.trim(),
-      content: editBody,
-      mood_tags: editMood,
-    });
+      const result = await updateJournal(journal.id, updateInput);
 
-    if (result.error) {
-      console.error("Failed to update journal:", result.error);
+      if (result.error) {
+        console.error("Failed to update journal:", result.error);
+        setIsSaving(false);
+        return;
+      }
+
+      // Update local state
+      setJournal({
+        ...journal,
+        title: editTitle.trim(),
+        body: editBody,
+        mood: editMood,
+        updatedAt: new Date().toISOString(),
+      });
+
       setIsSaving(false);
-      return;
+      setIsSaved(true);
+      setIsEditing(false);
+
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save journal:", err);
+      setIsSaving(false);
     }
-
-    // Update local state
-    setJournal({
-      ...journal,
-      title: editTitle.trim(),
-      body: editBody,
-      mood: editMood,
-      updatedAt: new Date().toISOString(),
-    });
-
-    setIsSaving(false);
-    setIsSaved(true);
-    setIsEditing(false);
-
-    setTimeout(() => setIsSaved(false), 2000);
   };
 
   const handleDelete = async () => {
@@ -243,6 +315,16 @@ export default function JournalDetailClient({ journal: initialJournal }: Journal
   return (
     <>
       <SiteHeader />
+      
+      {/* Unlock Modal - only shown when user has encryption setup */}
+      {encryptionToken && (
+        <JournalUnlockModal
+          open={showUnlockModal}
+          onOpenChange={setShowUnlockModal}
+          userId={userId}
+          validationToken={encryptionToken}
+        />
+      )}
 
       {/* Reading Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 z-50">
