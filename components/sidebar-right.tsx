@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import { CalendarDays, PanelRightClose, PanelRightOpen, BookOpen, ChevronUp, ChevronDown } from "lucide-react"
+import { CalendarDays, PanelRightClose, PanelRightOpen, BookOpen, Brain, ChevronUp, ChevronDown, CheckSquare } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sidebar"
 import { CalendarWithFilters } from "./calendar-with-filters"
 import { SidebarJournalContent } from "./journal/sidebar-journal-content"
+import { FocusHeatmapCalendar } from "./focus/focus-heatmap-calendar"
 import { Task, Journal } from "@/types/database"
 import { getTasks } from "@/app/actions/getTasks"
 import { getJournals } from "@/app/actions/journals"
@@ -23,6 +24,8 @@ import {
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 
+type SidebarMode = 'tasks' | 'journal' | 'focus' | 'calendar'
+
 export function SidebarRight({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
@@ -33,24 +36,67 @@ export function SidebarRight({
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [isMobileExpanded, setIsMobileExpanded] = React.useState(false)
 
-  // Check if we're on a journal page
-  const isJournalPage = pathname?.startsWith("/dashboard/journal")
+  // Determine sidebar mode based on route
+  const getSidebarMode = (): SidebarMode => {
+    if (pathname?.startsWith("/dashboard/journal")) return 'journal'
+    if (pathname?.startsWith("/dashboard/focus")) return 'focus'
+    if (pathname?.startsWith("/dashboard/tasks")) return 'tasks'
+    return 'calendar' // Default for dashboard home and other pages
+  }
 
-  // Fetch data based on current page - only fetch what's needed to save server resources
+  const sidebarMode = getSidebarMode()
+
+  // Get header config based on mode
+  const getHeaderConfig = () => {
+    switch (sidebarMode) {
+      case 'journal':
+        return {
+          icon: <BookOpen className="h-4 w-4 text-primary" />,
+          iconBg: "bg-gradient-to-br from-primary/20 to-accent/20",
+          title: "Journal",
+          tooltip: { show: "Show journal panel", hide: "Hide journal panel" }
+        }
+      case 'focus':
+        return {
+          icon: <Brain className="h-4 w-4 text-orange-500" />,
+          iconBg: "bg-orange-500/10",
+          title: "Focus Activity",
+          tooltip: { show: "Show focus activity", hide: "Hide focus activity" }
+        }
+      case 'tasks':
+        return {
+          icon: <CheckSquare className="h-4 w-4 text-primary" />,
+          iconBg: "bg-primary/10",
+          title: "Tasks",
+          tooltip: { show: "Show task calendar", hide: "Hide task calendar" }
+        }
+      default:
+        return {
+          icon: <CalendarDays className="h-4 w-4 text-primary" />,
+          iconBg: "bg-primary/10",
+          title: "Calendar",
+          tooltip: { show: "Show calendar", hide: "Hide calendar" }
+        }
+    }
+  }
+
+  const headerConfig = getHeaderConfig()
+
+  // Fetch data based on current page - only fetch what's needed
   React.useEffect(() => {
     async function fetchData() {
+      setIsLoading(true)
       try {
-        if (isJournalPage) {
-          // Only fetch journals on journal pages
+        if (sidebarMode === 'journal') {
           const journalsData = await getJournals()
           setJournals(journalsData)
-        } else {
-          // Only fetch tasks on non-journal pages
+        } else if (sidebarMode === 'tasks' || sidebarMode === 'calendar') {
           const tasksResult = await getTasks()
           if (tasksResult.data) {
             setTasks(tasksResult.data)
           }
         }
+        // Focus mode doesn't need server data - uses IndexedDB
       } catch (error) {
         console.error('Failed to fetch data:', error)
       } finally {
@@ -58,7 +104,45 @@ export function SidebarRight({
       }
     }
     fetchData()
-  }, [isJournalPage])
+  }, [sidebarMode])
+
+  // Render content based on mode
+  const renderContent = () => {
+    switch (sidebarMode) {
+      case 'journal':
+        return <SidebarJournalContent journals={journals} />
+      case 'focus':
+        return <FocusHeatmapCalendar />
+      case 'tasks':
+        return isLoading ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-xs text-muted-foreground">Loading tasks...</span>
+          </div>
+        ) : (
+          <CalendarWithFilters tasks={tasks} />
+        )
+      default:
+        return isLoading ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-xs text-muted-foreground">Loading calendar...</span>
+          </div>
+        ) : (
+          <CalendarWithFilters tasks={tasks} />
+        )
+    }
+  }
+
+  // Mobile header text
+  const getMobileHeaderText = () => {
+    switch (sidebarMode) {
+      case 'journal': return "Journal Quick Actions"
+      case 'focus': return "Focus Activity"
+      case 'tasks': return "Task Calendar"
+      default: return "Calendar"
+    }
+  }
 
   return (
     <>
@@ -75,21 +159,10 @@ export function SidebarRight({
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-2">
-              {isJournalPage ? (
-                <>
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary/20 to-accent/20">
-                    <BookOpen className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium">Journal Quick Actions</span>
-                </>
-              ) : (
-                <>
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
-                    <CalendarDays className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium">Calendar</span>
-                </>
-              )}
+              <div className={cn("flex h-6 w-6 items-center justify-center rounded-md", headerConfig.iconBg)}>
+                {headerConfig.icon}
+              </div>
+              <span className="text-sm font-medium">{getMobileHeaderText()}</span>
             </div>
             {isMobileExpanded ? (
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -109,16 +182,7 @@ export function SidebarRight({
                 className="overflow-hidden"
               >
                 <div className="max-h-[50vh] overflow-y-auto px-2 pb-4">
-                  {isJournalPage ? (
-                    <SidebarJournalContent journals={journals} />
-                  ) : isLoading ? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-8">
-                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                      <span className="text-xs text-muted-foreground">Loading...</span>
-                    </div>
-                  ) : (
-                    <CalendarWithFilters tasks={tasks} />
-                  )}
+                  {renderContent()}
                 </div>
               </motion.div>
             )}
@@ -129,7 +193,7 @@ export function SidebarRight({
       {/* Desktop Sidebar - Collapsible */}
       <div
         className={cn(
-          "sticky top-0 hidden h-svh transition-all duration-300 ease-in-out lg:block",
+          "sticky top-0 hidden h-svh transition-all duration-300 ease-in-out lg:block overflow-hidden",
           isCollapsed ? "w-0" : "w-[300px]"
         )}
       >
@@ -154,10 +218,7 @@ export function SidebarRight({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              {isCollapsed 
-                ? (isJournalPage ? "Show journal panel" : "Show calendar") 
-                : (isJournalPage ? "Hide journal panel" : "Hide calendar")
-              }
+              {isCollapsed ? headerConfig.tooltip.show : headerConfig.tooltip.hide}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -174,35 +235,19 @@ export function SidebarRight({
           {/* Header - Changes based on route */}
           <SidebarHeader className="flex flex-row items-center gap-2 px-4 py-4">
             <AnimatePresence mode="wait">
-              {isJournalPage ? (
-                <motion.div
-                  key="journal-header"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-2"
-                >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/20">
-                    <BookOpen className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-semibold tracking-tight">Journal</span>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="calendar-header"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-2"
-                >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                    <CalendarDays className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-semibold tracking-tight">Calendar</span>
-                </motion.div>
-              )}
+              <motion.div
+                key={sidebarMode}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2"
+              >
+                <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg", headerConfig.iconBg)}>
+                  {headerConfig.icon}
+                </div>
+                <span className="text-sm font-semibold tracking-tight">{headerConfig.title}</span>
+              </motion.div>
             </AnimatePresence>
           </SidebarHeader>
 
@@ -212,34 +257,15 @@ export function SidebarRight({
           {/* Content - Switches based on route */}
           <SidebarContent className="overflow-y-auto px-2 py-3">
             <AnimatePresence mode="wait">
-              {isJournalPage ? (
-                <motion.div
-                  key="journal-content"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <SidebarJournalContent journals={journals} />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="calendar-content"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {isLoading ? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-12">
-                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                      <span className="text-xs text-muted-foreground">Loading calendar...</span>
-                    </div>
-                  ) : (
-                    <CalendarWithFilters tasks={tasks} />
-                  )}
-                </motion.div>
-              )}
+              <motion.div
+                key={sidebarMode}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderContent()}
+              </motion.div>
             </AnimatePresence>
           </SidebarContent>
         </Sidebar>
