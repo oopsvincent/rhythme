@@ -80,21 +80,32 @@ export const getJournalById = async (journalId: string): Promise<Journal | null>
 
 /**
  * Create a new journal entry
+ * Supports both encrypted and plaintext content.
+ * If encrypted_content and iv are provided, they take precedence.
  */
 export const createJournal = async (input: JournalInput) => {
   const { supabase, user } = await getAuthenticatedUser();
 
   try {
+    const insertData: Record<string, unknown> = {
+      user_id: user.id,
+      title: input.title,
+      content: input.content,
+      created_at: input.created_at,
+      updated_at: input.updated_at,
+      mood_tags: {
+        mood: input.mood_tags || "neutral",
+      },
+    };
+
+    // Include iv if provided (indicates encrypted content)
+    if (input.iv) {
+      insertData.iv = input.iv;
+    }
+
     const { data, error } = await supabase
       .from("journals")
-      .insert({
-        user_id: user.id,
-        title: input.title,
-        content: input.content,
-        created_at: input.created_at,
-        updated_at: input.updated_at,
-        mood_tags: [input.mood_tags || "neutral"],
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -127,7 +138,8 @@ export const updateJournal = async (
 
     if (input.title !== undefined) updateData.title = input.title;
     if (input.content !== undefined) updateData.content = input.content;
-    if (input.mood_tags !== undefined) updateData.mood_tags = [input.mood_tags];
+    if (input.iv !== undefined) updateData.iv = input.iv;
+    if (input.mood_tags !== undefined) updateData.mood_tags = { mood: input.mood_tags };
 
     const { data, error } = await supabase
       .from("journals")

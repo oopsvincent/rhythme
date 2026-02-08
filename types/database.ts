@@ -106,23 +106,25 @@ export interface HabitWithStats extends Habit {
 
 // Journals 
 
-export interface Journal{
-    journal_id: string
-    user_id: string
-    title: string
-    content: string
-    sentiment_score: number
-    created_at: string
-    updated_at: string
-    mood_tags: MoodTags[]
+export interface Journal {
+  journal_id: string;
+  user_id: string;
+  title: string;
+  content: string; // Stores plaintext OR encrypted base64 content
+  created_at: string;
+  updated_at: string;
+  sentiment_score?: number;
+  mood_tags?: { mood: MoodTags };
+  iv?: string | null; // Base64 IV - if present, content is encrypted
 }
 
 export interface JournalInput {
-    title: string
-    content: string
-    created_at: string
-    updated_at: string
-    mood_tags: MoodTags
+  title: string;
+  content: string; // Plaintext or encrypted base64 content
+  iv?: string; // If provided, content is encrypted
+  mood_tags?: MoodTags;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type MoodTags = "happy" | "calm" | "neutral" | "sad" | "frustrated" | "excited" | "anxious"
