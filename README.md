@@ -119,7 +119,7 @@ This is not just about productivity — it’s about finding balance, focus, and
 ---
 
 ## Version
-Current version: **0.17.0**  
+Current version: **0.36.0**  
 See full changelog → [CHANGELOG.md](./docs/CHANGELOG.md)
 ## Authors
 
