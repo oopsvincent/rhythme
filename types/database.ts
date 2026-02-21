@@ -106,6 +106,14 @@ export interface HabitWithStats extends Habit {
 
 // Journals 
 
+export interface JournalMoodTags {
+  mood: MoodTags;
+  sentiment?: string;    // e.g. "neutral", "positive", "negative"
+  emotions?: string[];   // e.g. ["neutral", "joy"]
+  model_used?: string;   // e.g. "roberta"
+  analyzed_at?: string;  // ISO timestamp from ML service
+}
+
 export interface Journal {
   journal_id: string;
   user_id: string;
@@ -113,9 +121,20 @@ export interface Journal {
   content: string; // Stores plaintext OR encrypted base64 content
   created_at: string;
   updated_at: string;
-  sentiment_score?: number;
-  mood_tags?: { mood: MoodTags };
+  sentiment_score?: number; // 0-100, derived from ML confidence
+  mood_tags?: JournalMoodTags;
   iv?: string | null; // Base64 IV - if present, content is encrypted
+}
+
+// ML Sentiment Analysis response from /o1/journal endpoint
+export interface SentimentAnalysisResult {
+  text: string;
+  title: string;
+  sentiment: string;
+  confidence: number; // 0.0 - 1.0
+  emotions: string[];
+  model_used: string;
+  created_at: string;
 }
 
 export interface JournalInput {

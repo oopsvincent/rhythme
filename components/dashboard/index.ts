@@ -13,6 +13,8 @@ export { HabitsWidget } from "./habits-widget"
 export { QuickJournalCard } from "./quick-journal-card"
 export { ReflectionPrompt } from "./reflection-prompt"
 export { ProductivitySummary } from "./productivity-summary"
+export { MoodChart } from "./mood-chart"
+export { SentimentChart } from "./sentiment-chart"
 
 export {
   DashboardStatsSkeleton,
@@ -25,5 +27,7 @@ export {
   QuickJournalSkeleton,
   ProductivitySummarySkeleton,
   ReflectionPromptSkeleton,
+  MoodChartSkeleton,
+  SentimentChartSkeleton,
 } from "./dashboard-skeleton"
 
