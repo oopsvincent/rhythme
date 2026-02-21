@@ -219,6 +219,10 @@ export default function FocusTimer() {
   }, [sidebarContext])
 
   const handleSessionComplete = useCallback(async () => {
+    // Guard: if the widget already completed this session, the store's isRunning is false
+    const storeState = useFocusStore.getState()
+    if (!storeState.isRunning && storeState.timeLeft === 0) return
+
     // Play sound
     if (settings?.soundEnabled && audioRef.current) {
       audioRef.current.play().catch(() => {})

@@ -3,9 +3,10 @@
 import * as React from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Brain, Coffee, Play, Pause, SkipForward, X, GripHorizontal, Eye, EyeOff } from 'lucide-react'
+import { Brain, Coffee, Play, Pause, SkipForward, X, GripHorizontal, EyeOff } from 'lucide-react'
 import { useFocusStore, SessionType } from '@/store/useFocusStore'
-import { formatTime } from '@/lib/focus-storage'
+import { formatTime, getFocusData } from '@/lib/focus-storage'
+import { saveSession, getDeviceId } from '@/lib/focus/focus-db'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,9 +15,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { toast } from 'sonner'
 
 const STORAGE_KEY = 'focus-widget-position'
-const VISIBILITY_KEY = 'focus-widget-visible'
+const DISMISSED_KEY = 'focus-widget-dismissed'
 
 interface Position {
   x: number
@@ -44,26 +46,52 @@ const sessionConfig: Record<SessionType, { label: string; color: string; bgColor
   },
 }
 
+// Padding from viewport edges
+const EDGE_PADDING = 8
+
 export function FocusFloatingWidget() {
   const router = useRouter()
   const pathname = usePathname()
-  const { isRunning, sessionType, timeLeft, getDisplayTime, start, pause, switchSession } = useFocusStore()
+  const { 
+    isRunning, sessionType, timeLeft, sessionsCompleted,
+    getDisplayTime, start, pause, switchSession, markCompleted, completeSession 
+  } = useFocusStore()
   
   const [position, setPosition] = React.useState<Position>({ x: 20, y: 100 })
   const [isDragging, setIsDragging] = React.useState(false)
   const [isExpanded, setIsExpanded] = React.useState(false)
-  const [isVisible, setIsVisible] = React.useState(true)
+  const [isDismissed, setIsDismissed] = React.useState(false)
   const [displayTime, setDisplayTime] = React.useState(timeLeft)
   const [mounted, setMounted] = React.useState(false)
+  const [isBouncing, setIsBouncing] = React.useState(false)
   
   const dragRef = React.useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null)
   const widgetRef = React.useRef<HTMLDivElement>(null)
+  const completedRef = React.useRef(false)
+  const prevIsRunningRef = React.useRef(false)
 
-  // Load saved position and visibility on mount
+  // --- Clamp position to keep widget fully within the viewport ---
+  const clampPosition = React.useCallback((pos: Position): Position => {
+    if (typeof window === 'undefined' || !widgetRef.current) return pos
+
+    const rect = widgetRef.current.getBoundingClientRect()
+    const w = rect.width
+    const h = rect.height
+
+    const maxX = window.innerWidth - w - EDGE_PADDING
+    const maxY = window.innerHeight - h - EDGE_PADDING
+
+    return {
+      x: Math.max(EDGE_PADDING, Math.min(maxX, pos.x)),
+      y: Math.max(EDGE_PADDING, Math.min(maxY, pos.y)),
+    }
+  }, [])
+
+  // --- Load saved position and dismissed state on mount ---
   React.useEffect(() => {
     setMounted(true)
     const savedPos = localStorage.getItem(STORAGE_KEY)
-    const savedVis = localStorage.getItem(VISIBILITY_KEY)
+    const savedDismissed = localStorage.getItem(DISMISSED_KEY)
     
     if (savedPos) {
       try {
@@ -72,23 +100,67 @@ export function FocusFloatingWidget() {
       } catch {}
     }
     
-    if (savedVis !== null) {
-      setIsVisible(savedVis === 'true')
+    if (savedDismissed === 'true') {
+      setIsDismissed(true)
     }
   }, [])
 
-  // Update display time using requestAnimationFrame
+  // --- Clamp position after mount and on window resize ---
+  React.useEffect(() => {
+    if (!mounted || !widgetRef.current) return
+
+    // Clamp once after first render to fix stale saved positions
+    const timer = setTimeout(() => {
+      setPosition(prev => {
+        const clamped = clampPosition(prev)
+        if (clamped.x !== prev.x || clamped.y !== prev.y) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(clamped))
+        }
+        return clamped
+      })
+    }, 100)
+
+    const handleResize = () => {
+      setPosition(prev => clampPosition(prev))
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [mounted, clampPosition])
+
+  // --- Auto-show when a session starts (un-dismiss) ---
+  React.useEffect(() => {
+    if (isRunning && !prevIsRunningRef.current && isDismissed) {
+      setIsDismissed(false)
+      localStorage.setItem(DISMISSED_KEY, 'false')
+    }
+    prevIsRunningRef.current = isRunning
+  }, [isRunning, isDismissed])
+
+  // --- Update display time + detect completion (background timer) ---
   React.useEffect(() => {
     let animationId: number
     
     const updateDisplay = () => {
-      setDisplayTime(getDisplayTime())
+      const current = getDisplayTime()
+      setDisplayTime(current)
+
+      // Background completion detection
+      if (isRunning && current <= 0 && !completedRef.current) {
+        completedRef.current = true
+        handleWidgetSessionComplete()
+      }
+
       if (isRunning) {
         animationId = requestAnimationFrame(updateDisplay)
       }
     }
     
     if (isRunning) {
+      completedRef.current = false
       updateDisplay()
     } else {
       setDisplayTime(timeLeft)
@@ -99,19 +171,97 @@ export function FocusFloatingWidget() {
     }
   }, [isRunning, timeLeft, getDisplayTime])
 
-  // Save position to localStorage
+  // --- Handle session completion from the widget (background) ---
+  const handleWidgetSessionComplete = React.useCallback(async () => {
+    const settings = getFocusData().settings
+
+    // Play bell sound
+    if (settings.soundEnabled) {
+      try {
+        const audio = new Audio('/sounds/bell.mp3')
+        await audio.play()
+      } catch {}
+    }
+
+    // Browser notification
+    try {
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          new Notification('Focus Timer', {
+            body: `${sessionConfig[sessionType].label} session completed!`,
+            icon: '/favicon.ico',
+          })
+        } else if (Notification.permission !== 'denied') {
+          const perm = await Notification.requestPermission()
+          if (perm === 'granted') {
+            new Notification('Focus Timer', {
+              body: `${sessionConfig[sessionType].label} session completed!`,
+              icon: '/favicon.ico',
+            })
+          }
+        }
+      }
+    } catch {}
+
+    markCompleted()
+
+    // Save session to IndexedDB
+    const getDuration = (type: SessionType): number => {
+      switch (type) {
+        case 'focus': return settings.focusDuration
+        case 'short_break': return settings.shortBreakDuration
+        case 'long_break': return settings.longBreakDuration
+      }
+    }
+
+    const duration = getDuration(sessionType) * 60
+    try {
+      await saveSession({
+        type: sessionType,
+        duration,
+        completedAt: new Date().toISOString(),
+        interrupted: false,
+        deviceId: getDeviceId(),
+      })
+    } catch (error) {
+      console.error('Failed to save session:', error)
+    }
+
+    completeSession()
+
+    // Determine next session
+    if (sessionType === 'focus') {
+      const newCount = sessionsCompleted + 1
+      if (newCount % (settings.sessionsUntilLongBreak || 4) === 0) {
+        switchSession('long_break', getDuration('long_break') * 60)
+      } else {
+        switchSession('short_break', getDuration('short_break') * 60)
+      }
+      if (settings.autoStartBreaks) {
+        setTimeout(() => start(), 1000)
+      }
+    } else {
+      switchSession('focus', getDuration('focus') * 60)
+      if (settings.autoStartFocus) {
+        setTimeout(() => start(), 1000)
+      }
+    }
+
+    toast.success(`${sessionConfig[sessionType].label} completed!`)
+  }, [sessionType, sessionsCompleted, markCompleted, completeSession, switchSession, start])
+
+  // --- Save position to localStorage ---
   const savePosition = React.useCallback((pos: Position) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(pos))
   }, [])
 
-  // Toggle visibility
-  const toggleVisibility = React.useCallback(() => {
-    const newVis = !isVisible
-    setIsVisible(newVis)
-    localStorage.setItem(VISIBILITY_KEY, String(newVis))
-  }, [isVisible])
+  // --- Dismiss widget ---
+  const dismiss = React.useCallback(() => {
+    setIsDismissed(true)
+    localStorage.setItem(DISMISSED_KEY, 'true')
+  }, [])
 
-  // Drag handlers
+  // --- Drag handlers ---
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
@@ -135,21 +285,32 @@ export function FocusFloatingWidget() {
     const deltaX = clientX - dragRef.current.startX
     const deltaY = clientY - dragRef.current.startY
     
-    const newX = Math.max(0, Math.min(window.innerWidth - 150, dragRef.current.startPosX + deltaX))
-    const newY = Math.max(0, Math.min(window.innerHeight - 60, dragRef.current.startPosY + deltaY))
+    // Allow free movement during drag (no clamping while dragging — clamp on release)
+    const newX = dragRef.current.startPosX + deltaX
+    const newY = dragRef.current.startPosY + deltaY
     
     setPosition({ x: newX, y: newY })
   }, [isDragging])
 
   const handleDragEnd = React.useCallback(() => {
     if (isDragging) {
-      savePosition(position)
+      // Clamp position to viewport and animate bounce-back if needed
+      const clamped = clampPosition(position)
+      const didBounce = clamped.x !== position.x || clamped.y !== position.y
+
+      if (didBounce) {
+        setIsBouncing(true)
+        setTimeout(() => setIsBouncing(false), 500)
+      }
+
+      setPosition(clamped)
+      savePosition(clamped)
     }
     setIsDragging(false)
     dragRef.current = null
-  }, [isDragging, position, savePosition])
+  }, [isDragging, position, savePosition, clampPosition])
 
-  // Attach global listeners for drag
+  // --- Attach global listeners for drag ---
   React.useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleDragMove)
@@ -166,53 +327,24 @@ export function FocusFloatingWidget() {
     }
   }, [isDragging, handleDragMove, handleDragEnd])
 
-  // Don't render on focus page (main timer is visible)
-  const isOnFocusPage = pathname?.startsWith('/dashboard/focus')
-  
-  // Don't render during SSR
+  // --- Don't render during SSR ---
   if (!mounted) return null
-  
-  // Only show when timer has been started at least once (timeLeft < initial value or isRunning)
-  const hasActiveSession = isRunning || timeLeft < 25 * 60
 
-  // Check if widget is on the right half of screen
-  const isOnRightSide = mounted && position.x > window.innerWidth / 2
-
-  const config = sessionConfig[sessionType]
-
-  // Show/Hide toggle button when widget is hidden
-  if (!isVisible) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className={cn(
-                "fixed z-50 p-2 rounded-full shadow-lg border backdrop-blur-sm",
-                "bg-background/80 hover:bg-background transition-colors",
-                config.borderColor
-              )}
-              style={{ left: position.x, top: position.y }}
-              onClick={toggleVisibility}
-            >
-              <Eye className="w-4 h-4 text-muted-foreground" />
-            </motion.button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            Show focus timer
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    )
-  }
-
-  // Don't show on focus page when visible
+  // --- Never render on focus page (main timer UI is there) ---
+  const isOnFocusPage = pathname?.startsWith('/dashboard/focus')
   if (isOnFocusPage) return null
   
-  // Don't show if no active session
+  // --- Don't render if dismissed ---
+  if (isDismissed) return null
+
+  // --- Only show when timer has been started at least once ---
+  const hasActiveSession = isRunning || timeLeft < 25 * 60
   if (!hasActiveSession) return null
+
+  // Check if widget is on the right half of screen
+  const isOnRightSide = position.x > window.innerWidth / 2
+
+  const config = sessionConfig[sessionType]
 
   return (
     <AnimatePresence>
@@ -221,12 +353,17 @@ export function FocusFloatingWidget() {
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ 
           opacity: 1, 
-          scale: 1, 
+          scale: isBouncing ? [1, 1.08, 0.95, 1.02, 1] : 1,
           y: 0,
+          x: 0,
           boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.2)' : '0 4px 16px rgba(0,0,0,0.1)'
         }}
         exit={{ opacity: 0, scale: 0.8, y: 20 }}
-        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+        transition={
+          isBouncing 
+            ? { scale: { duration: 0.4, ease: 'easeOut' }, type: 'spring', damping: 20, stiffness: 300 }
+            : { type: 'spring', damping: 20, stiffness: 300 }
+        }
         className={cn(
           "fixed z-50 select-none",
           "rounded-2xl border shadow-lg backdrop-blur-xl",
@@ -297,8 +434,11 @@ export function FocusFloatingWidget() {
                   size="icon"
                   className="h-7 w-7"
                   onClick={() => {
+                    const settings = getFocusData().settings
                     const nextType = sessionType === 'focus' ? 'short_break' : 'focus'
-                    const nextDuration = nextType === 'focus' ? 25 * 60 : 5 * 60
+                    const nextDuration = nextType === 'focus' 
+                      ? settings.focusDuration * 60 
+                      : settings.shortBreakDuration * 60
                     switchSession(nextType, nextDuration)
                   }}
                 >
@@ -327,7 +467,7 @@ export function FocusFloatingWidget() {
             </motion.div>
           </Button>
           
-          {/* Hide button */}
+          {/* Dismiss button */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -335,13 +475,13 @@ export function FocusFloatingWidget() {
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={toggleVisibility}
+                  onClick={dismiss}
                 >
                   <EyeOff className="w-3 h-3 text-muted-foreground" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
-                Hide widget
+                Dismiss widget
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
