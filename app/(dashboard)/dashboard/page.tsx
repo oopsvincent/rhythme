@@ -15,11 +15,15 @@ import {
   QuickJournalCard,
   ReflectionPrompt,
   ProductivitySummary,
+  MoodChart,
+  SentimentChart,
   MoodInputSkeleton,
   HabitsWidgetSkeleton,
   QuickJournalSkeleton,
   ProductivitySummarySkeleton,
   ReflectionPromptSkeleton,
+  MoodChartSkeleton,
+  SentimentChartSkeleton,
 } from "@/components/dashboard"
 
 export default async function DashboardPage() {
@@ -84,8 +88,18 @@ export default async function DashboardPage() {
                 </Suspense>
               </div>
 
-              {/* Right Column - Journal, Tasks */}
+              {/* Right Column - Mood Chart, Journal, Tasks */}
               <div className="flex flex-col gap-4 mb-8 sm:mb-0">
+                {/* 7-Day Mood Chart */}
+                <Suspense fallback={<MoodChartSkeleton />}>
+                  <MoodChart journals={journals} />
+                </Suspense>
+
+                {/* Sentiment Confidence Chart */}
+                <Suspense fallback={<SentimentChartSkeleton />}>
+                  <SentimentChart journals={journals} />
+                </Suspense>
+
                 {/* Quick Journal */}
                 <Suspense fallback={<QuickJournalSkeleton />}>
                   <QuickJournalCard journals={journals} />

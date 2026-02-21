@@ -188,3 +188,85 @@ export const deleteJournal = async (journalId: string) => {
     };
   }
 };
+
+/**
+ * Analyze journal sentiment via ML endpoint.
+ * Client sends decrypted text; this action calls the ML service
+ * and persists results (sentiment_score + mood_tags) to Supabase.
+ */
+export const analyzeJournalSentiment = async (
+  journalId: string,
+  decryptedTitle: string,
+  decryptedText: string
+) => {
+  const { supabase, user } = await getAuthenticatedUser();
+
+  try {
+    // Import the sentiment service dynamically to keep the server action lean
+    const { fetchSentimentAnalysis } = await import("@/lib/journal-sentiment");
+
+    const result = await fetchSentimentAnalysis({
+      title: decryptedTitle,
+      text: decryptedText,
+    });
+
+    if (!result) {
+      return { error: "Sentiment analysis service is unavailable" };
+    }
+
+    // Fetch current mood_tags to preserve the existing mood field
+    const { data: currentJournal, error: fetchError } = await supabase
+      .from("journals")
+      .select("mood_tags")
+      .eq("journal_id", journalId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (fetchError) {
+      return { error: fetchError.message };
+    }
+
+    // Merge sentiment data into existing mood_tags
+    const existingMoodTags = (currentJournal?.mood_tags as Record<string, unknown>) || {};
+    const updatedMoodTags = {
+      ...existingMoodTags,
+      sentiment: result.sentiment,
+      emotions: result.emotions,
+      model_used: result.model_used,
+      analyzed_at: result.created_at,
+    };
+
+    // confidence (0.0–1.0) → sentiment_score (0–100)
+    const sentimentScore = Math.round(result.confidence * 100);
+
+    const { error: updateError } = await supabase
+      .from("journals")
+      .update({
+        mood_tags: updatedMoodTags,
+        sentiment_score: sentimentScore,
+      })
+      .eq("journal_id", journalId)
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      return { error: updateError.message };
+    }
+
+    revalidatePath(`/dashboard/journal/${journalId}`);
+
+    return {
+      data: {
+        sentiment: result.sentiment,
+        confidence: result.confidence,
+        sentimentScore,
+        emotions: result.emotions,
+        model_used: result.model_used,
+        analyzed_at: result.created_at,
+      },
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Failed to analyze sentiment",
+    };
+  }
+};
