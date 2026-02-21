@@ -14,39 +14,71 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertTriangle, Loader2, Trash2 } from "lucide-react"
+import { AlertTriangle, Loader2, Trash2, HeartCrack, Flame } from "lucide-react"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+
+const STEPS = [
+  {
+    icon: HeartCrack,
+    title: "Wait, you're leaving us?",
+    description:
+      "We thought we had something special... All your habits, journals, and focus sessions will vanish like your motivation on a Monday morning.",
+    buttonText: "I'm sure, keep going",
+  },
+  {
+    icon: AlertTriangle,
+    title: "Okay, this is getting serious",
+    description:
+      "Your streaks, your progress, that one really good journal entry from 3am — all gone. Even your data will ghost you. Are you REALLY sure?",
+    buttonText: "Yes, I've made peace with it",
+  },
+  {
+    icon: Flame,
+    title: "Last chance. No take-backs.",
+    description:
+      "Type DELETE below to confirm you're breaking up with Rhythmé. We won't send a sad playlist, but we'll think about it.",
+    buttonText: "Delete my account forever",
+  },
+]
 
 export function DeleteAccountModal() {
   const [isOpen, setIsOpen] = useState(false)
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState(0)
   const [confirmText, setConfirmText] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
+
+  const currentStep = STEPS[step]
+  const StepIcon = currentStep.icon
 
   const handleDelete = async () => {
     if (confirmText !== "DELETE") return
 
     setIsDeleting(true)
-    
-    // Call server action
+
     const result = await deleteAccount()
-    
+
     if (!result.success) {
       toast.error(result.error || "Failed to delete account")
       setIsDeleting(false)
     } else {
-      // Redirect happens in server action usually, but if we get here:
-      toast.success("Account deleted. Redirecting...")
-      // Optional: Client side redirect fallback
-      window.location.href = "/login"
+      toast.success("Account deleted. It's not you, it's... well, goodbye. 👋")
+      router.push("/login")
     }
   }
 
   const resetModal = () => {
     setIsOpen(false)
-    setStep(1)
+    setStep(0)
     setConfirmText("")
     setIsDeleting(false)
+  }
+
+  const handleNext = () => {
+    if (step < 2) {
+      setStep((s) => s + 1)
+    }
   }
 
   return (
@@ -59,29 +91,39 @@ export function DeleteAccountModal() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md border-destructive/20">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-destructive mb-2">
-            <AlertTriangle className="h-5 w-5" />
-            <DialogTitle>Delete Account</DialogTitle>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+            <StepIcon className="h-7 w-7 text-destructive" />
           </div>
-          <DialogDescription>
-            {step === 1 
-              ? "This action cannot be undone. This will permanently delete your account and remove your data from our servers."
-              : "Are you absolutely sure? This action is irreversible."
-            }
+          <DialogTitle className="text-center">{currentStep.title}</DialogTitle>
+          <DialogDescription className="text-center">
+            {currentStep.description}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Step indicator */}
+        <div className="flex justify-center gap-1.5 py-1">
+          {STEPS.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i <= step ? "w-6 bg-destructive" : "w-1.5 bg-muted"
+              }`}
+            />
+          ))}
+        </div>
 
         {step === 2 && (
           <div className="space-y-3 py-2">
             <Label htmlFor="confirm-delete" className="text-muted-foreground font-normal">
-              Type <span className="font-bold text-foreground">DELETE</span> to confirm.
+              Type <span className="font-bold text-foreground">DELETE</span> to confirm. No going back after this.
             </Label>
             <Input
               id="confirm-delete"
               value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
+              onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
               placeholder="DELETE"
-              className="border-destructive/30 focus-visible:ring-destructive/30"
+              className="border-destructive/30 focus-visible:ring-destructive/30 text-center font-mono tracking-widest"
+              disabled={isDeleting}
             />
           </div>
         )}
@@ -92,15 +134,15 @@ export function DeleteAccountModal() {
             onClick={resetModal}
             disabled={isDeleting}
           >
-            Cancel
+            {step === 0 ? "Never mind, I'll stay" : "Cancel"}
           </Button>
-          
-          {step === 1 ? (
+
+          {step < 2 ? (
             <Button
               variant="destructive"
-              onClick={() => setStep(2)}
+              onClick={handleNext}
             >
-              Continue
+              {currentStep.buttonText}
             </Button>
           ) : (
             <Button
@@ -109,8 +151,14 @@ export function DeleteAccountModal() {
               disabled={confirmText !== "DELETE" || isDeleting}
               className="gap-2"
             >
-              {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Delete Account
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                currentStep.buttonText
+              )}
             </Button>
           )}
         </DialogFooter>
