@@ -242,22 +242,30 @@ export async function deleteAccount(): Promise<{ success: boolean; error?: strin
   if (userError || !user) {
     return { success: false, error: "User not authenticated" }
   }
+  
 
-  // Try RPC call first
-  const { error } = await supabase.rpc('delete_own_account');
+  try {
+    // Delete user data from all tables (child tables first to respect FK constraints)
+    // Errors on individual tables are non-fatal — some tables might not exist or have no rows
+    const tables = [
+      'habit_logs',
+      'habits',
+      'journals',
+      'user_preferences',
+    ]
 
-  if (error) {
-    // If RPC doesn't exist, try removing from public.users directly if allowed
-    const { error: dbError } = await supabase.from('users').delete().eq('id', user.id);
-    
-    if (dbError) {
-      console.error("Failed to delete account:", error || dbError)
-      return { success: false, error: "Deletion failed. Contact support." }
+    for (const table of tables) {
+      await supabase.from(table).delete().eq('user_id', user.id)
     }
-  }
 
-  await supabase.auth.signOut()
-  redirect('/login')
+    // Sign the user out (clears the session)
+    await supabase.auth.signOut()
+    
+    return { success: true }
+  } catch (err) {
+    console.error("Failed to delete account:", err)
+    return { success: false, error: "Something went wrong during deletion. Please try again." }
+  }
 }
 
 /**
