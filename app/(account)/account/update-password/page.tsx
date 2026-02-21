@@ -1,15 +1,16 @@
-// app/(auth)/auth/update-password/page.tsx
+// app/(account)/account/update-password/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
 export default function UpdatePasswordPage() {
   const [password, setPassword] = useState("");
@@ -17,19 +18,20 @@ export default function UpdatePasswordPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isValidSession, setIsValidSession] = useState(false);
+  const [sessionError, setSessionError] = useState(false);
 
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    // Check if this is a valid password recovery session
     checkSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function checkSession() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      router.push("/login");
+      setSessionError(true);
       return;
     }
     setIsValidSession(true);
@@ -40,8 +42,8 @@ export default function UpdatePasswordPage() {
     setErrorMsg(null);
 
     // Validation
-    if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters long");
+    if (password.length < 8) {
+      setErrorMsg("Password must be at least 8 characters long");
       return;
     }
 
@@ -64,55 +66,98 @@ export default function UpdatePasswordPage() {
     }
 
     setStatus("success");
-    
-    // Redirect to dashboard after 2 seconds
+
+    // Redirect to dashboard after 3 seconds
     setTimeout(() => {
       router.push("/dashboard");
-    }, 2000);
+    }, 3000);
   }
 
-  if (!isValidSession) {
+  // Session expired or invalid
+  if (sessionError) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (status === "success") {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="flex items-center justify-center min-h-screen p-4 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
             <CardTitle className="text-2xl font-bold">
-              Password Updated!
+              Session Expired
             </CardTitle>
             <CardDescription>
-              Your password has been successfully updated
+              Your password reset link has expired or is invalid.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-center text-muted-foreground">
-              Redirecting to dashboard...
-            </p>
+          <CardContent className="space-y-3">
+            <Button asChild className="w-full">
+              <Link href="/auth/reset-password">Request a new reset link</Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/login">Back to login</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  // Loading session check
+  if (!isValidSession) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Verifying your session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state
+  if (status === "success") {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4 bg-background">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+              <CheckCircle2 className="h-8 w-8 text-green-500" />
+            </div>
+            <CardTitle className="text-2xl font-bold">
+              Password Updated!
+            </CardTitle>
+            <CardDescription>
+              Your password has been successfully updated. You can now log in with your new password.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              Redirecting to dashboard in a moment...
+            </p>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/dashboard">Go to Dashboard</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Password mismatch live check
+  const passwordMismatch = confirmPassword.length > 0 && password !== confirmPassword;
+
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <ShieldCheck className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">
             Set New Password
           </CardTitle>
-          <CardDescription>
-            Enter your new password below
+          <CardDescription className="text-center">
+            Choose a strong password for your account
           </CardDescription>
         </CardHeader>
 
@@ -128,39 +173,41 @@ export default function UpdatePasswordPage() {
 
             <div className="space-y-2">
               <Label htmlFor="password">New Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 required
                 placeholder="Enter new password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={status === "loading"}
-                minLength={6}
+                showStrength
               />
               <p className="text-xs text-muted-foreground">
-                Must be at least 6 characters
+                At least 8 characters with mixed case, numbers & symbols
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 required
                 placeholder="Confirm new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={status === "loading"}
-                minLength={6}
               />
+              {passwordMismatch && (
+                <p className="text-xs text-destructive">
+                  Passwords do not match
+                </p>
+              )}
             </div>
 
             <Button
               type="submit"
               className="w-full"
-              disabled={status === "loading" || !password || !confirmPassword}
+              disabled={status === "loading" || !password || !confirmPassword || passwordMismatch}
             >
               {status === "loading" ? (
                 <>

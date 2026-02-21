@@ -3,6 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { useOAuthError } from "@/hooks/useOAuthError";
@@ -10,7 +11,7 @@ import { OctagonAlert } from "lucide-react";
 import OAuthButtons from "./OAuth-buttons";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function LoginForm({
   className,
@@ -22,10 +23,14 @@ export function LoginForm({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const errorData = useOAuthError();
   const oauthErrorMsg = errorData?.errorDescription ?? null;
+
+  // Get redirect destination from URL params
+  const redirectTo = searchParams?.get("redirect") || "/dashboard";
 
   async function signInWithEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +54,7 @@ export function LoginForm({
     // Users will set up or unlock their encryption passphrase when accessing journals.
     // This ensures consistent encryption across all login methods (password, OAuth).
 
-    router.push("/dashboard");
+    router.push(redirectTo);
   }
 
   return (
@@ -117,10 +122,11 @@ export function LoginForm({
               Forgot your password?
             </Link>
           </div>
-          <Input
+          <PasswordInput
             onChange={(e) => setPassword(e.target.value)}
+            value={password}
             id="password"
-            type="password"
+            placeholder="Enter your password"
             required
           />
         </div>

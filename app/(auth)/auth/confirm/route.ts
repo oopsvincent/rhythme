@@ -1,4 +1,4 @@
-// app/(auth)/auth/confirm/route.tsx
+// app/(auth)/auth/confirm/route.ts
 
 import { type EmailOtpType } from '@supabase/supabase-js'
 import { type NextRequest } from 'next/server'
@@ -20,7 +20,13 @@ export async function GET(request: NextRequest) {
     })
     
     if (!error) {
-      // Get the user to check if they need onboarding
+      // For password recovery, always redirect to update-password page
+      // Skip onboarding check since this is an existing user resetting their password
+      if (type === 'recovery') {
+        redirect('/account/update-password')
+      }
+
+      // For other types (signup, email change, etc.), check onboarding
       const { data: { user } } = await supabase.auth.getUser()
       
       if (user) {
