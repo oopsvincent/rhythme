@@ -29,6 +29,9 @@ const sectionTitles: Record<string, string> = {
   privacy: "Privacy",
   security: "Security",
   journal: "Journal",
+  week: "Weekly",
+  plan: "Plan",
+  review: "Review",
   billing: "Billing",
 }
 
