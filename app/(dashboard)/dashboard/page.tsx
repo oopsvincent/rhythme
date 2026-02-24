@@ -24,6 +24,7 @@ import {
   ReflectionPromptSkeleton,
   MoodChartSkeleton,
   SentimentChartSkeleton,
+  WeeklyWidget,
 } from "@/components/dashboard"
 
 export default async function DashboardPage() {
@@ -98,6 +99,11 @@ export default async function DashboardPage() {
                 {/* Sentiment Confidence Chart */}
                 <Suspense fallback={<SentimentChartSkeleton />}>
                   <SentimentChart journals={journals} />
+                </Suspense>
+
+                {/* Weekly Focus Widget */}
+                <Suspense fallback={<div className="h-[200px] rounded-2xl bg-muted animate-pulse" />}>
+                  <WeeklyWidget />
                 </Suspense>
 
                 {/* Quick Journal */}

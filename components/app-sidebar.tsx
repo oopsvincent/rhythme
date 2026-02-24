@@ -13,7 +13,7 @@ import {
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import {
-    BookText,
+  BookText,
   CalendarSync,
   ClockArrowUp,
   Home,
@@ -22,8 +22,12 @@ import {
   Presentation,
   Settings,
   Sparkles,
+  Map,
+  LineChart,
+  History,
 } from "lucide-react";
 import { title } from "process";
+import { NavWeekly } from "./nav-weekly";
 
 // Main navigation items
 const mainNavItems = [
@@ -69,17 +73,28 @@ const mainNavItems = [
 // Weekly Nav Items
 const weeklyNavItems = [
     {
-        title: "Week Plan",
-        url: "/dashboard/week/plan",
-        icon: BookText,
-        section: "plan"
+      title: "Weekly",
+      url: "/dashboard/week",
+      icon: BookText,
+      isActive: true,
+      items: [
+        {
+          title: "Plan",
+          url: "/dashboard/week/plan",
+          icon: Map,
+        },
+        {
+          title: "Review",
+          url: "/dashboard/week/review",
+          icon: LineChart,
+        },
+        {
+          title: "History",
+          url: "/dashboard/week/history",
+          icon: History,
+        },
+      ],
     },
-    {
-        title: "Current Week Summary",
-        url: "/dashboard/week/review",
-        icon: Presentation,
-        section: "review"
-    }
 ]
 
 // Secondary navigation items
@@ -115,12 +130,12 @@ export function AppSidebarClient({
       {...props}
     >
       {/* Logo Header - Premium minimal */}
-      <SidebarHeader className="flex flex-row items-center gap-2 px-4 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 px-0">
-          <Image alt="R" src="/Rhythme.svg" width={20} height={20} />
+      <SidebarHeader className="flex flex-row items-center gap-2 px-6 py-5">
+        <div className="flex items-center justify-center rounded-lg w-8 h-8 shrink-0">
+          <Image alt="Rhythme Logo" src="/Rhythme.svg" width={24} height={24} />
         </div>
-        <span className="font-body text-lg font-bold tracking-tight">
-          hythmé
+        <span className="font-primary text-2xl font-black tracking-tight mt-0.5">
+          Rhythmé
         </span>
       </SidebarHeader>
 
@@ -135,15 +150,12 @@ export function AppSidebarClient({
             Menu
           </SidebarGroupLabel>
           <NavMain items={mainNavItems} />
+        {/* Weekly Navigation */}
+          <NavWeekly items={weeklyNavItems} />
         </SidebarGroup>
 
-        {/* Weekly Navigation */}
-        <SidebarGroup className="px-2 py-2">
-          <SidebarGroupLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-1">
-            Weekly Review
-          </SidebarGroupLabel>
-          <NavMain items={weeklyNavItems} />
-        </SidebarGroup>
+        {/* <SidebarGroup className="px-2 py-2">
+        </SidebarGroup> */}
 
         {/* Spacer */}
         <div className="flex-1" />

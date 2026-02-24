@@ -68,7 +68,7 @@ export default async function DashboardLayout({
             <ContextMenu>
               <ContextMenuTrigger asChild>
                 
-                <OnboardingCheck><main className="@container/main flex flex-1 flex-col">{children}</main></OnboardingCheck>
+                <OnboardingCheck><main className="@container/main flex flex-1 flex-col pb-20 md:pb-0">{children}</main></OnboardingCheck>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 <ContextMenuItem>Copy</ContextMenuItem>
