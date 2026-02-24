@@ -14,12 +14,12 @@ export type OAuthProvider = 'google' | 'github' | 'discord' | 'apple' | 'faceboo
  */
 async function getBaseUrl(): Promise<string> {
   // First try NEXT_PUBLIC_APP_URL (explicit app URL)
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL
+  if (process.env.VERCEL_ENV === 'development' || 'preview') {
+    return `https://${process.env.VERCEL_URL}`
   }
   
   // Then try Vercel production URL
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+  if (process.env.VERCEL_ENV === 'production') {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   }
   

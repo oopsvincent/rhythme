@@ -1,0 +1,160 @@
+# **Final 5.5 Weekly System – MVP V1 Reference Document**
+
+**Last updated:** February 22, 2026  
+**Owner:** @oopsvincent  
+**Status:** Active build priority  
+**PRD Section:** 5.5 – Reflection + direction without AI overreach
+
+### Purpose
+Reflection + light direction setting once per week — without AI decision-making or heavy computation.  
+Helps users close loops, notice emotional/behavioral patterns, and set calm intention for next week.  
+Reduces Sunday anxiety / Monday overwhelm by making weekly rhythm intentional and premium-feeling.
+
+### Core Principles (must respect all)
+- Clarity > Features → no data overload; max 4–6 focused sections/cards
+- Emotion-aware, not emotion-heavy → surface patterns gently, no therapy language
+- Minimal setup, immediate value → auto-generate templates + correlations from existing data
+- Privacy-first → all content user-owned; no external AI calls for correlations
+- Premium, calm, intentional UX → spacious, reflective feel (different from dashboard)
+- Direction over organization → focus on "what matters this week" vs rigid structure
+
+### Differentiation from Dashboard
+
+| Aspect              | Dashboard                          | Weekly Plan Page                  | Weekly Review Page                   |
+|---------------------|------------------------------------|-----------------------------------|--------------------------------------|
+| Time lens           | Today + rolling 7 days             | Coming week (intention)           | Past week (reflection & closure)     |
+| Data density        | High (lists, streaks, inputs)      | Low (mostly writing)              | Medium (guided + 3–5 cards)          |
+| Feel                | Action-oriented command center     | Open, Notion-style calm writing   | Guided carousel/slideshow flow       |
+| Correlations        | None or very light                 | None                              | Simple, explainable patterns         |
+| Primary action      | Do today’s things                  | Write intention                   | Reflect + learn                      |
+
+### Functional Requirements (PRD-aligned)
+- Weekly Plan: structured writing space with template
+- Weekly Review: guided reflection with wins/challenges + simple correlations (habit ↔ mood ↔ tasks)
+- One week = Monday–Sunday (or rolling 7 days — decide once)
+- Auto-detect current/previous week
+- Store only user entries (correlations computed on-demand)
+
+### Schema Additions (minimal – add via migration)
+```sql
+-- Weekly Plans (user intention)
+create table weekly_plans (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references auth.users not null,
+  week_start date not null,                    -- e.g. '2026-02-16'
+  content    jsonb,                             -- { markdown: string } or structured
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (user_id, week_start)
+);
+alter table weekly_plans enable row level security;
+
+-- Weekly Reviews (reflection)
+create table weekly_reviews (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references auth.users not null,
+  week_start date not null,
+  content    jsonb,                             -- { wins: md, challenges: md, lesson: md, ... }
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (user_id, week_start)
+);
+alter table weekly_reviews enable row level security;
+```
+
+### Simple Correlations – Rule-Based, On-Demand Only
+Computed via SQL view / RPC / server component on page load.  
+No new tables, no jobs, no pre-aggregation.
+
+**Allowed examples (display as calm text cards)**
+
+- "You completed 78% of habits on positive-mood days (vs 41% on neutral/negative)"
+- "High-priority tasks: 2.1× more likely completed on positive days"
+- "Streaks lasted 2.4× longer when you logged positive mood"
+- "Habits stronger on lighter-task days (65% vs 38% completion)"
+
+**No** scores, categories ("thriving", "burnout_risk"), recommendations, or JSON insight arrays.
+
+**Minimal SQL example (expand as needed)**
+```sql
+-- Habit completion % by mood – last 7 days
+SELECT 
+  mood_category,
+  ROUND(100.0 * SUM(completed) / NULLIF(SUM(expected), 0), 1) AS pct
+FROM (
+  SELECT 
+    CASE 
+      WHEN m.mood = 'positive' THEN 'Positive'
+      ELSE 'Other'
+    END AS mood_category,
+    COUNT(*) FILTER (WHERE hc.is_completed) AS completed,
+    COUNT(*) AS expected
+  FROM habit_completions hc
+  LEFT JOIN moods m ON DATE(hc.completed_at) = DATE(m.date)
+  WHERE hc.user_id = :user_id
+    AND hc.completed_at >= CURRENT_DATE - INTERVAL '7 days'
+  GROUP BY DATE(hc.completed_at), m.mood
+) t
+GROUP BY mood_category;
+```
+
+If <3 days data → show "Not enough data yet — keep logging mood & habits!"
+
+### UX & Flow
+
+**/weekly/plan**  
+- Route: `/weekly/plan`
+- Feel: Notion-style calm editor
+- Layout:
+  1. Header: "Plan for week of [Mon] – [Sun]"
+  2. Large markdown editor + default template:
+     ```
+     # Wins to build on
+     ...
+
+     # Challenges to handle better
+     ...
+
+     # 3–5 focus areas this week
+     1. ...
+
+     # Habits to protect
+     ...
+
+     # Mood intention
+     I want to feel more...
+     ```
+  3. Bottom bar: Save / Clear / Copy from last week
+
+**/weekly/review**  
+- Route: `/weekly/review`
+- Feel: Guided carousel (4–6 slides max)
+- Flow:
+  1. Overview: week dates + simple harmony text + mood sparkline
+  2. Wins: prompt + auto-insert streaks/tasks highlights
+  3. Challenges: prompt + top correlation (e.g. missed habits on negative days)
+  4. Patterns: 3–4 correlation cards (text + ↑↓ emoji)
+  5. Reflection: free markdown + quick mood takeaway → Save
+
+### Build Order (Minimum Complexity)
+1. Schema migration + RLS (30 min)
+2. /weekly/plan page + CRUD + editor (1–2 days)
+3. /weekly/review layout + static prompts (next)
+4. Add SQL correlations + dynamic cards (last polish)
+5. Test with mock data → <1.5 s load, calm feel
+
+### What to Ignore / Defer
+- New daily/weekly snapshot tables
+- Background jobs / cron
+- Categories (thriving / burnout_risk)
+- Overall scores (0–100)
+- Recommendations arrays
+- JSON insight structures
+- Any "actionable insights" phrasing
+
+### Success Metric (MVP)
+≥40% of active users complete ≥1 weekly plan/review per month  
+Qualitative: users describe it as "reflective but not overwhelming"
+
+This is the locked, shippable version.  
+No daily snapshots. No weekly_overviews table. No recommendations. No scores/categories.
