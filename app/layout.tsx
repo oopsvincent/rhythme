@@ -113,7 +113,7 @@ export const metadata: Metadata = {
     siteName: "Rhythmé",
     images: [
       {
-        url: "/preview.png",
+        url: "/OG-Rhythme.jpg",
         width: 1200,
         height: 630,
         alt: "Rhythmé App Preview",
@@ -127,7 +127,7 @@ export const metadata: Metadata = {
     title: "Rhythmé – The Productivity Ecosystem",
     description:
       "Align your life with habits, journaling, focus, and goals — all in one place.",
-    images: ["/preview.png"],
+    images: ["/OG-Rhythme.jpg"],
     creator: "@oopsvincent",
   },
   icons: {

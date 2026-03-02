@@ -10,20 +10,28 @@ import { headers } from 'next/headers'
 export type OAuthProvider = 'google' | 'github' | 'discord' | 'apple' | 'facebook'
 
 /**
- * Get the base URL from environment or headers (for server actions)
+ * Get the base URL from environment or headers (for server actions).
+ * 
+ * Priority order:
+ *  1. NEXT_PUBLIC_APP_URL — explicit override (e.g. custom domain)
+ *  2. Request headers — reflects the domain the user is actually visiting
+ *  3. VERCEL_PROJECT_PRODUCTION_URL — Vercel's .vercel.app domain (last resort)
+ *  4. localhost fallback
+ *
+ * IMPORTANT: Request headers MUST come before VERCEL_PROJECT_PRODUCTION_URL
+ * because the Vercel URL resolves to the .vercel.app domain, which may be
+ * behind Vercel Authentication. Using the host header ensures OAuth callbacks
+ * redirect to whatever domain the user actually accessed (i.e. your custom domain).
  */
 async function getBaseUrl(): Promise<string> {
-  // First try NEXT_PUBLIC_APP_URL (explicit app URL)
-  if (process.env.VERCEL_ENV === 'development' || 'preview') {
-    return `https://${process.env.VERCEL_URL}`
+  // 1. Explicit app URL override (highest priority)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
   }
-  
-  // Then try Vercel production URL
-  if (process.env.VERCEL_ENV === 'production') {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  }
-  
-  // Try to get from headers (works during requests)
+
+  // 2. Derive from incoming request headers — gives us the real domain
+  //    the user is visiting (custom domain, not the .vercel.app domain)
+
   try {
     const headersList = await headers()
     const host = headersList.get('host')
@@ -32,10 +40,15 @@ async function getBaseUrl(): Promise<string> {
       return `${protocol}://${host}`
     }
   } catch {
-    // Headers not available
+    // Headers not available (e.g. called outside of a request context)
   }
-  
-  // Default fallback
+
+  // 3. Vercel's auto-set production URL (may be .vercel.app — use as fallback only)
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  }
+
+  // 4. Local development fallback
   return 'http://localhost:3000'
 }
 
