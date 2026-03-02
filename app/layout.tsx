@@ -145,7 +145,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased selection:text-primary`}
+        className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased selection:bg-accent/50 selection:text-accent-foreground`}
       >
         <QueryProvider>
           <ColorThemeProvider>

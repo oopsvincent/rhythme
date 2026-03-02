@@ -9,6 +9,7 @@ import Link from "next/link"
 import { Fragment } from "react"
 import { formatSlugToTitle } from "@/lib/slug"
 import { ServiceStatusIndicator } from "@/components/service-status-indicator"
+import { NotificationPopover } from "@/components/notifications/notification-popover"
 
 // Mapping sections to display titles
 const sectionTitles: Record<string, string> = {
@@ -96,9 +97,10 @@ export function SiteHeader({ className }: React.HTMLAttributes<HTMLElement>) {
           ))}
         </nav>
 
-        {/* Subtle ML service status indicator - disappears when ready */}
-        <div className="ml-auto">
+        {/* Right side: notifications + status */}
+        <div className="ml-auto flex items-center gap-2">
           <ServiceStatusIndicator />
+          <NotificationPopover />
         </div>
       </div>
     </header>
