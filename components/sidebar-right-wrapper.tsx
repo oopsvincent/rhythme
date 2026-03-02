@@ -9,8 +9,8 @@ import { SidebarRight } from "@/components/sidebar-right"
 export function SidebarRightWrapper() {
   const pathname = usePathname()
   
-  // Hide sidebar on settings pages
-  if (pathname?.startsWith('/settings')) {
+  // Hide sidebar on settings and weekly pages
+  if (pathname?.startsWith('/settings') || pathname?.startsWith('/dashboard/week')) {
     return null
   }
   

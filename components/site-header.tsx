@@ -9,6 +9,7 @@ import Link from "next/link"
 import { Fragment } from "react"
 import { formatSlugToTitle } from "@/lib/slug"
 import { ServiceStatusIndicator } from "@/components/service-status-indicator"
+import { NotificationPopover } from "@/components/notifications/notification-popover"
 
 // Mapping sections to display titles
 const sectionTitles: Record<string, string> = {
@@ -29,6 +30,10 @@ const sectionTitles: Record<string, string> = {
   privacy: "Privacy",
   security: "Security",
   journal: "Journal",
+  week: "Weekly",
+  plan: "Plan",
+  review: "Review",
+  history: "History",
   billing: "Billing",
 }
 
@@ -54,12 +59,12 @@ function generateBreadcrumbs(pathname: string) {
   return breadcrumbs
 }
 
-export function SiteHeader() {
+export function SiteHeader({ className }: React.HTMLAttributes<HTMLElement>) {
   const pathname = usePathname()
   const breadcrumbs = generateBreadcrumbs(pathname || '/dashboard')
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className={`flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) ${className || ""}`}>
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator
@@ -92,9 +97,10 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        {/* Subtle ML service status indicator - disappears when ready */}
-        <div className="ml-auto">
+        {/* Right side: notifications + status */}
+        <div className="ml-auto flex items-center gap-2">
           <ServiceStatusIndicator />
+          <NotificationPopover />
         </div>
       </div>
     </header>

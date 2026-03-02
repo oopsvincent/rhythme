@@ -109,7 +109,7 @@ export const metadata: Metadata = {
     title: "Rhythmé – The Productivity Ecosystem",
     description:
       "Align your life with habits, journaling, focus, and goals — all in one place.",
-    url: "https://yourdomain.com",
+    url: "https://rhythme-gamma.vercel.app",
     siteName: "Rhythmé",
     images: [
       {
@@ -145,7 +145,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased`}
+        className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased selection:bg-accent/50 selection:text-accent-foreground`}
       >
         <QueryProvider>
           <ColorThemeProvider>

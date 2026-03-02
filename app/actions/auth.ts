@@ -31,6 +31,7 @@ async function getBaseUrl(): Promise<string> {
 
   // 2. Derive from incoming request headers — gives us the real domain
   //    the user is visiting (custom domain, not the .vercel.app domain)
+
   try {
     const headersList = await headers()
     const host = headersList.get('host')

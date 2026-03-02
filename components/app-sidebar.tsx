@@ -13,14 +13,21 @@ import {
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import {
+  BookText,
   CalendarSync,
   ClockArrowUp,
   Home,
   ListCheck,
   NotebookPen,
+  Presentation,
   Settings,
   Sparkles,
+  Map,
+  LineChart,
+  History,
 } from "lucide-react";
+import { title } from "process";
+import { NavWeekly } from "./nav-weekly";
 
 // Main navigation items
 const mainNavItems = [
@@ -55,7 +62,40 @@ const mainNavItems = [
     icon: NotebookPen,
     section: "journal",
   },
+//   {
+//     title: "Current Week",
+//     url: "/dashboard/week",
+//     icon: BookText,
+//     section: "journal",
+//   },
 ];
+
+// Weekly Nav Items
+const weeklyNavItems = [
+    {
+      title: "Weekly",
+      url: "/dashboard/week",
+      icon: BookText,
+      isActive: true,
+      items: [
+        {
+          title: "Plan",
+          url: "/dashboard/week/plan",
+          icon: Map,
+        },
+        {
+          title: "Review",
+          url: "/dashboard/week/review",
+          icon: LineChart,
+        },
+        {
+          title: "History",
+          url: "/dashboard/week/history",
+          icon: History,
+        },
+      ],
+    },
+]
 
 // Secondary navigation items
 const secondaryNavItems = [
@@ -86,21 +126,21 @@ export function AppSidebarClient({
   return (
     <Sidebar
       collapsible="offcanvas"
-      className="fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border glass"
+      className="fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border glass px-0"
       {...props}
     >
       {/* Logo Header - Premium minimal */}
-      <SidebarHeader className="flex flex-row items-center gap-2 px-4 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-          <Image alt="R" src="/Rhythme.svg" width={20} height={20} />
+      <SidebarHeader className="flex flex-row items-center gap-2 px-6 py-5">
+        <div className="flex items-center justify-center rounded-lg w-8 h-8 shrink-0">
+          <Image alt="Rhythme Logo" src="/Rhythme.svg" width={24} height={24} />
         </div>
-        <span className="font-primary text-lg font-bold tracking-tight">
+        <span className="font-primary text-2xl font-black tracking-tight mt-0.5">
           Rhythmé
         </span>
       </SidebarHeader>
 
       {/* Subtle divider */}
-      <div className="mx-4 h-px bg-border/50" />
+      <div className="h-px bg-border/50" />
 
       {/* Main Navigation */}
       <SidebarContent className="flex flex-col gap-0">
@@ -110,10 +150,16 @@ export function AppSidebarClient({
             Menu
           </SidebarGroupLabel>
           <NavMain items={mainNavItems} />
+        {/* Weekly Navigation */}
+          <NavWeekly items={weeklyNavItems} />
         </SidebarGroup>
+
+        {/* <SidebarGroup className="px-2 py-2">
+        </SidebarGroup> */}
 
         {/* Spacer */}
         <div className="flex-1" />
+
 
         {/* Secondary Navigation */}
         <SidebarGroup className="px-2 py-2">
