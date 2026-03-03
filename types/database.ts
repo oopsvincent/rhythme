@@ -98,6 +98,7 @@ export interface CachedHabitPrediction {
 // Extended habit with computed stats for UI
 export interface HabitWithStats extends Habit {
   completedToday: boolean
+  completedThisWeek: boolean // Whether habit was completed in current Mon–Sun window
   completionLogs: HabitLog[]
   current_streak: number // Computed from logs, most accurate
   prediction?: HabitPrediction | null
