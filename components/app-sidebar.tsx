@@ -1,8 +1,11 @@
 "use client";
+
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-// import { SidebarQuickStats } from "@/components/sidebar-quick-stats"; // Hidden for MVP
+import { TeamSwitcher } from "@/components/team-switcher";
+import { WorkspaceGoal } from "@/components/workspace-goal";
 import Image from "next/image";
+import { useSidebar } from "@/components/ui/sidebar"
 
 import {
   Sidebar,
@@ -20,20 +23,25 @@ import {
   Home,
   ListCheck,
   NotebookPen,
-  Presentation,
   Settings,
   Sparkles,
   Map,
   LineChart,
   History,
+  GalleryVerticalEnd,
 } from "lucide-react";
-import { title } from "process";
-import { NavWeekly } from "./nav-weekly";
 
-// Main navigation items
-const mainNavItems = [
+const workspaceData = [
   {
-    title: "Home",
+    name: "Personal Workspace",
+    logo: GalleryVerticalEnd,
+    plan: "Pro",
+  }
+];
+
+const navigationItems = [
+  {
+    title: "Overview",
     url: "/dashboard",
     icon: Home,
     isActive: true,
@@ -57,51 +65,44 @@ const mainNavItems = [
     icon: NotebookPen,
     section: "journal",
   },
-];
-
-// Habits nav items (collapsible with sub-items)
-const habitsNavItems = [
   {
     title: "Habits",
     url: "/dashboard/habits",
     icon: CalendarSync,
+    section: "habits",
     items: [
       {
-        title: "Weekly Habits",
+        title: "Weekly Config",
         url: "/dashboard/habits/weekly",
         icon: CalendarDays,
       },
     ],
   },
+  {
+    title: "Weekly Planning",
+    url: "/dashboard/week",
+    icon: BookText,
+    section: "week",
+    items: [
+      {
+        title: "Plan",
+        url: "/dashboard/week/plan",
+        icon: Map,
+      },
+      {
+        title: "Review",
+        url: "/dashboard/week/review",
+        icon: LineChart,
+      },
+      {
+        title: "History",
+        url: "/dashboard/week/history",
+        icon: History,
+      },
+    ],
+  },
 ];
 
-// Weekly Nav Items
-const weeklyNavItems = [
-    {
-      title: "Weekly",
-      url: "/dashboard/week",
-      icon: BookText,
-      items: [
-        {
-          title: "Plan",
-          url: "/dashboard/week/plan",
-          icon: Map,
-        },
-        {
-          title: "Review",
-          url: "/dashboard/week/review",
-          icon: LineChart,
-        },
-        {
-          title: "History",
-          url: "/dashboard/week/history",
-          icon: History,
-        },
-      ],
-    },
-]
-
-// Secondary navigation items
 const secondaryNavItems = [
   {
     title: "Ask AI",
@@ -117,8 +118,11 @@ const secondaryNavItems = [
   },
 ];
 
+
+
 export function AppSidebarClient({
   user,
+  workspaceGoal,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user?: {
@@ -126,65 +130,68 @@ export function AppSidebarClient({
     email: string;
     avatar: string;
   } | null;
+  workspaceGoal?: {
+    title: string;
+    description?: string;
+  } | null;
 }) {
+
+    const { state } = useSidebar()
+const isCollapsed = state === "collapsed"
+
+
   return (
     <Sidebar
-      collapsible="offcanvas"
-      className="fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border glass px-0"
+      collapsible="icon"
+      className="border-r border-sidebar-border bg-sidebar"
       {...props}
     >
-      {/* Logo Header - Premium minimal */}
-      <SidebarHeader className="flex flex-row items-center gap-2 px-6 py-5">
-        <div className="flex items-center justify-center rounded-lg w-8 h-8 shrink-0">
-          <Image alt="Rhythme Logo" src="/Rhythme.svg" width={24} height={24} />
-        </div>
-        <span className="font-primary text-2xl font-black tracking-tight mt-0.5">
-          Rhythmé
-        </span>
-      </SidebarHeader>
+<SidebarHeader className="px-2 pt-4 pb-2 flex flex-col gap-3">
+  <div className="flex px-2">
+    <div className="flex items-center justify-center rounded-md w-7 h-7 shrink-0 bg-sidebar-primary/5 border border-sidebar-border shadow-sm">
+      <Image alt="Rhythme Logo" src="/Rhythme.svg" width={18} height={18} className="opacity-90" />
+    </div>
+  </div>
 
-      {/* Subtle divider */}
-      <div className="h-px bg-border/50" />
+  {!isCollapsed && <TeamSwitcher teams={workspaceData} />}
+<div
+  className={`transition-all duration-200 ${
+    isCollapsed ? "opacity-0 h-0 overflow-hidden pointer-events-none" : "opacity-100"
+  }`}
+>
+    <WorkspaceGoal goal={workspaceGoal}/>
+</div>
+</SidebarHeader>
 
-      {/* Main Navigation */}
-      <SidebarContent className="flex flex-col gap-0">
-        {/* Primary Navigation */}
-        <SidebarGroup className="px-2 py-3">
-          <SidebarGroupLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-1">
+      <SidebarContent className="flex flex-col gap-0 overflow-y-auto custom-scrollbar pt-2">
+        {/* Main Navigation */}
+        <SidebarGroup className="px-2 py-0">
+          <SidebarGroupLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold mb-1">
             Menu
           </SidebarGroupLabel>
-          <NavMain items={mainNavItems} />
-          <NavWeekly items={habitsNavItems} />
-        {/* Weekly Navigation */}
-        </SidebarGroup>
-
-        <SidebarGroup className="px-2 py-2">
-          <NavWeekly items={weeklyNavItems} />
+          <NavMain items={navigationItems} />
         </SidebarGroup>
 
         {/* Spacer */}
-        <div className="flex-1" />
-
 
         {/* Secondary Navigation */}
-        <SidebarGroup className="px-2 py-2">
-          <SidebarGroupLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-1">
-            More
+        <SidebarGroup className="px-2 py-2 mt-auto">
+          <SidebarGroupLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold mb-1">
+            General
           </SidebarGroupLabel>
           <NavMain items={secondaryNavItems} />
         </SidebarGroup>
       </SidebarContent>
 
-      {/* User Footer - Glass effect */}
-      <SidebarFooter className="border-t border-border/50 p-2">
+      <SidebarFooter className="border-t border-sidebar-border p-2">
         {user ? (
           <NavUser user={user} />
         ) : (
           <div className="flex items-center gap-3 rounded-lg px-3 py-2">
-            <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
+            <div className="h-8 w-8 animate-pulse rounded-full bg-sidebar-accent" />
             <div className="space-y-1">
-              <div className="h-3 w-20 animate-pulse rounded bg-muted" />
-              <div className="h-2 w-28 animate-pulse rounded bg-muted" />
+              <div className="h-3 w-20 animate-pulse rounded bg-sidebar-accent" />
+              <div className="h-2 w-28 animate-pulse rounded bg-sidebar-accent" />
             </div>
           </div>
         )}

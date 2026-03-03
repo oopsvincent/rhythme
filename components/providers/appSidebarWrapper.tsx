@@ -1,13 +1,15 @@
 // AppSidebarWrapper.tsx (SERVER)
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebarClient } from "../app-sidebar";
-// import AppSidebarClient from "./AppSidebarClient";
 
 export default async function AppSidebarWrapper(
   props: React.ComponentProps<typeof AppSidebarClient>
 ) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const mappedUser = user
     ? {
@@ -21,5 +23,29 @@ export default async function AppSidebarWrapper(
       }
     : null;
 
-  return <AppSidebarClient {...props} user={mappedUser} />;
+  // ✅ Fetch workspace goal here
+  let workspaceGoal = null;
+
+  if (user) {
+    const { data, error } = await supabase
+      .from("user_preferences")
+      .select("onboarding_data")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!error && data?.onboarding_data?.long_term_goal) {
+      workspaceGoal = {
+        title: data.onboarding_data.long_term_goal,
+        description: data.onboarding_data.long_term_goal_description,
+      };
+    }
+  }
+
+  return (
+    <AppSidebarClient
+      {...props}
+      user={mappedUser}
+      workspaceGoal={workspaceGoal}
+    />
+  );
 }
