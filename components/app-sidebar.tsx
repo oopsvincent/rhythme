@@ -15,6 +15,7 @@ import {
 import {
   BookText,
   CalendarSync,
+  CalendarDays,
   ClockArrowUp,
   Home,
   ListCheck,
@@ -39,12 +40,6 @@ const mainNavItems = [
     section: "overview",
   },
   {
-    title: "Habits",
-    icon: CalendarSync,
-    url: "/dashboard/habits",
-    section: "habits",
-  },
-  {
     title: "Tasks",
     url: "/dashboard/tasks",
     icon: ListCheck,
@@ -62,12 +57,22 @@ const mainNavItems = [
     icon: NotebookPen,
     section: "journal",
   },
-//   {
-//     title: "Current Week",
-//     url: "/dashboard/week",
-//     icon: BookText,
-//     section: "journal",
-//   },
+];
+
+// Habits nav items (collapsible with sub-items)
+const habitsNavItems = [
+  {
+    title: "Habits",
+    url: "/dashboard/habits",
+    icon: CalendarSync,
+    items: [
+      {
+        title: "Weekly Habits",
+        url: "/dashboard/habits/weekly",
+        icon: CalendarDays,
+      },
+    ],
+  },
 ];
 
 // Weekly Nav Items
@@ -76,7 +81,6 @@ const weeklyNavItems = [
       title: "Weekly",
       url: "/dashboard/week",
       icon: BookText,
-      isActive: true,
       items: [
         {
           title: "Plan",
@@ -150,12 +154,13 @@ export function AppSidebarClient({
             Menu
           </SidebarGroupLabel>
           <NavMain items={mainNavItems} />
+          <NavWeekly items={habitsNavItems} />
         {/* Weekly Navigation */}
-          <NavWeekly items={weeklyNavItems} />
         </SidebarGroup>
 
-        {/* <SidebarGroup className="px-2 py-2">
-        </SidebarGroup> */}
+        <SidebarGroup className="px-2 py-2">
+          <NavWeekly items={weeklyNavItems} />
+        </SidebarGroup>
 
         {/* Spacer */}
         <div className="flex-1" />

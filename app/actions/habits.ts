@@ -64,6 +64,76 @@ function isCompletedToday(logs: HabitLog[]): boolean {
   return logs.some((log) => log.completed_at.split("T")[0] === today);
 }
 
+// Get current week bounds (Monday 00:00:00 UTC – Sunday 23:59:59 UTC)
+function getWeekBounds(): { weekStart: string; weekEnd: string } {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Sun, 1=Mon...
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + diffToMonday));
+  const sunday = new Date(Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate() + 6, 23, 59, 59, 999));
+  return {
+    weekStart: monday.toISOString(),
+    weekEnd: sunday.toISOString(),
+  };
+}
+
+function isCompletedThisWeek(logs: HabitLog[]): boolean {
+  const { weekStart, weekEnd } = getWeekBounds();
+  return logs.some((log) => log.completed_at >= weekStart && log.completed_at <= weekEnd);
+}
+
+// Get ISO week number + year for a date string
+function getISOWeekKey(dateStr: string): string {
+  const d = new Date(dateStr);
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+// Compute consecutive weeks with at least one completion (walking backwards)
+function computeWeeklyStreak(dateStrs: string[]): number {
+  if (dateStrs.length === 0) return 0;
+
+  // Get unique ISO week keys from completion dates
+  const weekKeys = [...new Set(dateStrs.map(getISOWeekKey))].sort((a, b) => b.localeCompare(a));
+  if (weekKeys.length === 0) return 0;
+
+  const currentWeekKey = getISOWeekKey(new Date().toISOString());
+  // Get last week key
+  const now = new Date();
+  const lastWeekDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 7));
+  const lastWeekKey = getISOWeekKey(lastWeekDate.toISOString());
+
+  const latest = weekKeys[0];
+  if (latest !== currentWeekKey && latest !== lastWeekKey) return 0;
+
+  // Walk backwards through consecutive weeks
+  let streak = 0;
+  let expectedWeek = latest;
+
+  for (const week of weekKeys) {
+    if (week === expectedWeek) {
+      streak++;
+      // Compute previous week key
+      const parts = expectedWeek.split("-W");
+      const year = parseInt(parts[0]);
+      const wk = parseInt(parts[1]);
+      if (wk === 1) {
+        // Previous week is last week of previous year — approximate
+        const dec28 = new Date(Date.UTC(year - 1, 11, 28));
+        expectedWeek = getISOWeekKey(dec28.toISOString());
+      } else {
+        expectedWeek = `${year}-W${String(wk - 1).padStart(2, "0")}`;
+      }
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
 function daysSince(date: Date): number {
   const now = new Date();
   const diffTime = Math.abs(now.getTime() - date.getTime());
@@ -116,11 +186,16 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
       const uniqueDatesDesc = [
         ...new Set(habitLogs.map((log) => log.completed_at.split("T")[0])),
       ].sort((a, b) => b.localeCompare(a));
-      const currentStreak = computeCurrentStreak(uniqueDatesDesc);
+
+      // Use week-based streak for weekly habits, day-based for daily
+      const currentStreak = habit.frequency === "weekly"
+        ? computeWeeklyStreak(uniqueDatesDesc)
+        : computeCurrentStreak(uniqueDatesDesc);
 
       return {
         ...habit,
         completedToday: isCompletedToday(habitLogs),
+        completedThisWeek: isCompletedThisWeek(habitLogs),
         completionLogs: habitLogs,
         current_streak: currentStreak,
         prediction: null, // Placeholder; populated in stats if needed
@@ -172,12 +247,17 @@ export async function getHabit(
     const uniqueDatesDesc = [
       ...new Set((logs || []).map((log) => log.completed_at.split("T")[0])),
     ].sort((a, b) => b.localeCompare(a));
-    const currentStreak = computeCurrentStreak(uniqueDatesDesc);
+
+    // Use week-based streak for weekly habits
+    const currentStreak = habit.frequency === "weekly"
+      ? computeWeeklyStreak(uniqueDatesDesc)
+      : computeCurrentStreak(uniqueDatesDesc);
 
     return {
       data: {
         ...habit,
         completedToday: isCompletedToday(logs || []),
+        completedThisWeek: isCompletedThisWeek(logs || []),
         completionLogs: logs || [],
         current_streak: currentStreak,
         prediction: null,
@@ -287,19 +367,44 @@ export async function logHabitCompletion(
   try {
     const { supabase, user } = await getAuthenticatedUser();
 
-    // Check if already completed today
-    const today = new Date().toISOString().split("T")[0];
-    const { data: existingLog } = await supabase
-      .from("habit_logs")
-      .select("*")
+    // Fetch the habit to check frequency
+    const { data: habit } = await supabase
+      .from("habits")
+      .select("frequency")
       .eq("habit_id", habitId)
       .eq("user_id", user.id)
-      .gte("completed_at", `${today}T00:00:00`)
-      .lt("completed_at", `${today}T23:59:59`)
-      .maybeSingle();
+      .single();
 
-    if (existingLog) {
-      return { error: "Habit already completed today" };
+    if (habit?.frequency === "weekly") {
+      // For weekly habits, guard against duplicate completion this week
+      const { weekStart, weekEnd } = getWeekBounds();
+      const { data: existingLog } = await supabase
+        .from("habit_logs")
+        .select("*")
+        .eq("habit_id", habitId)
+        .eq("user_id", user.id)
+        .gte("completed_at", weekStart)
+        .lte("completed_at", weekEnd)
+        .maybeSingle();
+
+      if (existingLog) {
+        return { error: "Habit already completed this week" };
+      }
+    } else {
+      // For daily/monthly habits, guard against same-day duplicate
+      const today = new Date().toISOString().split("T")[0];
+      const { data: existingLog } = await supabase
+        .from("habit_logs")
+        .select("*")
+        .eq("habit_id", habitId)
+        .eq("user_id", user.id)
+        .gte("completed_at", `${today}T00:00:00`)
+        .lt("completed_at", `${today}T23:59:59`)
+        .maybeSingle();
+
+      if (existingLog) {
+        return { error: "Habit already completed today" };
+      }
     }
 
     // Insert the completion log
@@ -329,7 +434,11 @@ export async function logHabitCompletion(
     const uniqueDatesDesc = [
       ...new Set((allLogs || []).map((l) => l.completed_at.split("T")[0])),
     ].sort((a, b) => b.localeCompare(a));
-    const newStreak = computeCurrentStreak(uniqueDatesDesc);
+
+    // Use week-based streak for weekly habits
+    const newStreak = habit?.frequency === "weekly"
+      ? computeWeeklyStreak(uniqueDatesDesc)
+      : computeCurrentStreak(uniqueDatesDesc);
 
     // Update streak_count in habits table
     await supabase
