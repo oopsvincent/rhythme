@@ -68,7 +68,25 @@ export default async function DashboardLayout({
             <ContextMenu>
               <ContextMenuTrigger asChild>
                 
-                <OnboardingCheck><main className="@container/main flex flex-1 flex-col pb-20 md:pb-0">{children}</main></OnboardingCheck>
+<OnboardingCheck>
+  <div className="flex flex-1 bg-muted/30 dark:bg-background">
+    <main className="@container/main flex flex-1 p-6 pb-20 md:pb-6">
+      <div
+        className="
+          w-full
+          rounded-2xl
+          bg-card
+          border
+          border-border
+          shadow-sm
+          p-6
+        "
+      >
+        {children}
+      </div>
+    </main>
+  </div>
+</OnboardingCheck>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 <ContextMenuItem>Copy</ContextMenuItem>
