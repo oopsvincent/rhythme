@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -15,13 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,7 +26,6 @@ import {
   ArrowLeft,
   CheckCircle2,
   Flame,
-  TrendingUp,
   Brain,
   Sparkles,
   Loader2,
@@ -49,7 +41,6 @@ import { motion } from "framer-motion";
 import type {
   HabitWithStats,
   HabitLog,
-  HabitPrediction,
   HabitFrequency,
 } from "@/types/database";
 import {
@@ -62,6 +53,12 @@ import {
   canUsePrediction,
   getDaysUntilPrediction,
 } from "@/lib/habit-prediction";
+import {
+  getFrequencyLabel,
+  getTargetLabel,
+  getStreakUnit,
+  getPeriodLabel,
+} from "@/lib/habit-helpers";
 
 /**
  * Get motivational message based on prediction probability
@@ -91,6 +88,13 @@ function getPredictionMessage(probability: number): string {
     return "🚀 Unstoppable! This habit is now part of your identity.";
   }
 }
+
+const FREQUENCY_OPTIONS: { value: HabitFrequency; label: string }[] = [
+  { value: 0, label: "Daily" },
+  { value: 1, label: "Weekly" },
+  { value: 2, label: "Monthly" },
+  { value: 3, label: "Multiple per week" },
+];
 
 interface HabitStats {
   completion_rate_7d: number;
@@ -136,12 +140,15 @@ export function HabitDetailClient({
   // Edit form state
   const [editName, setEditName] = useState(habit.name);
   const [editDescription, setEditDescription] = useState(habit.description || "");
-  const [editFrequency, setEditFrequency] = useState<HabitFrequency>(habit.frequency);
+  const [editFrequency, setEditFrequency] = useState<HabitFrequency>(habit.frequency_num ?? habit.frequency);
+  const [editTargetCount, setEditTargetCount] = useState(habit.target_count ?? 1);
 
   const today = new Date().toISOString().split("T")[0];
   const daysUntilPrediction = canUsePrediction(habit)
     ? 0
     : getDaysUntilPrediction(habit);
+  const freq = habit.frequency_num ?? habit.frequency;
+  const streakUnit = getStreakUnit(freq);
 
   const handleComplete = () => {
     logMutation.mutate(
@@ -154,7 +161,10 @@ export function HabitDetailClient({
           // Optimistic update
           setHabit((prev) => ({
             ...prev,
+            isCompletedForPeriod: (prev.periodCompletions + 1) >= prev.periodTarget,
+            periodCompletions: prev.periodCompletions + 1,
             completedToday: true,
+            completedThisWeek: true,
             current_streak: prev.current_streak + 1,
             completionLogs: data ? [data, ...prev.completionLogs] : prev.completionLogs,
           }));
@@ -177,11 +187,13 @@ export function HabitDetailClient({
   };
 
   const handleRemoveCompletion = () => {
-    // Optimistic update - apply immediately for instant UI feedback
+    // Optimistic update
     setHabit((prev) => ({
       ...prev,
+      isCompletedForPeriod: false,
+      periodCompletions: Math.max(0, prev.periodCompletions - 1),
       completedToday: false,
-      current_streak: Math.max(0, prev.current_streak - 1), // Decrement streak
+      current_streak: Math.max(0, prev.current_streak - 1),
       completionLogs: prev.completionLogs.filter(
         (log) => !log.completed_at.startsWith(today)
       ),
@@ -206,7 +218,6 @@ export function HabitDetailClient({
       },
       {
         onError: () => {
-          // Revert on error - refetch the page to get correct state
           router.refresh();
         },
       }
@@ -223,17 +234,19 @@ export function HabitDetailClient({
           name: editName.trim(),
           description: editDescription.trim() || null,
           frequency: editFrequency,
+          target_count: editTargetCount,
         },
       },
       {
         onSuccess: (data) => {
           if (data) {
-            // Optimistic update
             setHabit((prev) => ({
               ...prev,
               name: data.name,
               description: data.description,
               frequency: data.frequency,
+              frequency_num: data.frequency_num ?? data.frequency,
+              target_count: data.target_count ?? prev.target_count,
             }));
           }
           setIsEditDialogOpen(false);
@@ -266,7 +279,7 @@ export function HabitDetailClient({
             <motion.button
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              onClick={() => router.back()}
+              onClick={() => router.push("/dashboard/habits")}
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -290,7 +303,8 @@ export function HabitDetailClient({
                           onClick={() => {
                             setEditName(habit.name);
                             setEditDescription(habit.description || "");
-                            setEditFrequency(habit.frequency);
+                            setEditFrequency(freq);
+                            setEditTargetCount(habit.target_count ?? 1);
                             setIsEditDialogOpen(true);
                           }}
                           className="p-1.5 rounded-lg hover:bg-muted transition-colors"
@@ -304,14 +318,30 @@ export function HabitDetailClient({
                           {habit.description}
                         </CardDescription>
                       )}
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{habit.frequency}</Badge>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary">{getFrequencyLabel(freq)}</Badge>
+                        <Badge variant="outline" className="bg-muted/50">
+                          <Target className="mr-1 h-3 w-3" />
+                          {habit.periodTarget}x {habit.periodLabel}
+                        </Badge>
                         <Badge
                           variant="outline"
                           className="bg-primary/10 text-primary border-primary/20"
                         >
                           <Flame className="mr-1 h-3 w-3" />
-                          {habit.current_streak} day streak
+                          {habit.current_streak} {streakUnit} streak
+                        </Badge>
+                        <Badge
+                          variant={habit.isCompletedForPeriod ? "default" : "outline"}
+                          className={
+                            habit.isCompletedForPeriod
+                              ? "bg-primary/15 text-primary border-primary/20"
+                              : "text-muted-foreground"
+                          }
+                        >
+                          {habit.isCompletedForPeriod
+                            ? `✓ ${habit.periodCompletions}/${habit.periodTarget}`
+                            : `${habit.periodCompletions}/${habit.periodTarget} ${habit.periodLabel}`}
                         </Badge>
                       </div>
                     </div>
@@ -319,7 +349,7 @@ export function HabitDetailClient({
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-3">
-                    {!habit.completedToday ? (
+                    {!habit.isCompletedForPeriod ? (
                       <button
                         onClick={() => setIsCompleteDialogOpen(true)}
                         disabled={isPending}
@@ -330,7 +360,7 @@ export function HabitDetailClient({
                         ) : (
                           <CheckCircle2 className="mr-2 h-4 w-4" />
                         )}
-                        Mark Complete for Today
+                        Mark Complete ({habit.periodCompletions + 1}/{habit.periodTarget})
                       </button>
                     ) : (
                       <button
@@ -343,7 +373,7 @@ export function HabitDetailClient({
                         ) : (
                           <XCircle className="mr-2 h-4 w-4" />
                         )}
-                        Remove Today's Completion
+                        Remove Today&apos;s Completion
                       </button>
                     )}
                   </div>
@@ -362,7 +392,7 @@ export function HabitDetailClient({
                     Complete {habit.name}
                   </DialogTitle>
                   <DialogDescription>
-                    Add an optional note about today's completion
+                    Add an optional note about this completion
                   </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -404,7 +434,7 @@ export function HabitDetailClient({
                     Remove Completion
                   </DialogTitle>
                   <DialogDescription>
-                    Are you sure you want to remove today's completion? This will reset your streak if it was active today.
+                    Are you sure you want to remove today&apos;s completion? This may affect your streak.
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -469,21 +499,40 @@ export function HabitDetailClient({
                         onChange={(e) => setEditDescription(e.target.value)}
                       />
                     </div>
+                    {/* Frequency Radio Buttons */}
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Frequency</Label>
-                      <Select
-                        value={editFrequency}
-                        onValueChange={(value: HabitFrequency) => setEditFrequency(value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="grid grid-cols-2 gap-2">
+                        {FREQUENCY_OPTIONS.map((opt) => (
+                          <button
+                            type="button"
+                            key={opt.value}
+                            onClick={() => setEditFrequency(opt.value)}
+                            className={`flex items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 border ${
+                              editFrequency === opt.value
+                                ? "bg-primary text-primary-foreground border-primary shadow-md"
+                                : "bg-muted/30 text-foreground border-border hover:bg-muted/50 hover:border-border/80"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Target Count */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        {getTargetLabel(editFrequency)}
+                      </Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={editTargetCount}
+                        onChange={(e) =>
+                          setEditTargetCount(Math.max(1, parseInt(e.target.value) || 1))
+                        }
+                      />
                     </div>
                   </div>
                   <DialogFooter>
@@ -660,7 +709,7 @@ export function HabitDetailClient({
                       Completion History
                     </CardTitle>
                   </div>
-                  <CardDescription>Last 30 days of completions</CardDescription>
+                  <CardDescription>Recent completions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {habit.completionLogs.length === 0 ? (

@@ -4,6 +4,7 @@ import type {
   HabitPredictionInput,
   HabitPrediction,
   CachedHabitPrediction,
+  HabitFrequency,
 } from "@/types/database";
 
 // ML Prediction Service Configuration
@@ -26,30 +27,28 @@ function filterLogsByDays(logs: HabitLog[], days: number): HabitLog[] {
   return logs.filter((log) => new Date(log.completed_at) >= cutoffDate);
 }
 
-function getExpectedCompletions(frequency: string, days: number): number {
+function getExpectedCompletions(frequency: HabitFrequency, days: number): number {
   switch (frequency) {
-    case "daily":
+    case 0: // daily
       return days;
-    case "weekly":
+    case 1: // weekly
       return Math.ceil(days / 7);
-    case "monthly":
+    case 2: // monthly
       return Math.ceil(days / 30);
+    case 3: // multiple per week
+      return Math.ceil(days / 7);
     default:
       return days;
   }
 }
 
-function encodeFrequency(frequency: string): number {
-  switch (frequency) {
-    case "daily":
-      return 0;
-    case "weekly":
-      return 1;
-    case "monthly":
-      return 2;
-    default:
-      return 0;
-  }
+/**
+ * Encode frequency for ML model.
+ * The ML model expects: 0=daily, 1=weekly, 2=monthly, 3=multiple_per_week
+ * Since our numeric HabitFrequency already matches this mapping, just pass through.
+ */
+function encodeFrequency(frequency: HabitFrequency): number {
+  return frequency;
 }
 
 // === Cache Management ===
@@ -127,12 +126,15 @@ export function calculatePredictionInput(
   const dayOfWeek = (now.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
   const isWeekend = dayOfWeek >= 5 ? 1 : 0;
 
+  // Resolve numeric frequency
+  const freq: HabitFrequency = habit.frequency_num ?? habit.frequency;
+
   // Calculate completion rates
   const logs7d = filterLogsByDays(logs, 7);
   const logs30d = filterLogsByDays(logs, 30);
 
-  const expectedCompletions7d = getExpectedCompletions(habit.frequency, 7);
-  const expectedCompletions30d = getExpectedCompletions(habit.frequency, 30);
+  const expectedCompletions7d = getExpectedCompletions(freq, 7);
+  const expectedCompletions30d = getExpectedCompletions(freq, 30);
 
   return {
     completion_rate_7d: Math.min(
@@ -146,7 +148,7 @@ export function calculatePredictionInput(
     current_streak: habit.streak_count,
     day_of_week: dayOfWeek,
     days_since_start: daysSince(new Date(habit.created_at)),
-    frequency_encoded: encodeFrequency(habit.frequency),
+    frequency_encoded: encodeFrequency(freq),
     is_weekend: isWeekend,
   };
 }

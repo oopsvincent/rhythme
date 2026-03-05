@@ -57,16 +57,6 @@ export function useHabits() {
   });
 }
 
-/**
- * Fetch only weekly habits (filters from useHabits cache)
- */
-export function useWeeklyHabits() {
-  const habitsQuery = useHabits();
-  return {
-    ...habitsQuery,
-    data: (habitsQuery.data || []).filter((h) => h.frequency === "weekly"),
-  };
-}
 
 /**
  * Fetch ML prediction for a single habit

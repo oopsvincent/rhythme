@@ -24,13 +24,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -65,6 +58,12 @@ import {
   useLogCompletion,
   useHabitPrediction,
 } from "@/hooks/use-habits";
+import {
+  FREQUENCY_LABELS,
+  getTargetLabel,
+  getFrequencyLabel,
+  getStreakUnit,
+} from "@/lib/habit-helpers";
 
 /**
  * Generate SEO-friendly slug from habit name + id
@@ -81,6 +80,13 @@ function generateHabitSlug(name: string, id: number): string {
 
   return `${slug}-${id}`;
 }
+
+const FREQUENCY_OPTIONS: { value: HabitFrequency; label: string }[] = [
+  { value: 0, label: "Daily" },
+  { value: 1, label: "Weekly" },
+  { value: 2, label: "Monthly" },
+  { value: 3, label: "Multiple times per week" },
+];
 
 export default function HabitsPage() {
   const router = useRouter();
@@ -101,17 +107,18 @@ export default function HabitsPage() {
   const [completeDialogHabit, setCompleteDialogHabit] =
     useState<HabitWithStats | null>(null);
   const [completionNote, setCompletionNote] = useState("");
-  const [newHabit, setNewHabit] = useState<CreateHabitInput>({
+  const [newHabit, setNewHabit] = useState<CreateHabitInput & { target_count: number }>({
     name: "",
     description: "",
-    frequency: "daily",
+    frequency: 0,
+    target_count: 1,
   });
 
   const isPending =
     createMutation.isPending || deleteMutation.isPending || logMutation.isPending;
 
   const openCompleteDialog = (habit: HabitWithStats) => {
-    if (habit.completedToday) {
+    if (habit.isCompletedForPeriod) {
       // Already completed - navigate to detail page to undo
       return;
     }
@@ -137,12 +144,20 @@ export default function HabitsPage() {
 
   const handleAddHabit = () => {
     if (!newHabit.name.trim()) return;
-    createMutation.mutate(newHabit, {
-      onSuccess: () => {
-        setNewHabit({ name: "", description: "", frequency: "daily" });
-        setIsAddDialogOpen(false);
+    createMutation.mutate(
+      {
+        name: newHabit.name,
+        description: newHabit.description,
+        frequency: newHabit.frequency,
+        target_count: newHabit.target_count,
       },
-    });
+      {
+        onSuccess: () => {
+          setNewHabit({ name: "", description: "", frequency: 0, target_count: 1 });
+          setIsAddDialogOpen(false);
+        },
+      }
+    );
   };
 
   const handleDeleteHabit = (habitId: number) => {
@@ -157,12 +172,13 @@ export default function HabitsPage() {
   };
 
   // Group habits by frequency
-  const dailyHabits = habits.filter((h) => h.frequency === "daily");
-  const weeklyHabits = habits.filter((h) => h.frequency === "weekly");
-  const monthlyHabits = habits.filter((h) => h.frequency === "monthly");
+  const dailyHabits = habits.filter((h) => h.frequency_num === 0);
+  const weeklyHabits = habits.filter((h) => h.frequency_num === 1);
+  const monthlyHabits = habits.filter((h) => h.frequency_num === 2);
+  const multiplePerWeekHabits = habits.filter((h) => h.frequency_num === 3);
 
-  // Calculate overview stats
-  const completedToday = dailyHabits.filter((h) => h.completedToday).length;
+  // Overview stats
+  const completedToday = dailyHabits.filter((h) => h.isCompletedForPeriod).length;
   const totalDaily = dailyHabits.length;
   const completionRate = totalDaily > 0 ? (completedToday / totalDaily) * 100 : 0;
 
@@ -255,23 +271,49 @@ export default function HabitsPage() {
                           }
                         />
                       </div>
+                      {/* Frequency Radio Buttons */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Frequency</Label>
-                        <Select
-                          value={newHabit.frequency}
-                          onValueChange={(value: HabitFrequency) =>
-                            setNewHabit({ ...newHabit, frequency: value })
+                        <div className="grid grid-cols-2 gap-2">
+                          {FREQUENCY_OPTIONS.map((opt) => (
+                            <button
+                              type="button"
+                              key={opt.value}
+                              onClick={() =>
+                                setNewHabit({
+                                  ...newHabit,
+                                  frequency: opt.value,
+                                  target_count: opt.value === 0 ? 1 : newHabit.target_count,
+                                })
+                              }
+                              className={`flex items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 border ${
+                                newHabit.frequency === opt.value
+                                  ? "bg-primary text-primary-foreground border-primary shadow-md"
+                                  : "bg-muted/30 text-foreground border-border hover:bg-muted/50 hover:border-border/80"
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Dynamic Target Count */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">
+                          {getTargetLabel(newHabit.frequency ?? 0)}
+                        </Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={newHabit.target_count}
+                          onChange={(e) =>
+                            setNewHabit({
+                              ...newHabit,
+                              target_count: Math.max(1, parseInt(e.target.value) || 1),
+                            })
                           }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="daily">Daily</SelectItem>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        />
                       </div>
                     </div>
                     <DialogFooter>
@@ -309,7 +351,7 @@ export default function HabitsPage() {
                     Complete {completeDialogHabit?.name}
                   </DialogTitle>
                   <DialogDescription>
-                    Add an optional note about today's completion
+                    Add an optional note about this completion
                   </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -375,7 +417,7 @@ export default function HabitsPage() {
                   <Card className="glass border-border/30">
                     <CardHeader className="pb-3">
                       <CardDescription className="text-xs font-medium">
-                        Today's Progress
+                        Today&apos;s Progress
                       </CardDescription>
                       <CardTitle className="text-2xl font-primary">
                         {completedToday} / {totalDaily}
@@ -393,7 +435,7 @@ export default function HabitsPage() {
                       </CardDescription>
                       <CardTitle className="text-2xl font-primary flex items-center gap-2">
                         <Flame className="h-5 w-5 text-primary" />
-                        {totalStreak} days
+                        {totalStreak}
                       </CardTitle>
                     </CardHeader>
                   </Card>
@@ -405,7 +447,7 @@ export default function HabitsPage() {
                       </CardDescription>
                       <CardTitle className="text-2xl font-primary flex items-center gap-2">
                         <TrendingUp className="h-5 w-5 text-accent" />
-                        {longestStreak} days
+                        {longestStreak}
                       </CardTitle>
                     </CardHeader>
                   </Card>
@@ -446,6 +488,18 @@ export default function HabitsPage() {
                       onNavigate={navigateToHabit}
                       isPending={isPending}
                       delay={0.4}
+                    />
+                  )}
+
+                  {multiplePerWeekHabits.length > 0 && (
+                    <HabitSection
+                      title="Multiple Per Week"
+                      habits={multiplePerWeekHabits}
+                      onComplete={openCompleteDialog}
+                      onDelete={handleDeleteHabit}
+                      onNavigate={navigateToHabit}
+                      isPending={isPending}
+                      delay={0.5}
                     />
                   )}
                 </div>
@@ -529,6 +583,8 @@ function HabitItem({
     habit.canPredict ? habit : undefined
   );
 
+  const streakUnit = getStreakUnit(habit.frequency_num);
+
   return (
     <motion.div
       layout
@@ -542,16 +598,16 @@ function HabitItem({
           {/* Complete Button */}
           <button
             onClick={onComplete}
-            disabled={isPending || habit.completedToday}
+            disabled={isPending || habit.isCompletedForPeriod}
             className={`shrink-0 h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 ${
-              habit.completedToday
+              habit.isCompletedForPeriod
                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 cursor-default"
                 : "border-2 border-dashed border-border hover:border-primary hover:bg-primary/5"
             }`}
           >
             {isPending ? (
               <Loader2 className="h-5 w-5 animate-spin" />
-            ) : habit.completedToday ? (
+            ) : habit.isCompletedForPeriod ? (
               <CheckCircle2 className="h-5 w-5" />
             ) : (
               <Plus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -563,18 +619,23 @@ function HabitItem({
             <div className="flex items-center gap-2">
               <h3
                 className={`font-medium ${
-                  habit.completedToday ? "text-muted-foreground line-through" : ""
+                  habit.isCompletedForPeriod ? "text-muted-foreground line-through" : ""
                 }`}
               >
                 {habit.name}
               </h3>
               <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            {habit.description && (
-              <p className="text-sm text-muted-foreground mt-0.5 truncate">
-                {habit.description}
-              </p>
-            )}
+            <div className="flex items-center gap-2 mt-0.5">
+              {habit.description && (
+                <p className="text-sm text-muted-foreground truncate">
+                  {habit.description}
+                </p>
+              )}
+              <span className="text-xs text-muted-foreground shrink-0">
+                {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
+              </span>
+            </div>
           </div>
 
           {/* Stats & Badges */}
@@ -585,7 +646,7 @@ function HabitItem({
                 className="bg-primary/10 text-primary border-0"
               >
                 <Flame className="mr-1 h-3 w-3" />
-                {habit.current_streak}
+                {habit.current_streak}{streakUnit.charAt(0)}
               </Badge>
             )}
 
@@ -646,13 +707,16 @@ function HabitItem({
 
         {/* Mobile Badges */}
         <div className="flex sm:hidden items-center gap-2 mt-3 ml-15">
+          <span className="text-xs text-muted-foreground">
+            {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
+          </span>
           {habit.current_streak > 0 && (
             <Badge
               variant="secondary"
               className="bg-primary/10 text-primary border-0 text-xs"
             >
               <Flame className="mr-1 h-3 w-3" />
-              {habit.current_streak} streak
+              {habit.current_streak}{streakUnit.charAt(0)} streak
             </Badge>
           )}
 

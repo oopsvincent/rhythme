@@ -33,7 +33,9 @@ export interface UpdateTaskInput {
 }
 
 // Habits
-export type HabitFrequency = 'daily' | 'weekly' | 'monthly'
+// Frequency mapping (ML model dependency — DO NOT CHANGE):
+//   0 = Daily, 1 = Weekly, 2 = Monthly, 3 = Multiple times per week
+export type HabitFrequency = 0 | 1 | 2 | 3
 
 // Matches the `habits` table
 export interface Habit {
@@ -42,6 +44,8 @@ export interface Habit {
   name: string
   description: string | null
   frequency: HabitFrequency
+  frequency_num: HabitFrequency
+  target_count: number
   streak_count: number
   is_active: boolean
   created_at: string
@@ -62,12 +66,14 @@ export interface CreateHabitInput {
   name: string
   description?: string
   frequency?: HabitFrequency
+  target_count?: number
 }
 
 export interface UpdateHabitInput {
   name?: string
   description?: string | null
   frequency?: HabitFrequency
+  target_count?: number
   is_active?: boolean
 }
 
@@ -78,7 +84,7 @@ export interface HabitPredictionInput {
   current_streak: number
   day_of_week: number          // 0-6 (Monday=0)
   days_since_start: number
-  frequency_encoded: number    // 0=daily, 1=weekly, 2=monthly
+  frequency_encoded: number    // 0=daily, 1=weekly, 2=monthly, 3=multiple_per_week
   is_weekend: number           // 0 or 1
 }
 
@@ -97,12 +103,16 @@ export interface CachedHabitPrediction {
 
 // Extended habit with computed stats for UI
 export interface HabitWithStats extends Habit {
-  completedToday: boolean
-  completedThisWeek: boolean // Whether habit was completed in current Mon–Sun window
+  completedToday: boolean       // Keep for backward compat (daily habits)
+  completedThisWeek: boolean    // Keep for backward compat (weekly habits)
+  isCompletedForPeriod: boolean // Unified: completions >= target_count for current period
+  periodCompletions: number     // Number of completions in the current period
+  periodTarget: number          // target_count for the habit
+  periodLabel: string           // "today" | "this week" | "this month"
   completionLogs: HabitLog[]
-  current_streak: number // Computed from logs, most accurate
+  current_streak: number        // Computed from logs, most accurate
   prediction?: HabitPrediction | null
-  daysUntilPrediction?: number // Days remaining until AI predictions are available
+  daysUntilPrediction?: number  // Days remaining until AI predictions are available
 }
 
 // Journals 

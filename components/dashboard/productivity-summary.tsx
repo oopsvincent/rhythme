@@ -42,8 +42,8 @@ export function ProductivitySummary() {
   }, []);
 
   // Calculate habit stats
-  const dailyHabits = habits.filter(h => h.frequency === "daily");
-  const completedHabits = dailyHabits.filter(h => h.completedToday).length;
+  const dailyHabits = habits.filter(h => h.frequency_num === 0);
+  const completedHabits = dailyHabits.filter(h => h.isCompletedForPeriod).length;
   const totalHabits = dailyHabits.length;
   const bestStreak = Math.max(...habits.map(h => h.current_streak), 0);
 
