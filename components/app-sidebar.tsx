@@ -70,13 +70,6 @@ const navigationItems = [
     url: "/dashboard/habits",
     icon: CalendarSync,
     section: "habits",
-    items: [
-      {
-        title: "Weekly Config",
-        url: "/dashboard/habits/weekly",
-        icon: CalendarDays,
-      },
-    ],
   },
   {
     title: "Weekly Planning",

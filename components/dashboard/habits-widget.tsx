@@ -24,19 +24,19 @@ export function HabitsWidget() {
   
   // Get today's daily habits only (max 4)
   const dailyHabits = habits
-    .filter(h => h.frequency === "daily")
+    .filter(h => h.frequency_num === 0)
     .slice(0, 4);
 
-  // Get weekly habits (max 2)
-  const weeklyHabits = habits
-    .filter(h => h.frequency === "weekly")
+  // Get non-daily habits (max 2)
+  const otherHabits = habits
+    .filter(h => h.frequency_num !== 0)
     .slice(0, 2);
 
-  const completedCount = dailyHabits.filter(h => h.completedToday).length;
+  const completedCount = dailyHabits.filter(h => h.isCompletedForPeriod).length;
   const totalCount = dailyHabits.length;
 
   const handleComplete = (habit: HabitWithStats) => {
-    if (habit.completedToday || habit.completedThisWeek) return;
+    if (habit.isCompletedForPeriod) return;
     logMutation.mutate({ habitId: habit.habit_id });
   };
 
@@ -119,17 +119,17 @@ export function HabitsWidget() {
                 {/* Completion button */}
                 <button
                   onClick={() => handleComplete(habit)}
-                  disabled={logMutation.isPending || habit.completedToday}
+                  disabled={logMutation.isPending || habit.isCompletedForPeriod}
                   className={cn(
                     "shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
-                    habit.completedToday
+                    habit.isCompletedForPeriod
                       ? "bg-primary text-primary-foreground"
                       : "border border-dashed border-border hover:border-primary hover:bg-primary/5"
                   )}
                 >
                   {logMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : habit.completedToday ? (
+                  ) : habit.isCompletedForPeriod ? (
                     <CheckCircle2 className="w-4 h-4" />
                   ) : (
                     <Circle className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -141,11 +141,18 @@ export function HabitsWidget() {
                   href="/dashboard/habits"
                   className={cn(
                     "flex-1 text-sm font-medium truncate transition-colors",
-                    habit.completedToday && "line-through text-muted-foreground"
+                    habit.isCompletedForPeriod && "line-through text-muted-foreground"
                   )}
                 >
                   {habit.name}
                 </Link>
+
+                {/* Progress (for multi-target daily habits) */}
+                {habit.periodTarget > 1 && (
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {habit.periodCompletions}/{habit.periodTarget}
+                  </span>
+                )}
 
                 {/* Streak badge */}
                 {habit.current_streak > 0 && (
@@ -163,16 +170,16 @@ export function HabitsWidget() {
         </>
       )}
 
-      {/* Weekly Habits Section */}
-      {weeklyHabits.length > 0 && (
+      {/* Other Habits Section (Weekly / Monthly / Multiple per week) */}
+      {otherHabits.length > 0 && (
         <div className={dailyHabits.length > 0 ? "mt-4 pt-4 border-t border-border/30" : ""}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-accent" />
-              <h3 className="font-semibold font-primary text-sm">This Week</h3>
+              <h3 className="font-semibold font-primary text-sm">Other Habits</h3>
             </div>
             <Link 
-              href="/dashboard/habits/weekly"
+              href="/dashboard/habits"
               className="text-xs text-primary font-medium hover:underline"
             >
               View all
@@ -180,7 +187,7 @@ export function HabitsWidget() {
           </div>
 
           <div className="space-y-2">
-            {weeklyHabits.map((habit, index) => (
+            {otherHabits.map((habit, index) => (
               <motion.div
                 key={habit.habit_id}
                 initial={{ opacity: 0, x: -10 }}
@@ -194,17 +201,17 @@ export function HabitsWidget() {
                 {/* Completion button */}
                 <button
                   onClick={() => handleComplete(habit)}
-                  disabled={logMutation.isPending || habit.completedThisWeek}
+                  disabled={logMutation.isPending || habit.isCompletedForPeriod}
                   className={cn(
                     "shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
-                    habit.completedThisWeek
+                    habit.isCompletedForPeriod
                       ? "bg-primary text-primary-foreground"
                       : "border border-dashed border-border hover:border-primary hover:bg-primary/5"
                   )}
                 >
                   {logMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : habit.completedThisWeek ? (
+                  ) : habit.isCompletedForPeriod ? (
                     <CheckCircle2 className="w-4 h-4" />
                   ) : (
                     <CircleDashed className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -213,14 +220,19 @@ export function HabitsWidget() {
 
                 {/* Habit name */}
                 <Link 
-                  href="/dashboard/habits/weekly"
+                  href="/dashboard/habits"
                   className={cn(
                     "flex-1 text-sm font-medium truncate transition-colors",
-                    habit.completedThisWeek && "line-through text-muted-foreground"
+                    habit.isCompletedForPeriod && "line-through text-muted-foreground"
                   )}
                 >
                   {habit.name}
                 </Link>
+
+                {/* Progress counter */}
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {habit.periodCompletions}/{habit.periodTarget}
+                </span>
 
                 {/* Streak badge */}
                 {habit.current_streak > 0 && (
@@ -229,7 +241,7 @@ export function HabitsWidget() {
                     className="shrink-0 bg-accent/10 text-accent border-0 text-xs px-2"
                   >
                     <Flame className="w-3 h-3 mr-1" />
-                    {habit.current_streak}w
+                    {habit.current_streak}
                   </Badge>
                 )}
               </motion.div>
@@ -239,12 +251,11 @@ export function HabitsWidget() {
       )}
 
       {/* Empty state for daily habits */}
-      {dailyHabits.length === 0 && weeklyHabits.length === 0 && habits.length > 0 && (
+      {dailyHabits.length === 0 && otherHabits.length === 0 && habits.length > 0 && (
         <p className="text-sm text-muted-foreground text-center py-3">
-          No daily or weekly habits set up
+          No active habits set up
         </p>
       )}
     </motion.div>
   );
 }
-

@@ -3,45 +3,17 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   Habit,
   HabitLog,
+  HabitFrequency,
   CreateHabitInput,
   UpdateHabitInput,
   ActionResponse,
   HabitWithStats,
 } from "@/types/database";
-
-// UTC-safe one day subtract
-function subtractOneDayUTC(dateStr: string): string {
-  const date = new Date(`${dateStr}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() - 1);
-  return date.toISOString().split("T")[0];
-}
-
-// Compute current streak from array of UTC date strings (unique + desc sorted)
-function computeCurrentStreak(dateStrs: string[]): number {
-  if (dateStrs.length === 0) return 0;
-
-  const today = new Date().toISOString().split("T")[0];
-  const yesterdayDate = new Date();
-  yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
-  const yesterday = yesterdayDate.toISOString().split("T")[0];
-
-  const latest = dateStrs[0];
-  if (latest !== today && latest !== yesterday) return 0; // broken & old
-
-  let streak = 0;
-  let expected = latest;
-
-  for (const date of dateStrs) {
-    if (date === expected) {
-      streak++;
-      expected = subtractOneDayUTC(expected);
-    } else {
-      break; // gap found
-    }
-  }
-
-  return streak;
-}
+import {
+  getPeriodBounds,
+  getPeriodLabel,
+  computeUnifiedStreak,
+} from "@/lib/habit-helpers";
 
 // === Authentication Helper ===
 async function getAuthenticatedUser() {
@@ -59,80 +31,6 @@ async function getAuthenticatedUser() {
 }
 
 // === Helper Functions ===
-function isCompletedToday(logs: HabitLog[]): boolean {
-  const today = new Date().toISOString().split("T")[0];
-  return logs.some((log) => log.completed_at.split("T")[0] === today);
-}
-
-// Get current week bounds (Monday 00:00:00 UTC – Sunday 23:59:59 UTC)
-function getWeekBounds(): { weekStart: string; weekEnd: string } {
-  const now = new Date();
-  const day = now.getUTCDay(); // 0=Sun, 1=Mon...
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + diffToMonday));
-  const sunday = new Date(Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate() + 6, 23, 59, 59, 999));
-  return {
-    weekStart: monday.toISOString(),
-    weekEnd: sunday.toISOString(),
-  };
-}
-
-function isCompletedThisWeek(logs: HabitLog[]): boolean {
-  const { weekStart, weekEnd } = getWeekBounds();
-  return logs.some((log) => log.completed_at >= weekStart && log.completed_at <= weekEnd);
-}
-
-// Get ISO week number + year for a date string
-function getISOWeekKey(dateStr: string): string {
-  const d = new Date(dateStr);
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
-}
-
-// Compute consecutive weeks with at least one completion (walking backwards)
-function computeWeeklyStreak(dateStrs: string[]): number {
-  if (dateStrs.length === 0) return 0;
-
-  // Get unique ISO week keys from completion dates
-  const weekKeys = [...new Set(dateStrs.map(getISOWeekKey))].sort((a, b) => b.localeCompare(a));
-  if (weekKeys.length === 0) return 0;
-
-  const currentWeekKey = getISOWeekKey(new Date().toISOString());
-  // Get last week key
-  const now = new Date();
-  const lastWeekDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 7));
-  const lastWeekKey = getISOWeekKey(lastWeekDate.toISOString());
-
-  const latest = weekKeys[0];
-  if (latest !== currentWeekKey && latest !== lastWeekKey) return 0;
-
-  // Walk backwards through consecutive weeks
-  let streak = 0;
-  let expectedWeek = latest;
-
-  for (const week of weekKeys) {
-    if (week === expectedWeek) {
-      streak++;
-      // Compute previous week key
-      const parts = expectedWeek.split("-W");
-      const year = parseInt(parts[0]);
-      const wk = parseInt(parts[1]);
-      if (wk === 1) {
-        // Previous week is last week of previous year — approximate
-        const dec28 = new Date(Date.UTC(year - 1, 11, 28));
-        expectedWeek = getISOWeekKey(dec28.toISOString());
-      } else {
-        expectedWeek = `${year}-W${String(wk - 1).padStart(2, "0")}`;
-      }
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-}
 
 function daysSince(date: Date): number {
   const now = new Date();
@@ -140,8 +38,53 @@ function daysSince(date: Date): number {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
+/**
+ * Resolve the numeric frequency from a habit row.
+ * Prefers frequency_num; falls back to the frequency field.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function resolveFrequency(habit: any): HabitFrequency {
+  if (habit.frequency_num !== null && habit.frequency_num !== undefined) {
+    return habit.frequency_num as HabitFrequency;
+  }
+  // Fallback: parse old string frequency column
+  const f = habit.frequency;
+  if (typeof f === "number") return f as HabitFrequency;
+  switch (f) {
+    case "daily":
+      return 0;
+    case "weekly":
+      return 1;
+    case "monthly":
+      return 2;
+    default:
+      return 0;
+  }
+}
+
+/**
+ * Count completions for a habit within a period range.
+ */
+async function countPeriodCompletions(
+  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  habitId: number,
+  userId: string,
+  start: string,
+  end: string,
+): Promise<number> {
+  const { count } = await supabase
+    .from("habit_logs")
+    .select("*", { count: "exact", head: true })
+    .eq("habit_id", habitId)
+    .eq("user_id", userId)
+    .gte("completed_at", start)
+    .lte("completed_at", end);
+
+  return count ?? 0;
+}
+
 const MIN_DAYS_FOR_PREDICTION = 7;
-const AT_RISK_THRESHOLD = 0.6; // Ties to PRD success metric (3x/week ~0.43 daily, but buffer for weekly/custom)
+const AT_RISK_THRESHOLD = 0.6;
 
 // === CRUD Operations ===
 
@@ -165,7 +108,7 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
       return { data: [] };
     }
 
-    // Fetch all logs for all habits (no limit for accurate streak)
+    // Fetch all logs for all habits
     const { data: logs, error: logsError } = await supabase
       .from("habit_logs")
       .select("*")
@@ -176,32 +119,59 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
       return { error: logsError.message };
     }
 
+    const today = new Date().toISOString().split("T")[0];
+
     // Map habits with their stats
     const habitsWithStats: HabitWithStats[] = habits.map((habit: Habit) => {
+      const freq = resolveFrequency(habit);
+      const targetCount = (habit as any).target_count as number ?? 1;
+
       const habitLogs = (logs || []).filter(
         (log: HabitLog) => log.habit_id === habit.habit_id,
       );
+
+      // Period-based progress
+      const { start, end } = getPeriodBounds(freq);
+      const periodLogs = habitLogs.filter(
+        (log: HabitLog) => log.completed_at >= start && log.completed_at <= end,
+      );
+      const periodCompletions = periodLogs.length;
+      const isCompletedForPeriod = periodCompletions >= targetCount;
+
+      // Legacy compat fields
+      const completedToday = habitLogs.some(
+        (log: HabitLog) => log.completed_at.split("T")[0] === today,
+      );
+      const completedThisWeek = (() => {
+        const weekBounds = getPeriodBounds(1);
+        return habitLogs.some(
+          (log: HabitLog) =>
+            log.completed_at >= weekBounds.start && log.completed_at <= weekBounds.end,
+        );
+      })();
+
+      // Streak
+      const completionDates = habitLogs.map((log: HabitLog) => log.completed_at);
+      const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates);
+
       const daysOld = daysSince(new Date(habit.created_at));
       const canPredict = daysOld >= MIN_DAYS_FOR_PREDICTION;
-      const uniqueDatesDesc = [
-        ...new Set(habitLogs.map((log) => log.completed_at.split("T")[0])),
-      ].sort((a, b) => b.localeCompare(a));
-
-      // Use week-based streak for weekly habits, day-based for daily
-      const currentStreak = habit.frequency === "weekly"
-        ? computeWeeklyStreak(uniqueDatesDesc)
-        : computeCurrentStreak(uniqueDatesDesc);
 
       return {
         ...habit,
-        completedToday: isCompletedToday(habitLogs),
-        completedThisWeek: isCompletedThisWeek(habitLogs),
+        frequency: freq,
+        frequency_num: freq,
+        target_count: targetCount,
+        completedToday,
+        completedThisWeek,
+        isCompletedForPeriod,
+        periodCompletions,
+        periodTarget: targetCount,
+        periodLabel: getPeriodLabel(freq),
         completionLogs: habitLogs,
         current_streak: currentStreak,
-        prediction: null, // Placeholder; populated in stats if needed
-        daysUntilPrediction: canPredict
-          ? undefined
-          : MIN_DAYS_FOR_PREDICTION - daysOld,
+        prediction: null,
+        daysUntilPrediction: canPredict ? undefined : MIN_DAYS_FOR_PREDICTION - daysOld,
       };
     });
 
@@ -230,7 +200,7 @@ export async function getHabit(
       return { error: habitError.message };
     }
 
-    // Fetch all logs for this habit (no 30d limit for streak)
+    // Fetch all logs for this habit
     const { data: logs, error: logsError } = await supabase
       .from("habit_logs")
       .select("*")
@@ -242,28 +212,51 @@ export async function getHabit(
       return { error: logsError.message };
     }
 
+    const freq = resolveFrequency(habit as unknown as Record<string, unknown>);
+    const targetCount = habit.target_count ?? 1;
+    const today = new Date().toISOString().split("T")[0];
+
+    // Period-based progress
+    const { start, end } = getPeriodBounds(freq);
+    const periodLogs = (logs || []).filter(
+      (log: HabitLog) => log.completed_at >= start && log.completed_at <= end,
+    );
+    const periodCompletions = periodLogs.length;
+    const isCompletedForPeriod = periodCompletions >= targetCount;
+
+    // Legacy compat
+    const completedToday = (logs || []).some(
+      (log: HabitLog) => log.completed_at.split("T")[0] === today,
+    );
+    const weekBounds = getPeriodBounds(1);
+    const completedThisWeek = (logs || []).some(
+      (log: HabitLog) =>
+        log.completed_at >= weekBounds.start && log.completed_at <= weekBounds.end,
+    );
+
+    // Streak
+    const completionDates = (logs || []).map((log: HabitLog) => log.completed_at);
+    const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates);
+
     const daysOld = daysSince(new Date(habit.created_at));
     const canPredict = daysOld >= MIN_DAYS_FOR_PREDICTION;
-    const uniqueDatesDesc = [
-      ...new Set((logs || []).map((log) => log.completed_at.split("T")[0])),
-    ].sort((a, b) => b.localeCompare(a));
-
-    // Use week-based streak for weekly habits
-    const currentStreak = habit.frequency === "weekly"
-      ? computeWeeklyStreak(uniqueDatesDesc)
-      : computeCurrentStreak(uniqueDatesDesc);
 
     return {
       data: {
         ...habit,
-        completedToday: isCompletedToday(logs || []),
-        completedThisWeek: isCompletedThisWeek(logs || []),
+        frequency: freq,
+        frequency_num: freq,
+        target_count: targetCount,
+        completedToday,
+        completedThisWeek,
+        isCompletedForPeriod,
+        periodCompletions,
+        periodTarget: targetCount,
+        periodLabel: getPeriodLabel(freq),
         completionLogs: logs || [],
         current_streak: currentStreak,
         prediction: null,
-        daysUntilPrediction: canPredict
-          ? undefined
-          : MIN_DAYS_FOR_PREDICTION - daysOld,
+        daysUntilPrediction: canPredict ? undefined : MIN_DAYS_FOR_PREDICTION - daysOld,
       },
     };
   } catch (error) {
@@ -279,13 +272,18 @@ export async function createHabit(
   try {
     const { supabase, user } = await getAuthenticatedUser();
 
+    const freq: HabitFrequency = input.frequency ?? 0;
+    const targetCount = input.target_count ?? 1;
+
     const { data, error } = await supabase
       .from("habits")
       .insert({
         user_id: user.id,
         name: input.name,
         description: input.description || null,
-        frequency: input.frequency || "daily",
+        frequency: freq === 0 ? "daily" : freq === 1 ? "weekly" : freq === 2 ? "monthly" : "daily",
+        frequency_num: freq,
+        target_count: targetCount,
         is_active: true,
       })
       .select()
@@ -310,12 +308,23 @@ export async function updateHabit(
   try {
     const { supabase, user } = await getAuthenticatedUser();
 
+    const updatePayload: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (input.name !== undefined) updatePayload.name = input.name;
+    if (input.description !== undefined) updatePayload.description = input.description;
+    if (input.is_active !== undefined) updatePayload.is_active = input.is_active;
+    if (input.frequency !== undefined) {
+      updatePayload.frequency_num = input.frequency;
+      // Also update the string column for backward compat
+      updatePayload.frequency = input.frequency === 0 ? "daily" : input.frequency === 1 ? "weekly" : input.frequency === 2 ? "monthly" : "daily";
+    }
+    if (input.target_count !== undefined) updatePayload.target_count = input.target_count;
+
     const { data, error } = await supabase
       .from("habits")
-      .update({
-        ...input,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("habit_id", habitId)
       .eq("user_id", user.id)
       .select()
@@ -367,44 +376,28 @@ export async function logHabitCompletion(
   try {
     const { supabase, user } = await getAuthenticatedUser();
 
-    // Fetch the habit to check frequency
+    // Fetch the habit to check frequency and target_count
     const { data: habit } = await supabase
       .from("habits")
-      .select("frequency")
+      .select("*")
       .eq("habit_id", habitId)
       .eq("user_id", user.id)
       .single();
 
-    if (habit?.frequency === "weekly") {
-      // For weekly habits, guard against duplicate completion this week
-      const { weekStart, weekEnd } = getWeekBounds();
-      const { data: existingLog } = await supabase
-        .from("habit_logs")
-        .select("*")
-        .eq("habit_id", habitId)
-        .eq("user_id", user.id)
-        .gte("completed_at", weekStart)
-        .lte("completed_at", weekEnd)
-        .maybeSingle();
+    if (!habit) {
+      return { error: "Habit not found" };
+    }
 
-      if (existingLog) {
-        return { error: "Habit already completed this week" };
-      }
-    } else {
-      // For daily/monthly habits, guard against same-day duplicate
-      const today = new Date().toISOString().split("T")[0];
-      const { data: existingLog } = await supabase
-        .from("habit_logs")
-        .select("*")
-        .eq("habit_id", habitId)
-        .eq("user_id", user.id)
-        .gte("completed_at", `${today}T00:00:00`)
-        .lt("completed_at", `${today}T23:59:59`)
-        .maybeSingle();
+    const freq = resolveFrequency(habit as unknown as Record<string, unknown>);
+    const targetCount = habit.target_count ?? 1;
 
-      if (existingLog) {
-        return { error: "Habit already completed today" };
-      }
+    // Count-based validation: check if limit is reached for the current period
+    const { start, end } = getPeriodBounds(freq);
+    const currentCount = await countPeriodCompletions(supabase, habitId, user.id, start, end);
+
+    if (currentCount >= targetCount) {
+      const periodLabel = getPeriodLabel(freq);
+      return { error: `Habit already completed ${periodLabel} (${currentCount}/${targetCount})` };
     }
 
     // Insert the completion log
@@ -431,14 +424,8 @@ export async function logHabitCompletion(
       .eq("user_id", user.id)
       .order("completed_at", { ascending: false });
 
-    const uniqueDatesDesc = [
-      ...new Set((allLogs || []).map((l) => l.completed_at.split("T")[0])),
-    ].sort((a, b) => b.localeCompare(a));
-
-    // Use week-based streak for weekly habits
-    const newStreak = habit?.frequency === "weekly"
-      ? computeWeeklyStreak(uniqueDatesDesc)
-      : computeCurrentStreak(uniqueDatesDesc);
+    const completionDates = (allLogs || []).map((l) => l.completed_at);
+    const newStreak = computeUnifiedStreak(freq, targetCount, completionDates);
 
     // Update streak_count in habits table
     await supabase
@@ -478,7 +465,17 @@ export async function removeHabitCompletion(
       return { error: error.message };
     }
 
-    // Recalculate streak after removal and update in database
+    // Recalculate streak after removal
+    const { data: habit } = await supabase
+      .from("habits")
+      .select("*")
+      .eq("habit_id", habitId)
+      .eq("user_id", user.id)
+      .single();
+
+    const freq = habit ? resolveFrequency(habit as unknown as Record<string, unknown>) : 0;
+    const targetCount = habit?.target_count ?? 1;
+
     const { data: remainingLogs } = await supabase
       .from("habit_logs")
       .select("completed_at")
@@ -486,10 +483,8 @@ export async function removeHabitCompletion(
       .eq("user_id", user.id)
       .order("completed_at", { ascending: false });
 
-    const uniqueDatesDesc = [
-      ...new Set((remainingLogs || []).map((l) => l.completed_at.split("T")[0])),
-    ].sort((a, b) => b.localeCompare(a));
-    const newStreak = computeCurrentStreak(uniqueDatesDesc);
+    const completionDates = (remainingLogs || []).map((l) => l.completed_at);
+    const newStreak = computeUnifiedStreak(freq as HabitFrequency, targetCount, completionDates);
 
     // Update streak_count in habits table
     await supabase
@@ -518,7 +513,7 @@ export async function getHabitStats(habitId: number): Promise<
     current_streak: number;
     days_since_start: number;
     total_completions: number;
-    prediction: string | null; // Rule-based 'at risk' (PRD)
+    prediction: string | null;
   }>
 > {
   try {
@@ -548,6 +543,9 @@ export async function getHabitStats(habitId: number): Promise<
       return { error: logsError.message };
     }
 
+    const freq = resolveFrequency(habit as unknown as Record<string, unknown>);
+    const targetCount = habit.target_count ?? 1;
+
     const now = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -561,37 +559,35 @@ export async function getHabitStats(habitId: number): Promise<
       (log: HabitLog) => new Date(log.completed_at) >= thirtyDaysAgo,
     );
 
-    // Calculate expected completions based on frequency
-    const getExpectedCompletions = (
-      frequency: string,
-      days: number,
-    ): number => {
-      switch (frequency) {
-        case "daily":
-          return days;
-        case "weekly":
-          return Math.ceil(days / 7);
-        case "monthly":
-          return Math.ceil(days / 30);
+    // Calculate expected completions based on frequency and target_count
+    const getExpectedCompletions = (f: HabitFrequency, days: number, tc: number): number => {
+      switch (f) {
+        case 0: // daily
+          return days * tc;
+        case 1: // weekly
+          return Math.ceil(days / 7) * tc;
+        case 2: // monthly
+          return Math.ceil(days / 30) * tc;
+        case 3: // multiple per week
+          return Math.ceil(days / 7) * tc;
         default:
           return days;
       }
     };
 
-    const expected7d = getExpectedCompletions(habit.frequency, 7);
-    const expected30d = getExpectedCompletions(habit.frequency, 30);
+    const expected7d = getExpectedCompletions(freq, 7, targetCount);
+    const expected30d = getExpectedCompletions(freq, 30, targetCount);
 
     const completionRate30d = Math.min(
       logs30d.length / Math.max(expected30d, 1),
       1,
     );
 
-    const uniqueDatesDesc = [
-      ...new Set((logs || []).map((log) => log.completed_at.split("T")[0])),
-    ].sort((a, b) => b.localeCompare(a));
-    const currentStreak = computeCurrentStreak(uniqueDatesDesc);
+    // Unified streak
+    const completionDates = (logs || []).map((log: HabitLog) => log.completed_at);
+    const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates);
 
-    // Rule-based prediction (PRD: lightweight, rule-based risk)
+    // Rule-based prediction
     const prediction =
       completionRate30d >= AT_RISK_THRESHOLD ? "safe" : "at risk";
 
