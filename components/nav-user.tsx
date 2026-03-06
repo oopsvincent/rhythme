@@ -19,6 +19,7 @@ import {
   Sun,
   User,
   Goal,
+  EllipsisVertical,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -129,7 +130,7 @@ export function NavUser({
                       {user.email}
                     </span>
                   </div>
-                  <ChevronsUpDown className="ml-auto h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  <EllipsisVertical className="ml-auto h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                 </>
               )}
             </SidebarMenuButton>

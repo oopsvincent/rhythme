@@ -1,50 +1,70 @@
-// AppSidebarWrapper.tsx (SERVER)
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { AppSidebarClient } from "../app-sidebar";
 
-export default async function AppSidebarWrapper(
+type SidebarUser = {
+  name: string;
+  email: string;
+  avatar: string;
+};
+
+type WorkspaceGoal = {
+  title: string;
+  description?: string;
+};
+
+export default function AppSidebarWrapper(
   props: React.ComponentProps<typeof AppSidebarClient>
 ) {
-  const supabase = await createClient();
+  const [user, setUser] = useState<SidebarUser | null>(null);
+  const [workspaceGoal, setWorkspaceGoal] = useState<WorkspaceGoal | null>(
+    null
+  );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    const supabase = createClient();
 
-  const mappedUser = user
-    ? {
+    async function fetchSidebarData() {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (!authUser) return;
+
+      setUser({
         name:
-          user.user_metadata?.full_name ||
-          user.email?.split("@")[0] ||
+          authUser.user_metadata?.full_name ||
+          authUser.email?.split("@")[0] ||
           "Anonymous",
-        email: user.email || "No email",
+        email: authUser.email || "No email",
         avatar:
-          user.user_metadata?.avatar_url || "/avatars/default-user.png",
+          authUser.user_metadata?.avatar_url || "/avatars/default-user.png",
+      });
+
+      // Fetch workspace goal
+      const { data, error } = await supabase
+        .from("user_preferences")
+        .select("onboarding_data")
+        .eq("user_id", authUser.id)
+        .single();
+
+      if (!error && data?.onboarding_data?.long_term_goal) {
+        setWorkspaceGoal({
+          title: data.onboarding_data.long_term_goal,
+          description: data.onboarding_data.long_term_goal_description,
+        });
       }
-    : null;
-
-  // ✅ Fetch workspace goal here
-  let workspaceGoal = null;
-
-  if (user) {
-    const { data, error } = await supabase
-      .from("user_preferences")
-      .select("onboarding_data")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!error && data?.onboarding_data?.long_term_goal) {
-      workspaceGoal = {
-        title: data.onboarding_data.long_term_goal,
-        description: data.onboarding_data.long_term_goal_description,
-      };
     }
-  }
+
+    fetchSidebarData();
+  }, []);
 
   return (
     <AppSidebarClient
       {...props}
-      user={mappedUser}
+      user={user}
       workspaceGoal={workspaceGoal}
     />
   );
