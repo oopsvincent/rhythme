@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
+import { useRightSidebarStore } from "@/store/useRightSidebarStore"
 
 type SidebarMode = 'tasks' | 'journal' | 'focus' | 'calendar'
 
@@ -33,8 +34,7 @@ export function SidebarRight({
   const [tasks, setTasks] = React.useState<Task[]>([])
   const [journals, setJournals] = React.useState<Journal[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
-  const [isCollapsed, setIsCollapsed] = React.useState(false)
-  const [isMobileExpanded, setIsMobileExpanded] = React.useState(false)
+  const { isCollapsed, toggleCollapsed, isMobileExpanded, toggleMobileExpanded } = useRightSidebarStore()
 
   // Determine sidebar mode based on route
   const getSidebarMode = (): SidebarMode => {
@@ -155,7 +155,7 @@ export function SidebarRight({
         >
           {/* Mobile Toggle Header */}
           <button
-            onClick={() => setIsMobileExpanded(!isMobileExpanded)}
+            onClick={toggleMobileExpanded}
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -190,85 +190,86 @@ export function SidebarRight({
         </motion.div>
       </div>
 
-      {/* Desktop Sidebar - Collapsible */}
-      <div
-        className={cn(
-          "sticky top-0 hidden h-svh transition-all duration-300 ease-in-out lg:block overflow-hidden",
-          isCollapsed ? "w-0" : "w-[300px]"
-        )}
-      >
-        {/* Toggle Button - Always visible */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className={cn(
-                  "absolute top-4 z-50 h-8 w-8 rounded-lg border border-border/50 bg-background/80 backdrop-blur-sm transition-all hover:bg-muted",
-                  isCollapsed ? "-left-10" : "left-3"
-                )}
-              >
-                {isCollapsed ? (
-                  <PanelRightOpen className="h-4 w-4" />
-                ) : (
-                  <PanelRightClose className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-              {isCollapsed ? headerConfig.tooltip.show : headerConfig.tooltip.hide}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      {/* Desktop Sidebar - Toggle button lives outside the collapsible area */}
+      <div className="sticky top-0 hidden h-svh lg:flex flex-row">
+        {/* Toggle Button - Always visible, never clipped */}
+        <div className="relative flex items-start pt-4 z-50">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleCollapsed}
+                  className="h-8 w-8 rounded-lg border border-border/50 bg-background/80 backdrop-blur-sm hover:bg-muted"
+                >
+                  {isCollapsed ? (
+                    <PanelRightOpen className="h-4 w-4" />
+                  ) : (
+                    <PanelRightClose className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                {isCollapsed ? headerConfig.tooltip.show : headerConfig.tooltip.hide}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
 
-        {/* Sidebar Content */}
-        <Sidebar
-          collapsible="none"
+        {/* Collapsible Sidebar Content */}
+        <div
           className={cn(
-            "h-full border-l border-border/50 bg-sidebar/80 backdrop-blur-xl transition-all duration-300",
-            isCollapsed ? "opacity-0" : "opacity-100"
+            "transition-all duration-300 ease-in-out overflow-hidden",
+            isCollapsed ? "w-0" : "w-[300px]"
           )}
-          {...props}
         >
-          {/* Header - Changes based on route */}
-          <SidebarHeader className="flex flex-row items-center gap-2 px-4 py-4">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={sidebarMode}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-2"
-              >
-                <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg", headerConfig.iconBg)}>
-                  {headerConfig.icon}
-                </div>
-                <span className="text-sm font-semibold tracking-tight">{headerConfig.title}</span>
-              </motion.div>
-            </AnimatePresence>
-          </SidebarHeader>
+          <Sidebar
+            collapsible="none"
+            className={cn(
+              "h-full w-[300px] border-l border-border/50 bg-sidebar/80 backdrop-blur-xl transition-opacity duration-300",
+              isCollapsed ? "opacity-0" : "opacity-100"
+            )}
+            {...props}
+          >
+            {/* Header - Changes based on route */}
+            <SidebarHeader className="flex flex-row items-center gap-2 px-4 py-4">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={sidebarMode}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-2"
+                >
+                  <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg", headerConfig.iconBg)}>
+                    {headerConfig.icon}
+                  </div>
+                  <span className="text-sm font-semibold tracking-tight">{headerConfig.title}</span>
+                </motion.div>
+              </AnimatePresence>
+            </SidebarHeader>
 
-          {/* Subtle divider */}
-          <div className="mx-4 h-px bg-border/50" />
+            {/* Subtle divider */}
+            <div className="mx-4 h-px bg-border/50" />
 
-          {/* Content - Switches based on route */}
-          <SidebarContent className="overflow-y-auto px-2 py-3">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={sidebarMode}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                {renderContent()}
-              </motion.div>
-            </AnimatePresence>
-          </SidebarContent>
-        </Sidebar>
+            {/* Content - Switches based on route */}
+            <SidebarContent className="overflow-y-auto px-2 py-3">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={sidebarMode}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {renderContent()}
+                </motion.div>
+              </AnimatePresence>
+            </SidebarContent>
+          </Sidebar>
+        </div>
       </div>
     </>
   )

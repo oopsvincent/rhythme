@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-import { getUser } from "@/app/actions/auth";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Metadata } from "next";
 import { SidebarRightWrapper } from "@/components/sidebar-right-wrapper";
@@ -14,46 +12,15 @@ import { FocusWidgetProvider } from "@/components/providers/focus-widget-provide
 import OnboardingCheck from "@/components/OnboardingCheck";
 import AppSidebarWrapper from "@/components/providers/appSidebarWrapper";
 
-export default async function DashboardLayout({
+// Layout is synchronous — no server-side data fetching.
+// Auth gating is handled by middleware.ts (via lib/supabase/proxy.ts).
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
-
-  if (!user) {
-    // Redirect to login with the return URL
-    redirect("/login?redirect=/dashboard");
-  }
-
-  // Fetch user settings from your database
-  // This runs on the server, so you can make direct DB queries
-  const initialData = {
-    account: {
-      name: user.name || "John Doe",
-      email: user.email || "johndoe@gmail.com",
-    },
-    notifications: {
-      email: true,
-      push: false,
-      marketing: false,
-    },
-    appearance: {
-    //   theme: "system" as const,
-    //   fontSize: "medium",
-    },
-    language: {
-      language: "en",
-      timezone: "utc",
-    },
-    privacy: {
-      profileVisible: true,
-      showActivityStatus: true,
-    },
-  };
-
   return (
-    <SettingsProvider initialData={initialData}>
+    <SettingsProvider>
       <FocusWidgetProvider>
         <SidebarProvider
           style={
@@ -70,16 +37,14 @@ export default async function DashboardLayout({
                 
 <OnboardingCheck>
   <div className="flex flex-1 bg-muted/30 dark:bg-background">
-    <main className="@container/main flex flex-1 p-6 pb-20 md:pb-6">
+    <main className="@container/main flex flex-1 p-0 pb-20 md:p-4 md:pb-4 lg:p-6 lg:pb-6">
       <div
         className="
           w-full
-          rounded-2xl
           bg-card
-          border
-          border-border
-          shadow-sm
-          p-6
+          p-4
+          md:rounded-xl md:border md:border-border md:shadow-sm md:p-4
+          lg:rounded-2xl lg:p-6
         "
       >
         {children}

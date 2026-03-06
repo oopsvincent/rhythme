@@ -140,7 +140,7 @@ body {
   --sidebar-foreground: #0A0A0B;
   --sidebar-primary: #FF6B35;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #00D9FF;
+  --sidebar-accent: rgba(10, 10, 11, 0.06);
   --sidebar-accent-foreground: #0A0A0B;
   --sidebar-border: rgba(10, 10, 11, 0.08);
   --sidebar-ring: #FF6B35;
@@ -197,8 +197,8 @@ body {
   --sidebar-foreground: #FAFAFA;
   --sidebar-primary: #FF6B35;
   --sidebar-primary-foreground: #050506;
-  --sidebar-accent: #00D9FF;
-  --sidebar-accent-foreground: #050506;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #FAFAFA;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #FF6B35;
 
@@ -226,7 +226,7 @@ body {
   --chart-5: #FF9F1C;
   --sidebar-primary: #E63946;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F7B32B;
+  --sidebar-accent: rgba(10, 10, 11, 0.06);
   --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #E63946;
 }
@@ -246,8 +246,8 @@ body {
   --chart-5: #FF9F1C;
   --sidebar-primary: #E63946;
   --sidebar-primary-foreground: #050506;
-  --sidebar-accent: #F7B32B;
-  --sidebar-accent-foreground: #050506;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #FAFAFA;
   --sidebar-ring: #E63946;
 }
 
@@ -269,7 +269,7 @@ body {
   --chart-5: #03045E;
   --sidebar-primary: #0077B6;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #90E0EF;
+  --sidebar-accent: rgba(10, 10, 11, 0.06);
   --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #0077B6;
 }
@@ -289,8 +289,8 @@ body {
   --chart-5: #48CAE4;
   --sidebar-primary: #00B4D8;
   --sidebar-primary-foreground: #050506;
-  --sidebar-accent: #90E0EF;
-  --sidebar-accent-foreground: #050506;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #FAFAFA;
   --sidebar-ring: #00B4D8;
 }
 
@@ -312,7 +312,7 @@ body {
   --chart-5: #5A189A;
   --sidebar-primary: #9D4EDD;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #E0AAFF;
+  --sidebar-accent: rgba(10, 10, 11, 0.06);
   --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #9D4EDD;
 }
@@ -332,8 +332,8 @@ body {
   --chart-5: #5A189A;
   --sidebar-primary: #C77DFF;
   --sidebar-primary-foreground: #050506;
-  --sidebar-accent: #E0AAFF;
-  --sidebar-accent-foreground: #050506;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #FAFAFA;
   --sidebar-ring: #C77DFF;
 }
 
@@ -356,7 +356,7 @@ body {
   --chart-5: #D1D5DB;
   --sidebar-primary: #6B7280;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #9CA3AF;
+  --sidebar-accent: rgba(10, 10, 11, 0.06);
   --sidebar-accent-foreground: #111827;
   --sidebar-ring: #6B7280;
 }
@@ -376,7 +376,7 @@ body {
   --chart-5: #D1D5DB;
   --sidebar-primary: #9CA3AF;
   --sidebar-primary-foreground: #111827;
-  --sidebar-accent: #4B5563;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
   --sidebar-accent-foreground: #F9FAFB;
   --sidebar-ring: #9CA3AF;
 }
@@ -400,8 +400,8 @@ body {
   --chart-5: #06B6D4;
   --sidebar-primary: #EC4899;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #8B5CF6;
-  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-accent: rgba(10, 10, 11, 0.06);
+  --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #EC4899;
 }
 
@@ -420,8 +420,8 @@ body {
   --chart-5: #22D3EE;
   --sidebar-primary: #F472B6;
   --sidebar-primary-foreground: #050506;
-  --sidebar-accent: #A78BFA;
-  --sidebar-accent-foreground: #050506;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #FAFAFA;
   --sidebar-ring: #F472B6;
 }
 
@@ -444,7 +444,7 @@ body {
   --chart-5: #047857;
   --sidebar-primary: #059669;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #34D399;
+  --sidebar-accent: rgba(10, 10, 11, 0.06);
   --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #059669;
 }
@@ -464,8 +464,8 @@ body {
   --chart-5: #047857;
   --sidebar-primary: #10B981;
   --sidebar-primary-foreground: #050506;
-  --sidebar-accent: #34D399;
-  --sidebar-accent-foreground: #050506;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #FAFAFA;
   --sidebar-ring: #10B981;
 }
 
@@ -488,7 +488,7 @@ body {
   --chart-5: #1E1B4B;
   --sidebar-primary: #4F46E5;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #818CF8;
+  --sidebar-accent: rgba(10, 10, 11, 0.06);
   --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #4F46E5;
 }
@@ -508,8 +508,8 @@ body {
   --chart-5: #3730A3;
   --sidebar-primary: #6366F1;
   --sidebar-primary-foreground: #050506;
-  --sidebar-accent: #818CF8;
-  --sidebar-accent-foreground: #050506;
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #FAFAFA;
   --sidebar-ring: #6366F1;
 }
 
