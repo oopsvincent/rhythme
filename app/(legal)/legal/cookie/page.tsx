@@ -7,15 +7,28 @@ export const metadata: Metadata = {
   description: "Learn how Rhythmé uses cookies and similar technologies. We only use essential cookies for authentication and functionality.",
 };
 
+const cookieSections = [
+  { id: "introduction", title: "1. Introduction" },
+  { id: "what-are-cookies", title: "2. What Are Cookies" },
+  { id: "cookies-used", title: "3. Cookies We Use" },
+  { id: "local-storage", title: "4. Local Storage" },
+  { id: "not-used", title: "5. What We Do NOT Use" },
+  { id: "analytics", title: "6. Analytics" },
+  { id: "third-party", title: "7. Third-Party Services" },
+  { id: "managing", title: "8. Managing Cookies" },
+  { id: "updates", title: "9. Updates to Policy" },
+  { id: "contact", title: "10. Contact Us" }
+];
+
 const CookiePolicy = () => {
   return (
     <LegalLayout 
       title="Cookie Policy" 
       type="cookie" 
       lastUpdated="December 2025"
+      sections={cookieSections}
     >
-      {/* Section 1 */}
-      <section>
+      <section id="introduction">
         <h2>1. Introduction</h2>
         <p>
           This Cookie Policy explains how Rhythmé (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) uses cookies and similar 
@@ -24,8 +37,7 @@ const CookiePolicy = () => {
         </p>
       </section>
 
-      {/* Section 2 */}
-      <section>
+      <section id="what-are-cookies">
         <h2>2. What Are Cookies?</h2>
         <p>
           Cookies are small text files stored on your device when you visit a website. They help 
@@ -33,31 +45,30 @@ const CookiePolicy = () => {
         </p>
       </section>
 
-      {/* Section 3 */}
-      <section>
+      <section id="cookies-used">
         <h2>3. Cookies We Use</h2>
         
         <h3>3.1 Essential Cookies (Required)</h3>
         <p>These cookies are necessary for the Service to function and cannot be disabled:</p>
-        <div className="overflow-x-auto my-4">
-          <table className="min-w-full border border-border rounded-lg">
-            <thead className="bg-muted/50">
+        <div className="overflow-x-auto my-6 not-prose">
+          <table className="min-w-full border border-border/50 rounded-xl overflow-hidden bg-muted/20">
+            <thead className="bg-muted/50 border-b border-border/50">
               <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium">Cookie Name</th>
-                <th className="px-4 py-2 text-left text-sm font-medium">Purpose</th>
-                <th className="px-4 py-2 text-left text-sm font-medium">Duration</th>
+                <th className="px-5 py-3 text-left text-sm font-semibold">Cookie Name</th>
+                <th className="px-5 py-3 text-left text-sm font-semibold">Purpose</th>
+                <th className="px-5 py-3 text-left text-sm font-semibold">Duration</th>
               </tr>
             </thead>
-            <tbody>
-              <tr className="border-t border-border">
-                <td className="px-4 py-2 text-sm font-mono">sb-*-auth-token</td>
-                <td className="px-4 py-2 text-sm">Supabase authentication session</td>
-                <td className="px-4 py-2 text-sm">Session</td>
+            <tbody className="divide-y divide-border/40 text-sm">
+              <tr className="hover:bg-muted/30 transition-colors">
+                <td className="px-5 py-3 font-mono text-primary/80">sb-*-auth-token</td>
+                <td className="px-5 py-3 text-muted-foreground">Supabase authentication session</td>
+                <td className="px-5 py-3 text-muted-foreground">Session</td>
               </tr>
-              <tr className="border-t border-border">
-                <td className="px-4 py-2 text-sm font-mono">__vercel_live_token</td>
-                <td className="px-4 py-2 text-sm">Vercel deployment authentication</td>
-                <td className="px-4 py-2 text-sm">Session</td>
+              <tr className="hover:bg-muted/30 transition-colors">
+                <td className="px-5 py-3 font-mono text-primary/80">__vercel_live_token</td>
+                <td className="px-5 py-3 text-muted-foreground">Vercel deployment authentication</td>
+                <td className="px-5 py-3 text-muted-foreground">Session</td>
               </tr>
             </tbody>
           </table>
@@ -80,8 +91,7 @@ const CookiePolicy = () => {
         </ul>
       </section>
 
-      {/* Section 4 */}
-      <section>
+      <section id="local-storage">
         <h2>4. Local Storage</h2>
         <p>In addition to cookies, we use your browser&apos;s localStorage to store:</p>
         <ul>
@@ -92,8 +102,7 @@ const CookiePolicy = () => {
         <p>This data stays on your device and is not transmitted to our servers.</p>
       </section>
 
-      {/* Section 5 */}
-      <section>
+      <section id="not-used">
         <h2>5. What We Do NOT Use</h2>
         <p>We want to be clear about what we don&apos;t do:</p>
         <ul>
@@ -104,8 +113,7 @@ const CookiePolicy = () => {
         </ul>
       </section>
 
-      {/* Section 6 */}
-      <section>
+      <section id="analytics">
         <h2>6. Analytics</h2>
         <p>We use Vercel Analytics for basic, privacy-respecting analytics:</p>
         <ul>
@@ -116,8 +124,7 @@ const CookiePolicy = () => {
         </ul>
       </section>
 
-      {/* Section 7 */}
-      <section>
+      <section id="third-party">
         <h2>7. Third-Party Services</h2>
         <p>
           Our authentication providers (Google, GitHub, Meta, Discord) may set their own cookies 
@@ -131,8 +138,7 @@ const CookiePolicy = () => {
         </ul>
       </section>
 
-      {/* Section 8 */}
-      <section>
+      <section id="managing">
         <h2>8. Managing Cookies</h2>
         
         <h3>8.1 Browser Settings</h3>
@@ -162,8 +168,7 @@ const CookiePolicy = () => {
         </ol>
       </section>
 
-      {/* Section 9 */}
-      <section>
+      <section id="updates">
         <h2>9. Updates to This Policy</h2>
         <p>We may update this Cookie Policy from time to time. We will notify you of changes by:</p>
         <ul>
@@ -172,8 +177,7 @@ const CookiePolicy = () => {
         </ul>
       </section>
 
-      {/* Section 10 */}
-      <section>
+      <section id="contact">
         <h2>10. Contact Us</h2>
         <p>If you have questions about our use of cookies, please contact us at:</p>
         <p>
@@ -182,10 +186,8 @@ const CookiePolicy = () => {
         </p>
       </section>
 
-      {/* Footer Note */}
-      <section>
-        <hr className="my-8" />
-        <p className="text-sm text-muted-foreground">
+      <section id="acknowledgment" className="border-t border-border/40 pt-16 mt-16">
+        <p className="text-sm font-medium text-muted-foreground p-4 bg-muted/30 rounded-lg border border-border/50">
           By continuing to use Rhythmé, you acknowledge that you have read and understood this Cookie Policy.
         </p>
       </section>
