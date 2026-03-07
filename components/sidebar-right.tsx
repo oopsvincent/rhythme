@@ -11,6 +11,7 @@ import {
 import { CalendarWithFilters } from "./calendar-with-filters"
 import { SidebarJournalContent } from "./journal/sidebar-journal-content"
 import { FocusHeatmapCalendar } from "./focus/focus-heatmap-calendar"
+import { DailyActivityInspector } from "./daily-activity-inspector"
 import { Task, Journal } from "@/types/database"
 import { getTasks } from "@/app/actions/getTasks"
 import { getJournals } from "@/app/actions/journals"
@@ -24,6 +25,7 @@ import {
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRightSidebarStore } from "@/store/useRightSidebarStore"
+import { useDashboardCalendarStore, useTaskCalendarStore, useHabitCalendarStore } from "@/store/useCalendarStores"
 
 type SidebarMode = 'tasks' | 'journal' | 'focus' | 'calendar'
 
@@ -35,6 +37,23 @@ export function SidebarRight({
   const [journals, setJournals] = React.useState<Journal[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const { isCollapsed, toggleCollapsed, isMobileExpanded, toggleMobileExpanded } = useRightSidebarStore()
+
+  const dashboardDate = useDashboardCalendarStore(s => s.selectedDate)
+  const setDashboardDate = useDashboardCalendarStore(s => s.setSelectedDate)
+  const taskDate = useTaskCalendarStore(s => s.selectedDate)
+  const setTaskDate = useTaskCalendarStore(s => s.setSelectedDate)
+  const habitDate = useHabitCalendarStore(s => s.selectedDate)
+  const setHabitDate = useHabitCalendarStore(s => s.setSelectedDate)
+
+  const activeCalendarState = (() => {
+    if (pathname?.startsWith("/dashboard/habits")) {
+       return { selectedDate: habitDate, setSelectedDate: setHabitDate }
+    }
+    if (pathname?.startsWith("/dashboard/tasks")) {
+       return { selectedDate: taskDate, setSelectedDate: setTaskDate }
+    }
+    return { selectedDate: dashboardDate, setSelectedDate: setDashboardDate }
+  })()
 
   // Determine sidebar mode based on route
   const getSidebarMode = (): SidebarMode => {
@@ -120,7 +139,14 @@ export function SidebarRight({
             <span className="text-xs text-muted-foreground">Loading tasks...</span>
           </div>
         ) : (
-          <CalendarWithFilters tasks={tasks} />
+          <div className="flex flex-col">
+            <CalendarWithFilters 
+              tasks={tasks} 
+              selectedDate={activeCalendarState.selectedDate} 
+              onDateSelect={activeCalendarState.setSelectedDate} 
+            />
+            <DailyActivityInspector selectedDate={activeCalendarState.selectedDate} />
+          </div>
         )
       default:
         return isLoading ? (
@@ -129,7 +155,14 @@ export function SidebarRight({
             <span className="text-xs text-muted-foreground">Loading calendar...</span>
           </div>
         ) : (
-          <CalendarWithFilters tasks={tasks} />
+          <div className="flex flex-col">
+            <CalendarWithFilters 
+              tasks={tasks} 
+              selectedDate={activeCalendarState.selectedDate} 
+              onDateSelect={activeCalendarState.setSelectedDate} 
+            />
+            <DailyActivityInspector selectedDate={activeCalendarState.selectedDate} />
+          </div>
         )
     }
   }

@@ -8,10 +8,11 @@ import { generateSlug } from "@/lib/slug";
 
 interface CalendarWithFiltersProps {
   showTitle?: boolean;
-  onDateSelect?: (date: Date | undefined) => void;
+  onDateSelect?: (date: Date) => void;
   compact?: boolean;
   tasks?: Task[];
   onTaskClick?: () => void;
+  selectedDate: Date;
 }
 
 const priorityColors: Record<string, string> = {
@@ -24,9 +25,18 @@ export const CalendarWithFilters = ({
   showTitle = false, 
   onDateSelect,
   tasks = [],
-  onTaskClick
+  onTaskClick,
+  selectedDate,
 }: CalendarWithFiltersProps) => {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+
+  const [month, setMonth] = React.useState<Date>(selectedDate || new Date());
+
+  // Sync month when selectedDate changes externally
+  React.useEffect(() => {
+    if (selectedDate) {
+      setMonth(selectedDate);
+    }
+  }, [selectedDate]);
 
   // Get dates that have tasks
   const taskDates = React.useMemo(() => {
@@ -41,17 +51,17 @@ export const CalendarWithFilters = ({
 
   // Get tasks for selected date
   const tasksForSelectedDate = React.useMemo(() => {
-    if (!date) return [];
-    const selectedDateStr = date.toDateString();
+    if (!selectedDate) return [];
+    const selectedDateStr = selectedDate.toDateString();
     return tasks.filter(t => {
       if (!t.due_date) return false;
       return new Date(t.due_date).toDateString() === selectedDateStr;
     });
-  }, [date, tasks]);
+  }, [selectedDate, tasks]);
 
   const handleDateChange = (newDate: Date | undefined) => {
-    setDate(newDate);
-    onDateSelect?.(newDate);
+    const d = newDate || new Date(); 
+    onDateSelect?.(d);
   };
 
   return (
@@ -66,8 +76,10 @@ export const CalendarWithFilters = ({
       <div className="flex justify-center">
         <Calendar
           mode="single"
-          selected={date}
+          selected={selectedDate}
           onSelect={handleDateChange}
+          month={month}
+          onMonthChange={setMonth}
           className="rounded-md border w-full"
           modifiers={{
             hasTask: taskDates
@@ -80,10 +92,10 @@ export const CalendarWithFilters = ({
       
       {/* Selected Date & Tasks */}
       <div className="px-1 space-y-2">
-        {date && (
+        {selectedDate && (
           <div className="p-2 bg-muted rounded-md text-center">
             <p className="font-medium text-sm">
-              {date.toLocaleDateString('en-US', { 
+              {selectedDate.toLocaleDateString('en-US', { 
                 weekday: 'short', 
                 month: 'short', 
                 day: 'numeric' 
@@ -116,7 +128,7 @@ export const CalendarWithFilters = ({
               </p>
             )}
           </div>
-        ) : date ? (
+        ) : selectedDate ? (
           <p className="text-xs text-muted-foreground text-center py-2">
             No tasks on this day
           </p>

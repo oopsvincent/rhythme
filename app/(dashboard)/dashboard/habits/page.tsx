@@ -58,6 +58,7 @@ import {
   useLogCompletion,
   useHabitPrediction,
 } from "@/hooks/use-habits";
+import { HabitHeatmap } from "@/components/dashboard/habit-heatmap";
 import {
   FREQUENCY_LABELS,
   getTargetLabel,
@@ -172,18 +173,18 @@ export default function HabitsPage() {
   };
 
   // Group habits by frequency
-  const dailyHabits = habits.filter((h) => h.frequency_num === 0);
-  const weeklyHabits = habits.filter((h) => h.frequency_num === 1);
-  const monthlyHabits = habits.filter((h) => h.frequency_num === 2);
-  const multiplePerWeekHabits = habits.filter((h) => h.frequency_num === 3);
+  const dailyHabits = habits.filter((h: HabitWithStats) => h.frequency_num === 0);
+  const weeklyHabits = habits.filter((h: HabitWithStats) => h.frequency_num === 1);
+  const monthlyHabits = habits.filter((h: HabitWithStats) => h.frequency_num === 2);
+  const multiplePerWeekHabits = habits.filter((h: HabitWithStats) => h.frequency_num === 3);
 
   // Overview stats
-  const completedToday = dailyHabits.filter((h) => h.isCompletedForPeriod).length;
+  const completedToday = dailyHabits.filter((h: HabitWithStats) => h.isCompletedForPeriod).length;
   const totalDaily = dailyHabits.length;
   const completionRate = totalDaily > 0 ? (completedToday / totalDaily) * 100 : 0;
 
-  const totalStreak = habits.reduce((sum, h) => sum + h.current_streak, 0);
-  const longestStreak = Math.max(...habits.map((h) => h.current_streak), 0);
+  const totalStreak = habits.reduce((sum: number, h: HabitWithStats) => sum + h.current_streak, 0);
+  const longestStreak = Math.max(...habits.map((h: HabitWithStats) => h.current_streak), 0);
 
   if (error) {
     return (
@@ -704,9 +705,18 @@ function HabitItem({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        
+        {/* Heatmap Section */}
+        <div className="mt-4 pt-4 border-t border-border/10">
+          <HabitHeatmap
+            logs={habit.completionLogs || []}
+            frequency={habit.frequency_num}
+            targetCount={habit.target_count}
+          />
+        </div>
 
         {/* Mobile Badges */}
-        <div className="flex sm:hidden items-center gap-2 mt-3 ml-15">
+        <div className="flex sm:hidden flex-wrap items-center gap-2 mt-3">
           <span className="text-xs text-muted-foreground">
             {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
           </span>

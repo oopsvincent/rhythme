@@ -59,6 +59,7 @@ import {
   getStreakUnit,
   getPeriodLabel,
 } from "@/lib/habit-helpers";
+import { HabitHeatmap } from "@/components/dashboard/habit-heatmap";
 
 /**
  * Get motivational message based on prediction probability
@@ -619,6 +620,30 @@ export function HabitDetailClient({
                     {stats?.total_completions || 0}
                   </CardTitle>
                 </CardHeader>
+              </Card>
+            </motion.div>
+
+            {/* Heatmap Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <Card className="glass border-border/30">
+                <CardHeader>
+                  <CardTitle className="text-lg font-primary flex items-center gap-2">
+                    <Flame className="h-5 w-5 text-primary" />
+                    Heatmap consistency
+                  </CardTitle>
+                  <CardDescription>Visual summary of the last 90 days</CardDescription>
+                </CardHeader>
+                <CardContent className="overflow-x-auto">
+                  <HabitHeatmap 
+                    logs={habit.completionLogs || []}
+                    frequency={freq}
+                    targetCount={habit.target_count}
+                  />
+                </CardContent>
               </Card>
             </motion.div>
 
