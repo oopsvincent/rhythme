@@ -10,6 +10,7 @@ import { QueryProvider } from "@/components/query-provider";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflineIndicator } from "@/components/offline-indicator";
+import { AppleSplashScreens } from "@/components/apple-splash-screens";
 
 
 const clashDisplay = localFont({
@@ -144,6 +145,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <AppleSplashScreens />
+      </head>
       <body
         className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased selection:bg-accent/50 selection:text-accent-foreground`}
       >
