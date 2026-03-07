@@ -1,6 +1,39 @@
-import { Skeleton } from "@/components/ui/skeleton";
+"use client";
+
+import { useState, useEffect } from "react";
+
+const loadingMessages = [
+  "Fetching your schedule...",
+  "Loading habits...",
+  "Aligning your day...",
+  "Getting things ready...",
+  "Almost there..."
+];
 
 export default function Loading() {
+  const [progress, setProgress] = useState(0);
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev < 42) return prev + Math.floor(Math.random() * 8) + 2; 
+        if (prev < 85) return prev + Math.floor(Math.random() * 4) + 1; 
+        if (prev < 99) return prev + 1;
+        return 99;
+      });
+    }, 200);
+
+    const messageInterval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 1500);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(messageInterval);
+    };
+  }, []);
+
   return (
     <div
       className="relative flex items-center justify-center min-h-screen bg-gradient-to-b from-black/90 via-neutral-900 to-[#0b0b0f] text-white overflow-hidden"
@@ -118,13 +151,18 @@ export default function Loading() {
         {/* Progress / microcopy row */}
         <div className="w-full max-w-xs mt-1">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs opacity-70">Syncing presets</span>
-            <span className="text-xs opacity-60">42%</span>
+            <span className="text-xs opacity-70 transition-opacity duration-300">
+              {loadingMessages[messageIndex]}
+            </span>
+            <span className="text-xs opacity-60 tabular-nums">{progress}%</span>
           </div>
 
-          {/* Skeleton bar (thin) */}
+          {/* Progress bar */}
           <div className="h-2 w-full rounded-full bg-white/6 overflow-hidden">
-            <Skeleton className="h-2 w-3/5 rounded-full" />
+            <div 
+              className="h-full bg-white/20 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
           </div>
 
           <p className="mt-2 text-[11px] opacity-60 text-center">Loading Rhythmé</p>
