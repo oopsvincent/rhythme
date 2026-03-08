@@ -2,6 +2,810 @@
 
 ---
 
+PR #83
+commit no - c25f0bffdadba6b202f505c9d49af6b6f93ab719
+## [0.59.0] - 2026-03-07
+
+### Highlights
+- The app now displays proper Apple launch screens when installed as a PWA on iOS devices, improving the native app feel on Apple hardware across all supported device sizes.
+
+### Added
+- `AppleSplashScreens` component generating device-specific `apple-touch-startup-image` meta tags for iOS launch screen support.
+- Full set of splash screen PNG assets under `public/splash_screens/splash_screens/` covering all supported Apple device sizes.
+- `public/splash_screens/icon.png` as the new PWA manifest icon.
+- README documentation for the splash screen assets.
+
+### Changed
+- Included `AppleSplashScreens` component in `app/layout.tsx` head for automatic iOS splash screen injection.
+- Updated the web app manifest to reference the new `splash_screens/icon.png` asset.
+
+---
+
+PR #82
+commit no - b508adcf96a94abe041cbb1a33c4c60a6234f2c0
+## [0.58.0] - 2026-03-07
+
+### Highlights
+- The loading experience has been upgraded from a plain skeleton to an animated progress bar with rotating microcopy messages, making wait times feel shorter and more engaging.
+
+### Added
+- Simulated non-linear progress animation capped at 99% to indicate active loading without implying completion.
+- Rotating predefined loading messages cycling during the loading state for better UX.
+- CSS-based progress bar replacing the previous `Skeleton` placeholder.
+- Dynamic percentage and message display during loading.
+- Interval cleanup on component unmount to prevent memory leaks.
+
+### Changed
+- Converted the `Loading` component from a server component to a client component using `useState` and `useEffect` to drive progress and message state.
+
+---
+
+PR #81
+commit no - 6dd7287fc4ad5d8c97fabcb3733990be865e4ec9
+## [0.57.0] - 2026-03-07
+
+### Highlights
+- Habit tracking gets a visual upgrade with a 90-day heatmap and a daily activity inspector in the right sidebar, making it easy to spot patterns and review completions for any selected date at a glance.
+
+### Added
+- `HabitHeatmap` component displaying a 90-day grid with per-day completion intensity visualization.
+- `DailyActivityInspector` component in the right sidebar showing habit completions for the currently selected date.
+- Zustand calendar stores for dashboard, task, and habit contexts to sync `selectedDate` across the app.
+- `selectedDate` prop support in `CalendarWithFilters` with month state syncing and updated `onDateSelect` handling.
+
+### Changed
+- `SidebarRight` updated to use the active calendar state, render `CalendarWithFilters` with the `selectedDate` prop, and display the `DailyActivityInspector`.
+- `CalendarWithFilters` API updated to require `selectedDate` as a prop.
+- Integrated `HabitHeatmap` into both the habit list and habit detail pages.
+- Added type annotations for habit filters and reductions across habit-related files.
+
+### Fixed
+- Removed obsolete `pages/Marketing.tsx` that was no longer in use.
+
+### Breaking Changes
+- `CalendarWithFilters` now requires a `selectedDate` prop. Any existing usage of this component without the prop will need to be updated to pass a valid date value, otherwise the component will not render correctly.
+
+---
+
+PR #80
+commit no - 3f9e251de914f58268c6083ad764c5ffc328aa87
+## [0.56.0] - 2026-03-06
+
+### Highlights
+- The dashboard layout and sidebar architecture have been significantly refactored for better performance and maintainability: auth gating moved to middleware, the sidebar converted to a client component with live data fetching, and a new Zustand store introduced to manage right sidebar state cleanly.
+
+### Added
+- `store/useRightSidebarStore.ts` Zustand store to manage right sidebar collapsed and mobile states.
+- Desktop toggle for the right sidebar moved outside the collapsible area for always-accessible control.
+- `useIsMobile` hook integration in `TeamSwitcher` to adjust dropdown side on mobile.
+
+### Changed
+- Dashboard layout made synchronous with server-side auth and data fetching removed, auth gating delegated to middleware.
+- Adjusted main content and card spacing with improved responsive rounding in the dashboard layout.
+- Replaced hard-coded sidebar accent colors with semi-transparent RGBA values across all theme variants.
+- Converted `AppSidebarWrapper` from a server component to a client component using `useEffect` and the Supabase client to fetch the current user and workspace goal.
+- Updated `AppSidebarWrapper` to pass typed `user` and `workspaceGoal` props to `AppSidebarClient`.
+- Swapped `NavUser` dropdown icon to `EllipsisVertical`.
+- Right sidebar collapsible container simplified with improved animations and layout for sidebar content.
+- Updated `TeamSwitcher` UI with revised icons, sizes, and mobile dropdown positioning.
+- Renamed schema files from `.pgsql` to `.sql` for consistency.
+
+### Breaking Changes
+- Server-side auth and data fetching have been removed from the dashboard layout. Auth gating is now handled entirely by middleware. Any custom server-side auth logic in the dashboard layout will need to be migrated to middleware to maintain route protection.
+- `AppSidebarWrapper` is now a client component. Any usage expecting it to behave as a server component will need to be reviewed and updated accordingly.
+
+---
+
+PR #79
+commit no - fa32523f23b0c9d323768e5338117fc6094646df
+## [0.55.0] - 2026-03-05
+
+### Highlights
+- The habit model has been unified around a numeric frequency system with target count and period tracking, replacing the previous separate daily/weekly logic — simplifying the codebase and enabling more flexible habit scheduling across all frequencies.
+
+### Added
+- `lib/habit-helpers.ts` utility file with helper functions for the new unified habit frequency model.
+- `frequency_num`, `target_count`, and `period` fields to the habit model for unified frequency tracking.
+- Frequency and target count UI in habit creation and editing forms using radio buttons and a numeric target input.
+- DB schema files at `components/schemas/*.pgsql` for the updated habit model.
+- Supabase migration `supabase/migrations/001_unified_habits.sql` for the unified habits schema.
+- `periodCompletions`, `periodTarget`, and `isCompletedForPeriod` logic across components and hooks.
+
+### Changed
+- Updated `HabitDetailClient`, `HabitsPage`, and `HabitItem` components to use the new unified frequency model and period-based completion tracking.
+- Updated `hooks/use-habits` to use `periodCompletions`, `periodTarget`, and `isCompletedForPeriod`.
+- Updated `lib/habit-prediction` to use the new `frequency_num` and `target_count` fields.
+- Improved optimistic updates across habit components to reflect period-based completions accurately.
+- Updated sidebar navigation to point to `/dashboard/habits`.
+- UI polish for habit badges and completion text labels.
+- Minor copy and label tweaks across habit-related components.
+- Updated `types/database.ts` to reflect the new habit model fields.
+
+### Deprecated
+- Old weekly-specific habit pages and client components have been removed in favor of the unified frequency model.
+
+### Breaking Changes
+- The habit model has migrated from separate daily/weekly fields to a unified `frequency_num`, `target_count`, and `period` structure. The Supabase migration `001_unified_habits.sql` must be applied to the database before deploying this update, otherwise habit-related features will break.
+- Old weekly-specific pages and clients have been removed. Any routes or components referencing the previous weekly habit pages will result in 404 errors and must be updated to use the new unified habits flow.
+
+---
+
+PR #78
+commit no - 2da3a837749cbd8dd6f077ff3bfe352e0815a267
+## [0.54.0] - 2026-03-03
+
+### Highlights
+- The sidebar has been significantly refactored with a cleaner layout, collapsible submenus, improved active-state detection, and a new workspace goal feature that surfaces each user's personal goal directly in the sidebar for quick reference.
+
+### Added
+- `app/actions/sidebar.ts` server action to fetch a user's workspace goal from `user_preferences`.
+- `WorkspaceGoal` client component to display the user's workspace goal in the sidebar.
+- `workspaceGoal` prop passed from `providers/appSidebarWrapper.tsx` to the sidebar after querying `user_preferences`.
+- `TeamSwitcher` integration into the refactored `AppSidebarClient`.
+- Collapsible submenu support in `NavMain` with icon rendering.
+- Improved active-state detection in `NavMain` for accurate nav highlighting.
+
+### Changed
+- Wrapped dashboard content in a styled card with adjusted layout padding.
+- Refactored `AppSidebarClient` with updated styling, sidebar collapse state handling, and a compact header and footer.
+- Restructured sidebar nav data into `navigationItems` and `secondaryNavItems`, replacing the previous weekly/habits grouping.
+- `appSidebarWrapper.tsx` now queries `user_preferences` to pass workspace goal data to the sidebar.
+- Overall UI and CSS tweaks across the sidebar for visual consistency.
+- Minor housekeeping and import cleanup across sidebar-related files.
+
+### Breaking Changes
+- The previous weekly/habits nav grouping in the sidebar has been replaced with the new `navigationItems` and `secondaryNavItems` structure. Any components or tests referencing the old nav grouping will need to be updated to reflect the new structure.
+
+---
+
+PR #77
+commit no - 399013c3761a22978f30398f16c08dd9eef22216
+## [0.53.0] - 2026-03-03
+
+### Highlights
+- Weekly habits are now fully supported with dedicated pages, week-based completion tracking, streak calculation, and optimistic UI updates — giving users a complete habit management experience for both daily and weekly cadences.
+
+### Added
+- Weekly habits listing page at `app/.../habits/weekly/page.tsx`.
+- Weekly habit detail page at `app/.../habits/weekly/[habitId]/page.tsx`.
+- `weekly-habit-detail-client.tsx` client component for the weekly habit detail UI.
+- Week-based server logic in `app/actions/habits.ts`: `getWeekBounds`, `isCompletedThisWeek`, `getISOWeekKey`, and `computeWeeklyStreak` utilities.
+- Weekly completion and streak handling in `getHabits`, `getHabit`, and `logHabitCompletion` server actions.
+- Grouped weekly logs view in the habit detail UI.
+- Slug-based navigation for weekly habit detail pages.
+- AI prediction handling support for weekly habits.
+
+### Changed
+- Updated `use-habits` hook to support weekly habit creation, deletion, completion, removal of completions, and optimistic updates.
+- Updated `app-sidebar` to include weekly habits navigation.
+- Updated `habits-widget` to reflect weekly habit progress.
+- Updated `nav-weekly` to include weekly habits nav item.
+- Updated `types/database.ts` to support weekly habit and completion types.
+
+### Breaking Changes
+- `getHabits`, `getHabit`, and `logHabitCompletion` server actions have been updated to handle weekly frequency logic. Any custom integrations calling these actions directly should be reviewed to ensure compatibility with the new weekly completion and streak handling.
+
+---
+
+PR #76
+commit no - fff87feec3962fdeb2095ca75e6c33ba43d94be6
+## [0.52.0] - 2026-03-02
+
+### Highlights
+- OAuth redirect behavior is now reliable across all deployment environments with an improved base URL resolution chain, and the app branding has been refreshed with a new OG image and updated PWA manifest icons.
+
+### Added
+- `public/OG-Rhythme.jpg` as the new Open Graph and preview image for app metadata.
+- `public/rhythme_z_o.png` as the new PWA manifest icon asset.
+- Manifest version field added to the PWA manifest.
+
+### Changed
+- Base URL resolution for server actions now follows a priority chain: `NEXT_PUBLIC_APP_URL` → request headers → Vercel production URL → localhost, ensuring OAuth callbacks use the correct visited domain.
+- Swapped OG/preview image in app metadata to `public/OG-Rhythme.jpg`.
+- Replaced PWA manifest icons with `public/rhythme_z_o.png`.
+- Bumped `package.json` version to reflect latest release.
+
+### Fixed
+- OAuth redirect callbacks incorrectly resolving to the wrong domain in certain deployment environments, particularly on preview and production Vercel deployments.
+
+---
+
+PR #75
+commit no - 1dae0243eb3cf5dadcc8acf12b27f408de5a75eb
+## [0.51.0] - 2026-03-02
+
+### Highlights
+- A full notifications system has been introduced with a header popover, unread count badge, optimistic mark-as-read updates, and background polling — keeping users informed of important activity without interrupting their workflow.
+
+### Added
+- `app/actions/notifications.ts` server actions to fetch notifications, get unread count, and mark single or all notifications as read.
+- `notification-popover.tsx` client component for displaying notifications in a header popover with optimistic updates.
+- `notification-item.tsx` client component for rendering individual notification entries.
+- Unread count polling in the notification popover for real-time badge updates.
+- `Notification` type added to `types/database.ts`.
+- Notifications popover wired into `components/site-header.tsx`.
+
+### Changed
+- Updated `site-header.tsx` to include the notifications popover alongside existing header elements.
+- Tweaked global selection styling in `app/layout.tsx`.
+
+---
+
+PR #74
+commit no - 91dc5f8411bbff52b0c0e1fb39005e7c1d7e9779
+## [0.50.1] - 2026-02-24
+
+### Highlights
+- The weekly workflow has been fleshed out with Plan, Review, and History pages, a dashboard widget, and an improved edit modal — giving users a complete end-to-end experience for managing their weekly goals and reflections.
+
+### Added
+- Weekly Plan, Review, and History pages under the week layout.
+- `SiteHeader` integrated into the week layout.
+- `WeeklyWidget` component for the dashboard providing a quick overview of the weekly workflow.
+- Edit modal on the weekly plan page for adding, removing, and editing plan items.
+- Weekly History timeline for browsing past weekly entries.
+- `NavWeekly` dedicated weekly navigation section in the app sidebar.
+- Weekly widget component export added to the component index.
+- PRD documentation for the Weekly System.
+
+### Changed
+- Refactored the weekly plan page to use structured item lists with improved layout and actions.
+- Enhanced weekly review carousel UI for a smoother review experience.
+- Updated app sidebar to include `NavWeekly` for dedicated weekly navigation.
+- Tweaked dashboard layout padding for better spacing consistency.
+- Updated package metadata.
+
+---
+
+PR #74
+commit no - 7f5029d68e3f7cc50e2dc4d3bcd5708b9bdc0c96
+## [0.50.0] - 2026-02-24
+
+### Highlights
+- The Weekly System MVP has arrived, introducing dedicated weekly plan and review pages with new UI components for mood tracking, correlations, and a review carousel — giving users a structured way to plan and reflect on their week.
+
+### Added
+- Weekly System MVP with new `dashboard/week` routes: layout, index, plan, and review pages.
+- `weekly-review-carousel` component for stepping through weekly review content.
+- `correlation-card` component for displaying habit and mood correlation insights.
+- `mood-sparkline` component for compact inline mood trend visualization.
+- Weekly nav items and section titles wired up in the sidebar and header.
+- Roadmap documentation at `docs/roadmaps/5.5WeeklySystem` describing the planned schema and UX for the Weekly System.
+
+### Changed
+- Added container query on the dashboard main layout for improved responsive behaviour.
+- Updated root metadata URL configuration.
+- Applied selection styling improvements at the root level.
+- Minor sidebar and header style adjustments to accommodate weekly nav items.
+- Updated `getBaseUrl` environment handling in `app/actions/auth.ts`.
+
+---
+
+PR #73
+commit no - 5b1a9ad75a4b81b189dafada69ec2f6d5d121851
+## [0.49.0] - 2026-02-21
+
+### Highlights
+- Account deletion is now a safer, more transparent process with a three-step confirmation flow, explicit server-side data cleanup across all user tables, and clearer UX copy — reducing the risk of accidental deletion while ensuring complete data removal.
+
+### Added
+- Three-step confirmation flow in the delete account modal with step indicators and icons at each stage.
+- Uppercase confirmation input requirement before deletion can proceed.
+- Client-side redirect via `router.push` on successful account deletion.
+- Detailed server-side error reporting on deletion failure.
+
+### Changed
+- `auth.deleteAccount` now explicitly deletes user data from `habit_logs`, `habits`, `journals`, and `user_preferences` tables before removing the account, replacing the previous single RPC call.
+- `auth.deleteAccount` now signs the user out as part of the deletion flow.
+- Delete account modal converted from a single-step to a three-step confirmation flow.
+- Improved button states and loading text during the deletion process.
+- Updated UX copy and styles across the delete account flow for clearer, safer communication.
+
+### Fixed
+- Account deletion previously relied on a single RPC call that lacked granular error handling; explicit per-table cleanup now returns detailed errors on failure.
+
+### Security
+- Explicit server-side deletion of all user-related data across multiple tables ensures no orphaned records remain after account removal.
+- User session is signed out server-side as part of the deletion process, preventing any lingering authenticated state.
+
+### Breaking Changes
+- The account deletion backend has been replaced from a single RPC call to explicit multi-table deletion. Any custom integrations or scripts relying on the previous RPC deletion behaviour will need to be updated accordingly.
+
+---
+
+PR #72
+commit no - 5e4654264ad04ba99b7bf2dd30309e8e21b01b8c
+## [0.48.0] - 2026-02-21
+
+### Highlights
+- Authentication flows have been polished end-to-end with a reusable password input component featuring visibility toggle and strength meter, stricter password rules, improved session handling, and better success/error feedback across login, signup, and password reset pages.
+
+### Added
+- Reusable `PasswordInput` component with visibility toggle and live password strength meter.
+- Live password mismatch validation on signup and update-password flows.
+- Expired session UI on the update-password page for handling stale or invalid sessions.
+- Success state UI on the update-password page with a longer redirect delay for better user feedback.
+- Success confirmation UI and alerts on the reset-password request page.
+- `redirect` query parameter support on the login form to send users back to their intended page after signing in.
+
+### Changed
+- Replaced plain password inputs with the new `PasswordInput` component across login, signup, and update-password flows.
+- Hardened password rules to enforce a minimum of 8 characters.
+- Moved and renamed the update-password page to an improved path.
+- Improved session checks on the update-password page.
+- Enhanced reset-password request UI with better navigation and alert feedback.
+- Minor visual and icon tweaks across auth components.
+
+### Fixed
+- Auth flows lacking proper expired-session handling now correctly show an expired-session UI instead of failing silently.
+
+### Security
+- Minimum password length enforced at 8 characters across all auth flows.
+- Live password strength meter added to guide users toward stronger passwords during signup and password updates.
+- Improved session validation on the update-password page to prevent actions on expired or invalid sessions.
+
+### Breaking Changes
+- The update-password page has been moved and renamed to a new path. Any hardcoded links or emails pointing to the old update-password URL will need to be updated.
+- Obsolete `auth/new` page has been removed. Any references to this route will result in a 404.
+
+---
+
+PR #71
+commit no - a8a7ffc840cd0b31b7e307c0a420fde617d9d8e3
+## [0.47.0] - 2026-02-21
+
+### Highlights
+- The focus floating widget now behaves robustly with viewport-clamped dragging, bounce animations, background session completion detection, and smart auto-dismiss/undismiss logic — making the focus timer seamlessly usable across the entire dashboard.
+
+### Added
+- Viewport clamping with edge padding for the floating widget position, applied on drag release with a bounce animation.
+- Position persistence for the floating widget across sessions.
+- Dismiss state for the floating widget, replacing the old visibility toggle.
+- Background session completion detection in the widget: plays a sound, triggers a browser notification, and shows a toast when a session finishes while the app is inactive.
+- Completed session persistence to IndexedDB from the floating widget.
+- Session marking and advancing logic with optional auto-start for the next session.
+- Auto-undismiss behaviour when a new focus session starts.
+- Guard in `FocusTimer.handleSessionComplete` to prevent duplicate completion handling if the store already shows the session as finished.
+- Bell sound and toast notification in the Zustand store when the timer completes while the app is inactive.
+
+### Changed
+- Floating widget now only appears when a session has been started, hiding on the main focus page.
+- Replaced the separate hidden-toggle UI with the new dismiss state system.
+- Free dragging allowed during a session but position is clamped to viewport bounds on release.
+- Updated Zustand store to handle inactive-state timer completion with audio and toast feedback.
+
+### Fixed
+- Duplicate session completion handling when the store and timer both attempted to finalize the same session simultaneously.
+
+---
+
+PR #70
+commit no - 04d314b
+## [0.46.0] - 2026-02-21
+
+### Highlights
+- Journal entries now get AI-powered sentiment analysis with emotion detection and suggestions, and the dashboard surfaces 7-day mood and sentiment confidence charts — giving users meaningful insights into their mental and emotional patterns over time.
+
+### Added
+- `insights-client` component that decrypts journal entries, calls `analyzeJournalSentiment`, and displays sentiment scores, detected emotions, and suggestions.
+- `analyzeJournalSentiment` server action that calls the sentiment ML service, persists `mood_tags` and `sentiment_score` to Supabase, and revalidates the journal path.
+- `mood-chart` component with skeleton loader for displaying 7-day mood trends on the dashboard.
+- `sentiment-chart` component with skeleton loader for displaying 7-day sentiment confidence on the dashboard.
+- `lib/journal-sentiment.ts` helper for journal sentiment utilities.
+- Exported `mood-chart` and `sentiment-chart` from the dashboard index.
+
+### Changed
+- Converted the journal insights page to a server component responsible for loading the journal, user, and encryption token before mounting the client.
+- Updated dashboard page to include the 7-day mood and sentiment confidence charts.
+- Updated journal-related types to support `mood_tags` and `sentiment_score` fields.
+- Tweaked auth base URL fallback logic.
+- Minor UI spacing adjustment in `journal-detail-client`.
+
+### Security
+- AI sentiment analysis is performed only after client-side decryption, ensuring encrypted journal content is never sent to the ML service in ciphertext form without the user's key being present.
+
+---
+
+PR #69
+commit no - dc11021
+## [0.45.0] - 2026-02-08
+
+### Highlights
+- The focus timer has been significantly upgraded with local session persistence, a draggable floating widget for quick access, a monthly heatmap calendar, and a richer settings and history experience — making focus tracking more powerful and accessible across the dashboard.
+
+### Added
+- `FocusFloatingWidget` component: a draggable and hideable floating timer for quick focus session access from anywhere in the dashboard.
+- `FocusHeatmapCalendar` component: a monthly heatmap view of focus session history.
+- `lib/focus/focus-db.ts` for IndexedDB-based local storage of focus sessions.
+- `useFocusStore` Zustand store for persisted focus session state management.
+- `FocusWidgetProvider` integrated into the dashboard layout to expose widget state globally.
+- Session grouping view in the focus history UI.
+- Data deletion flow for clearing focus session history.
+- Device naming support in the focus timer.
+- Fullscreen handling for the focus timer.
+- Implementation plan documentation added.
+- New dependencies added to `package.json` to support focus features.
+
+### Changed
+- Refactored `components/focus-timer.tsx` to use the new store and IndexedDB layer for full session lifecycle management.
+- Improved focus timer display with smoother updates and progress animation timing.
+- Enhanced history and settings UI with a drawer and tabbed layout.
+- Reorganized dashboard focus page layout and session visuals.
+- Wrapped dashboard layout with `FocusWidgetProvider` for widget state access.
+- Minor UI adjustments to timer display and session visuals.
+
+### Breaking Changes
+- Focus session data is now stored in IndexedDB locally. Any previous session data not migrated to the new storage layer will not appear in history. Users may need to clear stale state if conflicts arise after updating.
+
+---
+
+PR #68
+commit no - e5283c2
+## [0.44.0] - 2026-02-08
+
+### Highlights
+- Journal entries are now protected with client-side end-to-end encryption. Titles and body content are encrypted before being saved and only decrypted on the user's device, ensuring private journal data never reaches the server in plaintext.
+
+### Added
+- `app/actions/encryption.ts` server actions to get and save a per-user encryption validation token.
+- `lib/crypto.ts` crypto utility module for deriving and managing encryption keys.
+- `store/useJournalEncryptionStore.ts` in-memory store to hold derived encryption keys during a session.
+- `JournalPassphraseSetup` component for first-time passphrase setup flow.
+- `JournalUnlockModal` component for unlocking encrypted journals with a passphrase.
+- `iv` (initialization vector) field support in server-side journal actions for persisting encryption metadata.
+- Placeholder UI shown when journals are encrypted but the key is not yet available.
+- Redirect to login if user session is missing on journal pages.
+- Backward compatibility support for reading legacy plaintext journal entries.
+
+### Changed
+- Journal creation and editing components (new entry, journal list, detail) now encrypt content before saving and decrypt on load when a key is available.
+- Server-side journal actions updated to accept and persist encrypted content along with `iv` metadata.
+- Routing and pages updated to fetch and pass `userId` and `encryptionToken` down to client components.
+- Minor UI and text adjustments to the quick journal card and login flow.
+
+### Security
+- End-to-end client-side encryption implemented for journal entry titles and body content.
+- Encryption keys are derived from a user passphrase and held only in memory, never persisted to the server.
+- Per-user encryption validation token stored server-side to verify correct passphrase without exposing the key.
+
+### Breaking Changes
+- Journal entries created going forward will be encrypted. Any existing plaintext entries remain readable but new entries require passphrase setup. Integrations or scripts that read journal content directly from the database will receive encrypted ciphertext instead of plaintext.
+
+---
+
+PR #67
+commit no - 0c64f8c
+## [0.43.0] - 2026-02-07
+
+### Highlights
+- Journal pages have been split into proper server and client components, improving performance, data fetching clarity, and laying the groundwork for future local-first offline sync.
+
+### Added
+- `JournalDetailClient` component to handle rendering, editing, and UI for individual journal entries.
+- `JournalPageClient` component to handle journal list UI, filtering, and editing on the client side.
+- `notFound()` handling on the journal detail page when a journal entry is missing.
+- `LOCAL_OPS` comments throughout the codebase marking hooks and storage helpers reserved for a future local-first sync implementation.
+
+### Changed
+- Refactored journal pages into server components responsible for data fetching (`getJournalById` / journals list) and client components responsible for UI and interactions.
+- `NewJournalPage` now uses the `createJournal` server action and has updated type and mood handling.
+- Journal detail page now delegates all rendering and editing to `JournalDetailClient`.
+- Updated journal-related types and storage helpers to support the refactor.
+- Minor UI and component adjustments across journal pages.
+
+### Deprecated
+- Direct localStorage-based journal operations are being phased out in favor of server actions, with local-first sync planned as a future replacement via `LOCAL_OPS` hooks.
+
+---
+
+PR #66
+commit no - 518a667
+## [0.42.9] - 2026-02-03
+
+### Highlights
+- Major overhaul of the habit management experience with optimistic UI updates, an inline edit feature, and smarter state handling — making the app feel significantly faster and more responsive.
+
+### Added
+- Optimistic updates for habit completion and removal, giving instant UI feedback before server confirmation.
+- Edit dialog and form inside `HabitDetailClient` for updating habits in place.
+- New hooks: `useLogCompletion`, `useRemoveCompletion`, `useHabitPrediction`, and `useUpdateHabit` to centralize habit mutations.
+- Prediction UI integrated into habit lists with per-habit loading state, badge indicators, and days-until-prediction display.
+- Overview stats section on the Habits page.
+- Grouped habit lists by frequency on the Habits page.
+- Empty and error states on the Habits page for better feedback.
+- Facebook as a supported OAuth provider in the connections section.
+- `public/Facebook_Logo_Primary.png` asset for the Facebook provider icon.
+- `HabitFrequency` type import for improved type safety.
+
+### Changed
+- Refactored `HabitDetailClient` to use local optimistic state and new hooks instead of direct action calls.
+- Reworked habit cards and dialogs (complete, remove, edit) with updated layout and consistent loading indicators.
+- Improved accessibility across habit card and dialog components.
+- Updated Habits page with client-side validation and confirm-before-delete flow.
+- Switched to using `current_streak` consistently across habit displays.
+- Improved create habit dialog UX and pending state handling.
+- Adjusted avatar and background CSS classes in the connections section.
+- Improved prediction loading and error states in `HabitDetailClient`.
+- Minor formatting and progress/badge styling refinements.
+
+---
+
+PR #66
+commit no - 3b45f66
+## [0.42.8] - 2026-01-31
+
+### Highlights
+- The app now supports Progressive Web App (PWA) installation and handles offline usage gracefully with a visual indicator and service worker caching.
+
+### Added
+- `OfflineIndicator` component to notify users when they lose internet connection.
+- Custom PWA manifest for app installation support on supported devices.
+- Service worker for offline caching, enabling basic app functionality without a network.
+- App icons for PWA installation across different platforms.
+
+### Changed
+- Updated the main layout to include the `OfflineIndicator` component.
+- Removed the manifest reference from metadata in favor of the new custom PWA manifest.
+
+---
+
+PR #66
+commit no - dfb2ee4
+## [0.42.7] - 2026-01-30
+
+### Highlights
+- Spotify has been disabled as a connected account provider, streamlining the supported OAuth options.
+
+### Changed
+- Removed Spotify from the `ALL_PROVIDERS` array.
+- Commented out the Spotify entry in the `PROVIDERS` object, disabling it from the provider list.
+
+### Deprecated
+- Spotify as a connected account provider is disabled and may be permanently removed in a future release.
+
+### Breaking Changes
+- Users who previously connected their Spotify account may lose access to that integration. Manual review or migration may be needed if Spotify data was in use.
+
+---
+
+PR #66
+commit no - f163f1d
+## [0.42.6] - 2026-01-30
+
+### Highlights
+- The connections section now uses proper SVG icons for OAuth providers, making the UI cleaner and more visually consistent.
+
+### Added
+- SVG assets for OAuth provider icons: Google, GitHub, Discord, and Apple.
+
+### Changed
+- Refactored the connections section to use SVG icons for OAuth providers.
+- Improved the overall UI layout of the connections section.
+- Updated button styles in the connections section.
+
+### Fixed
+- Minor style issue in the `nav-user` component.
+
+### Deprecated
+- Spotify removed from the list of supported OAuth providers and may be permanently dropped in a future release.
+
+---
+
+PR #66
+commit no - 4c2dab4
+## [0.42.5] - 2026-01-28
+
+### Highlights
+- Settings pages have been completely redesigned with a clean flat-design system, modular sections, and mobile navigation support — making account management significantly more organized and user-friendly.
+
+### Added
+- New modular settings section components for: Profile, Connections, Security, Onboarding, Privacy, Theme, Custom Themes, Notifications, General, Subscription, Billing History, and Delete Account.
+- Mobile navigation support for the new settings layout.
+- Toast notifications for improved user feedback across settings actions.
+- `SettingsLayoutWrapper` component for the refactored settings layout.
+- `SidebarRightWrapper` integration into the dashboard layout.
+
+### Changed
+- Redesigned the entire settings system with a flat-design approach and grouped sections.
+- Refactored settings layout to use `SettingsLayoutWrapper`.
+- Updated dashboard layout to use `SidebarRightWrapper`.
+- Improved UX for account linking, notification preferences, and theme selection.
+- Updated routing to redirect old settings page URLs to their new locations.
+
+### Breaking Changes
+- Old settings page routes have been redirected to new locations. Any hardcoded links or bookmarks to previous settings URLs will need to be updated to avoid redirect issues.
+
+---
+
+PR #66
+commit no - 1b4e89b
+## [0.42.4] - 2026-01-28
+
+### Highlights
+- Journal storage logic has been centralized for better maintainability, and account security has been significantly enhanced with password update, account deletion, and improved route protection.
+
+### Added
+- `lib/journal-storage.ts` utility file centralizing all journal localStorage logic.
+- Account deletion modal for users to delete their account from the UI.
+- Session info component to display current session details.
+- Password update server action for changing account passwords.
+- Account deletion server action for permanently removing accounts.
+
+### Changed
+- Updated all journal-related components and pages to use the new `lib/journal-storage.ts` utilities.
+- Improved security settings UI layout and interactions.
+- Updated connected accounts logic for better consistency.
+- Refined Supabase middleware for stronger route protection.
+
+### Security
+- Password update functionality added, allowing users to change credentials directly from account settings.
+- Account deletion flow implemented with proper server-side handling.
+- Improved route protection via updated Supabase middleware, reducing unauthorized access risks.
+
+### Breaking Changes
+- Journal components previously managing localStorage directly now depend on `lib/journal-storage.ts`. Any custom extensions to journal storage logic will need to be migrated to use the new utility.
+
+---
+
+PR #66
+commit no - ef131d9
+## [0.42.3] - 2026-01-28
+
+### Highlights
+- Users can now see the live status of backend ML services directly in the site header, improving transparency around AI-powered feature availability.
+
+### Added
+- `ServiceStatusIndicator` component to display real-time status of backend ML services in the site header.
+- `useWarmServices` hook to manage and trigger warm-up calls for backend ML services.
+
+### Changed
+- Updated the site header to include the `ServiceStatusIndicator`.
+
+### Fixed
+- Apostrophe escaping and quote formatting issues across several dashboard and landing page components.
+
+---
+
+PR #66
+commit no - e9eb475
+## [0.42.2] - 2026-01-27
+
+### Highlights
+- The dashboard has been significantly expanded with five new widgets covering mood tracking, habit progress, quick journaling, daily reflection prompts, and productivity summaries — giving users a much richer home screen experience.
+
+### Added
+- `MoodInputCard` widget for tracking mood directly from the dashboard.
+- `HabitsWidget` for viewing habit progress at a glance.
+- `QuickJournalCard` for fast journal entries without leaving the dashboard.
+- `ReflectionPrompt` for daily reflection prompts on the dashboard.
+- `ProductivitySummary` widget for an overview of productivity stats.
+- Skeleton loaders for all five new dashboard widgets for smoother loading states.
+
+### Changed
+- Restructured the dashboard page layout to a grid-based system accommodating the new widgets.
+- Refactored the dashboard index to export all new widget components cleanly.
+
+---
+
+PR #66
+commit no - 0ce905d
+## [0.42.1] - 2026-01-27
+
+### Highlights
+- Auth redirect URLs now consistently point to the correct production environment by using `VERCEL_PROJECT_PRODUCTION_URL`.
+
+### Changed
+- Replaced `VERCEL_URL` with `VERCEL_PROJECT_PRODUCTION_URL` for constructing redirect URLs in authentication flows.
+
+### Fixed
+- Redirect URLs in auth flows incorrectly resolving to preview/branch deployment URLs instead of the production URL.
+
+### Breaking Changes
+- Environments must have `VERCEL_PROJECT_PRODUCTION_URL` set correctly in Vercel project settings, otherwise auth redirects will fail in production.
+
+---
+
+PR #66 
+commit no - 93f262a
+
+## [0.42.0] - 2026-01-27
+
+### Highlights
+- Authentication redirect URLs now correctly resolve in Vercel deployments by switching to the `VERCEL_URL` environment variable.
+
+### Changed
+- Replaced `NEXT_PUBLIC_SITE_URL` with `VERCEL_URL` for constructing redirect URLs in authentication flows.
+
+### Fixed
+- Incorrect redirect URL generation during auth flows in Vercel-hosted deployments.
+
+### Breaking Changes
+- Projects relying on `NEXT_PUBLIC_SITE_URL` for auth redirects will need to ensure `VERCEL_URL` is properly set in their Vercel environment variables, or redirects may break.
+
+---
+
+## [0.41.0] - 2026-02-03
+
+### Highlights
+- Major overhaul of the habit management experience with optimistic UI updates, an inline edit feature, and smarter state handling — making the app feel significantly faster and more responsive.
+
+### Added
+- Optimistic updates for habit completion and removal, giving instant UI feedback before server confirmation.
+- Edit dialog and form inside `HabitDetailClient` for updating habits in place.
+- New hooks: `useLogCompletion`, `useRemoveCompletion`, `useHabitPrediction`, and `useUpdateHabit` to centralize habit mutations.
+- Prediction UI integrated into habit lists with per-habit loading state, badge indicators, and days-until-prediction display.
+- Overview stats section on the Habits page.
+- Grouped habit lists by frequency on the Habits page.
+- Empty and error states on the Habits page for better feedback.
+- Facebook as a supported OAuth provider in the connections section.
+- `public/Facebook_Logo_Primary.png` asset for the Facebook provider icon.
+- `HabitFrequency` type import for improved type safety.
+
+### Changed
+- Refactored `HabitDetailClient` to use local optimistic state and new hooks instead of direct action calls.
+- Reworked habit cards and dialogs (complete, remove, edit) with updated layout and consistent loading indicators.
+- Improved accessibility across habit card and dialog components.
+- Updated Habits page with client-side validation and confirm-before-delete flow.
+- Switched to using `current_streak` consistently across habit displays.
+- Improved create habit dialog UX and pending state handling.
+- Adjusted avatar and background CSS classes in the connections section.
+- Improved prediction loading and error states in `HabitDetailClient`.
+- Minor formatting and progress/badge styling refinements.
+
+---
+
+## [0.40.0] - 2026-01-31
+
+### Highlights
+- The app now supports Progressive Web App (PWA) installation and handles offline usage gracefully with a visual indicator and service worker caching.
+
+### Added
+- `OfflineIndicator` component to notify users when they lose internet connection.
+- Custom PWA manifest for app installation support on supported devices.
+- Service worker for offline caching, enabling basic app functionality without a network.
+- App icons for PWA installation across different platforms.
+
+### Changed
+- Updated the main layout to include the `OfflineIndicator` component.
+- Removed the manifest reference from the metadata in favor of the new custom PWA manifest.
+
+---
+
+## [0.39.1] - 2026-01-30
+
+### Highlights
+- Spotify has been disabled as a connected account provider, streamlining the supported OAuth options.
+
+### Changed
+- Removed Spotify from the `ALL_PROVIDERS` array.
+- Commented out the Spotify entry in the `PROVIDERS` object, disabling it from the provider list.
+
+### Deprecated
+- Spotify as a connected account provider is disabled and may be permanently removed in a future release.
+
+### Breaking Changes
+- Users who previously connected their Spotify account may lose access to that integration. Manual review or migration may be needed if Spotify data was in use.
+
+---
+
+## [0.39.0] - 2026-01-30
+
+### Highlights
+- Revamped the connections UI with proper SVG icons for OAuth providers, making the interface cleaner and more visually consistent.
+
+### Added
+- SVG assets for OAuth provider icons: Google, GitHub, Discord, and Apple.
+
+### Changed
+- Refactored the connections section to use SVG icons instead of text/placeholder elements for OAuth providers.
+- Improved the overall layout and button styles in the connections UI.
+- Updated nav-user component with a minor style fix.
+
+### Removed
+- Spotify removed from the list of supported OAuth providers.
+
+---
+
 ## [0.38.0] - 2026-01-28
 
 ### Highlights
