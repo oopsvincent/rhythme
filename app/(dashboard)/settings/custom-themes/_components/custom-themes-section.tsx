@@ -1,5 +1,5 @@
 // app/(dashboard)/settings/custom-themes/_components/custom-themes-section.tsx
-// Custom color themes with flat design
+// Custom color themes with flat design + premium gating
 
 "use client"
 
@@ -7,9 +7,28 @@ import { Check, Crown, Lock } from "lucide-react"
 import { useColorTheme, colorThemes, type ColorTheme } from "@/contexts/theme-context"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { usePremium } from "@/hooks/use-premium"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export function CustomThemesSection() {
   const { colorTheme, setColorTheme } = useColorTheme()
+  const { isPremium } = usePremium()
+  const router = useRouter()
+
+  const handleThemeSelect = (t: typeof colorThemes[number]) => {
+    if (t.premium && !isPremium) {
+      toast("Premium Theme", {
+        description: `"${t.name}" is a premium theme. Upgrade to unlock all themes.`,
+        action: {
+          label: "Upgrade",
+          onClick: () => router.push("/settings/billing"),
+        },
+      })
+      return
+    }
+    setColorTheme(t.id as ColorTheme)
+  }
 
   return (
     <div className="space-y-6">
@@ -20,11 +39,12 @@ export function CustomThemesSection() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {colorThemes.map((t) => {
           const isSelected = colorTheme === t.id
+          const isLocked = t.premium && !isPremium
           
           return (
             <motion.button
               key={t.id}
-              onClick={() => setColorTheme(t.id as ColorTheme)}
+              onClick={() => handleThemeSelect(t)}
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -33,7 +53,9 @@ export function CustomThemesSection() {
                 "border",
                 isSelected
                   ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg border-primary"
-                  : "border-border/50 hover:shadow-md hover:border-muted-foreground/30"
+                  : isLocked
+                    ? "opacity-75 hover:opacity-90 border-border/50 hover:shadow-md"
+                    : "border-border/50 hover:shadow-md hover:border-muted-foreground/30"
               )}
             >
               {/* Gradient Preview */}
@@ -41,9 +63,19 @@ export function CustomThemesSection() {
                 className="h-20 relative overflow-hidden"
                 style={{ background: t.gradient }}
               >
+                {/* Lock overlay for premium themes */}
+                {isLocked && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+                    <div className="flex items-center gap-1 bg-black/60 rounded-full px-2.5 py-1 shadow-lg">
+                      <Lock className="h-3 w-3 text-white" />
+                      <span className="text-[10px] font-bold text-white tracking-wide">PRO</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Selection indicator */}
                 <AnimatePresence>
-                  {isSelected && (
+                  {isSelected && !isLocked && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -74,7 +106,12 @@ export function CustomThemesSection() {
               {/* Theme Info */}
               <div className="p-3 space-y-1 bg-card">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{t.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-sm">{t.name}</span>
+                    {t.premium && (
+                      <Crown className="h-3 w-3 text-amber-500" />
+                    )}
+                  </div>
                   <div className="flex gap-1">
                     <div 
                       className="w-3 h-3 rounded-full border border-border/50 shadow-sm"
@@ -95,13 +132,15 @@ export function CustomThemesSection() {
         })}
       </div>
       
-      {/* Premium notice */}
-      <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
-        <Crown className="h-4 w-4 text-primary mt-0.5" />
-        <p className="text-sm text-muted-foreground">
-          <span className="text-primary font-medium">Premium feature.</span> Custom themes are available to premium subscribers.
-        </p>
-      </div>
+      {/* Premium notice — shown only for free users */}
+      {!isPremium && (
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <Crown className="h-4 w-4 text-primary mt-0.5" />
+          <p className="text-sm text-muted-foreground">
+            <span className="text-primary font-medium">Premium feature.</span> Custom themes are available to premium subscribers.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

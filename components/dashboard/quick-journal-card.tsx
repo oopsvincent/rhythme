@@ -37,6 +37,8 @@ import { useRouter } from "next/navigation";
 // } from "@/lib/journal-storage";
 import { Journal, MoodTags } from "@/types/database";
 import { createJournal } from "@/app/actions/journals";
+import { canCreateJournal } from "@/app/actions/usage-limits";
+import { PremiumGateModal } from "@/components/premium-gate-modal";
 
 const QUICK_JOURNAL_KEY = "rhythme_quick_journal_draft";
 
@@ -87,6 +89,7 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
   const [text, setText] = useState("");
   const [prompt, setPrompt] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [showPremiumGate, setShowPremiumGate] = useState(false);
 
   // Normalize journals and find today's entry
   const entries = journals.map(normalizeJournal);
@@ -134,7 +137,15 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
     if (!text.trim()) return;
     
     setIsSaving(true);
-    
+
+    // Check usage limit
+    const { allowed } = await canCreateJournal();
+    if (!allowed) {
+      setIsSaving(false);
+      setShowPremiumGate(true);
+      return;
+    }
+
     const result = await createJournal({
       title: prompt,
       content: text,
@@ -202,6 +213,12 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
   }
 
   return (
+    <>
+      <PremiumGateModal
+        open={showPremiumGate}
+        onOpenChange={setShowPremiumGate}
+        reason="journal"
+      />
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -263,5 +280,6 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
         )}
       </div>
     </motion.div>
+    </>
   );
 }

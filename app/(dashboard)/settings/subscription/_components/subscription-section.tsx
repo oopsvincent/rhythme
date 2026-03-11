@@ -1,5 +1,5 @@
 // app/(dashboard)/settings/subscription/_components/subscription-section.tsx
-// Subscription management with flat design
+// Subscription management with Razorpay checkout integration
 
 "use client"
 
@@ -27,14 +27,17 @@ import {
   Palette,
   ChevronDown,
   ChevronUp,
+  Loader2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { toast } from "sonner"
+import { usePremium } from "@/hooks/use-premium"
 
-// Pricing
+// Display pricing (actual charge is from Razorpay plan config in INR)
 const pricing = {
-  monthly: { starter: 0, premium: 12.99 },
-  yearly: { starter: 0, premium: 79.99 }
+  monthly: { starter: 0, premium: 9.99 },
+  yearly: { starter: 0, premium: 99.99 }
 }
 
 const starterPlanFeatures = [
@@ -76,6 +79,8 @@ interface SubscriptionSectionProps {
 export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly")
   const [showAllFeatures, setShowAllFeatures] = useState(false)
+  const [isUpgrading, setIsUpgrading] = useState(false)
+  const { refetch } = usePremium()
   
   const isPremium = currentPlan === "premium"
   const yearlyPrice = pricing.yearly.premium
@@ -84,6 +89,87 @@ export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
   const savingsPercentage = Math.round((monthlySavings / (monthlyPrice * 12)) * 100)
   
   const visibleFeatures = showAllFeatures ? premiumFeatures : premiumFeatures.slice(0, 6)
+
+  const handleUpgrade = async () => {
+    setIsUpgrading(true)
+    
+    try {
+      const res = await fetch("/api/payments/create-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: billingCycle }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "Failed to create subscription")
+      }
+
+      const { subscription_id, key_id } = await res.json()
+
+      const options = {
+        key: key_id,
+        subscription_id,
+        name: "Rhythmé",
+        description: `Premium ${billingCycle === "yearly" ? "Yearly" : "Monthly"} Plan`,
+        handler: async (response: { razorpay_payment_id: string; razorpay_subscription_id: string; razorpay_signature: string }) => {
+          try {
+            const verifyRes = await fetch("/api/payments/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            })
+
+            if (verifyRes.ok) {
+              toast.success("Welcome to Premium! 🎉", {
+                description: "Your subscription is now active. Enjoy all premium features!",
+              })
+              refetch()
+              window.location.reload()
+            } else {
+              toast.error("Payment verification failed", {
+                description: "Your payment was received but verification failed. Please contact support.",
+              })
+            }
+          } catch {
+            toast.error("Verification error", {
+              description: "Please contact support if your payment was charged.",
+            })
+          }
+        },
+        theme: { color: "#FF6B35" },
+        modal: {
+          ondismiss: () => {
+            setIsUpgrading(false)
+          },
+        },
+      }
+
+      const script = document.createElement("script")
+      script.src = "https://checkout.razorpay.com/v1/checkout.js"
+      script.onload = () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rzp = new (window as any).Razorpay(options)
+        rzp.open()
+        setIsUpgrading(false)
+      }
+      script.onerror = () => {
+        toast.error("Failed to load payment gateway")
+        setIsUpgrading(false)
+      }
+      document.body.appendChild(script)
+    } catch (error) {
+      console.error("Upgrade error:", error)
+      toast.error("Upgrade failed", {
+        description: error instanceof Error ? error.message : "Something went wrong",
+      })
+      setIsUpgrading(false)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -133,7 +219,7 @@ export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
             <div className="flex items-center gap-4 pt-4 mt-4 border-t border-border/50 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Renews on Jan 1, 2027</span>
+                <span>Active subscription</span>
               </div>
               <div className="flex items-center gap-2">
                 <Receipt className="h-4 w-4" />
@@ -264,9 +350,23 @@ export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
                 </div>
                 
                 <div className="flex flex-col gap-2 md:min-w-[200px]">
-                  <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/25">
-                    <Sparkles className="h-4 w-4" />
-                    Upgrade Now
+                  <Button 
+                    size="lg" 
+                    className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/25"
+                    onClick={handleUpgrade}
+                    disabled={isUpgrading}
+                  >
+                    {isUpgrading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Upgrade Now
+                      </>
+                    )}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
                     30-day money-back guarantee
@@ -289,7 +389,7 @@ export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
             <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
               <div>
                 <p className="font-medium text-sm">Update Payment Method</p>
-                <p className="text-xs text-muted-foreground">•••• •••• •••• 4242</p>
+                <p className="text-xs text-muted-foreground">Managed by Razorpay</p>
               </div>
               <Button variant="ghost" size="sm">Update</Button>
             </div>

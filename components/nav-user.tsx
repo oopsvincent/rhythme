@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { usePremium } from "@/hooks/use-premium";
 import {
   BadgeCheck,
   Bell,
@@ -9,6 +10,7 @@ import {
   Check,
   ChevronsUpDown,
   CreditCard,
+  Crown,
   Keyboard,
   LayoutGrid,
   LogOut,
@@ -65,6 +67,7 @@ export function NavUser({
   const { isMobile, state, setOpenMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
   const [userGoal, setUserGoal] = useState<UserGoal | null>(null);
+  const { isPremium } = usePremium();
 
   // Load goal from localStorage on mount
   useEffect(() => {
@@ -125,7 +128,14 @@ export function NavUser({
               {!isCollapsed && (
                 <>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate">{user.name}</span>
+                    <span className="truncate flex items-center gap-1.5">
+                      {user.name}
+                      {isPremium && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                          <span className="text-[9px] font-bold text-amber-500 tracking-wider">✦ PRO</span>
+                        </span>
+                      )}
+                    </span>
                     <span className="truncate text-xs text-muted-foreground">
                       {user.email}
                     </span>
@@ -155,7 +165,14 @@ export function NavUser({
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-emerald-500" />
                 </div>
                 <div className="grid flex-1 gap-0.5">
-                  <span className="text-sm font-semibold">{user.name}</span>
+                  <span className="text-sm font-semibold flex items-center gap-1.5">
+                    {user.name}
+                    {isPremium && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                        <span className="text-[9px] font-bold text-amber-500 tracking-wider">✦ PRO</span>
+                      </span>
+                    )}
+                  </span>
                   <span className="text-xs text-muted-foreground">{user.email}</span>
                 </div>
               </div>
@@ -195,17 +212,29 @@ export function NavUser({
 
             <DropdownMenuSeparator className="mx-1 my-1 bg-border/50" />
 
-            {/* Upgrade Section */}
-            <DropdownMenuItem 
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 px-2 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation("/pricing")}
-            >
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="flex-1 text-sm font-medium">Upgrade to Pro</span>
-              <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
-                NEW
-              </Badge>
-            </DropdownMenuItem>
+            {/* Upgrade Section / Premium Status */}
+            {isPremium ? (
+              <DropdownMenuItem 
+                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 px-2 py-2.5 cursor-default"
+              >
+                <Crown className="h-4 w-4 text-amber-500" />
+                <span className="flex-1 text-sm font-medium">Premium Plan</span>
+                <Badge variant="secondary" className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] px-1.5 py-0">
+                  Active
+                </Badge>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem 
+                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 px-2 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation("/settings/subscription")}
+              >
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="flex-1 text-sm font-medium">Upgrade to Pro</span>
+                <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
+                  NEW
+                </Badge>
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuSeparator className="mx-1 my-1 bg-border/50" />
 
