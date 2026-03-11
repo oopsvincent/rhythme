@@ -65,6 +65,8 @@ import {
   getFrequencyLabel,
   getStreakUnit,
 } from "@/lib/habit-helpers";
+import { canCreateHabit } from "@/app/actions/usage-limits";
+import { PremiumGateModal } from "@/components/premium-gate-modal";
 
 /**
  * Generate SEO-friendly slug from habit name + id
@@ -114,6 +116,7 @@ export default function HabitsPage() {
     frequency: 0,
     target_count: 1,
   });
+  const [showPremiumGate, setShowPremiumGate] = useState(false);
 
   const isPending =
     createMutation.isPending || deleteMutation.isPending || logMutation.isPending;
@@ -143,8 +146,17 @@ export default function HabitsPage() {
     );
   };
 
-  const handleAddHabit = () => {
+  const handleAddHabit = async () => {
     if (!newHabit.name.trim()) return;
+
+    // Check usage limit before creating
+    const { allowed } = await canCreateHabit();
+    if (!allowed) {
+      setIsAddDialogOpen(false);
+      setShowPremiumGate(true);
+      return;
+    }
+
     createMutation.mutate(
       {
         name: newHabit.name,
@@ -226,7 +238,9 @@ export default function HabitsPage() {
               </div>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <button className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-primary/25">
+                  <button
+                    className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-primary/25"
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Habit
                   </button>
@@ -339,6 +353,13 @@ export default function HabitsPage() {
                   </form>
                 </DialogContent>
               </Dialog>
+
+              {/* Premium Gate Modal */}
+              <PremiumGateModal
+                open={showPremiumGate}
+                onOpenChange={setShowPremiumGate}
+                reason="habit"
+              />
             </motion.div>
 
             {/* Complete Dialog */}

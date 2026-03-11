@@ -3,6 +3,7 @@
 
 import { useState, useTransition } from 'react'
 import { createTask } from '@/app/actions/getTasks'
+import { canCreateTask } from '@/app/actions/usage-limits'
 import type { CreateTaskInput, Priority, Status } from '@/types/database'
 import { Button } from "@/components/ui/button"
 import {
@@ -27,6 +28,7 @@ import {
 import { Plus, Loader2 } from 'lucide-react'
 import { DateNTimePicker } from './date-n-time-picker'
 import { Kbd } from './ui/kbd'
+import { PremiumGateModal } from './premium-gate-modal'
 
 const priorityOptions: { value: Priority; label: string; color: string }[] = [
   { value: 'low', label: 'Low', color: 'text-blue-600' },
@@ -44,6 +46,7 @@ export default function TaskForm() {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showPremiumGate, setShowPremiumGate] = useState(false)
 
   const [formData, setFormData] = useState<CreateTaskInput>({
     title: '',
@@ -78,6 +81,13 @@ export default function TaskForm() {
     }
 
     startTransition(async () => {
+      // Check usage limit
+      const { allowed } = await canCreateTask()
+      if (!allowed) {
+        setShowPremiumGate(true)
+        return
+      }
+
       const result = await createTask(formData)
       
       if (result?.error) {
@@ -97,6 +107,12 @@ export default function TaskForm() {
   }
 
   return (
+    <>
+    <PremiumGateModal
+      open={showPremiumGate}
+      onOpenChange={setShowPremiumGate}
+      reason="task"
+    />
     <Dialog open={showForm} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
@@ -241,5 +257,6 @@ export default function TaskForm() {
         </form>
       </DialogContent>
     </Dialog>
+    </>
   )
 }

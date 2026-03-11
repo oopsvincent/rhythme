@@ -38,9 +38,11 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { createJournal } from "@/app/actions/journals";
+import { canCreateJournal } from "@/app/actions/usage-limits";
 import { JournalInput, MoodTags } from "@/types/database";
 import { encryptJournal, isCryptoAvailable } from "@/lib/crypto";
 import { useJournalEncryptionStore } from "@/store/useJournalEncryptionStore";
+import { PremiumGateModal } from "@/components/premium-gate-modal";
 
 // Local storage key
 const DRAFT_STORAGE_KEY = "rhythme_journal_draft";
@@ -75,6 +77,7 @@ export default function NewJournalClient({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showPassphraseSetup, setShowPassphraseSetup] = useState(false);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [showPremiumGate, setShowPremiumGate] = useState(false);
 
   const canSave = title.trim() !== "" && mood !== null;
   const wordCount = calculateWordCount(body);
@@ -134,6 +137,14 @@ export default function NewJournalClient({
     }
 
     setIsSaving(true);
+
+    // Check usage limit before saving
+    const { allowed } = await canCreateJournal();
+    if (!allowed) {
+      setIsSaving(false);
+      setShowPremiumGate(true);
+      return;
+    }
 
     try {
       let journalInput: JournalInput;
@@ -223,6 +234,13 @@ export default function NewJournalClient({
           validationToken={encryptionToken}
         />
       )}
+
+      {/* Premium Gate Modal */}
+      <PremiumGateModal
+        open={showPremiumGate}
+        onOpenChange={setShowPremiumGate}
+        reason="journal"
+      />
 
       <div className="flex flex-1 flex-col overflow-hidden overflow-y-auto relative">
         {/* Ambient Background based on mood */}

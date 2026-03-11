@@ -103,6 +103,7 @@ export const colorThemes: {
   primary: string
   accent: string
   gradient: string
+  premium: boolean
 }[] = [
   {
     id: "RTX-FE-B35-00D",
@@ -111,6 +112,7 @@ export const colorThemes: {
     primary: "#FF6B35",
     accent: "#00D9FF",
     gradient: "linear-gradient(135deg, #FF6B35 0%, #00D9FF 100%)",
+    premium: false,
   },
   {
     id: "RTX-ST-946-F7B",
@@ -119,6 +121,7 @@ export const colorThemes: {
     primary: "#E63946",
     accent: "#F7B32B",
     gradient: "linear-gradient(135deg, #E63946 0%, #F7B32B 100%)",
+    premium: true,
   },
   {
     id: "RTX-ON-7B6-90E",
@@ -127,6 +130,7 @@ export const colorThemes: {
     primary: "#0077B6",
     accent: "#90E0EF",
     gradient: "linear-gradient(135deg, #0077B6 0%, #90E0EF 100%)",
+    premium: true,
   },
   {
     id: "RTX-LR-EDD-E0A",
@@ -135,6 +139,7 @@ export const colorThemes: {
     primary: "#9D4EDD",
     accent: "#E0AAFF",
     gradient: "linear-gradient(135deg, #9D4EDD 0%, #E0AAFF 100%)",
+    premium: true,
   },
   {
     id: "RTX-CS-280-9CA",
@@ -143,6 +148,7 @@ export const colorThemes: {
     primary: "#6B7280",
     accent: "#9CA3AF",
     gradient: "linear-gradient(135deg, #374151 0%, #9CA3AF 100%)",
+    premium: false,
   },
   {
     id: "RTX-CL-899-8B5",
@@ -151,6 +157,7 @@ export const colorThemes: {
     primary: "#EC4899",
     accent: "#8B5CF6",
     gradient: "linear-gradient(135deg, #F59E0B 0%, #EC4899 50%, #8B5CF6 100%)",
+    premium: true,
   },
   {
     id: "RTX-FT-669-34D",
@@ -159,6 +166,7 @@ export const colorThemes: {
     primary: "#059669",
     accent: "#34D399",
     gradient: "linear-gradient(135deg, #059669 0%, #34D399 100%)",
+    premium: true,
   },
   {
     id: "RTX-MT-0A3-636",
@@ -167,5 +175,6 @@ export const colorThemes: {
     primary: "#3730A3",
     accent: "#6366F1",
     gradient: "linear-gradient(135deg, #1E1B4B 0%, #6366F1 100%)",
+    premium: true,
   },
 ]
