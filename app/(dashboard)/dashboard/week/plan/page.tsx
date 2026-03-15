@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { motion, AnimatePresence, Variants } from "framer-motion"
+import { useState, useRef, useEffect, useCallback } from "react"
+import { motion, Variants } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import {
   Save,
@@ -15,15 +14,18 @@ import {
   Flame,
   Heart,
   Plus,
-  PenLine,
+  Check,
+  Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
-import { SiteHeader } from "@/components/site-header"
+import { useWeeklyPlan, useAutoSaveWeeklyPlan } from "@/hooks/use-weekly-plan"
+import type { WeeklyPlanContent } from "@/app/actions/weekly"
+import { useSaveWeeklyPlan } from "@/hooks/use-weekly-plan"
 
 // ── Template section data ──────────────────────────────────
 
 interface TemplateSection {
-  id: string
+  id: keyof WeeklyPlanContent
   icon: React.ElementType
   title: string
   subtitle: string
@@ -38,11 +40,7 @@ const TEMPLATE_SECTIONS: TemplateSection[] = [
     title: "Wins to build on",
     subtitle: "What went well last week that you want to carry forward?",
     placeholder: "e.g. Stayed consistent with exercise...",
-    defaultItems: [
-      "Completed all high-priority tasks by Wednesday",
-      "Maintained 5-day meditation streak",
-      "Had a great brainstorm session with the team",
-    ],
+    defaultItems: [],
   },
   {
     id: "challenges",
@@ -50,11 +48,7 @@ const TEMPLATE_SECTIONS: TemplateSection[] = [
     title: "Challenges to handle better",
     subtitle: "What tripped you up, and what could you do differently?",
     placeholder: "e.g. Got distracted by Slack...",
-    defaultItems: [
-      "Afternoon focus dips on Mon/Wed — try blocking 2-4pm",
-      "Said yes to too many meetings",
-      "", // Empty box
-    ],
+    defaultItems: [],
   },
   {
     id: "focus",
@@ -62,11 +56,7 @@ const TEMPLATE_SECTIONS: TemplateSection[] = [
     title: "3–5 focus areas this week",
     subtitle: "What deserves your best attention this week?",
     placeholder: "e.g. Ship the weekly system UI...",
-    defaultItems: [
-      "Ship the weekly system UI",
-      "Review pull requests backlog",
-      "Prepare Thursday presentation",
-    ],
+    defaultItems: [],
   },
   {
     id: "habits",
@@ -74,11 +64,7 @@ const TEMPLATE_SECTIONS: TemplateSection[] = [
     title: "Habits to protect",
     subtitle: "Which habits are non-negotiable this week?",
     placeholder: "e.g. Morning journaling...",
-    defaultItems: [
-      "Morning meditation (10 min)",
-      "Daily reading (20 min)",
-      "No phone after 10pm",
-    ],
+    defaultItems: [],
   },
   {
     id: "mood",
@@ -86,9 +72,7 @@ const TEMPLATE_SECTIONS: TemplateSection[] = [
     title: "Mood intention",
     subtitle: "How do you want to feel this week?",
     placeholder: "I want to feel more...",
-    defaultItems: [
-      "I want to feel more grounded and less reactive to distractions.",
-    ],
+    defaultItems: [],
   },
 ]
 
@@ -121,87 +105,122 @@ const fadeUp: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 }
 
-// ── Modal Component ────────────────────────────────────────
+// ── Inline Edit Item ───────────────────────────────────────
 
-interface EditModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSave: (val: string) => void
-  initialValue: string
-  title: string
+interface InlineEditItemProps {
+  value: string
   placeholder: string
+  prefix: string
+  onUpdate: (val: string) => void
+  onRemove: () => void
+  autoFocus?: boolean
 }
 
-function EditItemModal({ isOpen, onClose, onSave, initialValue, title, placeholder }: EditModalProps) {
-  const [value, setValue] = useState(initialValue)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+function InlineEditItem({ value, placeholder, prefix, onUpdate, onRemove, autoFocus }: InlineEditItemProps) {
+  const [isEditing, setIsEditing] = useState(autoFocus || false)
+  const [editValue, setEditValue] = useState(value)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Auto-resize textarea
+  const autoResize = useCallback(() => {
+    const ta = textareaRef.current
+    if (ta) {
+      ta.style.height = "auto"
+      ta.style.height = `${ta.scrollHeight}px`
+    }
+  }, [])
 
   useEffect(() => {
-    if (isOpen) {
-      setValue(initialValue)
-      setTimeout(() => inputRef.current?.focus(), 50)
+    if (isEditing) {
+      setTimeout(() => {
+        textareaRef.current?.focus()
+        autoResize()
+      }, 10)
     }
-  }, [isOpen, initialValue])
+  }, [isEditing, autoResize])
 
-  if (!isOpen) return null
+  useEffect(() => {
+    setEditValue(value)
+  }, [value])
+
+  const handleBlur = () => {
+    setIsEditing(false)
+    const trimmed = editValue.trim()
+    if (trimmed !== value) {
+      onUpdate(trimmed)
+    }
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      onSave(value)
+      textareaRef.current?.blur()
     }
     if (e.key === "Escape") {
-      onClose()
+      setEditValue(value)
+      setIsEditing(false)
     }
   }
 
+  if (isEditing) {
+    return (
+      <div className="relative flex min-h-[48px] items-start rounded-xl bg-card border-2 border-primary/30 px-4 py-3 shadow-sm transition-all">
+        <span className="shrink-0 w-6 font-medium text-primary/60 select-none pt-0.5">
+          {prefix}
+        </span>
+        <textarea
+          ref={textareaRef}
+          value={editValue}
+          onChange={(e) => {
+            setEditValue(e.target.value)
+            autoResize()
+          }}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          rows={1}
+          className="flex-1 min-w-0 pr-8 bg-transparent border-0 outline-none resize-none text-[15px] leading-relaxed placeholder:text-muted-foreground/50 focus:ring-0"
+          style={{ overflow: "hidden" }}
+        />
+      </div>
+    )
+  }
+
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="mx-4 w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl"
-          onClick={(e) => e.stopPropagation()}
+    <div
+      onClick={() => setIsEditing(true)}
+      className="group/item relative flex min-h-[48px] items-center rounded-xl bg-card border border-border/60 px-4 py-3 shadow-sm transition-all hover:bg-muted/40 hover:border-primary/30 hover:shadow-md cursor-text"
+    >
+      <span className="shrink-0 w-6 font-medium text-primary/60 select-none flex items-center h-full">
+        {prefix}
+      </span>
+
+      <div className="flex-1 min-w-0 pr-8">
+        {editValue ? (
+          <span className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
+            {editValue}
+          </span>
+        ) : (
+          <span className="text-[15px] text-muted-foreground/50 transition-colors group-hover/item:text-muted-foreground/70">
+            {placeholder}
+          </span>
+        )}
+      </div>
+
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover/item:opacity-100">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
         >
-          {/* Header */}
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <PenLine className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h2 className="font-primary text-xl font-bold">{title}</h2>
-            </div>
-          </div>
-
-          <Textarea
-            ref={inputRef}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="min-h-[120px] resize-none text-base bg-muted/30 focus-visible:ring-primary/20 border-border/50"
-          />
-          <p className="text-xs text-muted-foreground mt-2 text-right">Press Enter to save, Shift+Enter for new line</p>
-
-          <div className="mt-6 flex gap-3">
-            <Button variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button onClick={() => onSave(value)} className="flex-1">
-              Save
-            </Button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -210,66 +229,63 @@ function EditItemModal({ isOpen, onClose, onSave, initialValue, title, placehold
 export default function WeeklyPlanPage() {
   const weekRange = getWeekRange()
 
-  // State maps sectionId -> string[]
-  const [sections, setSections] = useState<Record<string, string[]>>(
-    Object.fromEntries(TEMPLATE_SECTIONS.map((s) => [s.id, s.defaultItems]))
-  )
-
-  // Modal State
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean
-    sectionId: string
-    itemIndex: number
-    title: string
-    placeholder: string
-    value: string
-  }>({
-    isOpen: false,
-    sectionId: "",
-    itemIndex: -1,
-    title: "",
-    placeholder: "",
-    value: "",
+  // State for all plan sections
+  const [sections, setSections] = useState<WeeklyPlanContent>({
+    wins: [],
+    challenges: [],
+    focus: [],
+    habits: [],
+    mood: [],
   })
+  const [dataLoaded, setDataLoaded] = useState(false)
 
-  const openModal = (sectionId: string, itemIndex: number, title: string, placeholder: string) => {
-    const list = sections[sectionId] || []
-    setModalState({
-      isOpen: true,
-      sectionId,
-      itemIndex,
-      title,
-      placeholder,
-      value: itemIndex >= list.length ? "" : list[itemIndex],
-    })
-  }
+  // Supabase hooks
+  const { data: planData, isLoading } = useWeeklyPlan()
+  const { triggerSave, isSaving, isSaved } = useAutoSaveWeeklyPlan()
+  const manualSave = useSaveWeeklyPlan()
 
-  const handleModalSave = (newValue: string) => {
-    const { sectionId, itemIndex } = modalState
+  // Load data from Supabase on mount
+  useEffect(() => {
+    if (planData && !dataLoaded) {
+      const content = planData.content
+      if (content) {
+        setSections({
+          wins: content.wins || [],
+          challenges: content.challenges || [],
+          focus: content.focus || [],
+          habits: content.habits || [],
+          mood: content.mood || [],
+        })
+      }
+      setDataLoaded(true)
+    } else if (planData === null && !dataLoaded) {
+      // No plan exists yet — keep defaults
+      setDataLoaded(true)
+    }
+  }, [planData, dataLoaded])
+
+  // Auto-save whenever sections change (after initial load)
+  const sectionsRef = useRef(sections)
+  sectionsRef.current = sections
+
+  useEffect(() => {
+    if (!dataLoaded) return
+    triggerSave(sections)
+  }, [sections, dataLoaded, triggerSave])
+
+  const updateItem = (sectionId: keyof WeeklyPlanContent, index: number, newValue: string) => {
     setSections((prev) => {
       const list = [...(prev[sectionId] || [])]
-      
-      if (itemIndex >= list.length) {
-        // Adding new item
-        if (newValue.trim()) {
-          list.push(newValue.trim())
-        }
+      if (!newValue && list.length > 0) {
+        list.splice(index, 1)
       } else {
-        // Updating existing item
-        if (!newValue.trim()) {
-          list[itemIndex] = ""
-        } else {
-          list[itemIndex] = newValue.trim()
-        }
+        list[index] = newValue
       }
-
       return { ...prev, [sectionId]: list }
     })
-    setModalState((s) => ({ ...s, isOpen: false }))
   }
 
-  const removeItem = (e: React.MouseEvent, sectionId: string, index: number) => {
-    e.stopPropagation()
+  const removeItem = (sectionId: keyof WeeklyPlanContent, index: number) => {
     setSections((prev) => {
       const list = [...(prev[sectionId] || [])]
       list.splice(index, 1)
@@ -277,21 +293,39 @@ export default function WeeklyPlanPage() {
     })
   }
 
-  const handleSave = () => {
-    toast.success("Plan saved!", {
-      description: "Your weekly plan has been saved.",
+  const addItem = (sectionId: keyof WeeklyPlanContent) => {
+    setSections((prev) => {
+      const list = [...(prev[sectionId] || []), ""]
+      return { ...prev, [sectionId]: list }
     })
   }
 
-  const handleClear = () => {
-    setSections(
-      Object.fromEntries(
-        TEMPLATE_SECTIONS.map((s) => {
-          const count = s.id === "mood" ? 1 : 3
-          return [s.id, Array(count).fill("")]
-        })
-      )
+  const handleManualSave = () => {
+    manualSave.mutate(
+      { content: sections },
+      {
+        onSuccess: () => {
+          toast.success("Plan saved!", {
+            description: "Your weekly plan has been saved.",
+          })
+        },
+        onError: () => {
+          toast.error("Save failed", {
+            description: "Could not save your plan. Please try again.",
+          })
+        },
+      }
     )
+  }
+
+  const handleClear = () => {
+    setSections({
+      wins: [],
+      challenges: [],
+      focus: [],
+      habits: [],
+      mood: [],
+    })
     toast("Plan cleared", {
       description: "All sections have been reset.",
     })
@@ -301,9 +335,11 @@ export default function WeeklyPlanPage() {
     toast.info("Copied from last week", {
       description: "Template loaded from your previous week's plan.",
     })
-    setSections(
-      Object.fromEntries(TEMPLATE_SECTIONS.map((s) => [s.id, s.defaultItems]))
-    )
+  }
+
+  // Count non-empty items per section
+  const getFilledCount = (sectionId: keyof WeeklyPlanContent) => {
+    return (sections[sectionId] || []).filter((item) => item.trim().length > 0).length
   }
 
   return (
@@ -329,12 +365,21 @@ export default function WeeklyPlanPage() {
           <Separator className="my-2" />
         </motion.div>
 
+        {/* Loading state */}
+        {isLoading && (
+          <div className="w-full max-w-5xl mx-auto flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Loading your plan...</span>
+          </div>
+        )}
+
         {/* Template sections */}
         <div className="w-full max-w-5xl mx-auto flex flex-col gap-10">
           {TEMPLATE_SECTIONS.map((section) => {
             const Icon = section.icon
             const items = sections[section.id] || []
             const isNumbered = section.id === "focus"
+            const filledCount = getFilledCount(section.id)
 
             return (
               <motion.section
@@ -346,62 +391,53 @@ export default function WeeklyPlanPage() {
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Icon className="w-4 h-4 text-primary" />
                   </div>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-semibold">{section.title}</h2>
-                    <p className="text-xs text-muted-foreground">{section.subtitle}</p>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <h2 className="text-base sm:text-lg font-semibold">{section.title}</h2>
+                      <p className="text-xs text-muted-foreground">{section.subtitle}</p>
+                    </div>
+                    {/* Section completion indicator */}
+                    {filledCount > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                        <Check className="w-3 h-3" />
+                        {filledCount}
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 <div className="pl-11 pr-2 flex flex-col gap-3">
                   {items.map((item, index) => (
-                    <div
-                      key={index}
-                      onClick={() => openModal(section.id, index, `Edit item`, section.placeholder)}
-                      className="group/item relative flex min-h-[48px] items-center rounded-xl bg-card border border-border/60 px-4 py-3 shadow-sm transition-all hover:bg-muted/40 hover:border-primary/30 hover:shadow-md cursor-text"
-                    >
-                      {/* Prefix (bullet/number) */}
-                      <span className="shrink-0 w-6 font-medium text-primary/60 select-none flex items-center h-full">
-                        {isNumbered ? `${index + 1}.` : "•"}
-                      </span>
-                      
-                      {/* Content */}
-                      <div className="flex-1 min-w-0 pr-8">
-                        {item ? (
-                          <span className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
-                            {item}
-                          </span>
-                        ) : (
-                          <span className="text-[15px] text-muted-foreground/50 transition-colors group-hover/item:text-muted-foreground/70">
-                            {section.placeholder}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Delete button (only show on hover if not the very last empty item) */}
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover/item:opacity-100">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          onClick={(e) => removeItem(e, section.id, index)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    <InlineEditItem
+                      key={`${section.id}-${index}`}
+                      value={item}
+                      placeholder={section.placeholder}
+                      prefix={isNumbered ? `${index + 1}.` : "•"}
+                      onUpdate={(val) => updateItem(section.id, index, val)}
+                      onRemove={() => removeItem(section.id, index)}
+                    />
                   ))}
 
                   {/* Add more button */}
-                  {section.id !== "mood" && (
+                  {section.id !== "mood" ? (
                     <Button
                       variant="ghost"
                       className="self-start gap-2 text-muted-foreground hover:text-foreground mt-1"
-                      onClick={() => openModal(section.id, items.length, `Add to ${section.title}`, section.placeholder)}
+                      onClick={() => addItem(section.id)}
                     >
                       <Plus className="w-4 h-4" />
                       Add more
                     </Button>
-                  )}
+                  ) : items.length === 0 ? (
+                    <Button
+                      variant="ghost"
+                      className="self-start gap-2 text-muted-foreground hover:text-foreground mt-1"
+                      onClick={() => addItem(section.id)}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add intention
+                    </Button>
+                  ) : null}
                 </div>
                 
                 <Separator className="mt-5 opacity-30 transition-opacity group-hover:opacity-100" />
@@ -419,7 +455,7 @@ export default function WeeklyPlanPage() {
         className="flex flex-wrap items-center gap-3 pt-6 pb-8 sticky bottom-0 bg-background/95 backdrop-blur-xl border-t border-border/50 px-4 sm:px-8 md:px-12 z-10 w-full"
       >
         <div className="w-full max-w-5xl mx-auto flex flex-wrap items-center gap-3">
-          <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/20">
+          <Button onClick={handleManualSave} className="gap-2 shadow-lg shadow-primary/20" disabled={manualSave.isPending}>
             <Save className="w-4 h-4" />
             Save Plan
           </Button>
@@ -431,18 +467,24 @@ export default function WeeklyPlanPage() {
             <Trash2 className="w-4 h-4" />
             Clear
           </Button>
+
+          {/* Auto-save indicator */}
+          <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+            {isSaving && (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Saving...</span>
+              </>
+            )}
+            {isSaved && !isSaving && (
+              <>
+                <Check className="w-3 h-3 text-emerald-500" />
+                <span className="text-emerald-500">Saved</span>
+              </>
+            )}
+          </div>
         </div>
       </motion.div>
-
-      {/* Edit Modal */}
-      <EditItemModal
-        isOpen={modalState.isOpen}
-        onClose={() => setModalState((s) => ({ ...s, isOpen: false }))}
-        onSave={handleModalSave}
-        initialValue={modalState.value}
-        title={modalState.title}
-        placeholder={modalState.placeholder}
-      />
     </>
   )
 }

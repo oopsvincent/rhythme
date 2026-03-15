@@ -11,7 +11,8 @@ import {
   Angry, 
   Star, 
   AlertCircle,
-  LucideIcon
+  LucideIcon,
+  ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 
@@ -100,7 +101,7 @@ export function MoodInputCard() {
               <p className="font-medium font-primary capitalize">{selectedMood}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-start gap-2">
             <button
               onClick={() => setSelectedMood(null)}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -109,9 +110,9 @@ export function MoodInputCard() {
             </button>
             <Link
               href="/dashboard/journal/new"
-              className="text-xs text-primary font-medium hover:underline"
+              className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
             >
-              Reflect →
+              Reflect <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
