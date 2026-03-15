@@ -1,117 +1,117 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
-import { CorrelationCard } from "@/components/dashboard/correlation-card"
 import { MoodSparkline } from "@/components/dashboard/mood-sparkline"
 import {
   ChevronLeft,
   ChevronRight,
   Trophy,
-  TrendingUp,
   Lightbulb,
   PenLine,
   LayoutDashboard,
-  Save,
   CheckCircle2,
   Target,
   Flame,
   Zap,
   Download,
-  Maximize2,
-  Minimize2,
+  Loader2,
+  Check,
 } from "lucide-react"
 import { toast } from "sonner"
 import { toPng } from "html-to-image"
 import jsPDF from "jspdf"
-
-// ── Dummy Data ─────────────────────────────────────────────
-const DUMMY_MOOD_DATA = [
-  { day: "Mon", value: 3 },
-  { day: "Tue", value: 4 },
-  { day: "Wed", value: 2 },
-  { day: "Thu", value: 4 },
-  { day: "Fri", value: 5 },
-  { day: "Sat", value: 3 },
-  { day: "Sun", value: 4 },
-]
-
-const DUMMY_WINS = [
-  { icon: Flame, text: "5-day meditation streak maintained" },
-  { icon: CheckCircle2, text: "Completed 12 of 15 planned tasks" },
-  { icon: Target, text: "Hit daily reading goal 4 days in a row" },
-]
-
-const DUMMY_CORRELATIONS = [
-  {
-    headline: "Habit completion 78% on positive-mood days",
-    detail: "Compared to 41% on neutral or negative days — your mood drives consistency.",
-    trend: "up" as const,
-  },
-  {
-    headline: "High-priority tasks 2.1× more likely completed on positive days",
-    detail: "Tackling hard stuff when you feel good seems to be your pattern.",
-    trend: "up" as const,
-  },
-  {
-    headline: "Streaks lasted 2.4× longer with positive mood",
-    detail: "Emotional momentum powers your habits more than willpower.",
-    trend: "up" as const,
-  },
-  {
-    headline: "Habits stronger on lighter-task days",
-    detail: "65% completion vs 38% on heavy days — less is more sometimes.",
-    trend: "down" as const,
-  },
-]
+import { useWeeklyReview, useAutoSaveWeeklyReview } from "@/hooks/use-weekly-review"
+import { useSaveWeeklyReview } from "@/hooks/use-weekly-review"
+import { useWeeklyStats } from "@/hooks/use-weekly-stats"
+import type { WeeklyStats } from "@/app/actions/weekly"
 
 // ── Slide Components ───────────────────────────────────────
 
-function OverviewSlide(props: any) {
+function OverviewSlide({ stats }: { stats: WeeklyStats | null }) {
+  const moodData = (stats?.moodEntries || []).map((m) => ({
+    day: m.day,
+    value: m.value || 0,
+  }))
+  const hasMoodData = moodData.some((d) => d.value > 0)
+
   return (
     <div className="flex flex-col h-full justify-between gap-6 p-2">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl sm:text-4xl font-primary font-bold tracking-tight">Week in Review</h2>
           <p className="text-muted-foreground text-base mt-2">
-            Feb 17 – Feb 23, 2026
+            {stats?.weekLabel || "This week"}
           </p>
         </div>
-        <div className="glass-card rounded-2xl px-5 py-3 border-primary/20 bg-primary/5">
-          <p className="text-sm font-semibold text-gradient-primary">
-            A balanced week with room to grow
-          </p>
-        </div>
+        {stats && stats.tasksCompletionPct >= 70 && (
+          <div className="rounded-2xl px-5 py-3 border border-emerald-500/20 bg-emerald-500/5">
+            <p className="text-sm font-semibold text-emerald-500">
+              Strong week — {stats.tasksCompletionPct}% tasks done
+            </p>
+          </div>
+        )}
+        {stats && stats.tasksCompletionPct < 70 && stats.tasksCompletionPct > 0 && (
+          <div className="rounded-2xl px-5 py-3 border border-primary/20 bg-primary/5">
+            <p className="text-sm font-semibold text-primary">
+              A balanced week with room to grow
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 mt-4">
         {/* Mood sparkline */}
-        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between">
+        <div className="rounded-2xl p-6 flex flex-col justify-between bg-card border border-border/50">
           <div>
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-4">
               Mood this week
             </p>
-            <MoodSparkline data={DUMMY_MOOD_DATA} className="h-32 w-full" />
+            {hasMoodData ? (
+              <MoodSparkline data={moodData} className="h-32 w-full" />
+            ) : (
+              <div className="h-32 flex items-center justify-center text-muted-foreground/50 text-sm">
+                No journal entries this week
+              </div>
+            )}
           </div>
-          <div className="flex justify-between mt-4 text-xs font-medium text-muted-foreground/70">
-            {DUMMY_MOOD_DATA.map((d) => (
-              <span key={d.day}>{d.day}</span>
-            ))}
-          </div>
+          {hasMoodData && (
+            <div className="flex justify-between mt-4 text-xs font-medium text-muted-foreground/70">
+              {moodData.map((d) => (
+                <span key={d.day}>{d.day}</span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Quick stats */}
         <div className="grid grid-cols-2 gap-4">
           {[
-            { label: "Tasks Done", value: "12/15", pct: 80 },
-            { label: "Habits Hit", value: "78%", pct: 78 },
-            { label: "Avg Mood", value: "3.6/5", pct: 72 },
-            { label: "Focus Hrs", value: "8.5h", pct: 85 },
+            {
+              label: "Tasks Done",
+              value: stats ? `${stats.tasksCompleted}/${stats.tasksTotal}` : "—",
+              pct: stats?.tasksCompletionPct || 0,
+            },
+            {
+              label: "Habits Hit",
+              value: stats ? `${stats.habitCompletionPct}%` : "—",
+              pct: stats?.habitCompletionPct || 0,
+            },
+            {
+              label: "Avg Mood",
+              value: stats && stats.avgMood > 0 ? `${stats.avgMood}/5` : "—",
+              pct: stats ? (stats.avgMood / 5) * 100 : 0,
+            },
+            {
+              label: "Journals",
+              value: stats ? `${stats.journalCount}` : "—",
+              pct: stats ? Math.min(stats.journalCount * 14, 100) : 0,
+            },
           ].map((stat) => (
-            <div key={stat.label} className="glass-card rounded-2xl p-5 flex flex-col justify-center items-center text-center">
+            <div key={stat.label} className="rounded-2xl p-5 flex flex-col justify-center items-center text-center bg-card border border-border/50">
               <p className="text-3xl font-black font-primary tracking-tighter">{stat.value}</p>
               <p className="text-sm text-muted-foreground mt-2 font-medium bg-muted/50 px-3 py-1 rounded-full">{stat.label}</p>
             </div>
@@ -122,7 +122,28 @@ function OverviewSlide(props: any) {
   )
 }
 
-function WinsSlide({ winsText, setWinsText }: any) {
+function WinsSlide({
+  stats,
+  winsText,
+  setWinsText,
+}: {
+  stats: WeeklyStats | null
+  winsText: string
+  setWinsText: (v: string) => void
+}) {
+  const topHabits = stats?.topHabits || []
+  const tasksCompleted = stats?.tasksCompleted || 0
+
+  const autoWins = [
+    ...(tasksCompleted > 0
+      ? [{ icon: Target, text: `Completed ${tasksCompleted} task${tasksCompleted !== 1 ? "s" : ""} this week` }]
+      : []),
+    ...topHabits.slice(0, 3).map((h) => ({
+      icon: Flame,
+      text: `${h.name}: ${h.completions} completion${h.completions !== 1 ? "s" : ""} this week`,
+    })),
+  ]
+
   return (
     <div className="flex flex-col h-full gap-8 p-2">
       <div>
@@ -136,23 +157,29 @@ function WinsSlide({ winsText, setWinsText }: any) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
-        {/* Auto-populated dummy wins */}
+        {/* Auto-populated wins */}
         <div className="flex flex-col gap-4">
           <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
             Data Highlights
           </p>
           <div className="flex flex-col gap-3 h-full justify-start">
-            {DUMMY_WINS.map((win, i) => (
-              <div
-                key={i}
-                className="glass-card rounded-2xl p-4 flex items-center gap-4 border-l-4 border-l-primary/50"
-              >
-                <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <win.icon className="w-5 h-5 text-primary" />
+            {autoWins.length > 0 ? (
+              autoWins.map((win, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl p-4 flex items-center gap-4 border-l-4 border-l-primary/50 bg-card border border-border/50"
+                >
+                  <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <win.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <p className="text-[15px] font-medium leading-snug">{win.text}</p>
                 </div>
-                <p className="text-[15px] font-medium leading-snug">{win.text}</p>
+              ))
+            ) : (
+              <div className="rounded-2xl p-6 bg-muted/20 text-center text-muted-foreground text-sm">
+                No activity data yet this week. Keep logging!
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -173,7 +200,18 @@ function WinsSlide({ winsText, setWinsText }: any) {
   )
 }
 
-function ChallengesSlide({ challengeText, setChallengeText }: any) {
+function ChallengesSlide({
+  stats,
+  challengeText,
+  setChallengeText,
+}: {
+  stats: WeeklyStats | null
+  challengeText: string
+  setChallengeText: (v: string) => void
+}) {
+  const tasksPending = stats?.tasksPending || 0
+  const habitPct = stats?.habitCompletionPct || 0
+
   return (
     <div className="flex flex-col h-full gap-8 p-2">
       <div>
@@ -187,17 +225,37 @@ function ChallengesSlide({ challengeText, setChallengeText }: any) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
-        {/* Highlight correlation */}
+        {/* Auto friction points */}
         <div className="flex flex-col gap-4">
           <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
-            Key Friction Point
+            Key Friction Points
           </p>
-          <div className="h-full">
-            <CorrelationCard
-              headline="Missed habits clustered on negative-mood days"
-              detail="3 of your 4 missed habits happened on days you logged low mood. That's normal — be gentle."
-              trend="down"
-            />
+          <div className="flex flex-col gap-3">
+            {tasksPending > 0 && (
+              <div className="rounded-2xl p-4 flex items-center gap-4 border-l-4 border-l-amber-500/50 bg-card border border-border/50">
+                <div className="shrink-0 w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-amber-500" />
+                </div>
+                <p className="text-[15px] font-medium leading-snug">
+                  {tasksPending} task{tasksPending !== 1 ? "s" : ""} still pending from this week
+                </p>
+              </div>
+            )}
+            {habitPct < 50 && habitPct > 0 && (
+              <div className="rounded-2xl p-4 flex items-center gap-4 border-l-4 border-l-amber-500/50 bg-card border border-border/50">
+                <div className="shrink-0 w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <Flame className="w-5 h-5 text-amber-500" />
+                </div>
+                <p className="text-[15px] font-medium leading-snug">
+                  Habit completion at {habitPct}% — below your usual rhythm
+                </p>
+              </div>
+            )}
+            {tasksPending === 0 && habitPct >= 50 && (
+              <div className="rounded-2xl p-6 bg-emerald-500/5 border border-emerald-500/20 text-center text-emerald-600 text-sm font-medium">
+                No major friction this week — well done! 🎉
+              </div>
+            )}
           </div>
         </div>
 
@@ -218,7 +276,68 @@ function ChallengesSlide({ challengeText, setChallengeText }: any) {
   )
 }
 
-function PatternsSlide(props: any) {
+function PatternsSlide({ stats }: { stats: WeeklyStats | null }) {
+  const patterns: { headline: string; detail: string; trend: "up" | "down" | "neutral" }[] = []
+
+  if (stats) {
+    if (stats.tasksCompletionPct >= 70) {
+      patterns.push({
+        headline: `Task completion at ${stats.tasksCompletionPct}%`,
+        detail: `You completed ${stats.tasksCompleted} of ${stats.tasksTotal} tasks. Strong execution this week.`,
+        trend: "up",
+      })
+    } else if (stats.tasksTotal > 0) {
+      patterns.push({
+        headline: `Task completion at ${stats.tasksCompletionPct}%`,
+        detail: `${stats.tasksPending} tasks remain incomplete. Consider adjusting your weekly planning scope.`,
+        trend: "down",
+      })
+    }
+
+    if (stats.habitCompletionPct >= 60) {
+      patterns.push({
+        headline: `Habit consistency at ${stats.habitCompletionPct}%`,
+        detail: `${stats.habitLogsThisWeek} habit completions across ${stats.habitsTotal} active habits. Good rhythm.`,
+        trend: "up",
+      })
+    } else if (stats.habitsTotal > 0) {
+      patterns.push({
+        headline: `Habit consistency at ${stats.habitCompletionPct}%`,
+        detail: `Room to improve — ${stats.habitLogsThisWeek} completions out of a possible ${stats.habitsTotal * 7}.`,
+        trend: "down",
+      })
+    }
+
+    if (stats.topHabits.length > 0) {
+      const top = stats.topHabits[0]
+      patterns.push({
+        headline: `Strongest habit: ${top.name}`,
+        detail: `${top.completions} completions this week — your most consistent habit.`,
+        trend: "up",
+      })
+    }
+
+    if (stats.avgMood >= 4) {
+      patterns.push({
+        headline: `Positive mood trend (${stats.avgMood}/5 avg)`,
+        detail: `Based on ${stats.journalCount} journal entries. Keep doing what's working.`,
+        trend: "up",
+      })
+    } else if (stats.avgMood > 0 && stats.avgMood < 3) {
+      patterns.push({
+        headline: `Lower mood this week (${stats.avgMood}/5 avg)`,
+        detail: `From ${stats.journalCount} journal entries. Be kind to yourself.`,
+        trend: "down",
+      })
+    } else if (stats.avgMood > 0) {
+      patterns.push({
+        headline: `Balanced mood (${stats.avgMood}/5 avg)`,
+        detail: `Based on ${stats.journalCount} journal entries this week.`,
+        trend: "neutral",
+      })
+    }
+  }
+
   return (
     <div className="flex flex-col h-full gap-8 p-2">
       <div>
@@ -227,18 +346,34 @@ function PatternsSlide(props: any) {
           Patterns
         </h2>
         <p className="text-muted-foreground text-base mt-2">
-          Simple correlations from your mood, habits, and tasks this week.
+          Observations from your tasks, habits, and mood this week.
         </p>
       </div>
 
       <div className="flex-1 w-full bg-card/50 rounded-3xl p-6 border border-border/50">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
-          {DUMMY_CORRELATIONS.map((c, i) => (
-            <div key={i} className="h-full">
-               <CorrelationCard {...c} />
-            </div>
-          ))}
-        </div>
+        {patterns.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+            {patterns.map((p, i) => (
+              <div
+                key={i}
+                className={`rounded-2xl p-5 border flex flex-col gap-2 ${
+                  p.trend === "up"
+                    ? "border-emerald-500/20 bg-emerald-500/5"
+                    : p.trend === "down"
+                      ? "border-amber-500/20 bg-amber-500/5"
+                      : "border-border/50 bg-muted/20"
+                }`}
+              >
+                <p className="font-semibold text-[15px]">{p.headline}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{p.detail}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+            Not enough data yet to identify patterns. Keep logging this week!
+          </div>
+        )}
       </div>
 
       <p className="text-sm font-medium text-muted-foreground text-center bg-muted/30 py-2 rounded-full w-max mx-auto px-6">
@@ -248,7 +383,17 @@ function PatternsSlide(props: any) {
   )
 }
 
-function ReflectionSlide({ reflectionText, setReflectionText, moodTakeaway, setMoodTakeaway }: any) {
+function ReflectionSlide({
+  reflectionText,
+  setReflectionText,
+  moodTakeaway,
+  setMoodTakeaway,
+}: {
+  reflectionText: string
+  setReflectionText: (v: string) => void
+  moodTakeaway: string
+  setMoodTakeaway: (v: string) => void
+}) {
   return (
     <div className="flex flex-col h-full gap-8 p-2">
       <div>
@@ -290,30 +435,36 @@ function ReflectionSlide({ reflectionText, setReflectionText, moodTakeaway, setM
   )
 }
 
-function DoneSlide({ onExport, isExporting, ...props }: any) {
+function DoneSlide({
+  onExport,
+  isExporting,
+}: {
+  onExport: () => void
+  isExporting: boolean
+}) {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-8 p-4 text-center">
-      <div className="w-24 h-24 bg-primary/10 flex items-center justify-center rounded-full mb-4 animate-pulse">
+      <div className="w-24 h-24 bg-primary/10 flex items-center justify-center rounded-full mb-4">
         <CheckCircle2 className="w-12 h-12 text-primary" />
       </div>
-      
+
       <div className="max-w-md space-y-4">
         <h2 className="text-4xl sm:text-5xl font-primary font-black tracking-tight">
-          You survived.
+          Reflection complete.
         </h2>
         <p className="text-muted-foreground text-lg">
-          Another week in the books. Print this out and put it on your fridge, or just save it before it disappears into the digital abyss.
+          Your week has been captured. These reflections build clarity over time — keep showing up.
         </p>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full max-w-sm">
-        <Button 
-          onClick={onExport} 
+        <Button
+          onClick={onExport}
           disabled={isExporting}
           className="w-full h-14 rounded-2xl text-base shadow-lg shadow-primary/25 border border-primary/20"
         >
           {isExporting ? (
-            <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
+            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
           ) : (
             <Download className="w-5 h-5 mr-2" />
           )}
@@ -327,50 +478,78 @@ function DoneSlide({ onExport, isExporting, ...props }: any) {
 // ── Slide config ───────────────────────────────────────────
 
 const SLIDES = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard, component: OverviewSlide },
-  { id: "wins", label: "Wins", icon: Trophy, component: WinsSlide },
-  { id: "challenges", label: "Challenges", icon: Zap, component: ChallengesSlide },
-  { id: "patterns", label: "Patterns", icon: Lightbulb, component: PatternsSlide },
-  { id: "reflection", label: "Reflection", icon: PenLine, component: ReflectionSlide },
-  { id: "done", label: "Done", icon: CheckCircle2, component: DoneSlide },
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "wins", label: "Wins", icon: Trophy },
+  { id: "challenges", label: "Challenges", icon: Zap },
+  { id: "patterns", label: "Patterns", icon: Lightbulb },
+  { id: "reflection", label: "Reflection", icon: PenLine },
+  { id: "done", label: "Done", icon: CheckCircle2 },
 ]
 
 // ── Main Carousel Component ────────────────────────────────
 
 const slideVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 100 : -100,
+    x: direction > 0 ? 60 : -60,
     opacity: 0,
-    scale: 0.98
   }),
   center: {
     x: 0,
     opacity: 1,
-    scale: 1
   },
   exit: (direction: number) => ({
-    x: direction < 0 ? 100 : -100,
+    x: direction < 0 ? 60 : -60,
     opacity: 0,
-    scale: 0.98
   }),
 }
 
 export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [direction, setDirection] = useState(0) // Re-added as it's used by AnimatePresence
-  const [isExporting, setIsExporting] = useState(false) // Re-added as it's used by DoneSlide and handleExportPDF
-  const [isMaximized, setIsMaximized] = useState(false) // Re-added as it's used for maximizing the carousel
+  const [direction, setDirection] = useState(0)
+  const [isExporting, setIsExporting] = useState(false)
   const fullReportRef = useRef<HTMLDivElement>(null)
 
   // Lifted slide state
-  const [winsText, setWinsText] = useState(
-    "I stayed consistent with my morning routine and knocked out two big tasks on Thursday."
-  )
-  const [challengeText, setChallengeText] = useState(
-    "I struggled with staying focused during afternoon meetings and missed two habit days."
-  )
+  const [winsText, setWinsText] = useState("")
+  const [challengeText, setChallengeText] = useState("")
   const [reflectionText, setReflectionText] = useState("")
   const [moodTakeaway, setMoodTakeaway] = useState("")
+  const [dataLoaded, setDataLoaded] = useState(false)
+
+  // Supabase hooks
+  const { data: reviewData } = useWeeklyReview()
+  const { triggerSave, isSaving, isSaved } = useAutoSaveWeeklyReview()
+  const manualSaveMutation = useSaveWeeklyReview()
+
+  // Real stats
+  const { data: stats, isLoading: statsLoading } = useWeeklyStats()
+
+  // Load data from Supabase on mount
+  useEffect(() => {
+    if (reviewData && !dataLoaded) {
+      const content = reviewData.content
+      if (content) {
+        setWinsText(content.winsText || "")
+        setChallengeText(content.challengeText || "")
+        setReflectionText(content.reflectionText || "")
+        setMoodTakeaway(content.moodTakeaway || "")
+      }
+      setDataLoaded(true)
+    } else if (reviewData === null && !dataLoaded) {
+      setDataLoaded(true)
+    }
+  }, [reviewData, dataLoaded])
+
+  // Auto-save when text fields change
+  useEffect(() => {
+    if (!dataLoaded) return
+    triggerSave({
+      winsText,
+      challengeText,
+      reflectionText,
+      moodTakeaway,
+    })
+  }, [winsText, challengeText, reflectionText, moodTakeaway, dataLoaded, triggerSave])
 
   const isFirst = currentSlide === 0
   const isLast = currentSlide === SLIDES.length - 1
@@ -401,14 +580,13 @@ export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
 
     try {
       const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
       })
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = pdf.internal.pageSize.getHeight()
 
-      // The slides we want to export are all children of the hidden container
       const slidesToExport = Array.from(fullReportRef.current.children)
 
       for (let i = 0; i < slidesToExport.length; i++) {
@@ -416,116 +594,164 @@ export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
         const dataUrl = await toPng(slideNode, {
           quality: 1,
           pixelRatio: 2,
-          backgroundColor: document.documentElement.classList.contains('dark') ? '#09090b' : '#ffffff',
-          fetchRequestInit: { cache: 'no-cache' },
-          skipFonts: true, // Prevents errors related to parsing cross-origin stylesheets and Next.js fonts
+          backgroundColor: document.documentElement.classList.contains("dark")
+            ? "#09090b"
+            : "#ffffff",
+          fetchRequestInit: { cache: "no-cache" },
+          skipFonts: true,
         })
-        
+
         const imgProps = pdf.getImageProperties(dataUrl)
         const renderHeight = (imgProps.height * pdfWidth) / imgProps.width
-        
-        // Center vertically if height is smaller than A4
         const yPos = renderHeight < pdfHeight ? (pdfHeight - renderHeight) / 2 : 0
 
         if (i > 0) pdf.addPage()
-        pdf.addImage(dataUrl, 'PNG', 0, yPos, pdfWidth, renderHeight)
+        pdf.addImage(dataUrl, "PNG", 0, yPos, pdfWidth, renderHeight)
       }
 
       pdf.save(`weekly-review-full-report.pdf`)
-      
       toast.success("Exported successfully", {
-        description: "Your full weekly report has been saved as a PDF."
+        description: "Your full weekly report has been saved as a PDF.",
       })
     } catch (error) {
       console.error("Export failed:", error)
       toast.error("Export failed", {
-        description: "There was an error generating your full PDF report."
+        description: "There was an error generating your full PDF report.",
       })
     } finally {
       setIsExporting(false)
     }
   }
 
-  const slideProps = {
-    winsText, setWinsText,
-    challengeText, setChallengeText,
-    reflectionText, setReflectionText,
-    moodTakeaway, setMoodTakeaway,
-    onExport: handleExportPDF,
-    isExporting
-  }
-
   const handleSave = () => {
-    toast.success("Weekly review saved!", {
-
-      description: "Your reflections have been recorded."
-    })
+    manualSaveMutation.mutate(
+      {
+        content: { winsText, challengeText, reflectionText, moodTakeaway },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Weekly review saved!", {
+            description: "Your reflections have been recorded.",
+          })
+        },
+        onError: () => {
+          toast.error("Save failed", {
+            description: "Could not save your review. Please try again.",
+          })
+        },
+      }
+    )
   }
 
-  const SlideComponent = SLIDES[currentSlide].component
+  const realStats = stats || null
+
+  // Render the correct slide
+  function renderSlide(slideId: string) {
+    switch (slideId) {
+      case "overview":
+        return <OverviewSlide stats={realStats} />
+      case "wins":
+        return <WinsSlide stats={realStats} winsText={winsText} setWinsText={setWinsText} />
+      case "challenges":
+        return <ChallengesSlide stats={realStats} challengeText={challengeText} setChallengeText={setChallengeText} />
+      case "patterns":
+        return <PatternsSlide stats={realStats} />
+      case "reflection":
+        return (
+          <ReflectionSlide
+            reflectionText={reflectionText}
+            setReflectionText={setReflectionText}
+            moodTakeaway={moodTakeaway}
+            setMoodTakeaway={setMoodTakeaway}
+          />
+        )
+      case "done":
+        return <DoneSlide onExport={handleExportPDF} isExporting={isExporting} />
+      default:
+        return null
+    }
+  }
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto py-2">
-      
-      {/* Top Controls: Navigation Dots */}
+      {/* Top Controls: Navigation Dots + Save indicator */}
       <div className="w-full flex items-center justify-center mb-6 px-2">
-        <div className="flex items-center gap-2">
-          {SLIDES.map((slide, idx) => {
-            const isActive = idx === currentSlide
-            return (
-              <button
-                key={slide.id}
-                onClick={() => goToStep(idx)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  isActive ? "w-8 bg-primary" : "w-2 bg-primary/20 hover:bg-primary/40"
-                }`}
-                aria-label={`Go to ${slide.label}`}
-              />
-            )
-          })}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {SLIDES.map((slide, idx) => {
+              const isActive = idx === currentSlide
+              return (
+                <button
+                  key={slide.id}
+                  onClick={() => goToStep(idx)}
+                  className={`h-2 rounded-full transition-all duration-200 ${
+                    isActive
+                      ? "w-8 bg-primary"
+                      : "w-2 bg-primary/20 hover:bg-primary/40"
+                  }`}
+                  aria-label={`Go to ${slide.label}`}
+                />
+              )
+            })}
+          </div>
+
+          {/* Save indicator */}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground ml-2">
+            {statsLoading && (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Loading data...</span>
+              </>
+            )}
+            {!statsLoading && isSaving && (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Saving...</span>
+              </>
+            )}
+            {!statsLoading && isSaved && !isSaving && (
+              <>
+                <Check className="w-3 h-3 text-emerald-500" />
+                <span className="text-emerald-500">Saved</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Presentation Frame Wrapper */}
-      <div 
-        className={`relative w-full flex items-center justify-center transition-all duration-500 ease-in-out z-40 ${
-          isMaximized 
-            ? "fixed inset-0 bg-background/95 backdrop-blur-sm p-4 sm:p-12 z-50 h-screen" 
-            : "aspect-[4/5] sm:aspect-[4/3] lg:aspect-[16/9] lg:max-h-[75vh]"
-        }`}
-      >
-        
+      {/* Presentation Frame */}
+      <div className="relative w-full flex items-center justify-center aspect-[4/5] sm:aspect-[4/3] lg:aspect-[16/9] lg:max-h-[75vh]">
         {/* Navigation Floating Buttons */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 sm:px-[-2rem] z-20 pointer-events-none">
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 z-20 pointer-events-none">
           <div className="pointer-events-auto">
             {!isFirst && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={goPrev}
-                className="w-10 h-10 sm:w-14 sm:h-14 -translate-x-1/2 rounded-full bg-background/80 backdrop-blur-xl shadow-xl border border-border/50 hover:scale-110 hover:bg-background transition-transform"
+                className="w-10 h-10 sm:w-14 sm:h-14 -translate-x-1/2 rounded-full bg-background/80 backdrop-blur-xl shadow-xl border border-border/50 hover:scale-105 hover:bg-background transition-transform duration-200"
               >
                 <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8 ml-0.5 sm:ml-1" />
               </Button>
             )}
           </div>
-          
+
           <div className="pointer-events-auto">
             {isLast ? (
               <Button
                 variant="default"
                 size="icon"
                 onClick={handleSave}
-                className="w-10 h-10 sm:w-14 sm:h-14 translate-x-1/2 rounded-full shadow-xl shadow-primary/25 hover:scale-110 transition-transform group"
+                className="w-10 h-10 sm:w-14 sm:h-14 translate-x-1/2 rounded-full shadow-xl shadow-primary/25 hover:scale-105 transition-transform duration-200 group"
               >
-                <CheckCircle2 className="w-5 h-5 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform" />
+                <CheckCircle2 className="w-5 h-5 sm:w-7 sm:h-7" />
               </Button>
             ) : (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={goNext}
-                className="w-10 h-10 sm:w-14 sm:h-14 translate-x-1/2 rounded-full bg-background/80 backdrop-blur-xl shadow-xl border border-border/50 hover:scale-110 hover:bg-background transition-transform"
+                className="w-10 h-10 sm:w-14 sm:h-14 translate-x-1/2 rounded-full bg-background/80 backdrop-blur-xl shadow-xl border border-border/50 hover:scale-105 hover:bg-background transition-transform duration-200"
               >
                 <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 mr-0.5 sm:mr-1" />
               </Button>
@@ -534,26 +760,7 @@ export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
         </div>
 
         {/* The Slide Itself */}
-        <div 
-          className={`w-full bg-card rounded-3xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] overflow-hidden relative transition-all duration-300 ${
-             isMaximized ? "h-full max-w-7xl" : "h-full"
-          }`}
-        >
-          {/* Decorative background blur */}
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 blur-[100px] rounded-full pointer-events-none" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-accent/20 blur-[100px] rounded-full pointer-events-none" />
-          
-          {isMaximized && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 z-50 rounded-full bg-background/50 backdrop-blur-md"
-              onClick={() => setIsMaximized(false)}
-            >
-              <Minimize2 className="w-4 h-4" />
-            </Button>
-          )}
-
+        <div className="w-full bg-card rounded-3xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] overflow-hidden relative h-full">
           <div className="relative w-full h-full p-6 sm:p-10 lg:p-14 flex flex-col pt-12 sm:pt-14">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
@@ -563,56 +770,48 @@ export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} 
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                 className="w-full h-full flex flex-col"
               >
                 <div className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground/60 font-bold mb-6 flex justify-between w-full shrink-0">
                   <span>Rhythmé • Weekly Report</span>
                   <span>{SLIDES[currentSlide].label}</span>
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  <SlideComponent {...slideProps} />
+                  {renderSlide(SLIDES[currentSlide].id)}
                 </div>
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
       </div>
-      
+
       {/* Bottom Progress Bar */}
-      <div className={`w-full max-w-sm mx-auto transition-all duration-300 ${isMaximized ? "fixed bottom-8 z-50 left-1/2 -translate-x-1/2 px-8" : "mt-10"}`}>
-         <Progress value={((currentSlide + 1) / SLIDES.length) * 100} className="h-1.5 shadow-md" />
+      <div className="w-full max-w-sm mx-auto mt-10">
+        <Progress value={((currentSlide + 1) / SLIDES.length) * 100} className="h-1.5 shadow-md" />
       </div>
 
       {/* Hidden Full Report Container for Export */}
       <div className="absolute left-[-9999px] top-[-9999px] pointer-events-none opacity-0 overflow-hidden">
         <div ref={fullReportRef} className="flex flex-col gap-8 bg-background p-8">
-          {SLIDES.filter(s => s.id !== "done").map((slide) => {
-            const SlideComp = slide.component as React.FC<any>
-            return (
-              <div 
-                key={slide.id} 
-                className="w-[1280px] h-[720px] bg-card rounded-3xl border border-border shadow-sm overflow-hidden relative p-14 flex flex-col"
-              >
-                {/* Decorative background blur */}
-                <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 blur-[100px] rounded-full pointer-events-none" />
-                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-accent/20 blur-[100px] rounded-full pointer-events-none" />
-                
-                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground/60 font-bold mb-8 flex justify-between w-full shrink-0">
-                  <span>Rhythmé • Weekly Report</span>
-                  <span>{slide.label}</span>
-                </div>
-                
-                <div className="flex-1 overflow-hidden">
-                  <SlideComp {...slideProps} />
-                </div>
+          {SLIDES.filter((s) => s.id !== "done").map((slide) => (
+            <div
+              key={slide.id}
+              className="w-[1280px] h-[720px] bg-card rounded-3xl border border-border shadow-sm overflow-hidden relative p-14 flex flex-col"
+            >
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground/60 font-bold mb-8 flex justify-between w-full shrink-0">
+                <span>Rhythmé • Weekly Report</span>
+                <span>{slide.label}</span>
               </div>
-            )
-          })}
+
+              <div className="flex-1 overflow-hidden">
+                {renderSlide(slide.id)}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-
     </div>
   )
 }

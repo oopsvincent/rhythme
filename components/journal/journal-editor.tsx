@@ -45,7 +45,7 @@ export function JournalEditor({ value, onChange, placeholder, className }: Journ
           "outline-none border-none focus:ring-0",
           "text-base leading-relaxed",
           "placeholder:text-muted-foreground/60",
-          "font-primary"
+          "font-sans"
         )}
       />
     </div>

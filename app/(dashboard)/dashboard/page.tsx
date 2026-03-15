@@ -70,9 +70,9 @@ export default async function DashboardPage() {
             </Suspense>
 
             {/* Main Dashboard Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start pb-8">
               {/* Left Column - Mood, Habits, Summary */}
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 md:gap-6">
                 {/* Mood Check-in */}
                 <Suspense fallback={<MoodInputSkeleton />}>
                   <MoodInputCard />
@@ -87,10 +87,26 @@ export default async function DashboardPage() {
                 <Suspense fallback={<ProductivitySummarySkeleton />}>
                   <ProductivitySummary />
                 </Suspense>
+
+                {/* Quick Journal */}
+                <Suspense fallback={<QuickJournalSkeleton />}>
+                  <QuickJournalCard journals={journals} />
+                </Suspense>
+
               </div>
 
               {/* Right Column - Mood Chart, Journal, Tasks */}
-              <div className="flex flex-col gap-4 mb-8 sm:mb-0">
+              <div className="flex flex-col gap-4 md:gap-6 mb-8 sm:mb-0">
+                {/* Weekly Focus Widget */}
+                <Suspense fallback={<div className="h-[200px] rounded-2xl bg-muted animate-pulse" />}>
+                  <WeeklyWidget />
+                </Suspense>
+
+                {/* Today's Tasks Overview */}
+                <Suspense fallback={<TodayOverviewSkeleton />}>
+                  <TodayOverview />
+                </Suspense>
+
                 {/* 7-Day Mood Chart */}
                 <Suspense fallback={<MoodChartSkeleton />}>
                   <MoodChart journals={journals} />
@@ -101,20 +117,6 @@ export default async function DashboardPage() {
                   <SentimentChart journals={journals} />
                 </Suspense>
 
-                {/* Weekly Focus Widget */}
-                <Suspense fallback={<div className="h-[200px] rounded-2xl bg-muted animate-pulse" />}>
-                  <WeeklyWidget />
-                </Suspense>
-
-                {/* Quick Journal */}
-                <Suspense fallback={<QuickJournalSkeleton />}>
-                  <QuickJournalCard journals={journals} />
-                </Suspense>
-
-                {/* Today's Tasks Overview */}
-                <Suspense fallback={<TodayOverviewSkeleton />}>
-                  <TodayOverview />
-                </Suspense>
               </div>
             </div>
           </div>
