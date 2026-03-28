@@ -1,74 +1,76 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { FcGoogle } from "react-icons/fc"; // Google official colored icon
-import { FaGithub, FaDiscord, FaSpotify, FaApple, FaFacebook } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub, FaDiscord, FaFacebook } from "react-icons/fa";
 import { signInWithProviderAction } from "@/app/actions/auth";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
-// 2. Define provider configs
 const providers = [
   {
     id: "google" as const,
-    name: "Continue with Google",
-    shortName: "Google",
-    color: "bg-background hover:bg-accent text-foreground border border-border",
-    icon: <FcGoogle size={20} />,
+    label: "Google",
+    icon: <FcGoogle size={18} />,
+    disabled: false,
   },
   {
     id: "github" as const,
-    name: "Continue with GitHub",
-    shortName: "GitHub",
-    color: "bg-background hover:bg-secondary/80 text-foreground",
-    icon: <FaGithub size={20} />,
-  },
-  {
-    id: "apple" as const,
-    name: "Continue with Apple (Coming Soon)",
-    shortName: "Apple (NA)",
-    color: "bg-black text-foreground hover:bg-gray-800",
-    icon: <FaApple size={20} />,
-    disabled: true, // Apple OAuth not in your supabase config yet
+    label: "GitHub",
+    icon: <FaGithub size={18} />,
+    disabled: false,
   },
   {
     id: "discord" as const,
-    name: "Continue with Discord",
-    shortName: "Discord",
-    color: "bg-indigo-600 text-foreground hover:bg-indigo-500",
-    icon: <FaDiscord size={20} />,
+    label: "Discord",
+    icon: <FaDiscord size={18} className="text-indigo-500" />,
+    disabled: false,
   },
-//   {
-//     id: "spotify" as const,
-//     name: "Continue with Spotify",
-//     shortName: "Spotify",
-//     color: "bg-green-500 text-foreground hover:bg-green-400",
-//     icon: <FaSpotify size={20} />,
-//   },
   {
     id: "facebook" as const,
-    name: "Continue with Facebook",
-    shortName: "Facebook",
-    color: "bg-blue-600 text-foreground hover:bg-blue-500",
-    icon: <FaFacebook size={20} />,
+    label: "Facebook",
+    icon: <FaFacebook size={18} className="text-blue-500" />,
+    disabled: false,
   },
 ];
 
-export default function OAuthButtons() {
+export default function OAuthButtons({ redirectTo }: { redirectTo?: string }) {
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  async function handleClick(providerId: typeof providers[number]["id"]) {
+    setLoadingId(providerId);
+    try {
+      await signInWithProviderAction(providerId, redirectTo);
+    } catch {
+      setLoadingId(null);
+    }
+  }
+
   return (
-    <div className="space-y-3 md:flex md:gap-2 md:justify-center md:h-auto md:flex-wrap w-full">
+    <div className="flex items-center justify-center gap-2 w-full">
       {providers.map((provider) => (
         <Button
           key={provider.id}
           type="button"
-          onClick={() =>
-            !provider.disabled && signInWithProviderAction(provider.id)
-          }
           variant="outline"
-          className={`w-full md:w-[40%] flex items-center justify-center space-x-2 ${provider.color} cursor-pointer`}
-          disabled={provider.disabled}
+          size="icon"
+          onClick={() => !provider.disabled && handleClick(provider.id)}
+          disabled={provider.disabled || loadingId !== null}
+          title={provider.disabled ? `${provider.label} (coming soon)` : `Continue with ${provider.label}`}
+          className="
+            relative h-11 w-11 rounded-xl border-border/60
+            bg-card/50 backdrop-blur-sm
+            hover:bg-accent/80 hover:border-primary/30 hover:scale-105
+            active:scale-95
+            transition-all duration-200 ease-out
+            disabled:opacity-40 disabled:hover:scale-100
+            cursor-pointer
+          "
         >
-          {provider.icon}
-          {/* Show full text on mobile, short name on desktop */}
-          <span className="md:hidden">{provider.name}</span>
-          <span className="hidden md:inline">{provider.shortName}</span>
+          {loadingId === provider.id ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            provider.icon
+          )}
         </Button>
       ))}
     </div>

@@ -103,14 +103,21 @@ export async function getFullUser() {
 
 export async function signInWithProviderAction(
   provider: OAuthProvider,
+  redirectTo?: string,
 ) {
   const supabase = await createClient()
   const baseUrl = await getBaseUrl()
 
+  // Build callback URL, appending the redirect destination if provided
+  const callbackUrl = new URL(`${baseUrl}/auth/callback`)
+  if (redirectTo) {
+    callbackUrl.searchParams.set('redirect', redirectTo)
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${baseUrl}/auth/callback`,
+      redirectTo: callbackUrl.toString(),
     },
   })
 
