@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
   // Check if this is an account linking callback
   const next = requestUrl.searchParams.get('next')
   const linked = requestUrl.searchParams.get('linked')
+  // Read the redirect destination set by the middleware/login flow
+  const redirectTo = requestUrl.searchParams.get('redirect')
 
   if (code) {
     const supabase = await createClient()
@@ -45,7 +47,12 @@ export async function GET(request: NextRequest) {
           return NextResponse.redirect(`${origin}/onboarding`)
         }
         
-        // Existing user - redirect to dashboard
+        // If middleware set a redirect destination, honour it
+        if (redirectTo) {
+          return NextResponse.redirect(`${origin}${redirectTo}`)
+        }
+        
+        // Existing user with no specific redirect - go to dashboard
         return NextResponse.redirect(`${origin}/dashboard`)
       }
     }

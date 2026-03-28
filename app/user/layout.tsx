@@ -1,20 +1,13 @@
 import React from 'react'
-import { getUser } from '../actions/auth';
-import { redirect } from 'next/navigation';
 
-const layout = async ({
+// Auth gating is handled by middleware (lib/supabase/proxy.ts).
+// No need to call getUser() here — middleware already redirects
+// unauthenticated users to /login?redirect=/user.
+const layout = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-
-    const user = await getUser();
-    if (!user) {
-    // Redirect to login with the return URL
-    redirect("/login?redirect=/user")
-  }
-    // redirect(`/user/${user?.id}`)
-
   return (
     <main>{children}</main>
   )

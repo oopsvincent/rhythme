@@ -1,20 +1,14 @@
 // app/(dashboard)/settings/layout.tsx
-import { getUser } from "@/app/actions/auth"
-import { redirect } from "next/navigation"
+// Auth gating is handled by middleware (lib/supabase/proxy.ts).
+// No need to call getUser() here — the user object wasn't used in the template anyway.
 import { SiteHeader } from "@/components/site-header"
 import { SettingsLayoutWrapper } from "./_components/settings-layout-wrapper"
 
-export default async function SettingsLayout({
+export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const user = await getUser()
-  
-  if (!user) {
-    redirect("/login")
-  }
-
   return (
     <div className="flex flex-col min-h-screen">
       <SiteHeader />

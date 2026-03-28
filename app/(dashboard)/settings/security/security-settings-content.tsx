@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { SessionInfo } from "@/components/settings/session-info"
+import { ChangePassphraseSection } from "./_components/change-passphrase-section"
 import { updatePassword } from "@/app/actions/auth"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/dialog"
 import { useState } from "react"
 
-export default function SecuritySettingsContent() {
+export default function SecuritySettingsContent({ userId }: { userId: string }) {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -141,6 +142,11 @@ export default function SecuritySettingsContent() {
           </CardContent>
         </Card>
       </div>
+
+      <Separator />
+
+      {/* Journal Encryption Passphrase */}
+      <ChangePassphraseSection userId={userId} />
 
       <Separator />
 

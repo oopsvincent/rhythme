@@ -1,24 +1,12 @@
 // app/(auth)/layout.tsx  (SERVER COMPONENT)
+// Auth gating (redirecting logged-in users) is handled entirely by middleware
+// (lib/supabase/proxy.ts). No need to call getUser() here again.
 import { ReactNode } from "react";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 
-export default async function AuthLayout({
+export default function AuthLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // If the user is already logged in, don't even render auth pages
-  if (user) {
-    redirect("/dashboard");
-  }
-
-  // Wrap content in a client component for animations
   return <main>{children}</main>;
 }
