@@ -11,6 +11,7 @@ import { SettingsProvider } from "@/components/providers/settings";
 import { FocusWidgetProvider } from "@/components/providers/focus-widget-provider";
 import OnboardingCheck from "@/components/OnboardingCheck";
 import AppSidebarWrapper from "@/components/providers/appSidebarWrapper";
+import { BrowserNotificationPrompt } from "@/components/notifications/browser-notification-prompt";
 
 // Layout is synchronous — no server-side data fetching.
 // Auth gating is handled by middleware.ts (via lib/supabase/proxy.ts).
@@ -63,6 +64,7 @@ export default function DashboardLayout({
           </SidebarInset>
           <SidebarRightWrapper />
         </SidebarProvider>
+        <BrowserNotificationPrompt />
       </FocusWidgetProvider>
     </SettingsProvider>
   );
