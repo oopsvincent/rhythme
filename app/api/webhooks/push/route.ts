@@ -28,13 +28,13 @@ export async function POST(req: Request) {
 
     // 2. Fetch subscriptions for the user
     // We need service role key to bypass RLS and read subscriptions
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
        return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
     }
 
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+      process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
     const { data: subscriptions, error } = await supabaseAdmin
