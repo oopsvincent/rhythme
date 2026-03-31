@@ -3,7 +3,7 @@ import { Suspense } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { Separator } from "@/components/ui/separator"
 import { getUser } from "../../actions/auth"
-import { getGreeting } from "@/utils/getGreetings"
+import { getGreeting } from "@/lib/getGreetings"
 import { getJournals } from "@/app/actions/journals"
 
 // Dashboard components

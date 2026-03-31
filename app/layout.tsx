@@ -11,6 +11,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import { AppleSplashScreens } from "@/components/apple-splash-screens";
+import { PwaRegistry } from "@/components/pwa-registry";
 
 
 const clashDisplay = localFont({
@@ -151,6 +152,7 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased selection:bg-accent/50 selection:text-accent-foreground`}
       >
+        <PwaRegistry />
         <QueryProvider>
           <ColorThemeProvider>
             <ThemeProvider
