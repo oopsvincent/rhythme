@@ -35,24 +35,27 @@ function getNotificationIcon(type: string) {
   }
 }
 
+import Link from "next/link"
+
 interface NotificationItemProps {
   notification: Notification
   onMarkAsRead: (id: number) => void
 }
 
 export function NotificationItem({ notification, onMarkAsRead }: NotificationItemProps) {
-  return (
-    <button
-      onClick={() => {
-        if (!notification.is_read) {
-          onMarkAsRead(notification.notification_id)
-        }
-      }}
-      className={cn(
-        "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
-        !notification.is_read && "bg-primary/5"
-      )}
-    >
+  const handleClick = () => {
+    if (!notification.is_read) {
+      onMarkAsRead(notification.notification_id)
+    }
+  }
+
+  const className = cn(
+    "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
+    !notification.is_read && "bg-primary/5"
+  )
+
+  const innerContent = (
+    <>
       {/* Icon */}
       <div className="mt-0.5 shrink-0">
         {getNotificationIcon(notification.type)}
@@ -80,6 +83,20 @@ export function NotificationItem({ notification, onMarkAsRead }: NotificationIte
           <div className="h-2 w-2 rounded-full bg-primary" />
         </div>
       )}
+    </>
+  )
+
+  if (notification.link) {
+    return (
+      <Link href={notification.link} onClick={handleClick} className={className}>
+        {innerContent}
+      </Link>
+    )
+  }
+
+  return (
+    <button onClick={handleClick} className={className}>
+      {innerContent}
     </button>
   )
 }

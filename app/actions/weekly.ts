@@ -151,6 +151,43 @@ export async function upsertWeeklyPlan(
   }
 }
 
+// === Get Last Week's Plan ===
+
+export async function getLastWeekPlan(
+  currentWeekStart?: string
+): Promise<ActionResponse<WeeklyPlanRow | null>> {
+  try {
+    const { supabase, user } = await getAuthenticatedUser();
+    const { weekStart: defaultStart } = getWeekBounds();
+    const current = currentWeekStart || defaultStart;
+
+    // Go back 7 days from the current week start
+    const d = new Date(current + "T00:00:00");
+    d.setDate(d.getDate() - 7);
+    const lastWeekStart = fmtLocalDate(d);
+
+    const { data, error } = await supabase
+      .from("weekly_plan")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("week_start_date", lastWeekStart)
+      .maybeSingle();
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { data: data as WeeklyPlanRow | null };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch last week's plan",
+    };
+  }
+}
+
 // === Weekly Review CRUD ===
 
 export async function getWeeklyReview(

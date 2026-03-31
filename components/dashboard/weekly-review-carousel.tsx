@@ -503,7 +503,7 @@ const slideVariants = {
   }),
 }
 
-export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
+export function WeeklyReviewCarousel({ onClose, weekStart }: { onClose?: () => void; weekStart?: string }) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [direction, setDirection] = useState(0)
   const [isExporting, setIsExporting] = useState(false)
@@ -515,14 +515,15 @@ export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
   const [reflectionText, setReflectionText] = useState("")
   const [moodTakeaway, setMoodTakeaway] = useState("")
   const [dataLoaded, setDataLoaded] = useState(false)
+  const [userHasEdited, setUserHasEdited] = useState(false)
 
   // Supabase hooks
-  const { data: reviewData } = useWeeklyReview()
+  const { data: reviewData } = useWeeklyReview(weekStart)
   const { triggerSave, isSaving, isSaved } = useAutoSaveWeeklyReview()
   const manualSaveMutation = useSaveWeeklyReview()
 
   // Real stats
-  const { data: stats, isLoading: statsLoading } = useWeeklyStats()
+  const { data: stats, isLoading: statsLoading } = useWeeklyStats(weekStart)
 
   // Load data from Supabase on mount
   useEffect(() => {
@@ -540,16 +541,22 @@ export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
     }
   }, [reviewData, dataLoaded])
 
-  // Auto-save when text fields change
+  // Auto-save when text fields change — only after user has actually typed
   useEffect(() => {
-    if (!dataLoaded) return
+    if (!dataLoaded || !userHasEdited) return
     triggerSave({
       winsText,
       challengeText,
       reflectionText,
       moodTakeaway,
-    })
-  }, [winsText, challengeText, reflectionText, moodTakeaway, dataLoaded, triggerSave])
+    }, weekStart)
+  }, [winsText, challengeText, reflectionText, moodTakeaway, dataLoaded, userHasEdited, triggerSave, weekStart])
+
+  // Wrap setters to track user edits
+  const handleSetWinsText = (v: string) => { setUserHasEdited(true); setWinsText(v) }
+  const handleSetChallengeText = (v: string) => { setUserHasEdited(true); setChallengeText(v) }
+  const handleSetReflectionText = (v: string) => { setUserHasEdited(true); setReflectionText(v) }
+  const handleSetMoodTakeaway = (v: string) => { setUserHasEdited(true); setMoodTakeaway(v) }
 
   const isFirst = currentSlide === 0
   const isLast = currentSlide === SLIDES.length - 1
@@ -627,6 +634,7 @@ export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
     manualSaveMutation.mutate(
       {
         content: { winsText, challengeText, reflectionText, moodTakeaway },
+        weekStart,
       },
       {
         onSuccess: () => {
@@ -651,18 +659,18 @@ export function WeeklyReviewCarousel({ onClose }: { onClose?: () => void }) {
       case "overview":
         return <OverviewSlide stats={realStats} />
       case "wins":
-        return <WinsSlide stats={realStats} winsText={winsText} setWinsText={setWinsText} />
+        return <WinsSlide stats={realStats} winsText={winsText} setWinsText={handleSetWinsText} />
       case "challenges":
-        return <ChallengesSlide stats={realStats} challengeText={challengeText} setChallengeText={setChallengeText} />
+        return <ChallengesSlide stats={realStats} challengeText={challengeText} setChallengeText={handleSetChallengeText} />
       case "patterns":
         return <PatternsSlide stats={realStats} />
       case "reflection":
         return (
           <ReflectionSlide
             reflectionText={reflectionText}
-            setReflectionText={setReflectionText}
+            setReflectionText={handleSetReflectionText}
             moodTakeaway={moodTakeaway}
-            setMoodTakeaway={setMoodTakeaway}
+            setMoodTakeaway={handleSetMoodTakeaway}
           />
         )
       case "done":

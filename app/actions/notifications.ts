@@ -2,7 +2,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, unstable_noStore as noStore } from "next/cache"
 import type { Notification } from "@/types/database"
 
 // ============================================================================
@@ -10,6 +10,7 @@ import type { Notification } from "@/types/database"
 // ============================================================================
 
 export async function getNotifications(limit = 50): Promise<Notification[]> {
+  noStore()
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -36,6 +37,7 @@ export async function getNotifications(limit = 50): Promise<Notification[]> {
 // ============================================================================
 
 export async function getUnreadNotificationCount(): Promise<number> {
+  noStore()
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()

@@ -1,9 +1,12 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion, Variants } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Calendar as CalendarUI } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Save,
   Trash2,
@@ -16,11 +19,14 @@ import {
   Plus,
   Check,
   Loader2,
+  Calendar,
 } from "lucide-react"
 import { toast } from "sonner"
-import { useWeeklyPlan, useAutoSaveWeeklyPlan } from "@/hooks/use-weekly-plan"
+import { useWeeklyPlan } from "@/hooks/use-weekly-plan"
 import type { WeeklyPlanContent } from "@/app/actions/weekly"
 import { useSaveWeeklyPlan } from "@/hooks/use-weekly-plan"
+import { getWeekBounds, fmtLocalDate } from "@/lib/week-helpers"
+import { getLastWeekPlan } from "@/app/actions/weekly"
 
 // ── Template section data ──────────────────────────────────
 
@@ -78,19 +84,51 @@ const TEMPLATE_SECTIONS: TemplateSection[] = [
 
 // ── Helpers ────────────────────────────────────────────────
 
-function getWeekRange() {
-  const now = new Date()
-  const day = now.getDay()
-  const diffToMon = day === 0 ? -6 : 1 - day
-  const monday = new Date(now)
-  monday.setDate(now.getDate() + diffToMon)
-  const sunday = new Date(monday)
-  sunday.setDate(monday.getDate() + 6)
+function formatRange(startStr: string, endStr: string) {
+  const fmt = (d: string) => {
+    const [y, m, day] = d.split("-")
+    const dt = new Date(parseInt(y), parseInt(m) - 1, parseInt(day))
+    return dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+  }
+  return `${fmt(startStr)} – ${fmt(endStr)}`
+}
 
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+const EMPTY_PLAN: WeeklyPlanContent = {
+  wins: [],
+  challenges: [],
+  focus: [],
+  habits: [],
+  mood: [],
+}
 
-  return `${fmt(monday)} – ${fmt(sunday)}`
+function getLocalStorageKey(weekStart: string) {
+  return `rhythme-plan-draft-${weekStart}`
+}
+
+function saveToLocal(weekStart: string, sections: WeeklyPlanContent) {
+  try {
+    localStorage.setItem(getLocalStorageKey(weekStart), JSON.stringify(sections))
+  } catch {
+    // localStorage might be full or unavailable
+  }
+}
+
+function loadFromLocal(weekStart: string): WeeklyPlanContent | null {
+  try {
+    const saved = localStorage.getItem(getLocalStorageKey(weekStart))
+    if (saved) return JSON.parse(saved)
+  } catch {
+    // parse error or unavailable
+  }
+  return null
+}
+
+function clearLocal(weekStart: string) {
+  try {
+    localStorage.removeItem(getLocalStorageKey(weekStart))
+  } catch {
+    // ignore
+  }
 }
 
 // ── Animation helpers ──────────────────────────────────────
@@ -227,26 +265,50 @@ function InlineEditItem({ value, placeholder, prefix, onUpdate, onRemove, autoFo
 // ── Main Page Component ────────────────────────────────────
 
 export default function WeeklyPlanPage() {
-  const weekRange = getWeekRange()
+  const searchParams = useSearchParams()
+  const urlWeekStart = searchParams.get("weekStart")
+  const defaultBounds = getWeekBounds()
+
+  const [weekStart, setWeekStart] = useState(urlWeekStart || defaultBounds.weekStart)
+  const [calOpen, setCalOpen] = useState(false)
+
+  const weekEnd = useMemo(() => {
+    const d = new Date(weekStart + "T00:00:00")
+    d.setDate(d.getDate() + 6)
+    return fmtLocalDate(d)
+  }, [weekStart])
+
+  const weekRange = formatRange(weekStart, weekEnd)
 
   // State for all plan sections
-  const [sections, setSections] = useState<WeeklyPlanContent>({
-    wins: [],
-    challenges: [],
-    focus: [],
-    habits: [],
-    mood: [],
-  })
+  const [sections, setSections] = useState<WeeklyPlanContent>(EMPTY_PLAN)
   const [dataLoaded, setDataLoaded] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [copyingLastWeek, setCopyingLastWeek] = useState(false)
 
   // Supabase hooks
-  const { data: planData, isLoading } = useWeeklyPlan()
-  const { triggerSave, isSaving, isSaved } = useAutoSaveWeeklyPlan()
+  const { data: planData, isLoading } = useWeeklyPlan(weekStart)
   const manualSave = useSaveWeeklyPlan()
 
-  // Load data from Supabase on mount
+  // Load data: priority is localStorage draft > Supabase data > empty
   useEffect(() => {
-    if (planData && !dataLoaded) {
+    setDataLoaded(false)
+  }, [weekStart])
+
+  useEffect(() => {
+    if (dataLoaded) return
+
+    // Check for local draft first
+    const localDraft = loadFromLocal(weekStart)
+    if (localDraft) {
+      setSections(localDraft)
+      setHasUnsavedChanges(true)
+      setDataLoaded(true)
+      return
+    }
+
+    // Then load from Supabase
+    if (planData) {
       const content = planData.content
       if (content) {
         setSections({
@@ -257,21 +319,25 @@ export default function WeeklyPlanPage() {
           mood: content.mood || [],
         })
       }
+      setHasUnsavedChanges(false)
       setDataLoaded(true)
-    } else if (planData === null && !dataLoaded) {
+    } else if (planData === null && !isLoading) {
       // No plan exists yet — keep defaults
+      setSections(EMPTY_PLAN)
+      setHasUnsavedChanges(false)
       setDataLoaded(true)
     }
-  }, [planData, dataLoaded])
+  }, [planData, dataLoaded, weekStart, isLoading])
 
-  // Auto-save whenever sections change (after initial load)
+  // Save to localStorage whenever sections change (after initial load)
   const sectionsRef = useRef(sections)
   sectionsRef.current = sections
 
   useEffect(() => {
     if (!dataLoaded) return
-    triggerSave(sections)
-  }, [sections, dataLoaded, triggerSave])
+    saveToLocal(weekStart, sections)
+    setHasUnsavedChanges(true)
+  }, [sections, dataLoaded, weekStart])
 
   const updateItem = (sectionId: keyof WeeklyPlanContent, index: number, newValue: string) => {
     setSections((prev) => {
@@ -302,9 +368,11 @@ export default function WeeklyPlanPage() {
 
   const handleManualSave = () => {
     manualSave.mutate(
-      { content: sections },
+      { content: sections, weekStart },
       {
         onSuccess: () => {
+          clearLocal(weekStart)
+          setHasUnsavedChanges(false)
           toast.success("Plan saved!", {
             description: "Your weekly plan has been saved.",
           })
@@ -319,23 +387,58 @@ export default function WeeklyPlanPage() {
   }
 
   const handleClear = () => {
-    setSections({
-      wins: [],
-      challenges: [],
-      focus: [],
-      habits: [],
-      mood: [],
-    })
+    setSections(EMPTY_PLAN)
+    clearLocal(weekStart)
+    setHasUnsavedChanges(false)
     toast("Plan cleared", {
       description: "All sections have been reset.",
     })
   }
 
-  const handleCopyLastWeek = () => {
-    toast.info("Copied from last week", {
-      description: "Template loaded from your previous week's plan.",
-    })
+  const handleCopyLastWeek = async () => {
+    setCopyingLastWeek(true)
+    try {
+      const result = await getLastWeekPlan(weekStart)
+      if (result.error) {
+        toast.error("Failed to load last week's plan", {
+          description: result.error,
+        })
+        return
+      }
+      if (!result.data || !result.data.content) {
+        toast.info("No plan found", {
+          description: "There's no plan from last week to copy.",
+        })
+        return
+      }
+      const content = result.data.content
+      setSections({
+        wins: content.wins || [],
+        challenges: content.challenges || [],
+        focus: content.focus || [],
+        habits: content.habits || [],
+        mood: content.mood || [],
+      })
+      toast.success("Copied from last week", {
+        description: "Your previous week's plan has been loaded. Don't forget to save!",
+      })
+    } catch {
+      toast.error("Something went wrong", {
+        description: "Could not fetch last week's plan.",
+      })
+    } finally {
+      setCopyingLastWeek(false)
+    }
   }
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) return
+    const { weekStart: ws } = getWeekBounds(date)
+    setWeekStart(ws)
+    setCalOpen(false)
+  }
+
+  const selectedDate = new Date(weekStart + "T00:00:00")
 
   // Count non-empty items per section
   const getFilledCount = (sectionId: keyof WeeklyPlanContent) => {
@@ -356,9 +459,23 @@ export default function WeeklyPlanPage() {
             Plan Your{" "}
             <span className="text-gradient-primary">Week</span>
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {weekRange}
-          </p>
+          <Popover open={calOpen} onOpenChange={setCalOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer group w-fit">
+                <Calendar className="w-4 h-4 group-hover:text-primary transition-colors" />
+                <span>{weekRange}</span>
+                <span className="text-xs opacity-60 group-hover:opacity-100">change</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarUI
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                className="rounded-md"
+              />
+            </PopoverContent>
+          </Popover>
         </motion.header>
 
         <motion.div variants={fadeUp} className="w-full max-w-5xl mx-auto">
@@ -456,11 +573,19 @@ export default function WeeklyPlanPage() {
       >
         <div className="w-full max-w-5xl mx-auto flex flex-wrap items-center gap-3">
           <Button onClick={handleManualSave} className="gap-2 shadow-lg shadow-primary/20" disabled={manualSave.isPending}>
-            <Save className="w-4 h-4" />
+            {manualSave.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
             Save Plan
           </Button>
-          <Button variant="outline" onClick={handleCopyLastWeek} className="gap-2">
-            <Copy className="w-4 h-4" />
+          <Button variant="outline" onClick={handleCopyLastWeek} className="gap-2" disabled={copyingLastWeek}>
+            {copyingLastWeek ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
             Copy from last week
           </Button>
           <Button variant="ghost" onClick={handleClear} className="gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
@@ -468,15 +593,21 @@ export default function WeeklyPlanPage() {
             Clear
           </Button>
 
-          {/* Auto-save indicator */}
+          {/* Draft/save indicator */}
           <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-            {isSaving && (
+            {manualSave.isPending && (
               <>
                 <Loader2 className="w-3 h-3 animate-spin" />
-                <span>Saving...</span>
+                <span>Saving to cloud...</span>
               </>
             )}
-            {isSaved && !isSaving && (
+            {!manualSave.isPending && hasUnsavedChanges && (
+              <>
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-amber-500">Draft saved locally</span>
+              </>
+            )}
+            {!manualSave.isPending && !hasUnsavedChanges && manualSave.isSuccess && (
               <>
                 <Check className="w-3 h-3 text-emerald-500" />
                 <span className="text-emerald-500">Saved</span>
