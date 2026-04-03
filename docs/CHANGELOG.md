@@ -1,5 +1,189 @@
 ## Changle-Log
 
+
+---
+
+PR #89
+commit no - f71638c24f929a0cf2e4042822b0a172b1333e42
+## [0.64.1] - 2026-03-31
+
+### Highlights
+- Webhook endpoints now correctly use the Supabase service role key for admin operations, ensuring Row Level Security is properly bypassed for secure server-side data access.
+
+### Changed
+- Replaced `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with `SUPABASE_SERVICE_ROLE_KEY` for server-side admin Supabase clients in `app/api/payments/webhook/route.ts` and `app/api/webhooks/push/route.ts`.
+- Updated environment variable presence checks to reflect the new key usage.
+
+### Fixed
+- Webhook endpoints previously using a public/publishable key for admin Supabase clients, which could fail to bypass RLS and read subscription data securely.
+
+### Security
+- Payment and push webhook endpoints now use the service role key exclusively for admin Supabase client instantiation, ensuring RLS is correctly bypassed only in trusted server-side contexts.
+- Removed usage of `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from server-side admin clients, preventing accidental exposure of elevated access patterns through public key usage.
+
+### Breaking Changes
+- `SUPABASE_SERVICE_ROLE_KEY` must be present in the server environment for the payment and push webhook endpoints to function. Deployments missing this variable will cause both webhook handlers to fail on startup.
+
+---
+
+PR #88
+commit no - ca24f2727f55157dbfb1fa0479817102def6d91a
+## [0.64.0] - 2026-03-31
+
+### Highlights
+- Full push notification support has been implemented end-to-end: users can now receive push notifications via a registered service worker, VAPID-secured subscriptions, and server-side delivery through a dedicated webhook — bringing real-time engagement capabilities to the app.
+
+### Added
+- `POST /api/push/subscribe` endpoint for registering client push subscriptions.
+- `/api/webhooks/push` webhook endpoint for server-side push notification delivery.
+- `PwaRegistry` component for registering the service worker, included in the root layout.
+- VAPID public key-based subscription flow in the browser notification prompt, posting subscriptions to the new subscribe route.
+- DB migration for `push_subscriptions` table to store client push subscription records.
+- Updated `public/sw.js` service worker to handle push notification events.
+- `web-push` package and its type definitions added to dependencies.
+
+### Changed
+- `BrowserNotificationPrompt` updated to subscribe with the VAPID public key and POST the subscription to `/api/push/subscribe`.
+- Moved `getGreetings` import path from `utils` to `lib`.
+- Adjusted payments webhook Supabase client environment variable usage.
+- Updated `pnpm` lock file with new dependencies.
+
+### Fixed
+- Removed legacy `utils/supabase` client files that were no longer in use, eliminating potential import conflicts.
+
+### Security
+- Push subscriptions secured using VAPID keys, ensuring only the server can send push notifications to subscribed clients.
+- Push subscription data persisted server-side in a dedicated `push_subscriptions` table with Supabase auth context.
+
+### Breaking Changes
+- The new push notification system requires a VAPID public key environment variable to be configured before deployment. Deployments without it will fail to register push subscriptions.
+- The DB migration for `push_subscriptions` must be applied before deploying this update, otherwise the subscribe endpoint will fail.
+- Legacy `utils/supabase` client files have been removed. Any remaining references to these files must be updated to use the current Supabase client path.
+
+---
+
+PR #87
+commit no - 211a7338b2cd5083145b530ad8f2989cc9797579
+## [0.63.0] - 2026-03-31
+
+### Highlights
+- The weekly workflow now feels significantly more polished with a calendar date picker for week navigation, local draft autosave for plans, copy-from-last-week functionality, day-based review gating, and browser notification prompts — making weekly planning and review more intuitive and reliable.
+
+### Added
+- Calendar date picker popover across Week, Plan, and Review pages for week-aware navigation.
+- `weekStart` threading through links and hooks for consistent week-scoped data fetching.
+- Local draft autosave for weekly plans using a per-week `localStorage` key.
+- Manual save behavior alongside local draft autosave with clearer save and draft indicators.
+- Copy-from-last-week functionality backed by a new `getLastWeekPlan` server action.
+- Day-based gating messaging on the Weekly Review flow indicating when the review becomes available.
+- Auto-ready logic for the Weekly Review later in the week.
+- `BrowserNotificationPrompt` component added to the dashboard layout for prompting notification permissions.
+- Optional `link` field on the `Notification` type to make notification items linkable.
+- Linkable notification items in the notifications UI.
+
+### Changed
+- `weekStart` passed into the weekly review carousel for week-scoped review data.
+- Weekly review carousel now only autosaves after a user edit, preventing unintended saves on load.
+- Notification server actions marked as non-cacheable with `unstable_noStore`.
+- Various UI and UX tweaks including icon updates, progress bar improvements, and wording refinements across weekly pages.
+
+### Fixed
+- Weekly review carousel previously autosaved on load regardless of user interaction; autosave now only triggers after an actual edit.
+
+### Breaking Changes
+- The `Notification` type now includes an optional `link` field. Any existing notification-related database entries or API responses will remain compatible, but integrations constructing `Notification` objects directly should be reviewed to account for the new field.
+
+---
+
+PR #86
+commit no - e397b032a6a7b6f630b709a8ebd64be74d76a407
+## [0.62.0] - 2026-03-28
+
+### Highlights
+- Users can now change their journal passphrase with full re-encryption of all existing journal entries, and the auth flow has been revamped with a redesigned UI, OAuth loading states, and proper redirect support through the entire sign-in chain.
+
+### Added
+- `ChangePassphraseSection` client component with a multi-step flow: verify old passphrase, set new passphrase, and re-encrypt all journals.
+- `reEncryptJournals` server action to batch-update encrypted journal content, IVs, and the validation token on passphrase change.
+- `ChangePassphraseSection` wired into the security settings page.
+- Optional `redirect` parameter support through `signInWithProviderAction` and the auth callback route to honor middleware-initiated redirects after sign-in.
+
+### Changed
+- Removed redundant server-side `getUser` checks from auth, user, and settings layouts, delegating auth gating entirely to middleware.
+- Commented out unused server actions for email login and signup.
+- Revamped signup and intro page UI.
+- Redesigned OAuth buttons with loading states during authentication.
+- Refactored login form layout and error handling.
+- Miscellaneous import cleanup, styling improvements, and minor UX tweaks across auth and settings components.
+
+### Security
+- Passphrase change flow re-encrypts all existing journal entries with the new key, ensuring no journal content remains encrypted under the old passphrase after a passphrase update.
+- Validation token updated server-side as part of the re-encryption flow to stay in sync with the new passphrase.
+
+### Breaking Changes
+- Server-side `getUser` checks have been removed from auth, user, and settings layouts. Route protection now relies entirely on middleware. Any deployments without properly configured auth middleware will lose route protection on these pages.
+
+---
+
+PR #85
+commit no - 4871afcccc8e0f293f7c325e44fb756ff827024d
+## [0.61.0] - 2026-03-15
+
+### Highlights
+- The weekly planning and review system is now fully functional with server-backed CRUD actions, autosave, inline editing, and a real history view with aggregated stats — turning the weekly workflow into a complete productivity feature.
+
+### Added
+- `app/actions/weekly.ts` server actions for full CRUD on weekly plans, reviews, stats, and history.
+- Helper utilities and Supabase schema files (`supabase/*.sql`) for the weekly planning data model.
+- `hooks/use-weekly-*.ts` client-side hooks for weekly plan and review state management.
+- Autosave functionality with save indicators on the weekly plan page.
+- Manual save option alongside autosave on the weekly plan page.
+- Inline editable items on the weekly plan page.
+- Loading and empty states on both the weekly plan and weekly history pages.
+- Real history data fetching on the weekly history page with aggregated stats per week.
+
+### Changed
+- Refactored the weekly plan page to use inline editing, autosave, and improved loading and empty state handling.
+- Updated the weekly history page to fetch and display real data instead of static placeholders, with per-week aggregated stats.
+- Minor dashboard layout adjustments to reorder cards and improve spacing.
+- Updated `package.json` dependencies to support new weekly features.
+
+### Breaking Changes
+- The weekly plan and review features now require the new Supabase schema to be applied via the provided `supabase/*.sql` migration files. Deploying without running the migrations will cause weekly plan and review functionality to fail.
+
+---
+
+PR #84
+commit no - 02c18ad3cc08ccd2a831463f36745cc5cd45af64
+## [0.60.0] - 2026-03-11
+
+### Highlights
+- Premium feature gating and a full Razorpay-backed subscription flow have been introduced, enabling monetization with usage limits on journals, tasks, and habits, and a seamless in-app upgrade experience with checkout, payment verification, and webhook handling.
+
+### Added
+- `app/actions/usage-limits.ts` server-side usage limit checks for journals, tasks, and habits.
+- `app/actions/subscription.ts` subscription status helper for fetching real subscription state from user profiles.
+- Razorpay subscription API routes: `create-subscription`, `verify`, and `webhook` handlers under `app/api/payments/`.
+- `PremiumGateModal` component for displaying upgrade prompts when usage limits are reached.
+- Premium checks integrated into Habits, Journal, `QuickJournalCard`, `TaskForm`, Appearance, Custom Themes, `NavUser`, and related settings pages.
+- Lock overlays on premium themes in the theme picker.
+- Premium badges and UI affordances in the nav and theme pickers for premium users.
+- Client-side upgrade handlers that open the Razorpay checkout and verify payments on completion.
+- Processing states and toast feedback across subscription and billing flows.
+- Premium indicators across gated features showing locks and upgrade prompts when limits are hit.
+
+### Changed
+- Subscription page now fetches real subscription state from user profiles instead of static data.
+- Billing UI components wired up to live Razorpay subscription flows.
+- Minor dependency updates in `package.json` and `pnpm` lock file.
+
+### Security
+- Razorpay webhook handler added with server-side verification to ensure only legitimate payment events update subscription state.
+- Subscription status checks performed server-side via `app/actions/subscription.ts` to prevent client-side bypass.
+
+### Breaking Changes
+- This update requires the following environment variables to be set before deployment, otherwise payment and subscription features will fail: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY`.
+
 ---
 
 PR #83
