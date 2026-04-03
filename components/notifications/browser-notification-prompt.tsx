@@ -42,33 +42,57 @@ export function BrowserNotificationPrompt() {
       setShowPrompt(false)
 
       if (permission === "granted") {
-        if ("serviceWorker" in navigator) {
-          const registration = await navigator.serviceWorker.ready;
-          const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-          if (vapidKey) {
-            const padding = "=".repeat((4 - (vapidKey.length % 4)) % 4);
-            const base64 = (vapidKey + padding).replace(/-/g, "+").replace(/_/g, "/");
+        if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+           toast.error("Push notifications are not supported in your browser.")
+           return
+        }
+
+        try {
+          // Register service worker if not already registered
+          const registration = await navigator.serviceWorker.register('/sw.js')
+          
+          let subscription = await registration.pushManager.getSubscription()
+          
+          if (!subscription) {
+            const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+            if (!publicVapidKey) {
+              throw new Error("VAPID public key is missing")
+            }
+
+            // Convert VAPID key for PushManager
+            const padding = '='.repeat((4 - (publicVapidKey.length % 4)) % 4);
+            const base64 = (publicVapidKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
             const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
             for (let i = 0; i < rawData.length; ++i) {
               outputArray[i] = rawData.charCodeAt(i);
             }
-            const subscription = await registration.pushManager.subscribe({
+
+            subscription = await registration.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: outputArray
-            });
-            await fetch("/api/push/subscribe", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(subscription),
-            });
+            })
           }
-        }
 
-        toast.success("Notifications enabled!", {
-          description: "You'll now receive updates directly in your browser.",
-          icon: <BellRing className="w-4 h-4 text-emerald-500" />
-        })
+          // Send subscription to backend
+          const response = await fetch('/api/notifications/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(subscription)
+          })
+
+          if (!response.ok) {
+             throw new Error("Failed to save push subscription on server")
+          }
+
+          toast.success("Notifications enabled!", {
+            description: "You'll now receive updates directly in your browser.",
+            icon: <BellRing className="w-4 h-4 text-emerald-500" />
+          })
+        } catch (err) {
+          console.error("Push subscription failed:", err)
+          toast.error("Could not complete subscription setup.")
+        }
       } else if (permission === "denied") {
         toast.info("Notifications declined", {
           description: "You can enable them later in your browser settings.",
