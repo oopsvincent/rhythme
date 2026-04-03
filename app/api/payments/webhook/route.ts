@@ -30,6 +30,11 @@ function verifyWebhookSignature(body: string, signature: string): boolean {
   );
 }
 
+const PLAN_IDS = {
+  monthly: 'plan_SPmQWhjDt5EyDF',
+  yearly: 'plan_SPmREBwR56C0gG',
+} as const;
+
 export async function POST(request: Request) {
   try {
     const rawBody = await request.text();
@@ -49,9 +54,57 @@ export async function POST(request: Request) {
 
     switch (eventType) {
       case 'subscription.activated':
-      case 'subscription.completed': {
-        const subscriptionId = payload.subscription?.entity?.id;
+      case 'subscription.completed':
+      case 'subscription.charged': {
+        const subscription = payload.subscription?.entity;
+        const payment = payload.payment?.entity;
+        const subscriptionId = subscription?.id;
         if (!subscriptionId) break;
+
+        // Fetch current profile to get billing history
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('billing_history')
+          .eq('razorpay_subscription_id', subscriptionId)
+          .single();
+
+        if (!profile) {
+          console.error(`Profile not found for subscription ${subscriptionId}`);
+          break;
+        }
+
+        const currentHistory = Array.isArray(profile.billing_history) ? profile.billing_history : [];
+        let updatedHistory = currentHistory;
+
+        // Extract plan and amount
+        const planId = subscription?.plan_id;
+        const plan = planId === PLAN_IDS.monthly ? 'monthly' : 'yearly';
+        
+        let amount = 0;
+        let paymentId = '';
+        if (payment) {
+          amount = payment.amount / 100; // convert from smallest currency unit to standard
+          paymentId = payment.id;
+        } else {
+          // fallback if no payment entity attached
+          amount = plan === 'monthly' ? 9.99 : 99.99;
+        }
+
+        // Add to history if not exists
+        if (paymentId && !currentHistory.some((entry: any) => entry.payment_id === paymentId)) {
+          const newBillingEntry = {
+            id: crypto.randomUUID(),
+            date: new Date().toISOString(),
+            amount: amount,
+            plan_type: plan,
+            payment_id: paymentId,
+            status: 'paid'
+          };
+          updatedHistory = [newBillingEntry, ...currentHistory];
+        }
+
+        const startDate = subscription?.current_start ? new Date(subscription.current_start * 1000).toISOString() : new Date().toISOString();
+        const endDate = subscription?.current_end ? new Date(subscription.current_end * 1000).toISOString() : new Date().toISOString();
 
         // Find user by subscription ID and activate premium
         await supabase
@@ -59,10 +112,15 @@ export async function POST(request: Request) {
           .update({
             is_premium: true,
             subscription_status: 'active',
+            subscription_plan: plan,
+            subscription_amount_paid: amount,
+            subscription_start_date: startDate,
+            subscription_end_date: endDate,
+            billing_history: updatedHistory,
           })
           .eq('razorpay_subscription_id', subscriptionId);
 
-        console.log(`✅ Subscription activated: ${subscriptionId}`);
+        console.log(`✅ Subscription ${eventType}: ${subscriptionId}`);
         break;
       }
 
@@ -82,14 +140,6 @@ export async function POST(request: Request) {
           .eq('razorpay_subscription_id', subscriptionId);
 
         console.log(`❌ Subscription ${status}: ${subscriptionId}`);
-        break;
-      }
-
-      case 'payment.captured': {
-        // Payment successful — subscription.activated usually handles this,
-        // but we log it for completeness
-        const paymentId = payload.payment?.entity?.id;
-        console.log(`💰 Payment captured: ${paymentId}`);
         break;
       }
 

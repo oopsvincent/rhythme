@@ -74,9 +74,16 @@ const premiumFeatures: PremiumFeature[] = [
 
 interface SubscriptionSectionProps {
   currentPlan: "starter" | "premium"
+  details?: {
+    plan?: string;
+    amountPaid?: number;
+    endDate?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    billingHistory?: any[];
+  }
 }
 
-export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
+export function SubscriptionSection({ currentPlan, details }: SubscriptionSectionProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly")
   const [showAllFeatures, setShowAllFeatures] = useState(false)
   const [isUpgrading, setIsUpgrading] = useState(false)
@@ -216,15 +223,23 @@ export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
           </div>
           
           {isPremium && (
-            <div className="flex items-center gap-4 pt-4 mt-4 border-t border-border/50 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>Active subscription</span>
+            <div className="flex flex-col gap-3 pt-4 mt-4 border-t border-border/50 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="capitalize">Active subscription {details?.plan ? `(${details.plan})` : ""}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4" />
+                  <span>${details?.amountPaid || yearlyPrice}/{details?.plan === 'monthly' ? 'month' : 'year'}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Receipt className="h-4 w-4" />
-                <span>${yearlyPrice}/year</span>
-              </div>
+              {details?.endDate && (
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  <span><strong className="text-foreground">{Math.max(0, Math.ceil((new Date(details.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days left</strong> until renewal</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -272,7 +287,7 @@ export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
                     >
-                      <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-500">
+                      <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20">
                         Save {savingsPercentage}%
                       </Badge>
                     </motion.div>
@@ -406,6 +421,42 @@ export function SubscriptionSection({ currentPlan }: SubscriptionSectionProps) {
               </Button>
             </div>
           </section>
+
+          {/* Billing History */}
+          {details?.billingHistory && details.billingHistory.length > 0 && (
+            <>
+              <div className="border-b border-border/50" />
+              <section className="space-y-4">
+                <h3 className="font-medium">Billing History</h3>
+                <div className="rounded-md border border-border/50 overflow-hidden bg-background">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/30 border-b border-border/50">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Plan</th>
+                        <th className="px-4 py-3 text-right font-medium text-muted-foreground">Amount</th>
+                        <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {details.billingHistory.map((item: any, i: number) => (
+                        <tr key={i} className="hover:bg-muted/10 transition-colors">
+                          <td className="px-4 py-3">{new Date(item.date).toLocaleDateString()}</td>
+                          <td className="px-4 py-3 capitalize">{item.plan_type}</td>
+                          <td className="px-4 py-3 text-right">${item.amount}</td>
+                          <td className="px-4 py-3 text-center">
+                            <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-200">
+                              {item.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </>
+          )}
         </>
       )}
     </div>
