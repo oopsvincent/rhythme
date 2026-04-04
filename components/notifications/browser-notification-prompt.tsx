@@ -113,7 +113,7 @@ export function BrowserNotificationPrompt() {
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="fixed bottom-6 right-6 z-[100] max-w-sm w-full"
         >
-          <div className="relative overflow-hidden bg-card border shadow-xl rounded-2xl p-5 flex flex-col gap-3">
+          <div className="relative overflow-hidden bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 border shadow-2xl rounded-2xl p-5 flex flex-col gap-3">
             {/* Background gradient hint */}
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 blur-3xl rounded-full" />
             
