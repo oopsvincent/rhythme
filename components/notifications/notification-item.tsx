@@ -35,7 +35,7 @@ function getNotificationIcon(type: string) {
   }
 }
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface NotificationItemProps {
   notification: Notification
@@ -43,9 +43,17 @@ interface NotificationItemProps {
 }
 
 export function NotificationItem({ notification, onMarkAsRead }: NotificationItemProps) {
-  const handleClick = () => {
+  const router = useRouter()
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+
     if (!notification.is_read) {
       onMarkAsRead(notification.notification_id)
+    }
+
+    if (notification.link) {
+      router.push(notification.link)
     }
   }
 
@@ -86,17 +94,10 @@ export function NotificationItem({ notification, onMarkAsRead }: NotificationIte
     </>
   )
 
-  if (notification.link) {
-    return (
-      <Link href={notification.link} onClick={handleClick} className={className}>
-        {innerContent}
-      </Link>
-    )
-  }
-
   return (
     <button onClick={handleClick} className={className}>
       {innerContent}
     </button>
   )
 }
+

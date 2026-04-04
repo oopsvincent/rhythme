@@ -62,18 +62,27 @@ export async function getUnreadNotificationCount(): Promise<number> {
 // MARK AS READ
 // ============================================================================
 
+import { createClient as createSupabaseAdmin } from "@supabase/supabase-js"
+
+function getAdminClient() {
+  return createSupabaseAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY!
+  )
+}
+
 export async function markNotificationAsRead(
   notificationId: number
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return { success: false, error: "Not authenticated" }
   }
 
-  const { error } = await supabase
+  const supabaseAdmin = getAdminClient()
+  const { error } = await supabaseAdmin
     .from("notifications")
     .update({ is_read: true })
     .eq("notification_id", notificationId)
@@ -97,14 +106,14 @@ export async function markAllNotificationsAsRead(): Promise<{
   error?: string
 }> {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return { success: false, error: "Not authenticated" }
   }
 
-  const { error } = await supabase
+  const supabaseAdmin = getAdminClient()
+  const { error } = await supabaseAdmin
     .from("notifications")
     .update({ is_read: true })
     .eq("user_id", user.id)

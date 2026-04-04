@@ -7,8 +7,8 @@ self.addEventListener('push', function (event) {
       
       const options = {
         body: data.body || 'You have a new notification.',
-        icon: data.icon || '/icon-192x192.png',
-        badge: data.badge || '/icon-192x192.png',
+        icon: data.icon || '/rhythme_z_o.png',
+        badge: data.badge || '/rhythme.png',
         data: data.url || '/',
       }
 
@@ -18,7 +18,7 @@ self.addEventListener('push', function (event) {
     } catch (err) {
       const options = {
         body: event.data.text(),
-        icon: '/icon-192x192.png',
+        icon: '/rhythme_z_o.png',
       }
       event.waitUntil(
         self.registration.showNotification('New Notification', options)
