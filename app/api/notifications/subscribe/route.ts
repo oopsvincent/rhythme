@@ -52,3 +52,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = await createClient()
+
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await req.json().catch(() => ({}))
+    const endpoint = body?.endpoint
+
+    let query = supabase.from("push_subscriptions").delete().eq("user_id", userData.user.id)
+
+    if (endpoint) {
+      query = query.eq("endpoint", endpoint)
+    }
+
+    const { error: deleteError } = await query
+
+    if (deleteError) {
+      console.error("Database error deleting push subscription:", deleteError)
+      return NextResponse.json({ error: "Failed to delete subscription" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, message: "Unsubscribed successfully" })
+  } catch (error) {
+    console.error("Error in push unsubscribe route:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+

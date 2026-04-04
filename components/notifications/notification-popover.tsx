@@ -93,7 +93,7 @@ export function NotificationPopover() {
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-[380px] p-0 overflow-hidden"
+        className="w-[380px] p-0 overflow-hidden bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 shadow-2xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b">
