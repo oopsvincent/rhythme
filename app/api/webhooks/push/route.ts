@@ -32,12 +32,17 @@ export async function POST(req: NextRequest) {
   try {
     const payload = (await req.json()) as WebhookPayload
 
-    // Only process INSERT events for notifications
-    if (payload.type !== "INSERT" || !payload.record) {
-      return NextResponse.json({ message: "Ignored: Not an INSERT event" }, { status: 200 })
+    // Process both INSERT and UPDATE events for notifications
+    if (!["INSERT", "UPDATE"].includes(payload.type) || !payload.record) {
+      return NextResponse.json({ message: `Ignored: Not an INSERT or UPDATE event (got ${payload.type})` }, { status: 200 })
     }
 
-    const { user_id, title, message, link } = payload.record
+    const { user_id, title, message, link, is_read } = payload.record
+
+    // Do not notify for already read notifications
+    if (is_read) {
+      return NextResponse.json({ message: "Ignored: Notification is already marked as read" }, { status: 200 })
+    }
 
     // We MUST use the service role key here to bypass RLS because this request 
     // comes from Supabase webhooks, not an authenticated frontend session.
