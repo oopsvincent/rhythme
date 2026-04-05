@@ -179,48 +179,38 @@ export function SidebarRight({
 
   return (
     <>
-      {/* Mobile Bottom Panel - Collapsible */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
-        <motion.div
-          initial={false}
-          animate={{ height: isMobileExpanded ? "auto" : "auto" }}
-          className="bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 border-t border-border/50 shadow-2xl"
-        >
-          {/* Mobile Toggle Header */}
-          <button
-            onClick={toggleMobileExpanded}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <div className={cn("flex h-6 w-6 items-center justify-center rounded-md", headerConfig.iconBg)}>
-                {headerConfig.icon}
+      {/* Mobile Bottom Panel - Floating Pill */}
+      <div className="lg:hidden fixed bottom-6 left-6 z-40 flex flex-col items-start gap-2">
+        <AnimatePresence>
+          {isMobileExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ height: "auto", opacity: 1, scale: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="origin-bottom-left w-[calc(100vw-3rem)] max-w-sm bg-background/60 backdrop-blur-3xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden mb-2"
+            >
+              <div className="max-h-[60vh] overflow-y-auto px-4 py-4">
+                {renderContent()}
               </div>
-              <span className="text-sm font-medium">{getMobileHeaderText()}</span>
-            </div>
-            {isMobileExpanded ? (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            )}
-          </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* Mobile Expanded Content */}
-          <AnimatePresence>
-            {isMobileExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="max-h-[50vh] overflow-y-auto px-2 pb-4">
-                  {renderContent()}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+        <motion.button
+          onClick={toggleMobileExpanded}
+          className="flex h-14 items-center gap-3 px-5 rounded-full bg-background/60 backdrop-blur-3xl border border-white/20 shadow-2xl transition-all hover:scale-105 active:scale-95 font-medium text-sm text-foreground/80 hover:text-foreground"
+        >
+          <div className={cn("flex h-7 w-7 items-center justify-center rounded-xl", headerConfig.iconBg)}>
+            {headerConfig.icon}
+          </div>
+          <span className="whitespace-nowrap hidden sm:inline-block">{getMobileHeaderText()}</span>
+          {isMobileExpanded ? (
+            <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
+          ) : (
+            <ChevronUp className="h-4 w-4 text-muted-foreground hidden sm:block" />
+          )}
+        </motion.button>
       </div>
 
       {/* Desktop Sidebar - Toggle button lives outside the collapsible area */}

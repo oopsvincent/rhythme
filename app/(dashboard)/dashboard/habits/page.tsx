@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Plus,
+  Minus,
   CheckCircle2,
   Flame,
   Brain,
@@ -219,7 +220,7 @@ export default function HabitsPage() {
   return (
     <>
       <SiteHeader />
-      <div className="flex flex-1 flex-col px-4 md:px-10 pb-8">
+      <div className="flex flex-1 flex-col px-4 md:px-10 pb-8 select-none">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-6 py-6">
             {/* Header */}
@@ -317,18 +318,47 @@ export default function HabitsPage() {
                         <Label className="text-sm font-medium">
                           {getTargetLabel(newHabit.frequency ?? 0)}
                         </Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={100}
-                          value={newHabit.target_count}
-                          onChange={(e) =>
-                            setNewHabit({
-                              ...newHabit,
-                              target_count: Math.max(1, parseInt(e.target.value) || 1),
-                            })
-                          }
-                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setNewHabit({
+                                ...newHabit,
+                                target_count: Math.max(1, newHabit.target_count - 1),
+                              })
+                            }
+                            disabled={newHabit.target_count <= 1}
+                            className="shrink-0 h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={newHabit.target_count}
+                            onChange={(e) =>
+                              setNewHabit({
+                                ...newHabit,
+                                target_count: Math.max(1, parseInt(e.target.value) || 1),
+                              })
+                            }
+                            className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setNewHabit({
+                                ...newHabit,
+                                target_count: Math.min(100, newHabit.target_count + 1),
+                              })
+                            }
+                            disabled={newHabit.target_count >= 100}
+                            className="shrink-0 h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                     <DialogFooter>

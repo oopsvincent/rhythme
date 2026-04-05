@@ -4,11 +4,6 @@ import * as React from "react"
 import { CalendarIcon, Clock, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 type DateNTimePickerProps = {
@@ -100,40 +95,53 @@ export function DateNTimePicker({
   const minuteOptions = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'))
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          disabled={disabled}
-          className={cn(
-            "w-[80%] sm:w-auto justify-start text-left font-normal",
-            !selectedDate && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          <span className="flex-1 truncate">{formatDisplay()}</span>
-          {selectedDate && (
-            <X 
-              className="ml-2 h-4 w-4 opacity-50 hover:opacity-100" 
-              onClick={handleClear}
-            />
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] p-0 overflow-auto" align="start" sideOffset={4}>
-        <div className="flex flex-col sm:flex-row max-h-[70vh] overflow-auto">
+    <div className="flex flex-col gap-2 w-full">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setOpen(!open)}
+        disabled={disabled}
+        className={cn(
+          "w-full justify-start text-left font-normal",
+          !selectedDate && "text-muted-foreground"
+        )}
+      >
+        <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+        <span className="flex-1 truncate">{formatDisplay()}</span>
+        {selectedDate && (
+          <div 
+            className="p-1 -mr-1 rounded-sm hover:bg-muted/50 cursor-pointer z-10 shrink-0"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleClear(e as any);
+              setOpen(false);
+            }}
+          >
+            <X className="h-4 w-4 opacity-70 hover:opacity-100" />
+          </div>
+        )}
+      </Button>
+      
+      {open && (
+        <div className="flex flex-col border rounded-xl bg-card shadow-sm w-full max-w-full overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Calendar */}
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleDateSelect}
-            initialFocus
-          />
+          <div className="p-1 sm:p-3 flex justify-center bg-background w-full overflow-x-auto shrink-0">
+            <div className="min-w-fit flex justify-center">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                initialFocus
+                className="scale-[0.85] sm:scale-100 origin-top p-0 sm:p-3 pb-8 sm:pb-3 mb-[-2.5rem] sm:mb-0"
+              />
+            </div>
+          </div>
           
           {/* Time Picker */}
-          <div className="border-t sm:border-t-0 sm:border-l p-4 flex flex-col gap-4">
+          <div className="border-t p-3 sm:p-4 flex flex-col gap-4 bg-muted/10 w-full min-w-0">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-4 w-4 text-muted-foreground" />
               Time
             </div>
             
@@ -174,12 +182,13 @@ export function DateNTimePicker({
             </div>
             
             {/* Quick Time Presets */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 mt-1">
               {['09:00', '12:00', '15:00', '18:00'].map((preset) => {
                 const [h, m] = preset.split(':')
                 return (
                   <Button
                     key={preset}
+                    type="button"
                     variant="outline"
                     size="sm"
                     className="text-xs h-7"
@@ -193,15 +202,16 @@ export function DateNTimePicker({
             
             {/* Done button for mobile */}
             <Button 
+              type="button"
               size="sm" 
-              className="sm:hidden mt-2"
+              className="mt-2 w-full"
               onClick={() => setOpen(false)}
             >
               Done
             </Button>
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      )}
+    </div>
   )
 }

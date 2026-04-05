@@ -25,6 +25,7 @@ import {
   MoodChartSkeleton,
   SentimentChartSkeleton,
   WeeklyWidget,
+  QuickActionsFab,
 } from "@/components/dashboard"
 
 export default async function DashboardPage() {
@@ -122,6 +123,7 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+      <QuickActionsFab />
     </>
   )
 }
