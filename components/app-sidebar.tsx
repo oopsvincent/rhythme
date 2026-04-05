@@ -3,7 +3,6 @@
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
-import { WorkspaceGoal } from "@/components/workspace-goal";
 import Image from "next/image";
 import { useSidebar } from "@/components/ui/sidebar"
 
@@ -146,14 +145,7 @@ const isCollapsed = state === "collapsed"
     </div>
   </div>
 
-  {!isCollapsed && <TeamSwitcher teams={workspaceData} />}
-<div
-  className={`transition-all duration-200 ${
-    isCollapsed ? "opacity-0 h-0 overflow-hidden pointer-events-none" : "opacity-100"
-  }`}
->
-    <WorkspaceGoal goal={workspaceGoal}/>
-</div>
+  {!isCollapsed && <TeamSwitcher teams={workspaceData} workspaceGoal={workspaceGoal} />}
 </SidebarHeader>
 
       <SidebarContent className="flex flex-col gap-0 overflow-y-auto custom-scrollbar pt-2">
