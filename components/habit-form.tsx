@@ -1,10 +1,10 @@
-// app/components/task-form.tsx
+// components/habit-form.tsx
 'use client'
 
 import { useState, useTransition } from 'react'
-import { createTask } from '@/app/actions/getTasks'
-import { canCreateTask } from '@/app/actions/usage-limits'
-import type { CreateTaskInput, Priority, Status } from '@/types/database'
+import { createHabit } from '@/app/actions/habits'
+import { canCreateHabit } from '@/app/actions/usage-limits'
+import type { CreateHabitInput, HabitFrequency } from '@/types/database'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,6 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -25,48 +26,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select'
-import { Plus, Loader2 } from 'lucide-react'
-import { DateNTimePicker } from './date-n-time-picker'
+import { Plus, Minus, Loader2 } from 'lucide-react'
 import { Kbd } from './ui/kbd'
 import { PremiumGateModal } from './premium-gate-modal'
+import { useRouter } from 'next/navigation'
 
-const priorityOptions: { value: Priority; label: string; color: string }[] = [
-  { value: 'low', label: 'Low', color: 'text-blue-600' },
-  { value: 'medium', label: 'Medium', color: 'text-yellow-600' },
-  { value: 'high', label: 'High', color: 'text-red-600' },
+const frequencyOptions: { value: string; label: string }[] = [
+  { value: '0', label: 'Daily' },
+  { value: '1', label: 'Weekly' },
+  { value: '2', label: 'Monthly' },
+  { value: '3', label: 'Multiple times per week' },
 ]
 
-const statusOptions: { value: Status; label: string }[] = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-]
-
-export default function TaskForm({ children }: { children?: React.ReactNode }) {
+export default function HabitForm({ children }: { children?: React.ReactNode }) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showPremiumGate, setShowPremiumGate] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const router = useRouter()
 
-  const [formData, setFormData] = useState<CreateTaskInput>({
-    title: '',
+  const [formData, setFormData] = useState<CreateHabitInput>({
+    name: '',
     description: '',
-    due_date: undefined,
-    priority: 'medium',
-    status: 'pending'
+    frequency: 0,
+    target_count: 1,
   })
-
-  const handleDateNTime = (date: Date | undefined) => {
-    setFormData({...formData , due_date: date})
-  }
 
   const resetForm = () => {
     setFormData({
-      title: '',
+      name: '',
       description: '',
-      due_date: undefined,
-      priority: 'medium',
-      status: 'pending'
+      frequency: 0,
+      target_count: 1,
     })
     setError(null)
   }
@@ -75,26 +67,27 @@ export default function TaskForm({ children }: { children?: React.ReactNode }) {
     e.preventDefault()
     setError(null)
 
-    if (!formData.title.trim()) {
-      setError('Title is required')
+    if (!formData.name.trim()) {
+      setError('Habit name is required')
       return
     }
 
     startTransition(async () => {
       // Check usage limit
-      const { allowed } = await canCreateTask()
+      const { allowed } = await canCreateHabit()
       if (!allowed) {
         setShowPremiumGate(true)
         return
       }
 
-      const result = await createTask(formData)
+      const result = await createHabit(formData)
       
       if (result?.error) {
         setError(result.error)
       } else {
         resetForm()
         setShowForm(false)
+        router.refresh()
       }
     })
   }
@@ -112,14 +105,14 @@ export default function TaskForm({ children }: { children?: React.ReactNode }) {
     <PremiumGateModal
       open={showPremiumGate}
       onOpenChange={setShowPremiumGate}
-      reason="task"
+      reason="habit"
     />
     <Dialog open={showForm} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {children || (
           <Button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
             <Plus className="h-4 w-4" />
-            Add Task
+            Add Habit
           </Button>
         )}
       </DialogTrigger>
@@ -127,7 +120,10 @@ export default function TaskForm({ children }: { children?: React.ReactNode }) {
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Create New Task</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Create New Habit</DialogTitle>
+            <DialogDescription className="sr-only">
+              Add a new habit to track
+            </DialogDescription>
           </DialogHeader>
 
           {error && (
@@ -137,18 +133,18 @@ export default function TaskForm({ children }: { children?: React.ReactNode }) {
           )}
 
           <div className="mt-4 space-y-4">
-            {/* Title */}
+            {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="title" className="sr-only">
-                Task Name <span className="text-red-500">*</span>
+              <Label htmlFor="habit-name" className="sr-only">
+                Habit Name <span className="text-red-500">*</span>
               </Label>
                 <Input
-                  id="title"
+                  id="habit-name"
                   type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full text-lg shadow-none font-medium h-12"
-                  placeholder="What needs to be done?"
+                  placeholder="What habit do you want to build?"
                   disabled={isPending}
                   autoFocus
                 />
@@ -158,57 +154,35 @@ export default function TaskForm({ children }: { children?: React.ReactNode }) {
               <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-sm font-medium text-muted-foreground">
+                  <Label htmlFor="habit-description" className="text-sm font-medium text-muted-foreground">
                     Description
                   </Label>
                   <Textarea
-                    id="description"
-                    value={formData.description}
+                    id="habit-description"
+                    value={formData.description || ''}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full min-h-[80px] resize-none"
-                    placeholder="Add more details about this task..."
+                    placeholder="Why is this habit important to you?"
                     disabled={isPending}
                   />
                 </div>
 
-                {/* Priority & Status Row - Stack on mobile */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Frequency & Target */}
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="priority" className="text-sm font-medium text-muted-foreground">
-                      Priority
+                    <Label htmlFor="habit-frequency" className="text-sm font-medium text-muted-foreground">
+                      Frequency
                     </Label>
                     <Select
-                      value={formData.priority}
-                      onValueChange={(value: Priority) => setFormData({ ...formData, priority: value })}
+                      value={String(formData.frequency ?? 0)}
+                      onValueChange={(value) => setFormData({ ...formData, frequency: parseInt(value) as HabitFrequency })}
                       disabled={isPending}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select priority" />
+                        <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                       <SelectContent>
-                        {priorityOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            <span className={option.color}>{option.label}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="status" className="text-sm font-medium text-muted-foreground">
-                      Status
-                    </Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value: Status) => setFormData({ ...formData, status: value })}
-                      disabled={isPending}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusOptions.map((option) => (
+                        {frequencyOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -216,14 +190,40 @@ export default function TaskForm({ children }: { children?: React.ReactNode }) {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
 
-                {/* Due Date - Full width */}
-                <div className="space-y-2">
-                  <Label htmlFor="due_date" className="text-sm font-medium text-muted-foreground">
-                    Due Date
-                  </Label>
-                  <DateNTimePicker value={formData.due_date} onChange={handleDateNTime} />
+                  <div className="space-y-2">
+                    <Label htmlFor="habit-target" className="text-sm font-medium text-muted-foreground">
+                      Target Count
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, target_count: Math.max(1, (formData.target_count ?? 1) - 1) })}
+                        disabled={isPending || (formData.target_count ?? 1) <= 1}
+                        className="shrink-0 h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <Input
+                        id="habit-target"
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={formData.target_count ?? 1}
+                        onChange={(e) => setFormData({ ...formData, target_count: parseInt(e.target.value) || 1 })}
+                        disabled={isPending}
+                        className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, target_count: Math.min(20, (formData.target_count ?? 1) + 1) })}
+                        disabled={isPending || (formData.target_count ?? 1) >= 20}
+                        className="shrink-0 h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -265,7 +265,7 @@ export default function TaskForm({ children }: { children?: React.ReactNode }) {
                     Creating...
                   </>
                 ) : (
-                  'Create Task'
+                  'Create Habit'
                 )}
               </Button>
             </div>

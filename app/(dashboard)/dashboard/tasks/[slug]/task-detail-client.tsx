@@ -42,6 +42,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { DateNTimePicker } from "@/components/date-n-time-picker";
 import type { Task, Priority, Status, UpdateTaskInput } from "@/types/database";
 import {
   useTask,
@@ -351,11 +352,10 @@ export function TaskDetailClient({ taskId }: TaskDetailClientProps) {
 
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Due Date</Label>
-                      <Input
-                        type="date"
-                        value={formData.due_date?.split("T")[0] || ""}
-                        onChange={(e) =>
-                          handleFieldChange("due_date", e.target.value || null)
+                      <DateNTimePicker
+                        value={formData.due_date ? new Date(formData.due_date) : undefined}
+                        onChange={(date: Date | undefined) =>
+                          handleFieldChange("due_date", date ? date.toISOString() : null)
                         }
                       />
                     </div>

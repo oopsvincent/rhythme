@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 
 interface OverviewItem {
   id: string
@@ -67,13 +68,32 @@ export async function TodayOverview() {
     return dueDate >= today && dueDate <= todayEnd
   }) ?? []
 
-  // Convert to overview items
+  // Get overdue tasks (past due, not completed)
+  const overdueTasks = tasksResult.data?.filter(task => {
+    if (!task.due_date) return false
+    if (task.status === "completed") return false
+    const dueDate = new Date(task.due_date)
+    return dueDate < today
+  }) ?? []
+
+  // Convert to overview items - overdue first, then today's
+  const overdueItems: OverviewItem[] = overdueTasks.slice(0, 3).map(task => ({
+    id: task.task_id,
+    title: task.title,
+    type: "task" as const,
+    status: "overdue" as const,
+    priority: task.priority,
+    dueTime: task.due_date ? new Date(task.due_date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    }) : undefined
+  }))
+
   const taskItems: OverviewItem[] = todayTasks.slice(0, 3).map(task => ({
     id: task.task_id,
     title: task.title,
     type: "task" as const,
-    status: task.status === "completed" ? "completed" : 
-            new Date(task.due_date!) < today ? "overdue" : "pending",
+    status: task.status === "completed" ? "completed" : "pending",
     priority: task.priority,
     dueTime: task.due_date ? new Date(task.due_date).toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -83,12 +103,11 @@ export async function TodayOverview() {
   }))
 
   // DEV LOG: Placeholders removed - show only real data
-  // TODO: Fetch real habits/focus data here when APIs are ready
   if (process.env.NODE_ENV === 'development') {
     console.log('[TodayOverview] Showing real task data only - placeholders removed');
   }
 
-  const allItems = taskItems.slice(0, 5)
+  const allItems = [...overdueItems, ...taskItems].slice(0, 5)
 
   const completedCount = allItems.filter(i => i.status === "completed").length
   const totalCount = allItems.length
@@ -179,12 +198,14 @@ export async function TodayOverview() {
       <Link 
         href="/dashboard/tasks"
         className="
-          block text-center text-xs sm:text-sm text-primary font-medium 
+          flex items-center justify-center gap-2
+          text-xs sm:text-sm text-primary font-medium 
           mt-3 sm:mt-4 py-2 rounded-lg
           hover:bg-primary/5 transition-colors
         "
       >
-        View All Tasks →
+        View All Tasks
+        <ArrowRight className="h-4 w-4" />
       </Link>
     </div>
   )
