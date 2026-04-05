@@ -184,7 +184,7 @@ export function SidebarRight({
         <motion.div
           initial={false}
           animate={{ height: isMobileExpanded ? "auto" : "auto" }}
-          className="bg-background/95 backdrop-blur-xl border-t border-border/50 shadow-2xl"
+          className="bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 border-t border-border/50 shadow-2xl"
         >
           {/* Mobile Toggle Header */}
           <button
@@ -260,7 +260,7 @@ export function SidebarRight({
           <Sidebar
             collapsible="none"
             className={cn(
-              "h-full w-[300px] border-l border-border/50 bg-sidebar/80 backdrop-blur-xl transition-opacity duration-300",
+              "h-full w-[300px] border-l border-border/50 bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 transition-opacity duration-300",
               isCollapsed ? "opacity-0" : "opacity-100"
             )}
             {...props}
