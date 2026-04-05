@@ -103,7 +103,7 @@ export const metadata: Metadata = {
     "ecosystem",
     "rhythmé",
   ],
-  authors: [{ name: "Rhythmé Team", url: "https://yourdomain.com" }],
+  authors: [{ name: "Rhythmé", url: "https://rhythme.vercel.app" }],
   creator: "Rhythmé",
   publisher: "Rhythmé",
   metadataBase: new URL("https://rhythme-gamma.vercel.app"),
