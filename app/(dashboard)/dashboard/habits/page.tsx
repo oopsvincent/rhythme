@@ -245,7 +245,7 @@ export default function HabitsPage() {
                     Add Habit
                   </button>
                 </DialogTrigger>
-                <DialogContent className="glass border-border sm:max-w-md">
+                <DialogContent className="border-border sm:max-w-md">
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -367,7 +367,7 @@ export default function HabitsPage() {
               open={!!completeDialogHabit}
               onOpenChange={(open) => !open && setCompleteDialogHabit(null)}
             >
-              <DialogContent className="glass border-border sm:max-w-md">
+              <DialogContent className="border-border sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle className="font-primary">
                     Complete {completeDialogHabit?.name}

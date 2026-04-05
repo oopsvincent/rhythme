@@ -256,7 +256,7 @@ export function TaskDetailClient({ taskId }: TaskDetailClientProps) {
 
             {/* Delete Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-              <DialogContent className="glass border-border sm:max-w-md">
+              <DialogContent className="sm:max-w-md border-border/10">
                 <DialogHeader>
                   <DialogTitle className="font-primary text-xl text-destructive">
                     Delete Task

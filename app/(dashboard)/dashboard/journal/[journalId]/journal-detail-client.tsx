@@ -564,7 +564,7 @@ export default function JournalDetailClient({
 
       {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="glass border-border sm:max-w-md">
+        <DialogContent className="sm:max-w-md border-border/10">
           <DialogHeader>
             <DialogTitle className="font-primary text-xl">Delete Entry</DialogTitle>
             <DialogDescription>
