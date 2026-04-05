@@ -80,7 +80,7 @@ export const CalendarWithFilters = ({
           onSelect={handleDateChange}
           month={month}
           onMonthChange={setMonth}
-          className="rounded-md border w-full"
+          className="rounded-md border w-full bg-card/40 backdrop-blur-md supports-[backdrop-filter]:bg-card/20 border border-border/50 shadow-sm"
           modifiers={{
             hasTask: taskDates
           }}
@@ -93,7 +93,7 @@ export const CalendarWithFilters = ({
       {/* Selected Date & Tasks */}
       <div className="px-1 space-y-2">
         {selectedDate && (
-          <div className="p-2 bg-muted rounded-md text-center">
+          <div className="p-2 bg-card/40 backdrop-blur-sm border border-border/50 rounded-md text-center shadow-sm">
             <p className="font-medium text-sm">
               {selectedDate.toLocaleDateString('en-US', { 
                 weekday: 'short', 
@@ -115,7 +115,7 @@ export const CalendarWithFilters = ({
                 key={task.task_id}
                 href={`/dashboard/tasks/${generateSlug(task.title)}-${task.task_id}`}
                 onClick={onTaskClick}
-                className="flex items-center gap-2 p-2 rounded-md bg-card border hover:bg-accent/50 transition-colors group"
+                className="flex items-center gap-2 p-2 rounded-md bg-card/40 backdrop-blur-sm border border-border/50 hover:bg-accent/50 transition-colors group"
               >
                 <div className={`w-2 h-2 rounded-full ${priorityColors[task.priority] || 'bg-gray-400'}`} />
                 <span className="flex-1 text-xs truncate">{task.title}</span>

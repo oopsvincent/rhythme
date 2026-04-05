@@ -168,7 +168,7 @@ export function FocusHeatmapCalendar({ className }: FocusHeatmapCalendarProps) {
 
       {/* Selected Day Details */}
       {selectedDay && (
-        <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+        <div className="rounded-lg bg-card/40 backdrop-blur-sm border border-border/50 shadow-sm p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">
               {new Date(year, month, selectedDay).toLocaleDateString('en-US', { 

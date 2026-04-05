@@ -387,7 +387,7 @@ export function HabitDetailClient({
               open={isCompleteDialogOpen}
               onOpenChange={setIsCompleteDialogOpen}
             >
-              <DialogContent className="glass border-border sm:max-w-md">
+              <DialogContent className="sm:max-w-md border-border/10">
                 <DialogHeader>
                   <DialogTitle className="font-primary">
                     Complete {habit.name}
@@ -429,7 +429,7 @@ export function HabitDetailClient({
               open={isRemoveDialogOpen}
               onOpenChange={setIsRemoveDialogOpen}
             >
-              <DialogContent className="glass border-border sm:max-w-md">
+              <DialogContent className="sm:max-w-md border-border/10">
                 <DialogHeader>
                   <DialogTitle className="font-primary">
                     Remove Completion
@@ -463,7 +463,7 @@ export function HabitDetailClient({
               open={isEditDialogOpen}
               onOpenChange={setIsEditDialogOpen}
             >
-              <DialogContent className="glass border-border sm:max-w-md">
+              <DialogContent className="sm:max-w-md border-border/10">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();

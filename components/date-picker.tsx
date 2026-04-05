@@ -17,7 +17,7 @@ export function DatePicker() {
       mode="single"
       selected={date}
       onSelect={setDate}
-      className="rounded-md border shadow-sm"
+      className="rounded-md w-full bg-card/40 backdrop-blur-md supports-[backdrop-filter]:bg-card/20 border border-border/50 shadow-sm"
       captionLayout="dropdown"
     />
       </SidebarGroupContent>

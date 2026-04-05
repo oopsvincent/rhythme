@@ -154,7 +154,7 @@ export default function TasksPage() {
                     Add Task
                   </button>
                 </DialogTrigger>
-                <DialogContent className="glass border-border sm:max-w-md">
+                <DialogContent className="border-border sm:max-w-md">
                   <form onSubmit={(e) => { e.preventDefault(); handleAddTask(); }}>
                     <DialogHeader>
                       <DialogTitle className="font-primary text-xl">
