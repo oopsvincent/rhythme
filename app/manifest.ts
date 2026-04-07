@@ -5,8 +5,6 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Rhythmé',
     short_name: 'Rhythmé',
     description: 'Premium productivity OS — tasks, habits, emotional awareness',
-    // @ts-expect-error -- 'version' is not in the Next.js Manifest type but is recognized by mobile browsers
-    version: '0.67.0',
     start_url: '/',
     display: 'standalone',
     background_color: '#000000',
