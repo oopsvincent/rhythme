@@ -1,6 +1,13 @@
 export function AppleSplashScreens() {
   return (
     <>
+      {/* ── Required meta tags for iOS PWA splash screens ── */}
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta name="apple-mobile-web-app-title" content="Rhythmé" />
+      <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+      {/* ── Splash screens per device ── */}
        <link
         rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"
         href="/splash_screens/iPhone_16_Plus__iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_landscape.png"

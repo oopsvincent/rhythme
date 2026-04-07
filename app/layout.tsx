@@ -3,6 +3,7 @@ import { Space_Grotesk, Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import './loading.css';
 import './styles/not-found.css'
+import './styles/pwa-install.css'
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ColorThemeProvider } from "@/contexts/theme-context";
@@ -12,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import { AppleSplashScreens } from "@/components/apple-splash-screens";
 import { PwaRegistry } from "@/components/pwa-registry";
+import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 
 
 const clashDisplay = localFont({
@@ -103,15 +105,15 @@ export const metadata: Metadata = {
     "ecosystem",
     "rhythmé",
   ],
-  authors: [{ name: "Rhythmé", url: "https://rhythme.vercel.app" }],
-  creator: "Rhythmé",
-  publisher: "Rhythmé",
-  metadataBase: new URL("https://rhythme-gamma.vercel.app"),
+  authors: [{ name: "Rhythmé" }],
+  creator: "Amplecen",
+  publisher: "Amplecen",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://rhythme.amplecen.com"),
   openGraph: {
     title: "Rhythmé – The Productivity Ecosystem",
     description:
       "Align your life with habits, journaling, focus, and goals — all in one place.",
-    url: "https://rhythme-gamma.vercel.app",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://rhythme.amplecen.com",
     siteName: "Rhythmé",
     images: [
       {
@@ -133,8 +135,14 @@ export const metadata: Metadata = {
     creator: "@oopsvincent",
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -171,6 +179,7 @@ export default function RootLayout({
               {children}
               <OfflineIndicator />
               <Toaster richColors position="bottom-right" />
+              <PwaInstallPrompt />
               <div className="absolute top-2 right-2 z-[100]">
                 {/* <ModeToggle /> */}
               </div>
