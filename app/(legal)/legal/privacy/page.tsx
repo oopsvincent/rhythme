@@ -1,5 +1,13 @@
 import React from "react";
 import LegalLayout from "@/components/legal/legal-layout";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Learn how Rhythmé collects, uses, and protects your personal data. We don't track, sell, or share your information for marketing.",
+  alternates: { canonical: "/legal/privacy" },
+};
 
 const privacySections = [
   { id: "introduction", title: "1. Introduction" },

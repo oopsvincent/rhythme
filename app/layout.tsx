@@ -15,6 +15,79 @@ import { AppleSplashScreens } from "@/components/apple-splash-screens";
 import { PwaRegistry } from "@/components/pwa-registry";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://rhythme.amplecen.com";
+
+/**
+ * JSON-LD structured data for rich search results.
+ * Provides WebApplication + Organization schema to Google.
+ */
+function JsonLd() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": `${BASE_URL}/#app`,
+        name: "Rhythmé",
+        url: BASE_URL,
+        description:
+          "Premium productivity OS — align tasks, habits, journaling, focus, and goals in one experience.",
+        applicationCategory: "ProductivityApplication",
+        operatingSystem: "Web, Android, iOS",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "INR",
+          description: "Free tier with premium upgrade available",
+        },
+        creator: {
+          "@type": "Organization",
+          "@id": `${BASE_URL}/#org`,
+        },
+        screenshot: `${BASE_URL}/OG-Rhythme.jpg`,
+        featureList:
+          "Habit Tracking, Focus Timer, Journaling, Goal Planning, Mood Awareness, Weekly Reviews",
+        browserRequirements: "Requires JavaScript. Requires a modern browser.",
+      },
+      {
+        "@type": "Organization",
+        "@id": `${BASE_URL}/#org`,
+        name: "Amplecen",
+        url: BASE_URL,
+        logo: `${BASE_URL}/icons/icon-512x512.png`,
+        sameAs: [
+          "https://twitter.com/oopsvincent",
+        ],
+        contactPoint: {
+          "@type": "ContactPoint",
+          email: "rhythmeauth@gmail.com",
+          contactType: "customer support",
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${BASE_URL}/#website`,
+        url: BASE_URL,
+        name: "Rhythmé",
+        publisher: { "@id": `${BASE_URL}/#org` },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${BASE_URL}/?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
 
 const clashDisplay = localFont({
   src: [
@@ -93,28 +166,86 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Rhythmé",
+  // ── Core ────────────────────────────────────────────────────
+  title: {
+    default: "Rhythmé – The Productivity Ecosystem",
+    template: "%s | Rhythmé",
+  },
   description:
-    "The Productivity Ecosystem – align your habits, focus, and goals in one unified experience.",
+    "The premium productivity OS — align your tasks, habits, journaling, focus sessions, and goals in one unified experience. Start free.",
   keywords: [
-    "productivity",
-    "habits",
-    "journaling",
-    "focus",
-    "goals",
-    "ecosystem",
+    "productivity app",
+    "habit tracker",
+    "journaling app",
+    "focus timer",
+    "goal planner",
+    "weekly review",
+    "mood tracker",
+    "personal productivity",
+    "productivity OS",
     "rhythmé",
+    "amplecen",
+    "task manager",
+    "pomodoro timer",
+    "self improvement",
   ],
-  authors: [{ name: "Rhythmé" }],
+  authors: [
+    { name: "Amplecen", url: BASE_URL },
+  ],
   creator: "Amplecen",
   publisher: "Amplecen",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://rhythme.amplecen.com"),
+  applicationName: "Rhythmé",
+  category: "Productivity",
+
+  // ── URL resolution ─────────────────────────────────────────
+  metadataBase: new URL(BASE_URL),
+  alternates: {
+    canonical: "/",
+    languages: {
+      "en-US": "/",
+    },
+  },
+
+  // ── Crawling directives ────────────────────────────────────
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+
+  // ── Open Graph ─────────────────────────────────────────────
   openGraph: {
     title: "Rhythmé – The Productivity Ecosystem",
     description:
-      "Align your life with habits, journaling, focus, and goals — all in one place.",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://rhythme.amplecen.com",
+      "Align your life with habits, journaling, focus, and goals — all in one premium experience.",
+    url: BASE_URL,
     siteName: "Rhythmé",
+    images: [
+      {
+        url: "/OG-Rhythme.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Rhythmé – Premium Productivity OS",
+        type: "image/jpeg",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+
+  // ── Twitter / X ────────────────────────────────────────────
+  twitter: {
+    card: "summary_large_image",
+    title: "Rhythmé – The Productivity Ecosystem",
+    description:
+      "Align your life with habits, journaling, focus, and goals — all in one premium experience.",
     images: [
       {
         url: "/OG-Rhythme.jpg",
@@ -123,17 +254,11 @@ export const metadata: Metadata = {
         alt: "Rhythmé App Preview",
       },
     ],
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Rhythmé – The Productivity Ecosystem",
-    description:
-      "Align your life with habits, journaling, focus, and goals — all in one place.",
-    images: ["/OG-Rhythme.jpg"],
     creator: "@oopsvincent",
+    site: "@oopsvincent",
   },
+
+  // ── Icons ──────────────────────────────────────────────────
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32" },
@@ -144,14 +269,34 @@ export const metadata: Metadata = {
       { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
+
+  // ── Search engine verification (replace with real tokens) ─
+  // verification: {
+  //   google: "YOUR_GOOGLE_SEARCH_CONSOLE_TOKEN",
+  //   yandex: "YOUR_YANDEX_TOKEN",
+  //   other: {
+  //     "msvalidate.01": "YOUR_BING_WEBMASTER_TOKEN",
+  //   },
+  // },
+
+  // ── Misc ───────────────────────────────────────────────────
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  colorScheme: "dark light",
 };
 
 export default function RootLayout({
@@ -163,6 +308,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <AppleSplashScreens />
+        <JsonLd />
       </head>
       <body
         className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased selection:bg-accent/50 selection:text-accent-foreground`}

@@ -1,10 +1,12 @@
 import React from "react";
 import LegalLayout from "@/components/legal/legal-layout";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy | Rhythmé",
-  description: "Learn how Rhythmé uses cookies and similar technologies. We only use essential cookies for authentication and functionality.",
+  title: "Cookie Policy",
+  description:
+    "Learn how Rhythmé uses cookies and similar technologies. We only use essential cookies for authentication and functionality.",
+  alternates: { canonical: "/legal/cookie" },
 };
 
 const cookieSections = [

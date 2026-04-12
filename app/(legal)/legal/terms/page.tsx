@@ -1,5 +1,13 @@
 import React from "react";
 import LegalLayout from "@/components/legal/legal-layout";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Read Rhythmé's Terms of Service — the rules and guidelines for using our productivity platform, including account policies, pricing, and liability.",
+  alternates: { canonical: "/legal/terms" },
+};
 
 const termsSections = [
   { id: "acceptance", title: "1. Acceptance of Terms" },

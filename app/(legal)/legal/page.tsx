@@ -2,6 +2,15 @@ import React from "react";
 import Link from "next/link";
 import { ArrowLeft, FileText, Shield, Cookie, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Legal",
+  description:
+    "Access Rhythmé's Terms of Service, Privacy Policy, and Cookie Policy. Transparency and respect for your data.",
+  alternates: { canonical: "/legal" },
+  robots: { index: true, follow: true },
+};
 
 const legalLinks = [
   {
