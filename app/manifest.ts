@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Premium productivity OS — tasks, habits, emotional awareness',
     start_url: '/',
     display: 'standalone',
-    background_color: '#000000',
-    theme_color: '#000000',
+    background_color: '#E8855A',
+    theme_color: '#1A2535',
     orientation: 'portrait',
     icons: [
       {
