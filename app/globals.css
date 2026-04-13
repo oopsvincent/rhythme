@@ -24,7 +24,6 @@ body {
   }
 }
 
-
 /* --- THEME TOKENS --- */
 @theme inline {
   /* FONTS */
@@ -37,31 +36,22 @@ body {
   /* COLORS (semantic mapping) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
-
-  /* COMPONENTS */
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-
-  /* Sidebar system */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -70,15 +60,12 @@ body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-
-  /* Chart colors */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* Radii */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -86,138 +73,139 @@ body {
 }
 
 /* ============================================
-   PREMIUM BLACK GLASSMORPHISM PALETTE
-   Primary: Bold Orange (#FF6B35)
-   Accent: Electric Cyan (#00D9FF)
-   Base: Deep Black with glass effects
+   RHYTHMÉ — WARM HUMAN DEFAULT PALETTE
+   Primary:  Ember     #E8855A  (warm terracotta)
+   Accent:   Dusk      #8FAFC9  (soft blue-grey)
+   Base:     Warm off-whites and deep navy
+   Philosophy: Feels like a journal. Not a dashboard.
    ============================================ */
 
-/* --- LIGHT MODE ROOT --- */
+/* --- LIGHT MODE --- */
 :root {
   --radius: 0.75rem;
 
-  /* DEEP CONTRAST LIGHT MODE */
-  --background: #FAFAFA;
-  --foreground: #0A0A0B;
+  /* Warm off-white base — never pure white */
+  --background: #F7F3EE;
+  --foreground: #1E2D3D;
 
-  /* Bold Orange Primary */
-  --primary: #FF6B35;
+  /* Ember — warm terracotta primary */
+  --primary: #E8855A;
   --primary-foreground: #FFFFFF;
 
-  /* Warm Orange Secondary */
-  --secondary: #FF8A5C;
-  --secondary-foreground: #0A0A0B;
+  /* Soft secondary — muted ember */
+  --secondary: #F0A882;
+  --secondary-foreground: #1E2D3D;
 
-  /* Electric Cyan Accent */
-  --accent: #00D9FF;
-  --accent-foreground: #0A0A0B;
+  /* Dusk — soft blue-grey accent */
+  --accent: #8FAFC9;
+  --accent-foreground: #1E2D3D;
 
-  /* Minimal Muted Tones */
-  --muted: #F0F0F2;
-  --muted-foreground: #5C5C66;
+  /* Warm muted */
+  --muted: #EDE8E0;
+  --muted-foreground: #6B7B8A;
 
-  /* Glass-inspired Cards */
-  --card: rgba(255, 255, 255, 0.85);
-  --card-foreground: #0A0A0B;
+  /* Warm cards — slightly elevated surface */
+  --card: rgba(255, 251, 245, 0.92);
+  --card-foreground: #1E2D3D;
 
-  --popover: rgba(255, 255, 255, 0.92);
-  --popover-foreground: #0A0A0B;
+  --popover: rgba(252, 248, 242, 0.96);
+  --popover-foreground: #1E2D3D;
 
-  --destructive: #FF3B30;
-  --border: rgba(10, 10, 11, 0.08);
-  --input: rgba(10, 10, 11, 0.06);
-  --ring: #FF6B35;
+  --destructive: #C0392B;
+  --border: rgba(30, 45, 61, 0.09);
+  --input: rgba(30, 45, 61, 0.06);
+  --ring: #E8855A;
 
-  /* Charts - Orange to Cyan spectrum */
-  --chart-1: #FF6B35;
-  --chart-2: #FF8A5C;
-  --chart-3: #00D9FF;
-  --chart-4: #00B8D9;
-  --chart-5: #00A3BF;
+  /* Charts — warm human spectrum */
+  --chart-1: #E8855A;
+  --chart-2: #C4A96B;
+  --chart-3: #8FAFC9;
+  --chart-4: #7EB898;
+  --chart-5: #C47A6B;
 
-  /* Sidebar - Premium Glass (higher opacity for readability) */
-  --sidebar: rgba(252, 252, 253, 0.95);
-  --sidebar-foreground: #0A0A0B;
-  --sidebar-primary: #FF6B35;
+  /* Sidebar */
+  --sidebar: rgba(247, 243, 238, 0.97);
+  --sidebar-foreground: #1E2D3D;
+  --sidebar-primary: #E8855A;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(10, 10, 11, 0.06);
-  --sidebar-accent-foreground: #0A0A0B;
-  --sidebar-border: rgba(10, 10, 11, 0.08);
-  --sidebar-ring: #FF6B35;
+  --sidebar-accent: rgba(30, 45, 61, 0.05);
+  --sidebar-accent-foreground: #1E2D3D;
+  --sidebar-border: rgba(30, 45, 61, 0.08);
+  --sidebar-ring: #E8855A;
 
-  /* Glassmorphism variables */
-  --glass-bg: rgba(252, 252, 253, 0.85);
-  --glass-border: rgba(0, 0, 0, 0.06);
-  --glass-blur: 50px;
+  /* Glass */
+  --glass-bg: rgba(247, 243, 238, 0.82);
+  --glass-border: rgba(30, 45, 61, 0.07);
+  --glass-blur: 40px;
 }
 
-/* --- DARK MODE - BLACK GLASSMORPHISM --- */
+/* --- DARK MODE — deep navy, not black --- */
 .dark {
-  /* Pure black base */
-  --background: #050506;
-  --foreground: #FAFAFA;
+  /* Deep navy base — warm, not cold */
+  --background: #1A2535;
+  --foreground: #F0EBE3;
 
-  /* Vibrant Orange Primary */
-  --primary: #FF6B35;
-  --primary-foreground: #050506;
+  /* Ember stays warm in dark */
+  --primary: #E8855A;
+  --primary-foreground: #1A2535;
 
-  /* Lighter Orange Secondary */
-  --secondary: #FF8A5C;
-  --secondary-foreground: #050506;
+  /* Softened secondary */
+  --secondary: #C4693A;
+  --secondary-foreground: #F0EBE3;
 
-  /* Electric Cyan Accent */
-  --accent: #00D9FF;
-  --accent-foreground: #050506;
+  /* Haze accent — readable on dark */
+  --accent: #6A9DBF;
+  --accent-foreground: #F0EBE3;
 
-  /* Dark glass muted */
-  --muted: rgba(255, 255, 255, 0.04);
-  --muted-foreground: rgba(255, 255, 255, 0.6);
+  /* Dark muted — warm not grey */
+  --muted: rgba(240, 235, 227, 0.06);
+  --muted-foreground: rgba(240, 235, 227, 0.55);
 
-  /* Glassmorphism Cards */
-  --card: rgba(255, 255, 255, 0.03);
-  --card-foreground: #FAFAFA;
+  /* Dark cards — slightly warm glass */
+  --card: rgba(255, 251, 245, 0.04);
+  --card-foreground: #F0EBE3;
 
-  --popover: rgba(20, 20, 22, 0.95);
-  --popover-foreground: #FAFAFA;
+  --popover: rgba(22, 32, 48, 0.96);
+  --popover-foreground: #F0EBE3;
 
-  --destructive: #FF453A;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.06);
-  --ring: #FF6B35;
+  --destructive: #E05C4A;
+  --border: rgba(240, 235, 227, 0.09);
+  --input: rgba(240, 235, 227, 0.07);
+  --ring: #E8855A;
 
-  /* Charts - Bold contrast */
-  --chart-1: #FF6B35;
-  --chart-2: #FF8A5C;
-  --chart-3: #00D9FF;
-  --chart-4: #00E5FF;
-  --chart-5: #00B8D9;
+  /* Charts — warm on dark */
+  --chart-1: #E8855A;
+  --chart-2: #C4A96B;
+  --chart-3: #6A9DBF;
+  --chart-4: #7EB898;
+  --chart-5: #E07B6A;
 
-  /* Sidebar - Premium Dark Glass */
-  --sidebar: rgba(8, 8, 10, 0.92);
-  --sidebar-foreground: #FAFAFA;
-  --sidebar-primary: #FF6B35;
-  --sidebar-primary-foreground: #050506;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #FAFAFA;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #FF6B35;
+  /* Sidebar dark */
+  --sidebar: rgba(20, 30, 45, 0.95);
+  --sidebar-foreground: #F0EBE3;
+  --sidebar-primary: #E8855A;
+  --sidebar-primary-foreground: #1A2535;
+  --sidebar-accent: rgba(240, 235, 227, 0.07);
+  --sidebar-accent-foreground: #F0EBE3;
+  --sidebar-border: rgba(240, 235, 227, 0.08);
+  --sidebar-ring: #E8855A;
 
-  /* Dark Glassmorphism variables */
-  --glass-bg: rgba(8, 8, 10, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Dark glass */
+  --glass-bg: rgba(20, 30, 45, 0.82);
+  --glass-border: rgba(240, 235, 227, 0.09);
   --glass-blur: 24px;
 }
 
 /* ============================================
-   SUNSET THEME - Warm Ruby & Golden Glow
+   SUNSET THEME — Warm Ruby & Golden Glow
    ============================================ */
 :root[data-color-theme="RTX-ST-946-F7B"] {
   --primary: #E63946;
   --primary-foreground: #FFFFFF;
   --secondary: #FF6B6B;
-  --secondary-foreground: #0A0A0B;
+  --secondary-foreground: #1E2D3D;
   --accent: #F7B32B;
-  --accent-foreground: #0A0A0B;
+  --accent-foreground: #1E2D3D;
   --ring: #E63946;
   --chart-1: #E63946;
   --chart-2: #FF6B6B;
@@ -226,18 +214,16 @@ body {
   --chart-5: #FF9F1C;
   --sidebar-primary: #E63946;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(10, 10, 11, 0.06);
-  --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #E63946;
 }
 
 .dark[data-color-theme="RTX-ST-946-F7B"] {
   --primary: #E63946;
-  --primary-foreground: #050506;
+  --primary-foreground: #1A2535;
   --secondary: #FF6B6B;
-  --secondary-foreground: #050506;
+  --secondary-foreground: #1A2535;
   --accent: #F7B32B;
-  --accent-foreground: #050506;
+  --accent-foreground: #1A2535;
   --ring: #E63946;
   --chart-1: #E63946;
   --chart-2: #FF6B6B;
@@ -245,22 +231,20 @@ body {
   --chart-4: #FFD166;
   --chart-5: #FF9F1C;
   --sidebar-primary: #E63946;
-  --sidebar-primary-foreground: #050506;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-primary-foreground: #1A2535;
   --sidebar-ring: #E63946;
 }
 
 /* ============================================
-   OCEAN THEME - Deep Blue & Sky Calm
+   OCEAN THEME — Deep Blue & Sky Calm
    ============================================ */
 :root[data-color-theme="RTX-ON-7B6-90E"] {
   --primary: #0077B6;
   --primary-foreground: #FFFFFF;
   --secondary: #00B4D8;
-  --secondary-foreground: #0A0A0B;
+  --secondary-foreground: #1E2D3D;
   --accent: #90E0EF;
-  --accent-foreground: #0A0A0B;
+  --accent-foreground: #1E2D3D;
   --ring: #0077B6;
   --chart-1: #0077B6;
   --chart-2: #00B4D8;
@@ -269,18 +253,16 @@ body {
   --chart-5: #03045E;
   --sidebar-primary: #0077B6;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(10, 10, 11, 0.06);
-  --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #0077B6;
 }
 
 .dark[data-color-theme="RTX-ON-7B6-90E"] {
   --primary: #00B4D8;
-  --primary-foreground: #050506;
+  --primary-foreground: #1A2535;
   --secondary: #0077B6;
-  --secondary-foreground: #FAFAFA;
+  --secondary-foreground: #F0EBE3;
   --accent: #90E0EF;
-  --accent-foreground: #050506;
+  --accent-foreground: #1A2535;
   --ring: #00B4D8;
   --chart-1: #00B4D8;
   --chart-2: #0077B6;
@@ -288,22 +270,20 @@ body {
   --chart-4: #CAF0F8;
   --chart-5: #48CAE4;
   --sidebar-primary: #00B4D8;
-  --sidebar-primary-foreground: #050506;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-primary-foreground: #1A2535;
   --sidebar-ring: #00B4D8;
 }
 
 /* ============================================
-   LAVENDER THEME - Creative Purple Serenity
+   LAVENDER THEME — Creative Purple Serenity
    ============================================ */
 :root[data-color-theme="RTX-LR-EDD-E0A"] {
   --primary: #9D4EDD;
   --primary-foreground: #FFFFFF;
   --secondary: #C77DFF;
-  --secondary-foreground: #0A0A0B;
+  --secondary-foreground: #1E2D3D;
   --accent: #E0AAFF;
-  --accent-foreground: #0A0A0B;
+  --accent-foreground: #1E2D3D;
   --ring: #9D4EDD;
   --chart-1: #9D4EDD;
   --chart-2: #C77DFF;
@@ -312,18 +292,16 @@ body {
   --chart-5: #5A189A;
   --sidebar-primary: #9D4EDD;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(10, 10, 11, 0.06);
-  --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #9D4EDD;
 }
 
 .dark[data-color-theme="RTX-LR-EDD-E0A"] {
   --primary: #C77DFF;
-  --primary-foreground: #050506;
+  --primary-foreground: #1A2535;
   --secondary: #9D4EDD;
-  --secondary-foreground: #FAFAFA;
+  --secondary-foreground: #F0EBE3;
   --accent: #E0AAFF;
-  --accent-foreground: #050506;
+  --accent-foreground: #1A2535;
   --ring: #C77DFF;
   --chart-1: #C77DFF;
   --chart-2: #9D4EDD;
@@ -331,15 +309,12 @@ body {
   --chart-4: #7B2CBF;
   --chart-5: #5A189A;
   --sidebar-primary: #C77DFF;
-  --sidebar-primary-foreground: #050506;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-primary-foreground: #1A2535;
   --sidebar-ring: #C77DFF;
 }
 
 /* ============================================
-   COLORLESS THEME - Minimal Monochrome
-   A "dead" feeling with pure grayscale
+   COLORLESS THEME — Minimal Monochrome
    ============================================ */
 :root[data-color-theme="RTX-CS-280-9CA"] {
   --primary: #6B7280;
@@ -356,8 +331,6 @@ body {
   --chart-5: #D1D5DB;
   --sidebar-primary: #6B7280;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(10, 10, 11, 0.06);
-  --sidebar-accent-foreground: #111827;
   --sidebar-ring: #6B7280;
 }
 
@@ -376,20 +349,17 @@ body {
   --chart-5: #D1D5DB;
   --sidebar-primary: #9CA3AF;
   --sidebar-primary-foreground: #111827;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #F9FAFB;
   --sidebar-ring: #9CA3AF;
 }
 
 /* ============================================
-   COLORFUL THEME - Joyful Rainbow Mix
-   Vibrant colors that bring joy and creativity
+   COLORFUL THEME — Joyful Rainbow Mix
    ============================================ */
 :root[data-color-theme="RTX-CL-899-8B5"] {
   --primary: #EC4899;
   --primary-foreground: #FFFFFF;
   --secondary: #F59E0B;
-  --secondary-foreground: #0A0A0B;
+  --secondary-foreground: #1E2D3D;
   --accent: #8B5CF6;
   --accent-foreground: #FFFFFF;
   --ring: #EC4899;
@@ -400,18 +370,16 @@ body {
   --chart-5: #06B6D4;
   --sidebar-primary: #EC4899;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(10, 10, 11, 0.06);
-  --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #EC4899;
 }
 
 .dark[data-color-theme="RTX-CL-899-8B5"] {
   --primary: #F472B6;
-  --primary-foreground: #050506;
+  --primary-foreground: #1A2535;
   --secondary: #FBBF24;
-  --secondary-foreground: #050506;
+  --secondary-foreground: #1A2535;
   --accent: #A78BFA;
-  --accent-foreground: #050506;
+  --accent-foreground: #1A2535;
   --ring: #F472B6;
   --chart-1: #F472B6;
   --chart-2: #FBBF24;
@@ -419,23 +387,20 @@ body {
   --chart-4: #34D399;
   --chart-5: #22D3EE;
   --sidebar-primary: #F472B6;
-  --sidebar-primary-foreground: #050506;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-primary-foreground: #1A2535;
   --sidebar-ring: #F472B6;
 }
 
 /* ============================================
-   FOREST THEME - Natural Green Serenity
-   Earthy and grounded nature vibes
+   FOREST THEME — Natural Green Serenity
    ============================================ */
 :root[data-color-theme="RTX-FT-669-34D"] {
   --primary: #059669;
   --primary-foreground: #FFFFFF;
   --secondary: #10B981;
-  --secondary-foreground: #0A0A0B;
+  --secondary-foreground: #1E2D3D;
   --accent: #34D399;
-  --accent-foreground: #0A0A0B;
+  --accent-foreground: #1E2D3D;
   --ring: #059669;
   --chart-1: #059669;
   --chart-2: #10B981;
@@ -444,18 +409,16 @@ body {
   --chart-5: #047857;
   --sidebar-primary: #059669;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(10, 10, 11, 0.06);
-  --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #059669;
 }
 
 .dark[data-color-theme="RTX-FT-669-34D"] {
   --primary: #10B981;
-  --primary-foreground: #050506;
+  --primary-foreground: #1A2535;
   --secondary: #059669;
-  --secondary-foreground: #FAFAFA;
+  --secondary-foreground: #F0EBE3;
   --accent: #34D399;
-  --accent-foreground: #050506;
+  --accent-foreground: #1A2535;
   --ring: #10B981;
   --chart-1: #10B981;
   --chart-2: #059669;
@@ -463,15 +426,12 @@ body {
   --chart-4: #6EE7B7;
   --chart-5: #047857;
   --sidebar-primary: #10B981;
-  --sidebar-primary-foreground: #050506;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-primary-foreground: #1A2535;
   --sidebar-ring: #10B981;
 }
 
 /* ============================================
-   MIDNIGHT THEME - Deep Dark Blue Mystery
-   Deep indigo for late night focus
+   MIDNIGHT THEME — Deep Dark Blue Mystery
    ============================================ */
 :root[data-color-theme="RTX-MT-0A3-636"] {
   --primary: #4F46E5;
@@ -479,7 +439,7 @@ body {
   --secondary: #6366F1;
   --secondary-foreground: #FFFFFF;
   --accent: #818CF8;
-  --accent-foreground: #0A0A0B;
+  --accent-foreground: #1E2D3D;
   --ring: #4F46E5;
   --chart-1: #4F46E5;
   --chart-2: #6366F1;
@@ -488,18 +448,16 @@ body {
   --chart-5: #1E1B4B;
   --sidebar-primary: #4F46E5;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(10, 10, 11, 0.06);
-  --sidebar-accent-foreground: #0A0A0B;
   --sidebar-ring: #4F46E5;
 }
 
 .dark[data-color-theme="RTX-MT-0A3-636"] {
   --primary: #6366F1;
-  --primary-foreground: #050506;
+  --primary-foreground: #1A2535;
   --secondary: #4F46E5;
-  --secondary-foreground: #FAFAFA;
+  --secondary-foreground: #F0EBE3;
   --accent: #818CF8;
-  --accent-foreground: #050506;
+  --accent-foreground: #1A2535;
   --ring: #6366F1;
   --chart-1: #6366F1;
   --chart-2: #4F46E5;
@@ -507,9 +465,7 @@ body {
   --chart-4: #A5B4FC;
   --chart-5: #3730A3;
   --sidebar-primary: #6366F1;
-  --sidebar-primary-foreground: #050506;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
-  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-primary-foreground: #1A2535;
   --sidebar-ring: #6366F1;
 }
 
@@ -525,7 +481,6 @@ body {
 
 /* --- GLASSMORPHISM UTILITIES --- */
 @layer utilities {
-  /* Primary glass effect */
   .glass {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
@@ -533,7 +488,6 @@ body {
     border: 1px solid var(--glass-border);
   }
 
-  /* Intense glass for cards */
   .glass-card {
     background: var(--card);
     backdrop-filter: blur(24px) saturate(180%);
@@ -541,38 +495,37 @@ body {
     border: 1px solid var(--glass-border);
   }
 
-  /* Subtle glass for overlays */
   .glass-subtle {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 251, 245, 0.04);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
 
   .dark .glass-subtle {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(20, 30, 45, 0.35);
   }
 
-  /* Glow effects for primary elements */
+  /* Glow — warm ember, not cold cyan */
   .glow-primary {
-    box-shadow: 0 0 20px rgba(255, 107, 53, 0.3),
-                0 0 40px rgba(255, 107, 53, 0.1);
+    box-shadow: 0 0 20px rgba(232, 133, 90, 0.25),
+                0 0 40px rgba(232, 133, 90, 0.08);
   }
 
   .glow-accent {
-    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3),
-                0 0 40px rgba(0, 217, 255, 0.1);
+    box-shadow: 0 0 20px rgba(143, 175, 201, 0.25),
+                0 0 40px rgba(143, 175, 201, 0.08);
   }
 
-  /* Premium text gradient */
+  /* Text gradients — warm */
   .text-gradient-primary {
-    background: linear-gradient(135deg, #FF6B35 0%, #FF8A5C 100%);
+    background: linear-gradient(135deg, #E8855A 0%, #C4693A 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-accent {
-    background: linear-gradient(135deg, #00D9FF 0%, #00B8D9 100%);
+    background: linear-gradient(135deg, #8FAFC9 0%, #6A9DBF 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

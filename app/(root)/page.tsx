@@ -1,7 +1,15 @@
 import LandingPageWrapper from "@/components/landing-provider";
 import PricingComponent from "@/components/landing/pricing";
+import { getUser } from "@/app/actions/auth";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="relative min-h-screen flex flex-col justify-center items-center text-center bg-background overflow-hidden">
       <LandingPageWrapper/>
