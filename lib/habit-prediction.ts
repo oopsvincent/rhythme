@@ -6,9 +6,9 @@ import type {
   CachedHabitPrediction,
   HabitFrequency,
 } from "@/types/database";
+import { fetchPredictionAction } from "@/app/actions/ml";
 
 // ML Prediction Service Configuration
-const ML_ENDPOINT = `${process.env.NEXT_PUBLIC_HABIT_PREDICTOR_URL}/o1/predict`;
 const CACHE_KEY_PREFIX = "habit_prediction_";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const MIN_DAYS_FOR_PREDICTION = 7;
@@ -153,24 +153,7 @@ export function calculatePredictionInput(
   };
 }
 
-/**
- * Fetch prediction from ML model API
- */
-async function fetchPrediction(
-  input: HabitPredictionInput
-): Promise<HabitPrediction> {
-  const response = await fetch(ML_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
 
-  if (!response.ok) {
-    throw new Error("Prediction service unavailable");
-  }
-
-  return response.json();
-}
 
 /**
  * Get cached prediction or fetch a new one (with 24h cache)
@@ -195,10 +178,10 @@ export async function getCachedPrediction(
   try {
     // Calculate input and fetch new prediction
     const input = calculatePredictionInput(habit, logs);
-    console.log("[HabitPrediction] Fetching prediction from:", ML_ENDPOINT);
+    console.log("[HabitPrediction] Fetching prediction using server action");
     console.log("[HabitPrediction] Request payload:", JSON.stringify(input, null, 2));
     
-    const prediction = await fetchPrediction(input);
+    const prediction = await fetchPredictionAction(input);
     console.log("[HabitPrediction] Response:", prediction);
 
     // Store in cache
@@ -206,8 +189,7 @@ export async function getCachedPrediction(
 
     return prediction;
   } catch (error) {
-    console.error("[HabitPrediction] Failed to fetch prediction:");
-    console.error("[HabitPrediction] Endpoint:", ML_ENDPOINT);
+    console.error("[HabitPrediction] Failed to fetch prediction from server action:");
     console.error("[HabitPrediction] Error:", error);
     if (error instanceof Error) {
       console.error("[HabitPrediction] Error message:", error.message);
@@ -235,7 +217,7 @@ export async function refreshPrediction(
 
   try {
     const input = calculatePredictionInput(habit, logs);
-    const prediction = await fetchPrediction(input);
+    const prediction = await fetchPredictionAction(input);
     saveToCache(habitId, prediction);
     return prediction;
   } catch (error) {

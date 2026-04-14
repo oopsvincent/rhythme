@@ -10,7 +10,7 @@ export function SidebarRightWrapper() {
   const pathname = usePathname()
   
   // Hide sidebar on settings and weekly pages
-  if (pathname?.startsWith('/settings') || pathname?.startsWith('/dashboard/week')) {
+  if (pathname?.startsWith('/settings') || pathname?.startsWith('/dashboard/week') || pathname?.startsWith('/dashboard/tasks')) {
     return null
   }
   

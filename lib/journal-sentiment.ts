@@ -10,8 +10,7 @@
  * =============================================================================
  */
 
-const ML_SENTIMENT_ENDPOINT = `${process.env.NEXT_PUBLIC_HABIT_PREDICTOR_URL}/o1/journal`;
-
+import { fetchSentimentAction } from "@/app/actions/ml";
 export interface SentimentRequest {
   text: string;
   title: string;
@@ -35,23 +34,15 @@ export async function fetchSentimentAnalysis(
   request: SentimentRequest
 ): Promise<SentimentResponse | null> {
   try {
-    console.log("[JournalSentiment] Fetching analysis from:", ML_SENTIMENT_ENDPOINT);
+    console.log("[JournalSentiment] Fetching analysis from server action");
 
-    const response = await fetch(ML_SENTIMENT_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
-    });
+    const result = await fetchSentimentAction(request);
 
-    if (!response.ok) {
-      console.error(
-        "[JournalSentiment] Service returned status:",
-        response.status
-      );
+    if (!result) {
+      console.error("[JournalSentiment] Service returned null");
       return null;
     }
 
-    const result: SentimentResponse = await response.json();
     console.log("[JournalSentiment] Analysis result:", result);
     return result;
   } catch (error) {

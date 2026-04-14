@@ -10,8 +10,7 @@ interface UseWarmServicesResult {
   retry: () => void;
 }
 
-const HEALTH_ENDPOINT = `${process.env.NEXT_PUBLIC_HABIT_PREDICTOR_URL}/o1/health`;
-
+import { warmServicesAction } from "@/app/actions/ml";
 /**
  * Hook that pings the ML services to wake them from Render's cold start.
  * Runs automatically on mount, with subtle status tracking.
@@ -20,25 +19,17 @@ export function useWarmServices(): UseWarmServicesResult {
   const [status, setStatus] = useState<ServiceStatus>("idle");
 
   const warmUp = useCallback(async () => {
-    if (!process.env.NEXT_PUBLIC_HABIT_PREDICTOR_URL) {
-      console.warn("[WarmServices] No HABIT_PREDICTOR_URL configured");
-      return;
-    }
-
     setStatus("waking");
 
     try {
-      const response = await fetch(HEALTH_ENDPOINT, {
-        method: "GET",
-        cache: "no-store",
-      });
+      const isOk = await warmServicesAction();
 
-      if (response.ok) {
+      if (isOk) {
         setStatus("ready");
         console.log("[WarmServices] ML services are ready");
       } else {
         setStatus("error");
-        console.warn("[WarmServices] Health check failed:", response.status);
+        console.warn("[WarmServices] Health check failed");
       }
     } catch (error) {
       setStatus("error");
