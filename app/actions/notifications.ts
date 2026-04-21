@@ -2,6 +2,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { getAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath, unstable_noStore as noStore } from "next/cache"
 import type { Notification } from "@/types/database"
 
@@ -61,8 +62,6 @@ export async function getUnreadNotificationCount(): Promise<number> {
 // ============================================================================
 // MARK AS READ
 // ============================================================================
-
-import { getAdminClient } from "@/lib/supabase/admin"
 
 export async function markNotificationAsRead(
   notificationId: number

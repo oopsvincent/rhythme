@@ -109,66 +109,17 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || "Failed to create subscription")
+        throw new Error(err.error || "Failed to create subscription checkout")
       }
 
-      const { subscription_id, key_id } = await res.json()
+      const { checkout_url } = await res.json()
 
-      const options = {
-        key: key_id,
-        subscription_id,
-        name: "Rhythmé",
-        description: `Premium ${billingCycle === "yearly" ? "Yearly" : "Monthly"} Plan`,
-        handler: async (response: { razorpay_payment_id: string; razorpay_subscription_id: string; razorpay_signature: string }) => {
-          try {
-            const verifyRes = await fetch("/api/payments/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_subscription_id: response.razorpay_subscription_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            })
-
-            if (verifyRes.ok) {
-              toast.success("Welcome to Premium! 🎉", {
-                description: "Your subscription is now active. Enjoy all premium features!",
-              })
-              refetch()
-              window.location.reload()
-            } else {
-              toast.error("Payment verification failed", {
-                description: "Your payment was received but verification failed. Please contact support.",
-              })
-            }
-          } catch {
-            toast.error("Verification error", {
-              description: "Please contact support if your payment was charged.",
-            })
-          }
-        },
-        theme: { color: "#FF6B35" },
-        modal: {
-          ondismiss: () => {
-            setIsUpgrading(false)
-          },
-        },
-      }
-
-      const script = document.createElement("script")
-      script.src = "https://checkout.razorpay.com/v1/checkout.js"
-      script.onload = () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rzp = new (window as any).Razorpay(options)
-        rzp.open()
+      if (checkout_url) {
+        window.location.href = checkout_url;
+      } else {
+        toast.error("Failed to get checkout link")
         setIsUpgrading(false)
       }
-      script.onerror = () => {
-        toast.error("Failed to load payment gateway")
-        setIsUpgrading(false)
-      }
-      document.body.appendChild(script)
     } catch (error) {
       console.error("Upgrade error:", error)
       toast.error("Upgrade failed", {
@@ -404,7 +355,7 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
             <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
               <div>
                 <p className="font-medium text-sm">Update Payment Method</p>
-                <p className="text-xs text-muted-foreground">Managed by Razorpay</p>
+                <p className="text-xs text-muted-foreground">Managed by Dodo Payments</p>
               </div>
               <Button variant="ghost" size="sm">Update</Button>
             </div>

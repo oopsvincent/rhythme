@@ -1,147 +1,91 @@
 // app/api/payments/webhook/route.ts
-// Razorpay webhook handler — verifies signature and updates subscription status
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
+import DodoPayments from 'dodopayments';
 import { getAdminClient } from '@/lib/supabase/admin';
 
-function verifyWebhookSignature(body: string, signature: string): boolean {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  if (!secret) {
-    console.warn('RAZORPAY_WEBHOOK_SECRET not set — skipping signature verification');
-    return true; // Allow in dev when secret not configured
-  }
+const dodopayments = new DodoPayments({
+  bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+  environment: 'test_mode',
+});
 
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(body)
-    .digest('hex');
-
-  return crypto.timingSafeEqual(
-    Buffer.from(expectedSignature),
-    Buffer.from(signature)
-  );
-}
-
-const PLAN_IDS = {
-  monthly: 'plan_SPmQWhjDt5EyDF',
-  yearly: 'plan_SPmREBwR56C0gG',
-} as const;
+const webhookSecret = process.env.DODO_WEBHOOK_SECRET;
 
 export async function POST(request: Request) {
+  const body = await request.text();
+  const signature = request.headers.get('webhook-signature');
+  const headers = Object.fromEntries(request.headers.entries()) as Record<string, string>;
+
+  if (!signature || !webhookSecret) {
+    return NextResponse.json({ error: 'Missing signature or webhook secret' }, { status: 400 });
+  }
+
+  let event: any;
+
   try {
-    const rawBody = await request.text();
-    const signature = request.headers.get('x-razorpay-signature') || '';
+    // Verify the webhook signature using the SDK
+    event = dodopayments.webhooks.unwrap(body, { headers, key: webhookSecret });
+  } catch (err: any) {
+    console.error('Webhook signature verification failed.', err.message);
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+  }
 
-    // Verify webhook signature
-    if (!verifyWebhookSignature(rawBody, signature)) {
-      console.error('Webhook signature verification failed');
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
-    }
+  const supabase = getAdminClient();
 
-    const event = JSON.parse(rawBody);
-    const eventType = event.event;
-    const payload = event.payload;
+  try {
+    switch (event.type) {
+      case 'subscription.active':
+      case 'subscription.renewed': {
+        const subscription = event.data;
+        const customerId = subscription.customer_id;
+        const email = subscription.customer?.email; // Optional, might need to look up by email
 
-    const supabase = getAdminClient();
+        const userId = subscription.metadata?.user_id;
 
-    switch (eventType) {
-      case 'subscription.activated':
-      case 'subscription.completed':
-      case 'subscription.charged': {
-        const subscription = payload.subscription?.entity;
-        const payment = payload.payment?.entity;
-        const subscriptionId = subscription?.id;
-        if (!subscriptionId) break;
-
-        // Fetch current profile to get billing history
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('billing_history')
-          .eq('razorpay_subscription_id', subscriptionId)
-          .single();
-
-        if (!profile) {
-          console.error(`Profile not found for subscription ${subscriptionId}`);
-          break;
+        if (userId) {
+          await supabase
+            .from('profiles')
+            .update({
+              subscription_id: subscription.subscription_id,
+              subscription_status: subscription.status,
+              is_premium: true,
+            })
+            .eq('id', userId);
+        } else if (email) {
+          // Fallback if metadata is missing
+          const { data: userData } = await supabase.from('profiles').select('id').eq('email', email).single();
+          if (userData?.id) {
+            await supabase
+              .from('profiles')
+              .update({
+                subscription_id: subscription.subscription_id,
+                subscription_status: subscription.status,
+                is_premium: true,
+              })
+              .eq('id', userData.id);
+          }
         }
-
-        const currentHistory = Array.isArray(profile.billing_history) ? profile.billing_history : [];
-        let updatedHistory = currentHistory;
-
-        // Extract plan and amount
-        const planId = subscription?.plan_id;
-        const plan = planId === PLAN_IDS.monthly ? 'monthly' : 'yearly';
-        
-        let amount = 0;
-        let paymentId = '';
-        if (payment) {
-          amount = payment.amount / 100; // convert from smallest currency unit to standard
-          paymentId = payment.id;
-        } else {
-          // fallback if no payment entity attached
-          amount = plan === 'monthly' ? 9.99 : 99.99;
-        }
-
-        // Add to history if not exists
-        if (paymentId && !currentHistory.some((entry: any) => entry.payment_id === paymentId)) {
-          const newBillingEntry = {
-            id: crypto.randomUUID(),
-            date: new Date().toISOString(),
-            amount: amount,
-            plan_type: plan,
-            payment_id: paymentId,
-            status: 'paid'
-          };
-          updatedHistory = [newBillingEntry, ...currentHistory];
-        }
-
-        const startDate = subscription?.current_start ? new Date(subscription.current_start * 1000).toISOString() : new Date().toISOString();
-        const endDate = subscription?.current_end ? new Date(subscription.current_end * 1000).toISOString() : new Date().toISOString();
-
-        // Find user by subscription ID and activate premium
-        await supabase
-          .from('profiles')
-          .update({
-            is_premium: true,
-            subscription_status: 'active',
-            subscription_plan: plan,
-            subscription_amount_paid: amount,
-            subscription_start_date: startDate,
-            subscription_end_date: endDate,
-            billing_history: updatedHistory,
-          })
-          .eq('razorpay_subscription_id', subscriptionId);
-
-        console.log(`✅ Subscription ${eventType}: ${subscriptionId}`);
         break;
       }
-
-      case 'subscription.halted':
-      case 'subscription.cancelled': {
-        const subscriptionId = payload.subscription?.entity?.id;
-        if (!subscriptionId) break;
-
-        const status = eventType === 'subscription.cancelled' ? 'cancelled' : 'halted';
-
+      case 'subscription.cancelled':
+      case 'subscription.failed':
+      case 'subscription.expired': {
+        const subscription = event.data;
         await supabase
           .from('profiles')
           .update({
+            subscription_status: subscription.status,
             is_premium: false,
-            subscription_status: status,
           })
-          .eq('razorpay_subscription_id', subscriptionId);
-
-        console.log(`❌ Subscription ${status}: ${subscriptionId}`);
+          .eq('subscription_id', subscription.subscription_id);
         break;
       }
-
       default:
-        console.log(`Unhandled webhook event: ${eventType}`);
+        console.log(`Unhandled event type ${event.type}`);
     }
 
-    return NextResponse.json({ status: 'ok' });
+    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook processing error:', error);
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    console.error('Webhook handler error:', error);
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }

@@ -1,17 +1,17 @@
 // app/api/payments/create-subscription/route.ts
 import { NextResponse } from 'next/server';
-import Razorpay from 'razorpay';
+import DodoPayments from 'dodopayments';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+const dodopayments = new DodoPayments({
+  bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+  environment: 'test_mode',
 });
 
-const PLAN_IDS = {
-  monthly: 'plan_SPmQWhjDt5EyDF',
-  yearly: 'plan_SPmREBwR56C0gG',
+const PRODUCT_IDS = {
+  monthly: process.env.DODO_MONTHLY_SUBSCRIPTION_ID,
+  yearly: process.env.DODO_YEARLY_SUBSCRIPTION_ID,
 } as const;
 
 export async function POST(request: Request) {
@@ -26,33 +26,46 @@ export async function POST(request: Request) {
     const body = await request.json();
     const plan = body.plan as 'monthly' | 'yearly';
 
-    if (!plan || !PLAN_IDS[plan]) {
-      return NextResponse.json({ error: 'Invalid plan. Use "monthly" or "yearly".' }, { status: 400 });
+    if (!plan || !PRODUCT_IDS[plan]) {
+      return NextResponse.json({ error: 'Invalid plan or missing product id.' }, { status: 400 });
     }
 
-    const subscription = await razorpay.subscriptions.create({
-      plan_id: PLAN_IDS[plan],
-      total_count: plan === 'monthly' ? 12 : 1,
-      customer_notify: 1,
+    // Get app URL for redirect
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const returnUrl = `${appUrl}/settings/subscription`;
+
+    const session = await dodopayments.checkoutSessions.create({
+      product_cart: [
+        {
+          product_id: PRODUCT_IDS[plan]!,
+          quantity: 1,
+        },
+      ],
+      return_url: returnUrl,
+      customer: {
+        email: user.email!,
+        name: user.user_metadata?.full_name || '',
+      },
+      metadata: {
+        user_id: user.id,
+      },
     });
 
     const adminSupabase = getAdminClient();
 
-    // Store subscription ID in profile (status stays pending until payment)
+    // Initial status, waiting for webhook
     await adminSupabase
       .from('profiles')
       .update({
-        razorpay_subscription_id: subscription.id,
         subscription_status: 'created',
       })
       .eq('id', user.id);
 
     return NextResponse.json({
-      subscription_id: subscription.id,
-      key_id: process.env.RAZORPAY_KEY_ID,
+      checkout_url: session.checkout_url,
     });
   } catch (error) {
-    console.error('Create subscription error:', error);
-    return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 });
+    console.error('Create subscription checkout error:', error);
+    return NextResponse.json({ error: 'Failed to create subscription checkout' }, { status: 500 });
   }
 }
