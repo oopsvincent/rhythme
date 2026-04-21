@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 export interface SubscriptionStatus {
   isPremium: boolean
   subscriptionStatus: string
-  razorpaySubscriptionId: string | null
+  subscriptionId: string | null
 }
 
 /**
@@ -25,13 +25,13 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
     return {
       isPremium: false,
       subscriptionStatus: 'inactive',
-      razorpaySubscriptionId: null,
+      subscriptionId: null,
     }
   }
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('is_premium, subscription_status, razorpay_subscription_id')
+    .select('is_premium, subscription_status, subscription_id')
     .eq('id', user.id)
     .single()
 
@@ -48,13 +48,13 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
     return {
       isPremium: false,
       subscriptionStatus: 'inactive',
-      razorpaySubscriptionId: null,
+      subscriptionId: null,
     }
   }
 
   return {
     isPremium: profile.is_premium ?? false,
     subscriptionStatus: profile.subscription_status ?? 'inactive',
-    razorpaySubscriptionId: profile.razorpay_subscription_id ?? null,
+    subscriptionId: profile.subscription_id ?? null,
   }
 }

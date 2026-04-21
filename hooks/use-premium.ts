@@ -18,7 +18,7 @@ export function usePremium() {
   return {
     isPremium: data?.isPremium ?? false,
     subscriptionStatus: data?.subscriptionStatus ?? "inactive",
-    razorpaySubscriptionId: data?.razorpaySubscriptionId ?? null,
+    subscriptionId: data?.subscriptionId ?? null,
     isLoading,
     error,
     refetch,

@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     // comes from Supabase webhooks, not an authenticated frontend session.
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY!
+      process.env.SUPABASE_SECRET_KEY!
     )
 
     // Fetch all active subscriptions for the user
