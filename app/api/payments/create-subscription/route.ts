@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import DodoPayments from 'dodopayments';
 import { createClient } from '@/lib/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
 
 const dodopayments = new DodoPayments({
   bearerToken: process.env.DODO_PAYMENTS_API_KEY,
@@ -51,10 +51,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const adminSupabase = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
-    );
+    const adminSupabase = getAdminClient();
 
     // Initial status, waiting for webhook
     await adminSupabase

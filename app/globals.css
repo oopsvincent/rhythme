@@ -32,6 +32,11 @@ body {
   --font-marketing: var(--font-playfair-display);
   --font-body: var(--font-inter);
   --font-primary: var(--font-clash-display);
+  
+  /* Amplecen Typography */
+  --font-amp-display: var(--font-fraunces), Georgia, serif;
+  --font-amp-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-amp-mono: var(--font-dm-mono), monospace;
 
   /* COLORS (semantic mapping) */
   --color-background: var(--background);

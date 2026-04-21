@@ -1,7 +1,7 @@
 // app/api/payments/webhook/route.ts
 import { NextResponse } from 'next/server';
 import DodoPayments from 'dodopayments';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
 
 const dodopayments = new DodoPayments({
   bearerToken: process.env.DODO_PAYMENTS_API_KEY,
@@ -29,10 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
-  const supabase = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  );
+  const supabase = getAdminClient();
 
   try {
     switch (event.type) {
