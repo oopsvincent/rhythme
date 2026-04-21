@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { getAdminClient } from "@/lib/supabase/admin"
 import webpush from "web-push"
 
 // Initialize web-push with VAPID keys
@@ -46,10 +46,7 @@ export async function POST(req: NextRequest) {
 
     // We MUST use the service role key here to bypass RLS because this request 
     // comes from Supabase webhooks, not an authenticated frontend session.
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY!
-    )
+    const supabaseAdmin = getAdminClient()
 
     // Fetch all active subscriptions for the user
     const { data: subscriptions, error } = await supabaseAdmin
