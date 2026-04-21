@@ -2,11 +2,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function OnboardingCheck({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
@@ -15,9 +13,11 @@ export default function OnboardingCheck({ children }: { children: React.ReactNod
 
   async function checkOnboardingStatus() {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
-      router.push("/login");
+      // Middleware should catch this first — this is a safety net
+      window.location.href =
+        process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com";
       return;
     }
 
@@ -30,9 +30,10 @@ export default function OnboardingCheck({ children }: { children: React.ReactNod
 
     if (!preferences) {
       // User hasn't completed onboarding, redirect
-      router.push("/onboarding");
+      window.location.href = "/onboarding";
     }
   }
 
   return <>{children}</>;
 }
+

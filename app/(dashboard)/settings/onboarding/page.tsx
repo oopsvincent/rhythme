@@ -5,12 +5,13 @@ import { getUser } from "@/app/actions/auth"
 import { getUserPreferences } from "@/app/actions/settings"
 import { redirect } from "next/navigation"
 import { OnboardingSection } from "./_components/onboarding-section"
+import { getAmplecenLoginUrl } from "@/lib/auth-redirect"
 
 export default async function OnboardingPage() {
   const user = await getUser()
   
   if (!user) {
-    redirect("/login")
+    redirect(getAmplecenLoginUrl('/settings/onboarding'))
   }
 
   const preferences = await getUserPreferences()

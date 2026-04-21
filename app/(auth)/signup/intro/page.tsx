@@ -149,9 +149,12 @@ export default function IntroPage() {
             </Button>
             <p className="text-sm text-muted-foreground mt-3">
               Already have an account?{" "}
-              <Link href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">
+              <a
+                href={`${process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com"}/login`}
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+              >
                 Sign in
-              </Link>
+              </a>
             </p>
           </div>
         </div>

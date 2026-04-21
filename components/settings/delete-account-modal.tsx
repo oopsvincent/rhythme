@@ -64,7 +64,8 @@ export function DeleteAccountModal() {
       setIsDeleting(false)
     } else {
       toast.success("Account deleted. It's not you, it's... well, goodbye. 👋")
-      router.push("/login")
+      window.location.href =
+        process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com"
     }
   }
 

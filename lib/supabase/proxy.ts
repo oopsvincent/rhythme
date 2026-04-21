@@ -6,6 +6,8 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const cookieDomain = process.env.COOKIE_DOMAIN // '.amplecen.com' in prod, unset in dev
+
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
   const supabase = createServerClient(
@@ -21,7 +23,17 @@ export async function updateSession(request: NextRequest) {
           supabaseResponse = NextResponse.next({
             request,
           })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              ...(cookieDomain && {
+                domain: cookieDomain,
+                path: '/',
+                sameSite: 'lax' as const,
+                secure: true,
+              }),
+            })
+          )
         },
       },
     }
@@ -37,40 +49,20 @@ export async function updateSession(request: NextRequest) {
 
   const user = data?.claims
 
-//   if (
-//     !user &&
-//     !request.nextUrl.pathname.startsWith('/login') &&
-//     !request.nextUrl.pathname.startsWith('/auth')
-//   ) {
-//     // no user, potentially respond by redirecting the user to the login page
-//     const url = request.nextUrl.clone()
-//     url.pathname = '/login'
-//     return NextResponse.redirect(url)
-//   }
   // Protected routes that require authentication
-  const isProtectedRoute = 
+  const isProtectedRoute =
     request.nextUrl.pathname.startsWith('/dashboard') ||
     request.nextUrl.pathname.startsWith('/settings') ||
     request.nextUrl.pathname.startsWith('/user')
 
-  // Public routes that logged-in users shouldn't access
-  const isAuthRoute = 
-    request.nextUrl.pathname === '/login' ||
-    request.nextUrl.pathname === '/signup'
-
-  // If user is not logged in and trying to access protected route
+  // If user is not logged in and trying to access a protected route,
+  // redirect to Amplecen ID with return_to so they land back here after login.
   if (!user && isProtectedRoute) {
-    const redirectUrl = new URL('/login', request.url)
-    // Save the page they were trying to access
-    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
-    return NextResponse.redirect(redirectUrl)
+    const accountsUrl = process.env.NEXT_PUBLIC_ACCOUNTS_URL || 'https://accounts.amplecen.com'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rhythme.amplecen.com'
+    const returnTo = encodeURIComponent(`${appUrl}${request.nextUrl.pathname}`)
+    return NextResponse.redirect(`${accountsUrl}/login?return_to=${returnTo}`)
   }
-
-  // If user is logged in and trying to access auth pages, redirect to dashboard
-  if (user && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:
@@ -86,4 +78,4 @@ export async function updateSession(request: NextRequest) {
   // of sync and terminate the user's session prematurely!
 
   return supabaseResponse
-}
+}

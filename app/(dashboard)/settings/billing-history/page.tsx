@@ -5,11 +5,12 @@ import { getUser } from "@/app/actions/auth"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { BillingHistorySection } from "./_components/billing-history-section"
+import { getAmplecenLoginUrl } from "@/lib/auth-redirect"
 
 export default async function BillingHistoryPage() {
   const user = await getUser()
   if (!user) {
-    redirect("/login")
+    redirect(getAmplecenLoginUrl('/settings/billing-history'))
   }
   
   const supabase = await createClient()

@@ -4,12 +4,13 @@
 import { getFullUser } from "@/app/actions/auth"
 import { redirect } from "next/navigation"
 import { ProfileSection } from "./_components/profile-section"
+import { getAmplecenLoginUrl } from "@/lib/auth-redirect"
 
 export default async function ProfilePage() {
   const user = await getFullUser()
   
   if (!user) {
-    redirect("/login")
+    redirect(getAmplecenLoginUrl('/settings/profile'))
   }
 
   return (
