@@ -13,6 +13,7 @@ const webhookSecret = process.env.DODO_WEBHOOK_SECRET;
 export async function POST(request: Request) {
   const body = await request.text();
   const signature = request.headers.get('webhook-signature');
+  const headers = Object.fromEntries(request.headers.entries()) as Record<string, string>;
 
   if (!signature || !webhookSecret) {
     return NextResponse.json({ error: 'Missing signature or webhook secret' }, { status: 400 });
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
 
   try {
     // Verify the webhook signature using the SDK
-    event = dodopayments.webhooks.unwrap(body, request.headers, webhookSecret);
+    event = dodopayments.webhooks.unwrap(body, { headers, key: webhookSecret });
   } catch (err: any) {
     console.error('Webhook signature verification failed.', err.message);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
