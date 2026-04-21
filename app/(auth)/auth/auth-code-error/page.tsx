@@ -33,11 +33,11 @@ export default function AuthCodeErrorPage() {
 
           <div className="space-y-2">
             <Button asChild className="w-full">
-              <Link href="/signup">Try signing up again</Link>
+              <a href={`${process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com"}/signup`}>Try signing up again</a>
             </Button>
             
             <Button asChild variant="outline" className="w-full">
-              <Link href="/login">Back to login</Link>
+              <a href={`${process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com"}/login`}>Back to login</a>
             </Button>
           </div>
 

@@ -4,12 +4,13 @@
 import { getUser } from "@/app/actions/auth"
 import { redirect } from "next/navigation"
 import { DeleteAccountSection } from "./_components/delete-account-section"
+import { getAmplecenLoginUrl } from "@/lib/auth-redirect"
 
 export default async function DeleteAccountPage() {
   const user = await getUser()
   
   if (!user) {
-    redirect("/login")
+    redirect(getAmplecenLoginUrl('/settings/delete-account'))
   }
 
   return (

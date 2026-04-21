@@ -92,12 +92,12 @@ const NavbarClient: React.FC<NavbarProps> = ({ user }) => {
               ) : (
                 <>
                   {/* Logged out state */}
-                  <Link
-                    href="/login"
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com"}/login`}
                     className="hidden sm:flex px-3 md:px-4 py-1.5 md:py-2 backdrop-blur-xl bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/40 rounded-lg text-sm md:text-base text-foreground hover:text-primary transition-all duration-300 font-medium btn-premium"
                   >
                     Log in
-                  </Link>
+                  </a>
                   <Link
                     href="/signup/intro"
                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg text-sm sm:text-base font-semibold hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 group btn-premium"
@@ -143,13 +143,13 @@ const NavbarClient: React.FC<NavbarProps> = ({ user }) => {
                 </a>
               ))}
               {!user && (
-                <Link
-                  href="/login"
+                <a
+                  href={`${process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com"}/login`}
                   onClick={closeMobileMenu}
                   className="sm:hidden block px-4 py-2.5 backdrop-blur-xl bg-primary/5 border border-primary/20 rounded-lg text-foreground hover:text-primary text-center transition-all duration-300 font-medium"
                 >
                   Log in
-                </Link>
+                </a>
               )}
             </div>
           </div>

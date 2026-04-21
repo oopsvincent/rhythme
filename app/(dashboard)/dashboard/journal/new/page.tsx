@@ -11,6 +11,7 @@ import { getUser } from "@/app/actions/auth";
 import { getEncryptionToken } from "@/app/actions/encryption";
 import { redirect } from "next/navigation";
 import NewJournalClient from "./new-journal-client";
+import { getAmplecenLoginUrl } from "@/lib/auth-redirect";
 
 export default async function NewJournalPage() {
   const [user, encryptionToken] = await Promise.all([
@@ -19,7 +20,7 @@ export default async function NewJournalPage() {
   ]);
 
   if (!user) {
-    redirect("/login");
+    redirect(getAmplecenLoginUrl('/dashboard/journal/new'));
   }
 
   return (

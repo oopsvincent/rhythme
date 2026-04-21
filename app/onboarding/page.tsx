@@ -90,7 +90,8 @@ export default function OnboardingPage() {
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
-      router.push("/login");
+      window.location.href =
+        process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com";
       return;
     }
 

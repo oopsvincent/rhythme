@@ -5,12 +5,13 @@ import { getUser } from "@/app/actions/auth"
 import { redirect } from "next/navigation"
 import { SubscriptionSection } from "./_components/subscription-section"
 import { createClient } from "@/lib/supabase/server"
+import { getAmplecenLoginUrl } from "@/lib/auth-redirect"
 
 export default async function SubscriptionPage() {
   const user = await getUser()
   
   if (!user) {
-    redirect("/login")
+    redirect(getAmplecenLoginUrl('/settings/subscription'))
   }
 
   // Fetch real subscription status
