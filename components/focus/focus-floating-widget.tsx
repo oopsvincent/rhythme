@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Brain, Coffee, Play, Pause, SkipForward, X, GripHorizontal, EyeOff } from 'lucide-react'
 import { useFocusStore, SessionType } from '@/store/useFocusStore'
 import { formatTime, getFocusData } from '@/lib/focus-storage'
-import { saveSession, getDeviceId } from '@/lib/focus/focus-db'
+import { getDeviceId } from '@/lib/focus/focus-db'
+import { endFocusSession } from '@/app/actions/focusSessions'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,7 +55,8 @@ export function FocusFloatingWidget() {
   const pathname = usePathname()
   const { 
     isRunning, sessionType, timeLeft, sessionsCompleted,
-    getDisplayTime, start, pause, switchSession, markCompleted, completeSession 
+    getDisplayTime, start, pause, switchSession, markCompleted, completeSession,
+    activeSessionId, interruptions, clearActiveFocusSession,
   } = useFocusStore()
   
   const [position, setPosition] = React.useState<Position>({ x: 20, y: 100 })
@@ -205,7 +207,6 @@ export function FocusFloatingWidget() {
 
     markCompleted()
 
-    // Save session to IndexedDB
     const getDuration = (type: SessionType): number => {
       switch (type) {
         case 'focus': return settings.focusDuration
@@ -215,16 +216,23 @@ export function FocusFloatingWidget() {
     }
 
     const duration = getDuration(sessionType) * 60
-    try {
-      await saveSession({
-        type: sessionType,
-        duration,
-        completedAt: new Date().toISOString(),
-        interrupted: false,
-        deviceId: getDeviceId(),
-      })
-    } catch (error) {
-      console.error('Failed to save session:', error)
+    if (sessionType === 'focus' && activeSessionId) {
+      try {
+        const result = await endFocusSession({
+          sessionId: activeSessionId,
+          actualDuration: duration,
+          interruptions,
+          metadata: {
+            completed: true,
+            sessionType,
+            deviceId: getDeviceId(),
+          },
+        })
+        if (result.error) throw new Error(result.error)
+        clearActiveFocusSession()
+      } catch (error) {
+        console.error('Failed to save focus session:', error)
+      }
     }
 
     completeSession()
@@ -248,7 +256,7 @@ export function FocusFloatingWidget() {
     }
 
     toast.success(`${sessionConfig[sessionType].label} completed!`)
-  }, [sessionType, sessionsCompleted, markCompleted, completeSession, switchSession, start])
+  }, [sessionType, sessionsCompleted, markCompleted, completeSession, switchSession, start, activeSessionId, interruptions, clearActiveFocusSession])
 
   // --- Save position to localStorage ---
   const savePosition = React.useCallback((pos: Position) => {

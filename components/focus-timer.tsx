@@ -11,19 +11,33 @@ import {
 } from '@/lib/focus-storage'
 import { useFocusStore, SessionType } from '@/store/useFocusStore'
 import { 
-  saveSession, 
   getDeviceId, 
   getDeviceName, 
   setDeviceName, 
-  getTodaySessions, 
-  getSessions,
   clearAllSessions,
-  FocusSessionRecord 
 } from '@/lib/focus/focus-db'
+import {
+  clearFocusSessions,
+  endFocusSession,
+  getFocusSessions,
+  startFocusSession,
+  updateFocusSession,
+} from '@/app/actions/focusSessions'
+import { createClient } from '@/lib/supabase/client'
+import { useTasks } from '@/hooks/use-tasks'
+import type { FocusSession } from '@/types/database'
 import { useSidebar } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { 
   Play, 
   Pause, 
@@ -54,7 +68,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
   DrawerDescription,
-  DrawerFooter,
 } from '@/components/ui/drawer'
 import {
   AlertDialog,
@@ -80,6 +93,8 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import type { Task } from '@/types/database'
 
 const sessionConfig: Record<SessionType, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
   focus: { 
@@ -102,7 +117,25 @@ const sessionConfig: Record<SessionType, { label: string; color: string; bgColor
   },
 }
 
+const moodOptions = [
+  { label: 'Wiped', value: 0.01 },
+  { label: 'Heavy', value: 0.12 },
+  { label: 'Uneasy', value: 0.23 },
+  { label: 'Flat', value: 0.34 },
+  { label: 'Steady', value: 0.45 },
+  { label: 'Calm', value: 0.56 },
+  { label: 'Bright', value: 0.67 },
+  { label: 'Focused', value: 0.78 },
+  { label: 'Upbeat', value: 0.89 },
+  { label: 'Electric', value: 1.0 },
+] as const
+
 export default function FocusTimer() {
+  type SyncedFocusSession = FocusSession & {
+    duration: number
+    completedAt: string
+  }
+
   // Settings & stats from localStorage
   const [settings, setSettings] = useState<FocusSettings | null>(null)
   const [stats, setStats] = useState<FocusStats | null>(null)
@@ -120,7 +153,14 @@ export default function FocusTimer() {
     completeSession,
     getDisplayTime,
     markCompleted,
+    activeSessionId,
+    activeTaskId,
+    interruptions,
+    setActiveFocusSession,
+    incrementInterruptions,
+    clearActiveFocusSession,
   } = useFocusStore()
+  const { data: tasks = [], isLoading: tasksLoading } = useTasks()
   
   // UI state
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -128,8 +168,14 @@ export default function FocusTimer() {
   const [showHistory, setShowHistory] = useState(false)
   const [deviceNameInput, setDeviceNameInput] = useState('')
   const [todaySessionCount, setTodaySessionCount] = useState(0)
-  const [allSessions, setAllSessions] = useState<FocusSessionRecord[]>([])
+  const [allSessions, setAllSessions] = useState<SyncedFocusSession[]>([])
   const [displayTime, setDisplayTime] = useState(25 * 60)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(activeTaskId)
+  const [moodBefore, setMoodBefore] = useState<number | null>(null)
+  const [moodAfter, setMoodAfter] = useState<number | null>(null)
+  const [energyLevel, setEnergyLevel] = useState<number | null>(null)
+  const [isSyncingSession, setIsSyncingSession] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'live' | 'saving' | 'error'>('idle')
   
   // Sidebar control for fullscreen
   const sidebarContext = useSidebar()
@@ -138,9 +184,9 @@ export default function FocusTimer() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const completedRef = useRef(false)
 
-  // One-time local notice
+  // Retired local-only notice.
   useEffect(() => {
-    if (!localStorage.getItem('focus-local-notice-shown')) {
+    if (localStorage.getItem('focus-local-notice-shown') === 'legacy') {
       toast.info('Focus sessions are stored locally on this device only—no cross-device sync.', {
         duration: 5000,
       })
@@ -148,7 +194,7 @@ export default function FocusTimer() {
     }
   }, [])
 
-  // Load data from localStorage and IndexedDB
+  // Load timer preferences from localStorage and focus sessions from Supabase.
   useEffect(() => {
     const data = getFocusData()
     setSettings(data.settings)
@@ -162,15 +208,67 @@ export default function FocusTimer() {
     loadSessions()
   }, [])
 
+  useEffect(() => {
+    if (!selectedTaskId && activeTaskId) {
+      setSelectedTaskId(activeTaskId)
+    }
+  }, [activeTaskId, selectedTaskId])
+
+  useEffect(() => {
+    let mounted = true
+    const supabase = createClient()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (!mounted || !data.user) return
+
+      channel = supabase
+        .channel(`focus-sessions-${data.user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'focus_sessions',
+            filter: `user_id=eq.${data.user.id}`,
+          },
+          () => {
+            setSyncStatus('live')
+            loadSessions()
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') setSyncStatus('live')
+        })
+    })
+
+    return () => {
+      mounted = false
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [])
+
   const loadSessions = async () => {
     try {
-      const todaySessions = await getTodaySessions()
-      setTodaySessionCount(todaySessions.filter(s => s.type === 'focus' && !s.interrupted).length)
-      
-      const all = await getSessions(50)
-      setAllSessions(all)
+      const result = await getFocusSessions(50)
+      if (result.error) throw new Error(result.error)
+
+      const sessions = (result.data || []).map((session) => ({
+        ...session,
+        duration: session.actual_duration ?? session.planned_duration,
+        completedAt: session.ended_at || session.started_at,
+      }))
+      const today = new Date().toDateString()
+      setTodaySessionCount(
+        sessions.filter((session) =>
+          session.ended_at &&
+          new Date(session.ended_at).toDateString() === today
+        ).length
+      )
+      setAllSessions(sessions)
     } catch (error) {
       console.error('Failed to load sessions:', error)
+      setSyncStatus('error')
     }
   }
 
@@ -230,20 +328,34 @@ export default function FocusTimer() {
     
     markCompleted()
     
-    // Save session to IndexedDB
     const duration = getDuration(sessionType) * 60
-    try {
-      await saveSession({
-        type: sessionType,
-        duration,
-        completedAt: new Date().toISOString(),
-        interrupted: false,
-        deviceId: getDeviceId(),
-      })
-      
-      await loadSessions()
-    } catch (error) {
-      console.error('Failed to save session:', error)
+    if (sessionType === 'focus' && activeSessionId) {
+      setSyncStatus('saving')
+      try {
+        const result = await endFocusSession({
+          sessionId: activeSessionId,
+          actualDuration: duration,
+          moodAfter,
+          interruptions,
+          metadata: {
+            completed: true,
+            sessionType,
+            deviceId: getDeviceId(),
+            moodAfterScore: moodAfter,
+          },
+        })
+
+        if (result.error) throw new Error(result.error)
+
+        clearActiveFocusSession()
+        setMoodAfter(null)
+        await loadSessions()
+        setSyncStatus('live')
+      } catch (error) {
+        console.error('Failed to save focus session:', error)
+        setSyncStatus('error')
+        toast.error('Session finished locally, but database sync failed.')
+      }
     }
     
     // Update localStorage stats
@@ -283,7 +395,7 @@ export default function FocusTimer() {
     }
     
     toast.success(`${sessionConfig[sessionType].label} completed!`)
-  }, [sessionType, settings, sessionsCompleted, completeSession, start, markCompleted])
+  }, [sessionType, settings, sessionsCompleted, completeSession, start, markCompleted, activeSessionId, moodAfter, interruptions, clearActiveFocusSession])
 
   const getDuration = (type: SessionType): number => {
     if (!settings) return type === 'focus' ? 25 : type === 'short_break' ? 5 : 15
@@ -298,34 +410,112 @@ export default function FocusTimer() {
     switchSession(type, getDuration(type) * 60)
   }
 
-  const toggleTimer = () => {
+  const toggleTimer = async () => {
     if (isRunning) {
+      if (sessionType === 'focus' && activeSessionId) {
+        const nextInterruptions = incrementInterruptions()
+        updateFocusSession(activeSessionId, { interruptions: nextInterruptions }).catch((error) => {
+          console.error('Failed to update interruptions:', error)
+        })
+      }
       pause()
     } else {
+      if (sessionType === 'focus' && !activeSessionId) {
+        if (!selectedTaskId) {
+          toast.error('Choose a task before starting focus.')
+          return
+        }
+
+        setIsSyncingSession(true)
+        setSyncStatus('saving')
+        const result = await startFocusSession({
+          taskId: selectedTaskId,
+          plannedDuration: getDuration('focus') * 60,
+          moodBefore: scoreToLegacyLevel(moodBefore),
+          energyLevel: scoreToLegacyLevel(energyLevel),
+          metadata: {
+            sessionType,
+            deviceId: getDeviceId(),
+            moodBeforeScore: moodBefore,
+            energyLevelScore: energyLevel,
+          },
+        })
+        setIsSyncingSession(false)
+
+        if (result.error || !result.data) {
+          setSyncStatus('error')
+          toast.error(result.error || 'Failed to start focus session.')
+          return
+        }
+
+        setActiveFocusSession(result.data.session_id, selectedTaskId)
+        setSyncStatus('live')
+        await loadSessions()
+      }
       start()
     }
   }
 
-  const resetTimer = () => {
+  const resetTimer = async () => {
+    if (sessionType === 'focus' && activeSessionId) {
+      const actualDuration = getDuration('focus') * 60 - getDisplayTime()
+      setSyncStatus('saving')
+      const result = await endFocusSession({
+        sessionId: activeSessionId,
+        actualDuration,
+        moodAfter,
+        interruptions: interruptions + 1,
+        metadata: {
+          completed: false,
+          reset: true,
+          sessionType,
+          deviceId: getDeviceId(),
+          moodAfterScore: moodAfter,
+        },
+      })
+
+      if (result.error) {
+        setSyncStatus('error')
+        toast.error(result.error)
+      } else {
+        clearActiveFocusSession()
+        setMoodAfter(null)
+        setSyncStatus('live')
+        await loadSessions()
+      }
+    }
     reset(getDuration(sessionType) * 60)
   }
 
   const skipSession = async () => {
-    if (isRunning) {
-      try {
-        await saveSession({
-          type: sessionType,
-          duration: getDuration(sessionType) * 60 - getDisplayTime(),
-          completedAt: new Date().toISOString(),
-          interrupted: true,
+    if (sessionType === 'focus' && activeSessionId) {
+      const actualDuration = getDuration('focus') * 60 - getDisplayTime()
+      const result = await endFocusSession({
+        sessionId: activeSessionId,
+        actualDuration,
+        moodAfter,
+        interruptions: interruptions + (isRunning ? 1 : 0),
+        metadata: {
+          completed: false,
+          skipped: true,
+          sessionType,
           deviceId: getDeviceId(),
-        })
-      } catch (error) {
-        console.error('Failed to save interrupted session:', error)
+          moodAfterScore: moodAfter,
+        },
+      })
+
+      if (result.error) {
+        setSyncStatus('error')
+        toast.error(result.error)
+      } else {
+        clearActiveFocusSession()
+        setMoodAfter(null)
+        setSyncStatus('live')
+        await loadSessions()
       }
-      pause()
     }
-    handleSessionComplete()
+    pause()
+    handleSwitchSession(sessionType === 'focus' ? 'short_break' : 'focus')
   }
 
   const toggleFullscreen = async () => {
@@ -393,11 +583,17 @@ export default function FocusTimer() {
 
   // Group sessions by date
   const groupedSessions = allSessions.reduce((groups, session) => {
-    const dateKey = new Date(session.completedAt).toDateString()
+    const dateKey = new Date(session.ended_at || session.started_at).toDateString()
     if (!groups[dateKey]) groups[dateKey] = []
     groups[dateKey].push(session)
     return groups
-  }, {} as Record<string, FocusSessionRecord[]>)
+  }, {} as Record<string, SyncedFocusSession[]>)
+
+  const selectedTask = tasks.find((task) => String(task.task_id) === selectedTaskId)
+  const completedFocusSeconds = allSessions.reduce(
+    (sum, session) => sum + (session.actual_duration ?? 0),
+    0
+  )
 
   if (!settings) {
     return (
@@ -408,9 +604,31 @@ export default function FocusTimer() {
   }
 
   return (
-    <div className={`relative flex flex-col items-center justify-center min-h-[70vh] transition-all ${isFullscreen ? 'bg-background fixed inset-0 z-50' : ''}`}>
+    <div className={cn(
+      "relative flex min-h-[70vh] flex-col items-center justify-center transition-all",
+      isFullscreen && "fixed inset-0 z-50 min-h-screen bg-background px-6"
+    )}>
       {/* Audio element for notification */}
       <audio ref={audioRef} src="/sounds/bell.mp3" preload="auto" />
+
+      {!isFullscreen && (
+        <FocusSessionPanel
+          activeSessionId={activeSessionId}
+          energyLevel={energyLevel}
+          isRunning={isRunning}
+          moodAfter={moodAfter}
+          moodBefore={moodBefore}
+          selectedTask={selectedTask}
+          selectedTaskId={selectedTaskId}
+          setEnergyLevel={setEnergyLevel}
+          setMoodAfter={setMoodAfter}
+          setMoodBefore={setMoodBefore}
+          setSelectedTaskId={setSelectedTaskId}
+          syncStatus={syncStatus}
+          tasks={tasks}
+          tasksLoading={tasksLoading}
+        />
+      )}
       
       {/* Fullscreen exit button */}
       {isFullscreen && (
@@ -424,99 +642,32 @@ export default function FocusTimer() {
         </Button>
       )}
       
-      {/* Session Type Tabs */}
-      <div className="flex gap-2 mb-8">
-        {(['focus', 'short_break', 'long_break'] as SessionType[]).map((type) => (
-          <button
-            key={type}
-            onClick={() => { if (!isRunning) handleSwitchSession(type) }}
-            disabled={isRunning}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              sessionType === type 
-                ? 'bg-primary text-primary-foreground' 
-                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-            } disabled:opacity-50`}
-          >
-            {sessionConfig[type].label}
-          </button>
-        ))}
-      </div>
+      <FocusModeTabs
+        isFullscreen={isFullscreen}
+        isRunning={isRunning}
+        onSwitch={handleSwitchSession}
+        sessionType={sessionType}
+      />
 
-      {/* Timer Display */}
-      <div className="relative mb-8">
-        {/* Progress Ring */}
-        <svg className="w-64 h-64 sm:w-80 sm:h-80 -rotate-90">
-          <circle
-            cx="50%"
-            cy="50%"
-            r="45%"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-            className="text-muted/20"
-          />
-          <circle
-            cx="50%"
-            cy="50%"
-            r="45%"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeDasharray={`${2 * Math.PI * 45}`}
-            strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress / 100)}`}
-            className={`${config.color} transition-all duration-300`}
-          />
-        </svg>
-        
-        {/* Time Display */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className={`flex items-center gap-2 mb-2 ${config.color}`}>
-            {config.icon}
-            <span className="text-sm font-medium uppercase tracking-wide">{config.label}</span>
-          </div>
-          <span className="text-6xl sm:text-7xl font-mono font-bold tracking-tight tabular-nums">
-            {formatTime(displayTime)}
-          </span>
-          <span className="text-sm text-muted-foreground mt-2">
-            Session {sessionsCompleted + 1}
-          </span>
-        </div>
-      </div>
+      <FocusTimerDial
+        config={config}
+        displayTime={displayTime}
+        isFullscreen={isFullscreen}
+        progress={progress}
+        selectedTask={selectedTask}
+        sessionNumber={sessionsCompleted + 1}
+      />
 
-      {/* Controls */}
-      <div className="flex items-center gap-4 mb-8">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={resetTimer}
-          className="w-12 h-12 rounded-full"
-        >
-          <RotateCcw className="w-5 h-5" />
-        </Button>
-        
-        <Button
-          onClick={toggleTimer}
-          size="lg"
-          className={`w-20 h-20 rounded-full text-xl shadow-lg transition-transform hover:scale-105 ${
-            isRunning ? 'bg-orange-500 hover:bg-orange-600' : 'bg-primary'
-          }`}
-        >
-          {isRunning ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
-        </Button>
-        
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={skipSession}
-          className="w-12 h-12 rounded-full"
-        >
-          <SkipForward className="w-5 h-5" />
-        </Button>
-      </div>
+      <FocusControls
+        isRunning={isRunning}
+        isSyncingSession={isSyncingSession}
+        onReset={resetTimer}
+        onSkip={skipSession}
+        onToggle={toggleTimer}
+      />
 
       {/* Action Bar */}
-      <div className="flex items-center gap-3">
+      <div className={cn("flex items-center gap-3", isFullscreen && "hidden")}>
         <Button
           variant="ghost"
           size="icon"
@@ -559,7 +710,7 @@ export default function FocusTimer() {
                       <Clock className="w-5 h-5 text-orange-500" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">{formatDuration(todaySessionCount * settings.focusDuration * 60)}</div>
+                      <div className="text-2xl font-bold">{formatDuration(completedFocusSeconds)}</div>
                       <div className="text-xs text-muted-foreground">Focus Time</div>
                     </div>
                   </div>
@@ -577,7 +728,7 @@ export default function FocusTimer() {
                       <Calendar className="w-5 h-5 text-green-500" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">{stats?.totalSessions || 0}</div>
+                      <div className="text-2xl font-bold">{allSessions.length}</div>
                       <div className="text-xs text-muted-foreground">Total Sessions</div>
                     </div>
                   </div>
@@ -588,7 +739,7 @@ export default function FocusTimer() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Total Focus Time</span>
-                    <span className="font-medium">{formatDuration(stats?.totalFocusTime || 0)}</span>
+                    <span className="font-medium">{formatDuration(completedFocusSeconds)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Longest Streak</span>
@@ -613,18 +764,18 @@ export default function FocusTimer() {
                     Object.entries(groupedSessions).map(([date, sessions]) => (
                       <div key={date} className="mb-4">
                         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                          {formatSessionDate(sessions[0].completedAt)}
+                            {formatSessionDate(sessions[0].ended_at || sessions[0].started_at)}
                         </h4>
                         <div className="space-y-2">
                           {sessions.map((session) => {
-                            const sConfig = sessionConfig[session.type]
+                              const isInterrupted = (session.interruptions || 0) > 0 || !session.ended_at
                             return (
-                              <div key={session.id} className={`flex items-center gap-3 p-3 rounded-lg ${sConfig.bgColor}`}>
-                                <div className={sConfig.color}>{sConfig.icon}</div>
+                                <div key={session.session_id} className={`flex items-center gap-3 p-3 rounded-lg ${sessionConfig.focus.bgColor}`}>
+                                  <div className={sessionConfig.focus.color}>{sessionConfig.focus.icon}</div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">{sConfig.label}</span>
-                                    {session.interrupted && (
+                                      <span className="truncate text-sm font-medium">{session.tasks?.title || 'Focus session'}</span>
+                                      {isInterrupted && (
                                       <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-600">
                                         Interrupted
                                       </span>
@@ -858,25 +1009,25 @@ export default function FocusTimer() {
                 
                 {/* Data Tab */}
                 <TabsContent value="data" className="space-y-6">
-                  {/* Local Storage Info */}
+                  {/* Storage Info */}
                   <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      <Monitor className="w-4 h-4" />
-                      <span>Local Storage Only</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      All your focus data is stored locally on this device. It is not synced to the cloud and remains completely private.
-                    </p>
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <Monitor className="w-4 h-4" />
+                      <span>Supabase Sync</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                      Focus sessions are saved to your account and updated live. Timer preferences stay on this device.
+                      </p>
                   </div>
                   
                   {/* Stats Summary */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg bg-accent/50 p-3 text-center">
-                      <div className="text-xl font-bold">{stats?.totalSessions || 0}</div>
+                      <div className="text-xl font-bold">{allSessions.length}</div>
                       <div className="text-xs text-muted-foreground">Total Sessions</div>
                     </div>
                     <div className="rounded-lg bg-accent/50 p-3 text-center">
-                      <div className="text-xl font-bold">{formatDuration(stats?.totalFocusTime || 0)}</div>
+                      <div className="text-xl font-bold">{formatDuration(completedFocusSeconds)}</div>
                       <div className="text-xs text-muted-foreground">Total Focus Time</div>
                     </div>
                   </div>
@@ -910,6 +1061,8 @@ export default function FocusTimer() {
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             onClick={async () => {
                               try {
+                                const result = await clearFocusSessions()
+                                if (result.error) throw new Error(result.error)
                                 await clearAllSessions()
                                 localStorage.removeItem('rhythme-focus-timer')
                                 localStorage.removeItem('rhythme-focus-device-name')
@@ -918,7 +1071,7 @@ export default function FocusTimer() {
                                 toast.success('All focus data deleted')
                                 setShowSettings(false)
                                 window.location.reload()
-                              } catch (error) {
+                              } catch {
                                 toast.error('Failed to delete data')
                               }
                             }}
@@ -946,7 +1099,7 @@ export default function FocusTimer() {
       </div>
 
       {/* Quick Stats */}
-      <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">
+      <div className={cn("mt-8 flex items-center gap-6 text-sm text-muted-foreground", isFullscreen && "hidden")}>
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />
           <span>{todaySessionCount} today</span>
@@ -958,4 +1111,323 @@ export default function FocusTimer() {
       </div>
     </div>
   )
+}
+
+type SyncStatus = 'idle' | 'live' | 'saving' | 'error'
+
+type SessionConfig = {
+  label: string
+  color: string
+  bgColor: string
+  icon: React.ReactNode
+}
+
+function FocusSessionPanel({
+  activeSessionId,
+  energyLevel,
+  isRunning,
+  moodAfter,
+  moodBefore,
+  selectedTask,
+  selectedTaskId,
+  setEnergyLevel,
+  setMoodAfter,
+  setMoodBefore,
+  setSelectedTaskId,
+  syncStatus,
+  tasks,
+  tasksLoading,
+}: {
+  activeSessionId: number | null
+  energyLevel: number | null
+  isRunning: boolean
+  moodAfter: number | null
+  moodBefore: number | null
+  selectedTask: Task | undefined
+  selectedTaskId: string | null
+  setEnergyLevel: (value: number | null) => void
+  setMoodAfter: (value: number | null) => void
+  setMoodBefore: (value: number | null) => void
+  setSelectedTaskId: (value: string | null) => void
+  syncStatus: SyncStatus
+  tasks: Task[]
+  tasksLoading: boolean
+}) {
+  const locked = isRunning || Boolean(activeSessionId)
+
+  return (
+    <section className="mb-8 grid w-full max-w-4xl gap-4 rounded-lg border bg-background p-4 shadow-sm md:grid-cols-[1fr_auto]">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <Label className="text-sm font-medium">Focus task</Label>
+          <FocusStatusBadge status={syncStatus} />
+        </div>
+
+        <Select
+          disabled={locked}
+          onValueChange={(value) => setSelectedTaskId(value)}
+          value={selectedTaskId || undefined}
+        >
+          <SelectTrigger className="h-10 w-full">
+            <SelectValue placeholder={tasksLoading ? 'Loading tasks...' : 'Choose a task'} />
+          </SelectTrigger>
+          <SelectContent>
+            {tasks
+              .filter((task) => task.status !== 'completed')
+              .map((task) => (
+                <SelectItem key={task.task_id} value={String(task.task_id)}>
+                  {task.title}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+
+        <div className="min-h-5 text-xs text-muted-foreground">
+          {selectedTask ? selectedTask.title : 'Pick one task. The session will be linked to it.'}
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:min-w-[340px]">
+        <div className="grid grid-cols-2 gap-2">
+          <FocusMoodSelect
+            disabled={locked}
+            label="Before"
+            onChange={setMoodBefore}
+            value={moodBefore}
+          />
+          <FocusMoodSelect
+            label="After"
+            onChange={setMoodAfter}
+            value={moodAfter}
+          />
+        </div>
+        <div className="space-y-2 rounded-md border bg-muted/20 p-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-muted-foreground">Energy</Label>
+            <span className="text-xs font-medium text-foreground">
+              {formatPercentLabel(energyLevel)}
+            </span>
+          </div>
+          <Slider
+            disabled={locked}
+            max={100}
+            min={1}
+            onValueChange={([next]) => setEnergyLevel(Number((next / 100).toFixed(2)))}
+            step={1}
+            value={[Math.round((energyLevel ?? 0.5) * 100)]}
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function FocusMoodSelect({
+  disabled,
+  label,
+  onChange,
+  value,
+}: {
+  disabled?: boolean
+  label: string
+  onChange: (value: number | null) => void
+  value: number | null
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Select
+        disabled={disabled}
+        onValueChange={(next) => onChange(next === 'none' ? null : Number(next))}
+        value={value !== null ? value.toFixed(2) : 'none'}
+      >
+        <SelectTrigger className="h-10 w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">-</SelectItem>
+          {moodOptions.map((mood) => (
+            <SelectItem key={mood.label} value={mood.value.toFixed(2)}>
+              {mood.label} ({mood.value.toFixed(2)})
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
+function FocusStatusBadge({ status }: { status: SyncStatus }) {
+  const label = status === 'live'
+    ? 'Live'
+    : status === 'saving'
+      ? 'Saving'
+      : status === 'error'
+        ? 'Sync issue'
+        : 'Ready'
+
+  return (
+    <Badge
+      variant={status === 'error' ? 'destructive' : 'outline'}
+      className={cn(status === 'live' && 'border-green-500/30 text-green-600')}
+    >
+      {label}
+    </Badge>
+  )
+}
+
+function FocusModeTabs({
+  isFullscreen,
+  isRunning,
+  onSwitch,
+  sessionType,
+}: {
+  isFullscreen: boolean
+  isRunning: boolean
+  onSwitch: (type: SessionType) => void
+  sessionType: SessionType
+}) {
+  if (isFullscreen) return null
+
+  return (
+    <div className="mb-8 flex rounded-lg border bg-muted/30 p-1">
+      {(['focus', 'short_break', 'long_break'] as SessionType[]).map((type) => (
+        <Button
+          key={type}
+          disabled={isRunning}
+          onClick={() => onSwitch(type)}
+          size="sm"
+          variant={sessionType === type ? 'default' : 'ghost'}
+          className="h-8 rounded-md"
+        >
+          {sessionConfig[type].label}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
+function FocusTimerDial({
+  config,
+  displayTime,
+  isFullscreen,
+  progress,
+  selectedTask,
+  sessionNumber,
+}: {
+  config: SessionConfig
+  displayTime: number
+  isFullscreen: boolean
+  progress: number
+  selectedTask: Task | undefined
+  sessionNumber: number
+}) {
+  const sizeClass = isFullscreen
+    ? 'h-[min(70vw,70vh,520px)] w-[min(70vw,70vh,520px)]'
+    : 'h-64 w-64 sm:h-80 sm:w-80'
+
+  return (
+    <div className={cn("relative mb-8", isFullscreen && "mb-10")}>
+      <svg className={cn("-rotate-90", sizeClass)} viewBox="0 0 100 100">
+        <circle
+          cx="50"
+          cy="50"
+          fill="none"
+          r="44"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="text-muted/30"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          fill="none"
+          r="44"
+          stroke="currentColor"
+          strokeDasharray={`${2 * Math.PI * 44}`}
+          strokeDashoffset={`${2 * Math.PI * 44 * (1 - progress / 100)}`}
+          strokeLinecap="round"
+          strokeWidth="2"
+          className={cn(config.color, "transition-all duration-300")}
+        />
+      </svg>
+
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
+        <div className={cn("mb-3 flex items-center gap-2", config.color)}>
+          {config.icon}
+          <span className="text-sm font-medium uppercase">{config.label}</span>
+        </div>
+        <span className={cn(
+          "font-mono font-bold tabular-nums",
+          isFullscreen ? "text-8xl sm:text-9xl" : "text-6xl sm:text-7xl"
+        )}>
+          {formatTime(displayTime)}
+        </span>
+          <span className={cn(
+            "mt-3 max-w-[70%] text-center text-sm leading-tight text-muted-foreground",
+            isFullscreen ? "max-w-[55%]" : "max-w-[62%] text-xs sm:text-sm"
+          )}>
+            {selectedTask?.title || `Session ${sessionNumber}`}
+          </span>
+        </div>
+    </div>
+  )
+}
+
+function FocusControls({
+  isRunning,
+  isSyncingSession,
+  onReset,
+  onSkip,
+  onToggle,
+}: {
+  isRunning: boolean
+  isSyncingSession: boolean
+  onReset: () => void
+  onSkip: () => void
+  onToggle: () => void
+}) {
+  return (
+    <div className="mb-8 flex items-center gap-4">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onReset}
+        className="h-12 w-12 rounded-full"
+      >
+        <RotateCcw className="h-5 w-5" />
+      </Button>
+
+      <Button
+        onClick={onToggle}
+        size="lg"
+        disabled={isSyncingSession}
+        className={cn(
+          "h-20 w-20 rounded-full text-xl shadow-lg transition-transform hover:scale-105",
+          isRunning ? "bg-orange-500 hover:bg-orange-600" : "bg-primary"
+        )}
+      >
+        {isRunning ? <Pause className="h-8 w-8" /> : <Play className="ml-1 h-8 w-8" />}
+      </Button>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onSkip}
+        className="h-12 w-12 rounded-full"
+      >
+        <SkipForward className="h-5 w-5" />
+      </Button>
+    </div>
+  )
+}
+
+function scoreToLegacyLevel(value: number | null) {
+  if (value === null) return null
+  return Math.min(5, Math.max(1, Math.ceil(value * 5)))
+}
+
+function formatPercentLabel(value: number | null) {
+  if (value === null) return '50%'
+  return `${Math.round(value * 100)}%`
 }
