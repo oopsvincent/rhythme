@@ -185,3 +185,20 @@ export interface Notification {
   link?: string | null
   created_at: string
 }
+
+export interface FocusSession {
+  session_id: number
+  user_id: string
+  task_id: number
+  planned_duration: number
+  actual_duration: number | null
+  energy_level: number | null
+  interruptions: number | null
+  mood_before: number | null
+  mood_after: number | null
+  started_at: string
+  ended_at: string | null
+  metadata: Record<string, unknown> | null
+  created_at: string | null
+  tasks?: Pick<Task, 'task_id' | 'title' | 'status' | 'priority'> | null
+}

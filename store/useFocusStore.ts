@@ -14,6 +14,9 @@ interface FocusTimerState {
   sessionsCompleted: number
   startedAt: number | null // timestamp when timer started
   targetDuration: number // duration in seconds for current session
+  activeSessionId: number | null
+  activeTaskId: string | null
+  interruptions: number
   
   // Actions
   start: () => void
@@ -24,6 +27,9 @@ interface FocusTimerState {
   completeSession: () => void
   getDisplayTime: () => number // Calculate current display time
   markCompleted: () => void
+  setActiveFocusSession: (sessionId: number | null, taskId: string | null) => void
+  incrementInterruptions: () => number
+  clearActiveFocusSession: () => void
 }
 
 export const useFocusStore = create<FocusTimerState>()(
@@ -36,6 +42,9 @@ export const useFocusStore = create<FocusTimerState>()(
       sessionsCompleted: 0,
       startedAt: null,
       targetDuration: 25 * 60,
+      activeSessionId: null,
+      activeTaskId: null,
+      interruptions: 0,
 
       start: () => {
         const state = get()
@@ -108,6 +117,28 @@ export const useFocusStore = create<FocusTimerState>()(
           startedAt: null,
         })
       },
+
+      setActiveFocusSession: (sessionId, taskId) => {
+        set({
+          activeSessionId: sessionId,
+          activeTaskId: taskId,
+          interruptions: 0,
+        })
+      },
+
+      incrementInterruptions: () => {
+        const next = get().interruptions + 1
+        set({ interruptions: next })
+        return next
+      },
+
+      clearActiveFocusSession: () => {
+        set({
+          activeSessionId: null,
+          activeTaskId: null,
+          interruptions: 0,
+        })
+      },
     }),
     {
       name: 'rhythme-focus-timer',
@@ -120,6 +151,9 @@ export const useFocusStore = create<FocusTimerState>()(
         sessionsCompleted: state.sessionsCompleted,
         startedAt: state.startedAt,
         targetDuration: state.targetDuration,
+        activeSessionId: state.activeSessionId,
+        activeTaskId: state.activeTaskId,
+        interruptions: state.interruptions,
       }),
       // On rehydration, recalculate time if timer was running
       onRehydrateStorage: () => (state) => {
