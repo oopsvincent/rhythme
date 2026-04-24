@@ -152,6 +152,18 @@ function formatDateGroupLabel(dateKey: string): string {
   });
 }
 
+function isTaskOverdue(task: Task) {
+  if (!task.due_date || task.status === "completed") return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const due = new Date(task.due_date);
+  due.setHours(0, 0, 0, 0);
+
+  return due < today;
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TasksPage() {
@@ -198,14 +210,35 @@ export default function TasksPage() {
     });
   }, [tasks, timeFrame]);
 
+  const overdueTasks = useMemo(
+    () =>
+      tasks
+        .filter(isTaskOverdue)
+        .sort((a, b) => {
+          const dueDiff =
+            new Date(a.due_date ?? 0).getTime() -
+            new Date(b.due_date ?? 0).getTime();
+
+          if (dueDiff !== 0) return dueDiff;
+
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }),
+    [tasks]
+  );
+
+  const regularFilteredTasks = useMemo(() => {
+    const overdueTaskIds = new Set(overdueTasks.map((task) => task.task_id));
+    return filteredTasks.filter((task) => !overdueTaskIds.has(task.task_id));
+  }, [filteredTasks, overdueTasks]);
+
   const tasksByDate = useMemo(() => {
-    return filteredTasks.reduce<Record<string, Task[]>>((acc, task) => {
+    return regularFilteredTasks.reduce<Record<string, Task[]>>((acc, task) => {
       const key = getDateKey(task.created_at);
       if (!acc[key]) acc[key] = [];
       acc[key].push(task);
       return acc;
     }, {});
-  }, [filteredTasks]);
+  }, [regularFilteredTasks]);
 
   const sortedDateKeys = useMemo(
     () =>
@@ -529,10 +562,60 @@ export default function TasksPage() {
           </motion.div>
         )}
 
+        {!isLoading && !error && tasks.length > 0 && filteredTasks.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-16 text-center"
+          >
+            <div className="h-14 w-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+              <Target className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold mb-1">
+              No tasks in {currentTimeFrameLabel}
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              Nothing matches this filter right now. Overdue tasks still stay visible below so you can catch up.
+            </p>
+          </motion.div>
+        )}
+
         {/* ── Task list ── */}
         {!isLoading && !error && tasks.length > 0 && (
           <div className="space-y-6">
             <AnimatePresence>
+              {overdueTasks.length > 0 && (
+                <motion.div
+                  key="overdue"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="flex items-center justify-between mb-1 px-1">
+                    <h2 className="text-xs font-semibold uppercase tracking-widest text-destructive/80">
+                      Overdue
+                    </h2>
+                    <span className="text-xs text-muted-foreground/50">
+                      {overdueTasks.length}
+                    </span>
+                  </div>
+
+                  <div>
+                    <AnimatePresence mode="popLayout">
+                      {overdueTasks.map((task) => (
+                        <TaskItem
+                          key={task.task_id}
+                          task={task}
+                          onStatusChange={handleStatusChange}
+                          onDelete={() => handleDeleteTask(task.task_id)}
+                          onNavigate={() => navigateToTask(task.task_id)}
+                          isPending={isPending}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+
               {sortedDateKeys.map((dateKey, i) => {
                 const dayTasks = tasksByDate[dateKey];
                 const label = formatDateGroupLabel(dateKey);
