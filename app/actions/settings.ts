@@ -81,6 +81,20 @@ export async function updateUserProfile(formData: FormData): Promise<SettingsAct
     return { success: false, error: error.message }
   }
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    await supabase
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        email: user.email,
+        full_name: displayName.trim(),
+        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "id" })
+  }
+
+  revalidatePath("/settings/profile")
   revalidatePath("/settings/account")
   revalidatePath("/dashboard")
   

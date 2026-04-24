@@ -2,11 +2,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { RHYTHME_PRODUCT_KEY } from '@/lib/payments/dodo'
 
 export interface SubscriptionStatus {
   isPremium: boolean
   subscriptionStatus: string
   subscriptionId: string | null
+  cancelAtPeriodEnd?: boolean
 }
 
 /**
@@ -30,19 +32,23 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
   }
 
   const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('is_premium, subscription_status, subscription_id')
-    .eq('id', user.id)
-    .single()
+    .from('account_subscriptions')
+    .select('entitlement_active, status, provider_subscription_id, cancel_at_period_end')
+    .eq('user_id', user.id)
+    .eq('product_key', RHYTHME_PRODUCT_KEY)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  // If no profile exists, create one with defaults
+  // If no profile exists, create one with defaults for the central account table.
   if (profileError || !profile) {
     await supabase
       .from('profiles')
       .upsert({
         id: user.id,
-        is_premium: false,
-        subscription_status: 'inactive',
+        email: user.email,
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
       }, { onConflict: 'id' })
 
     return {
@@ -53,8 +59,14 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
   }
 
   return {
-    isPremium: profile.is_premium ?? false,
-    subscriptionStatus: profile.subscription_status ?? 'inactive',
-    subscriptionId: profile.subscription_id ?? null,
+    isPremium: profile.entitlement_active ?? false,
+    subscriptionStatus: profile.status ?? 'inactive',
+    subscriptionId: profile.provider_subscription_id ?? null,
+    cancelAtPeriodEnd: profile.cancel_at_period_end ?? false,
   }
+}
+
+export async function isCurrentUserPremium(): Promise<boolean> {
+  const status = await getSubscriptionStatus()
+  return status.isPremium
 }

@@ -4,6 +4,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { isCurrentUserPremium } from '@/app/actions/subscription'
 
 /**
  * Check if the user can create a journal entry today.
@@ -15,14 +16,7 @@ export async function canCreateJournal(): Promise<{ allowed: boolean; count: num
 
   if (!user) return { allowed: false, count: 0, limit: 1 }
 
-  // Check if premium
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_premium')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.is_premium) return { allowed: true, count: 0, limit: Infinity }
+  if (await isCurrentUserPremium()) return { allowed: true, count: 0, limit: Infinity }
 
   // Count today's journals
   const today = new Date()
@@ -50,14 +44,7 @@ export async function canCreateTask(): Promise<{ allowed: boolean; count: number
 
   if (!user) return { allowed: false, count: 0, limit: 10 }
 
-  // Check if premium
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_premium')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.is_premium) return { allowed: true, count: 0, limit: Infinity }
+  if (await isCurrentUserPremium()) return { allowed: true, count: 0, limit: Infinity }
 
   // Count today's tasks
   const today = new Date()
@@ -77,22 +64,15 @@ export async function canCreateTask(): Promise<{ allowed: boolean; count: number
 
 /**
  * Check if the user can create a habit.
- * Free users: 5 habits total (active). Premium users: unlimited.
+ * Free users: 3 active habits total. Premium users: unlimited.
  */
 export async function canCreateHabit(): Promise<{ allowed: boolean; count: number; limit: number }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return { allowed: false, count: 0, limit: 5 }
+  if (!user) return { allowed: false, count: 0, limit: 3 }
 
-  // Check if premium
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_premium')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.is_premium) return { allowed: true, count: 0, limit: Infinity }
+  if (await isCurrentUserPremium()) return { allowed: true, count: 0, limit: Infinity }
 
   // Count total active habits
   const { count } = await supabase
@@ -102,5 +82,5 @@ export async function canCreateHabit(): Promise<{ allowed: boolean; count: numbe
     .eq('is_active', true)
 
   const currentCount = count ?? 0
-  return { allowed: currentCount < 5, count: currentCount, limit: 5 }
+  return { allowed: currentCount < 3, count: currentCount, limit: 3 }
 }

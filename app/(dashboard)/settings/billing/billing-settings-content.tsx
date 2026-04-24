@@ -35,7 +35,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { usePremium } from "@/hooks/use-premium"
 
-// Updated pricing (display only — actual charge is from Razorpay plan config in INR)
+// Display pricing only. Dodo product configuration is the source of truth for charges.
 const pricing = {
   monthly: { starter: 0, premium: 9.99 },
   yearly: { starter: 0, premium: 99.99 }
