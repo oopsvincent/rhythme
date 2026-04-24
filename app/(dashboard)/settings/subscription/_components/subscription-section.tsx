@@ -1,5 +1,5 @@
 // app/(dashboard)/settings/subscription/_components/subscription-section.tsx
-// Subscription management with Razorpay checkout integration
+// Subscription management with Dodo Payments checkout integration
 
 "use client"
 
@@ -28,13 +28,14 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  CreditCard,
+  AlertTriangle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { usePremium } from "@/hooks/use-premium"
 
-// Display pricing (actual charge is from Razorpay plan config in INR)
+// Display pricing. Dodo product ids remain the source of truth for actual charges.
 const pricing = {
   monthly: { starter: 0, premium: 9.99 },
   yearly: { starter: 0, premium: 99.99 }
@@ -76,18 +77,44 @@ interface SubscriptionSectionProps {
   currentPlan: "starter" | "premium"
   details?: {
     plan?: string;
-    amountPaid?: number;
-    endDate?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    billingHistory?: any[];
+    status?: string;
+    amount?: number | string;
+    currency?: string;
+    billingInterval?: string;
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd?: boolean;
+    subscriptionId?: string;
+    billingHistory?: BillingHistoryItem[];
   }
+}
+
+interface BillingHistoryItem {
+  id: string
+  provider_payment_id?: string | null
+  plan_key?: string | null
+  amount?: number | string | null
+  currency?: string | null
+  status: string
+  paid_at?: string | null
+  receipt_url?: string | null
+}
+
+function formatMoney(amount?: number | string | null, currency = "USD") {
+  if (amount == null) return "Managed by Dodo"
+  const parsedAmount = typeof amount === "string" ? Number(amount) : amount
+  if (!Number.isFinite(parsedAmount)) return "Managed by Dodo"
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(parsedAmount)
 }
 
 export function SubscriptionSection({ currentPlan, details }: SubscriptionSectionProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly")
   const [showAllFeatures, setShowAllFeatures] = useState(false)
   const [isUpgrading, setIsUpgrading] = useState(false)
-  const { refetch } = usePremium()
+  const [isUpdatingPayment, setIsUpdatingPayment] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
   
   const isPremium = currentPlan === "premium"
   const yearlyPrice = pricing.yearly.premium
@@ -96,6 +123,10 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
   const savingsPercentage = Math.round((monthlySavings / (monthlyPrice * 12)) * 100)
   
   const visibleFeatures = showAllFeatures ? premiumFeatures : premiumFeatures.slice(0, 6)
+  const renewalDate = details?.currentPeriodEnd ? new Date(details.currentPeriodEnd) : null
+  const daysUntilRenewal = renewalDate
+    ? Math.max(0, Math.ceil((renewalDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24)))
+    : null
 
   const handleUpgrade = async () => {
     setIsUpgrading(true)
@@ -129,6 +160,57 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
     }
   }
 
+  const handleUpdatePaymentMethod = async () => {
+    setIsUpdatingPayment(true)
+
+    try {
+      const res = await fetch("/api/payments/update-payment-method", { method: "POST" })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "Failed to create payment update link")
+      }
+
+      const { url } = await res.json()
+      if (url) {
+        window.location.href = url
+      } else {
+        toast.error("Dodo did not return a payment update link")
+      }
+    } catch (error) {
+      toast.error("Could not update payment method", {
+        description: error instanceof Error ? error.message : "Something went wrong",
+      })
+    } finally {
+      setIsUpdatingPayment(false)
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    const confirmed = window.confirm("Cancel your subscription at the end of the current billing period?")
+    if (!confirmed) return
+
+    setIsCancelling(true)
+
+    try {
+      const res = await fetch("/api/payments/cancel-subscription", { method: "POST" })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "Failed to cancel subscription")
+      }
+
+      toast.success("Subscription cancellation scheduled")
+      window.location.reload()
+    } catch (error) {
+      toast.error("Could not cancel subscription", {
+        description: error instanceof Error ? error.message : "Something went wrong",
+      })
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
   return (
     <div className="space-y-8">
       {/* Current Plan */}
@@ -145,7 +227,7 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
             </h3>
           </div>
           <Badge variant={isPremium ? "default" : "secondary"}>
-            {isPremium ? "Active" : "Current"}
+            {isPremium ? (details?.cancelAtPeriodEnd ? "Cancels soon" : "Active") : "Current"}
           </Badge>
         </div>
         
@@ -178,17 +260,28 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span className="capitalize">Active subscription {details?.plan ? `(${details.plan})` : ""}</span>
+                  <span className="capitalize">
+                    {details?.status || "active"} subscription {details?.plan ? `(${details.plan})` : ""}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Receipt className="h-4 w-4" />
-                  <span>${details?.amountPaid || yearlyPrice}/{details?.plan === 'monthly' ? 'month' : 'year'}</span>
+                  <span>{formatMoney(details?.amount, details?.currency || "USD")}/{details?.billingInterval || details?.plan || "period"}</span>
                 </div>
               </div>
-              {details?.endDate && (
+              {renewalDate && (
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  <span><strong className="text-foreground">{Math.max(0, Math.ceil((new Date(details.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days left</strong> until renewal</span>
+                  <span>
+                    <strong className="text-foreground">{daysUntilRenewal} days left</strong>
+                    {details?.cancelAtPeriodEnd ? " until access ends" : " until renewal"}
+                  </span>
+                </div>
+              )}
+              {details?.cancelAtPeriodEnd && (
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>Your subscription is scheduled to cancel at period end.</span>
                 </div>
               )}
             </div>
@@ -357,7 +450,10 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
                 <p className="font-medium text-sm">Update Payment Method</p>
                 <p className="text-xs text-muted-foreground">Managed by Dodo Payments</p>
               </div>
-              <Button variant="ghost" size="sm">Update</Button>
+              <Button variant="ghost" size="sm" onClick={handleUpdatePaymentMethod} disabled={isUpdatingPayment}>
+                {isUpdatingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                <span className="ml-2">Update</span>
+              </Button>
             </div>
             
             <div className="flex items-center justify-between p-4 rounded-lg bg-destructive/5 border border-destructive/20">
@@ -367,8 +463,15 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
                   Your plan remains active until the billing period ends
                 </p>
               </div>
-              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                Cancel
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={handleCancelSubscription}
+                disabled={isCancelling || details?.cancelAtPeriodEnd}
+              >
+                {isCancelling && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                {details?.cancelAtPeriodEnd ? "Scheduled" : "Cancel"}
               </Button>
             </div>
           </section>
@@ -390,11 +493,11 @@ export function SubscriptionSection({ currentPlan, details }: SubscriptionSectio
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
-                      {details.billingHistory.map((item: any, i: number) => (
-                        <tr key={i} className="hover:bg-muted/10 transition-colors">
-                          <td className="px-4 py-3">{new Date(item.date).toLocaleDateString()}</td>
-                          <td className="px-4 py-3 capitalize">{item.plan_type}</td>
-                          <td className="px-4 py-3 text-right">${item.amount}</td>
+                      {details.billingHistory.map((item) => (
+                        <tr key={item.id} className="hover:bg-muted/10 transition-colors">
+                          <td className="px-4 py-3">{item.paid_at ? new Date(item.paid_at).toLocaleDateString() : "Pending"}</td>
+                          <td className="px-4 py-3 capitalize">{item.plan_key || "Premium"}</td>
+                          <td className="px-4 py-3 text-right">{formatMoney(item.amount, item.currency || "USD")}</td>
                           <td className="px-4 py-3 text-center">
                             <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-200">
                               {item.status}

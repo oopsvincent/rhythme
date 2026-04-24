@@ -1,37 +1,50 @@
-// app/(dashboard)/settings/subscription/page.tsx
-// Subscription settings page — fetches real plan from profiles table
-
 import { getUser } from "@/app/actions/auth"
 import { redirect } from "next/navigation"
 import { SubscriptionSection } from "./_components/subscription-section"
 import { createClient } from "@/lib/supabase/server"
 import { getAmplecenLoginUrl } from "@/lib/auth-redirect"
+import { RHYTHME_PRODUCT_KEY } from "@/lib/payments/dodo"
 
 export default async function SubscriptionPage() {
   const user = await getUser()
-  
+
   if (!user) {
-    redirect(getAmplecenLoginUrl('/settings/subscription'))
+    redirect(getAmplecenLoginUrl("/settings/subscription"))
   }
 
-  // Fetch real subscription status
   const supabase = await createClient()
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_premium, subscription_plan, subscription_amount_paid, subscription_end_date, billing_history")
-    .eq("id", user.id)
-    .single()
+  const { data: subscription } = await supabase
+    .from("account_subscriptions")
+    .select("plan_key, status, entitlement_active, amount, currency, billing_interval, current_period_end, cancel_at_period_end, provider_subscription_id")
+    .eq("user_id", user.id)
+    .eq("product_key", RHYTHME_PRODUCT_KEY)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  const currentPlan = profile?.is_premium ? "premium" : "starter"
+  const { data: billingHistory } = await supabase
+    .from("billing_events")
+    .select("id, provider_payment_id, plan_key, amount, currency, status, paid_at, receipt_url")
+    .eq("user_id", user.id)
+    .eq("product_key", RHYTHME_PRODUCT_KEY)
+    .order("paid_at", { ascending: false, nullsFirst: false })
+    .limit(6)
+
+  const currentPlan = subscription?.entitlement_active ? "premium" : "starter"
 
   return (
-    <SubscriptionSection 
+    <SubscriptionSection
       currentPlan={currentPlan}
       details={{
-        plan: profile?.subscription_plan,
-        amountPaid: profile?.subscription_amount_paid,
-        endDate: profile?.subscription_end_date,
-        billingHistory: profile?.billing_history,
+        plan: subscription?.plan_key,
+        status: subscription?.status,
+        amount: subscription?.amount,
+        currency: subscription?.currency,
+        billingInterval: subscription?.billing_interval,
+        currentPeriodEnd: subscription?.current_period_end,
+        cancelAtPeriodEnd: subscription?.cancel_at_period_end,
+        subscriptionId: subscription?.provider_subscription_id,
+        billingHistory: billingHistory ?? [],
       }}
     />
   )

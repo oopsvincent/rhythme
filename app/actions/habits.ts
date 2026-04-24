@@ -14,6 +14,7 @@ import {
   getPeriodLabel,
   computeUnifiedStreak,
 } from "@/lib/habit-helpers";
+import { canCreateHabit } from "@/app/actions/usage-limits";
 
 // === Authentication Helper ===
 async function getAuthenticatedUser() {
@@ -271,6 +272,13 @@ export async function createHabit(
 ): Promise<ActionResponse<Habit>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
+    const limit = await canCreateHabit();
+
+    if (!limit.allowed) {
+      return {
+        error: `Free accounts can track up to ${limit.limit} active habits. Upgrade to Premium for unlimited habits.`,
+      };
+    }
 
     const freq: HabitFrequency = input.frequency ?? 0;
     const targetCount = input.target_count ?? 1;
