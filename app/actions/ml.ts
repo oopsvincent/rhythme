@@ -13,7 +13,7 @@ export async function fetchPredictionAction(
     throw new Error("Prediction service unavailable (missing URL)");
   }
 
-  const response = await fetch(`${ML_ENDPOINT}/o1/predict`, {
+  const response = await fetch(`${ML_ENDPOINT}/v1/predict`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -38,7 +38,7 @@ export async function fetchSentimentAction(
   }
 
   try {
-    const response = await fetch(`${ML_ENDPOINT}/o1/journal`, {
+    const response = await fetch(`${ML_ENDPOINT}/v1/journal`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export async function warmServicesAction(): Promise<boolean> {
   }
 
   try {
-    const response = await fetch(`${ML_ENDPOINT}/o1/health`, {
+    const response = await fetch(`${ML_ENDPOINT}/v1/health`, {
       method: "GET",
       headers: {
         "x-api-secret": API_SECRET,
