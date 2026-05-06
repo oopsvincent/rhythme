@@ -38,7 +38,28 @@ export function useWarmServices(): UseWarmServicesResult {
   }, []);
 
   useEffect(() => {
-    warmUp();
+    let cancelled = false;
+
+    const runWarmUp = () => {
+      if (cancelled) return;
+      void warmUp();
+    };
+
+    // Defer ML warm-up until the browser is idle so initial app data (Supabase)
+    // is not competing with Render cold-start requests.
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(runWarmUp, { timeout: 2000 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = window.setTimeout(runWarmUp, 1200);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
   }, [warmUp]);
 
   return {
