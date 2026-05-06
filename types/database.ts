@@ -212,13 +212,10 @@ export interface Notification {
 export interface FocusSession {
   session_id: number
   user_id: string
-  task_id: number
+  task_id: number | null
   planned_duration: number
   actual_duration: number | null
-  energy_level: number | null
   interruptions: number | null
-  mood_before: number | null
-  mood_after: number | null
   started_at: string
   ended_at: string | null
   metadata: Record<string, unknown> | null

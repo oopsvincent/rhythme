@@ -4,8 +4,9 @@ import * as React from 'react'
 import { ChevronLeft, ChevronRight, Brain, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { getSessionsForMonth, FocusSessionRecord } from '@/lib/focus/focus-db'
-import { formatDuration } from '@/lib/focus-storage'
+import { getFocusSessionsForMonth } from '@/app/actions/focusSessions'
+import type { FocusSession } from '@/types/database'
+import { formatDuration } from '@/lib/focus-mode'
 
 interface FocusHeatmapCalendarProps {
   className?: string
@@ -13,7 +14,7 @@ interface FocusHeatmapCalendarProps {
 
 export function FocusHeatmapCalendar({ className }: FocusHeatmapCalendarProps) {
   const [currentDate, setCurrentDate] = React.useState(new Date())
-  const [sessions, setSessions] = React.useState<FocusSessionRecord[]>([])
+  const [sessions, setSessions] = React.useState<FocusSession[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [selectedDay, setSelectedDay] = React.useState<number | null>(null)
 
@@ -25,8 +26,10 @@ export function FocusHeatmapCalendar({ className }: FocusHeatmapCalendarProps) {
     async function loadSessions() {
       setIsLoading(true)
       try {
-        const monthSessions = await getSessionsForMonth(year, month)
-        setSessions(monthSessions)
+        const result = await getFocusSessionsForMonth(year, month)
+        if (result.data) {
+          setSessions(result.data)
+        }
       } catch (error) {
         console.error('Failed to load sessions:', error)
       } finally {
@@ -39,12 +42,14 @@ export function FocusHeatmapCalendar({ className }: FocusHeatmapCalendarProps) {
   // Calculate focus time per day
   const focusTimeByDay = React.useMemo(() => {
     const map: Record<number, number> = {}
-    sessions
-      .filter(s => s.type === 'focus' && !s.interrupted)
-      .forEach(s => {
-        const day = new Date(s.completedAt).getDate()
-        map[day] = (map[day] || 0) + s.duration
-      })
+    sessions.forEach(s => {
+      const actualDuration = s.actual_duration ?? s.planned_duration
+      const completed = Boolean(s.ended_at) && actualDuration >= s.planned_duration
+      if (completed && s.ended_at) {
+        const day = new Date(s.ended_at).getDate()
+        map[day] = (map[day] || 0) + actualDuration
+      }
+    })
     return map
   }, [sessions])
 
@@ -85,12 +90,12 @@ export function FocusHeatmapCalendar({ className }: FocusHeatmapCalendarProps) {
 
   // Get sessions for selected day
   const selectedDaySessions = selectedDay
-    ? sessions.filter(s => new Date(s.completedAt).getDate() === selectedDay)
+    ? sessions.filter(s => s.ended_at && new Date(s.ended_at).getDate() === selectedDay)
     : []
 
   const selectedDayFocusTime = selectedDay ? (focusTimeByDay[selectedDay] || 0) : 0
   const selectedDaySessionCount = selectedDay
-    ? selectedDaySessions.filter(s => s.type === 'focus' && !s.interrupted).length
+    ? selectedDaySessions.filter(s => s.ended_at && (s.actual_duration ?? s.planned_duration) >= s.planned_duration).length
     : 0
 
   return (
