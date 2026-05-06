@@ -84,3 +84,29 @@ export async function canCreateHabit(): Promise<{ allowed: boolean; count: numbe
   const currentCount = count ?? 0
   return { allowed: currentCount < 3, count: currentCount, limit: 3 }
 }
+
+/**
+ * Check if the user can create a mood log on a given day.
+ * Free users: 1 mood log/day. Premium users: unlimited.
+ */
+export async function canCreateMoodLog(
+  loggedAt?: string
+): Promise<{ allowed: boolean; count: number; limit: number }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { allowed: false, count: 0, limit: 1 }
+
+  if (await isCurrentUserPremium()) return { allowed: true, count: 0, limit: Infinity }
+
+  const targetDate = loggedAt ?? new Date().toISOString().split('T')[0]
+
+  const { count } = await supabase
+    .from('mood_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('logged_at', targetDate)
+
+  const currentCount = count ?? 0
+  return { allowed: currentCount < 1, count: currentCount, limit: 1 }
+}

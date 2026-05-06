@@ -55,10 +55,10 @@ export function useWarmServices(): UseWarmServicesResult {
       };
     }
 
-    const timeoutId = window.setTimeout(runWarmUp, 1200);
+    const timeoutId = globalThis.setTimeout(runWarmUp, 1200);
     return () => {
       cancelled = true;
-      window.clearTimeout(timeoutId);
+      globalThis.clearTimeout(timeoutId);
     };
   }, [warmUp]);
 
