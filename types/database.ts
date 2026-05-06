@@ -115,6 +115,29 @@ export interface HabitWithStats extends Habit {
   daysUntilPrediction?: number  // Days remaining until AI predictions are available
 }
 
+// Mood logs
+export interface MoodLog {
+  id: number
+  user_id: string
+  mood_score: number
+  note: string | null
+  logged_at: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateMoodLogInput {
+  mood_score: number
+  note?: string
+  logged_at?: string
+}
+
+export interface UpdateMoodLogInput {
+  mood_score?: number
+  note?: string | null
+  logged_at?: string
+}
+
 // Journals 
 
 export interface JournalMoodTags {
