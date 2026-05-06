@@ -42,18 +42,48 @@ export async function getFocusSessions(limit = 50): Promise<ActionResponse<Focus
   }
 }
 
+export async function getFocusSessionsForMonth(year: number, month: number): Promise<ActionResponse<FocusSession[]>> {
+  try {
+    const { user, supabase } = await getAuthenticatedUser()
+
+    // month is 0-indexed in JS dates
+    const startDate = new Date(year, month, 1)
+    const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999)
+
+    const { data, error } = await supabase
+      .from('focus_sessions')
+      .select(`
+        *,
+        tasks:task_id (
+          task_id,
+          title
+        )
+      `)
+      .eq('user_id', user.id)
+      .gte('started_at', startDate.toISOString())
+      .lte('started_at', endDate.toISOString())
+      .order('started_at', { ascending: false })
+
+    if (error) throw error
+
+    return { data: data as FocusSession[] }
+  } catch (error) {
+    console.error('getFocusSessionsForMonth error:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to fetch focus sessions for month' }
+  }
+}
+
 export async function startFocusSession(input: {
-  taskId: string
+  taskId?: string | null
   plannedDuration: number
-  moodBefore?: number | null
-  energyLevel?: number | null
   metadata?: Record<string, unknown>
 }): Promise<ActionResponse<FocusSession>> {
   try {
     const { user, supabase } = await getAuthenticatedUser()
-    const taskId = Number(input.taskId)
+    const taskIdStr = input.taskId !== null && input.taskId !== undefined ? String(input.taskId).trim() : ''
+    const taskId = taskIdStr.length > 0 ? Number(taskIdStr) : null
 
-    if (!Number.isFinite(taskId)) {
+    if (taskId !== null && !Number.isFinite(taskId)) {
       throw new Error('Invalid task selected')
     }
 
@@ -63,8 +93,6 @@ export async function startFocusSession(input: {
         user_id: user.id,
         task_id: taskId,
         planned_duration: input.plannedDuration,
-        mood_before: input.moodBefore ?? null,
-        energy_level: input.energyLevel ?? null,
         interruptions: 0,
         metadata: input.metadata ?? {},
       })
@@ -83,9 +111,7 @@ export async function startFocusSession(input: {
 export async function updateFocusSession(
   sessionId: number,
   updates: {
-    energyLevel?: number | null
     interruptions?: number
-    moodBefore?: number | null
     metadata?: Record<string, unknown>
   }
 ): Promise<ActionResponse<FocusSession>> {
@@ -95,9 +121,7 @@ export async function updateFocusSession(
     const { data, error } = await supabase
       .from('focus_sessions')
       .update({
-        ...(updates.energyLevel !== undefined && { energy_level: updates.energyLevel }),
         ...(updates.interruptions !== undefined && { interruptions: updates.interruptions }),
-        ...(updates.moodBefore !== undefined && { mood_before: updates.moodBefore }),
         ...(updates.metadata !== undefined && { metadata: updates.metadata }),
       })
       .eq('session_id', sessionId)
@@ -117,7 +141,6 @@ export async function updateFocusSession(
 export async function endFocusSession(input: {
   sessionId: number
   actualDuration: number
-  moodAfter?: number | null
   interruptions?: number
   metadata?: Record<string, unknown>
 }): Promise<ActionResponse<FocusSession>> {
@@ -128,7 +151,6 @@ export async function endFocusSession(input: {
       .from('focus_sessions')
       .update({
         actual_duration: Math.max(0, Math.round(input.actualDuration)),
-        mood_after: input.moodAfter ?? null,
         interruptions: input.interruptions ?? 0,
         ended_at: new Date().toISOString(),
         ...(input.metadata !== undefined && { metadata: input.metadata }),

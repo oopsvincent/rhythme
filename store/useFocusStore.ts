@@ -4,19 +4,17 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { toast } from 'sonner'
 
-export type SessionType = 'focus' | 'short_break' | 'long_break'
+export type SessionType = 'focus' | 'break'
 
 interface FocusTimerState {
   // Timer state
   timeLeft: number // Only used when paused
   isRunning: boolean
   sessionType: SessionType
-  sessionsCompleted: number
   startedAt: number | null // timestamp when timer started
   targetDuration: number // duration in seconds for current session
   activeSessionId: number | null
   activeTaskId: string | null
-  interruptions: number
   
   // Actions
   start: () => void
@@ -28,7 +26,6 @@ interface FocusTimerState {
   getDisplayTime: () => number // Calculate current display time
   markCompleted: () => void
   setActiveFocusSession: (sessionId: number | null, taskId: string | null) => void
-  incrementInterruptions: () => number
   clearActiveFocusSession: () => void
 }
 
@@ -39,12 +36,10 @@ export const useFocusStore = create<FocusTimerState>()(
       timeLeft: 25 * 60,
       isRunning: false,
       sessionType: 'focus',
-      sessionsCompleted: 0,
       startedAt: null,
       targetDuration: 25 * 60,
       activeSessionId: null,
       activeTaskId: null,
-      interruptions: 0,
 
       start: () => {
         const state = get()
@@ -69,8 +64,7 @@ export const useFocusStore = create<FocusTimerState>()(
         const state = get()
         const defaultDurations: Record<SessionType, number> = {
           focus: 25 * 60,
-          short_break: 5 * 60,
-          long_break: 15 * 60,
+          break: 5 * 60,
         }
         const time = duration ?? defaultDurations[state.sessionType]
         set({
@@ -94,11 +88,7 @@ export const useFocusStore = create<FocusTimerState>()(
       },
 
       completeSession: () => {
-        set((state) => ({
-          sessionsCompleted: state.sessionType === 'focus' 
-            ? state.sessionsCompleted + 1 
-            : state.sessionsCompleted,
-        }))
+        // No-op for now, simplified
       },
 
       getDisplayTime: () => {
@@ -122,38 +112,28 @@ export const useFocusStore = create<FocusTimerState>()(
         set({
           activeSessionId: sessionId,
           activeTaskId: taskId,
-          interruptions: 0,
         })
-      },
-
-      incrementInterruptions: () => {
-        const next = get().interruptions + 1
-        set({ interruptions: next })
-        return next
       },
 
       clearActiveFocusSession: () => {
         set({
           activeSessionId: null,
           activeTaskId: null,
-          interruptions: 0,
         })
       },
     }),
     {
-      name: 'rhythme-focus-timer',
+      name: 'rhythme-focus-timer-v2',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Only persist these fields
         timeLeft: state.timeLeft,
         isRunning: state.isRunning,
         sessionType: state.sessionType,
-        sessionsCompleted: state.sessionsCompleted,
         startedAt: state.startedAt,
         targetDuration: state.targetDuration,
         activeSessionId: state.activeSessionId,
         activeTaskId: state.activeTaskId,
-        interruptions: state.interruptions,
       }),
       // On rehydration, recalculate time if timer was running
       onRehydrateStorage: () => (state) => {
