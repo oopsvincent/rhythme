@@ -21,6 +21,7 @@ const sectionTitles: Record<string, string> = {
   goals: "Goals",
   habits: "Habits",
   focus: "Focus",
+  mood: "Mood",
   ai: "Rhythmé AI",
   account: "Account",
   notifications: "Notifications",

@@ -19,6 +19,7 @@ import {
   CalendarSync,
   CalendarDays,
   ClockArrowUp,
+  HeartPulse,
   Home,
   ListCheck,
   NotebookPen,
@@ -57,6 +58,24 @@ const navigationItems = [
     url: "/dashboard/focus",
     icon: ClockArrowUp,
     section: "focus",
+  },
+  {
+    title: "Mood",
+    url: "/dashboard/mood",
+    icon: HeartPulse,
+    section: "mood",
+    items: [
+      {
+        title: "Log",
+        url: "/dashboard/mood",
+        icon: HeartPulse,
+      },
+      {
+        title: "History",
+        url: "/dashboard/mood/history",
+        icon: CalendarDays,
+      },
+    ],
   },
   {
     title: "Journal",

@@ -13,7 +13,7 @@ import { Crown, Sparkles, Lock, Zap } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
-export type PremiumGateReason = "journal" | "task" | "habit"
+export type PremiumGateReason = "journal" | "task" | "habit" | "mood"
 
 const GATE_CONFIG: Record<PremiumGateReason, {
   title: string
@@ -35,9 +35,15 @@ const GATE_CONFIG: Record<PremiumGateReason, {
   },
   habit: {
     title: "Habit Limit Reached",
-    description: "Free users can track up to 5 habits.",
-    limit: "5 habits total",
+    description: "Free users can track up to 3 habits.",
+    limit: "3 habits total",
     icon: Sparkles,
+  },
+  mood: {
+    title: "Mood Log Limit Reached",
+    description: "Free users can save 1 mood log per day.",
+    limit: "1 mood log/day",
+    icon: Lock,
   },
 }
 
@@ -99,7 +105,7 @@ export function PremiumGateModal({ open, onOpenChange, reason }: PremiumGateModa
             With Premium you get
           </p>
           <div className="grid gap-1.5">
-            {["Unlimited journals every day", "Unlimited tasks", "Unlimited habits", "Custom themes & more"].map((perk) => (
+            {["Unlimited journals every day", "Unlimited tasks", "Unlimited mood logs", "Custom themes & more"].map((perk) => (
               <div key={perk} className="flex items-center gap-2 text-sm">
                 <Crown className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                 <span className="text-muted-foreground">{perk}</span>
