@@ -216,9 +216,42 @@ export interface FocusSession {
   planned_duration: number
   actual_duration: number | null
   interruptions: number | null
+  mood_before: number | null
+  mood_after: number | null
+  energy_start: number | null
+  energy_end: number | null
   started_at: string
   ended_at: string | null
+  interruption_details: InterruptionDetail[] | null
+  custom_task_text: string | null
+  tags: string[] | null
   metadata: Record<string, unknown> | null
   created_at: string | null
   tasks?: Pick<Task, 'task_id' | 'title' | 'status' | 'priority'> | null
+}
+
+export interface InterruptionDetail {
+  type: 'notification' | 'mind_wandering' | 'phone' | 'external' | 'other'
+  label?: string
+  timestamp: string
+}
+
+export interface StartFocusSessionInput {
+  taskId?: string | null
+  customTaskText?: string | null
+  plannedDuration: number
+  energyStart?: number | null
+  moodBefore?: number | null
+  tags?: string[] | null
+  metadata?: Record<string, unknown>
+}
+
+export interface EndFocusSessionInput {
+  sessionId: number
+  actualDuration: number
+  moodAfter: number
+  energyEnd?: number | null
+  interruptions?: number
+  interruptionDetails?: InterruptionDetail[]
+  metadata?: Record<string, unknown>
 }

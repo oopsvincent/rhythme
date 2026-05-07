@@ -58,6 +58,18 @@ const navigationItems = [
     url: "/dashboard/focus",
     icon: ClockArrowUp,
     section: "focus",
+    items: [
+      {
+        title: "Session",
+        url: "/dashboard/focus",
+        icon: ClockArrowUp,
+      },
+      {
+        title: "History",
+        url: "/dashboard/focus/history",
+        icon: History,
+      },
+    ],
   },
   {
     title: "Mood",
