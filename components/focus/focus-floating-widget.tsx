@@ -126,10 +126,12 @@ export function FocusFloatingWidget() {
       const result = await endFocusSession({
         sessionId,
         actualDuration,
+        moodAfter: 3, // Default neutral mood when ending from mini widget
         metadata: {
           presetId: preferences.presetId,
           completed: reason === 'completed',
           endedReason: reason,
+          endedFromWidget: true,
         },
       })
 

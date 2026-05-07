@@ -244,6 +244,7 @@ export default function FocusTimer() {
       const result = await endFocusSession({
         sessionId,
         actualDuration,
+        moodAfter: 3,
         metadata,
       })
 

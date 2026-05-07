@@ -1,7 +1,12 @@
 'use server'
 
 import { createClient } from "@/lib/supabase/server"
-import type { ActionResponse, FocusSession } from "@/types/database"
+import type {
+  ActionResponse,
+  FocusSession,
+  StartFocusSessionInput,
+  EndFocusSessionInput,
+} from "@/types/database"
 
 async function getAuthenticatedUser() {
   const supabase = await createClient()
@@ -14,21 +19,23 @@ async function getAuthenticatedUser() {
   return { user, supabase }
 }
 
+const FOCUS_SESSION_SELECT = `
+  *,
+  tasks:task_id (
+    task_id,
+    title,
+    status,
+    priority
+  )
+`
+
 export async function getFocusSessions(limit = 50): Promise<ActionResponse<FocusSession[]>> {
   try {
     const { user, supabase } = await getAuthenticatedUser()
 
     const { data, error } = await supabase
       .from('focus_sessions')
-      .select(`
-        *,
-        tasks:task_id (
-          task_id,
-          title,
-          status,
-          priority
-        )
-      `)
+      .select(FOCUS_SESSION_SELECT)
       .eq('user_id', user.id)
       .order('started_at', { ascending: false })
       .limit(limit)
@@ -42,6 +49,26 @@ export async function getFocusSessions(limit = 50): Promise<ActionResponse<Focus
   }
 }
 
+export async function getFocusSession(sessionId: number): Promise<ActionResponse<FocusSession>> {
+  try {
+    const { user, supabase } = await getAuthenticatedUser()
+
+    const { data, error } = await supabase
+      .from('focus_sessions')
+      .select(FOCUS_SESSION_SELECT)
+      .eq('session_id', sessionId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (error) throw error
+
+    return { data: data as FocusSession }
+  } catch (error) {
+    console.error('getFocusSession error:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to fetch focus session' }
+  }
+}
+
 export async function getFocusSessionsForMonth(year: number, month: number): Promise<ActionResponse<FocusSession[]>> {
   try {
     const { user, supabase } = await getAuthenticatedUser()
@@ -52,13 +79,7 @@ export async function getFocusSessionsForMonth(year: number, month: number): Pro
 
     const { data, error } = await supabase
       .from('focus_sessions')
-      .select(`
-        *,
-        tasks:task_id (
-          task_id,
-          title
-        )
-      `)
+      .select(FOCUS_SESSION_SELECT)
       .eq('user_id', user.id)
       .gte('started_at', startDate.toISOString())
       .lte('started_at', endDate.toISOString())
@@ -73,11 +94,34 @@ export async function getFocusSessionsForMonth(year: number, month: number): Pro
   }
 }
 
-export async function startFocusSession(input: {
-  taskId?: string | null
-  plannedDuration: number
-  metadata?: Record<string, unknown>
-}): Promise<ActionResponse<FocusSession>> {
+export async function getFocusSessionsPaginated(
+  page: number,
+  pageSize: number,
+  sortOrder: 'asc' | 'desc' = 'desc'
+): Promise<ActionResponse<{ sessions: FocusSession[]; total: number }>> {
+  try {
+    const { user, supabase } = await getAuthenticatedUser()
+
+    const from = page * pageSize
+    const to = from + pageSize - 1
+
+    const { data, error, count } = await supabase
+      .from('focus_sessions')
+      .select(FOCUS_SESSION_SELECT, { count: 'exact' })
+      .eq('user_id', user.id)
+      .order('started_at', { ascending: sortOrder === 'asc' })
+      .range(from, to)
+
+    if (error) throw error
+
+    return { data: { sessions: data as FocusSession[], total: count ?? 0 } }
+  } catch (error) {
+    console.error('getFocusSessionsPaginated error:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to fetch focus sessions' }
+  }
+}
+
+export async function startFocusSession(input: StartFocusSessionInput): Promise<ActionResponse<FocusSession>> {
   try {
     const { user, supabase } = await getAuthenticatedUser()
     const taskIdStr = input.taskId !== null && input.taskId !== undefined ? String(input.taskId).trim() : ''
@@ -92,8 +136,13 @@ export async function startFocusSession(input: {
       .insert({
         user_id: user.id,
         task_id: taskId,
+        custom_task_text: input.customTaskText?.trim() || null,
         planned_duration: input.plannedDuration,
+        energy_start: input.energyStart ?? null,
+        mood_before: input.moodBefore ?? null,
+        tags: input.tags ?? null,
         interruptions: 0,
+        interruption_details: [],
         metadata: input.metadata ?? {},
       })
       .select()
@@ -112,18 +161,21 @@ export async function updateFocusSession(
   sessionId: number,
   updates: {
     interruptions?: number
+    interruptionDetails?: Array<{ type: string; label?: string; timestamp: string }>
     metadata?: Record<string, unknown>
   }
 ): Promise<ActionResponse<FocusSession>> {
   try {
     const { user, supabase } = await getAuthenticatedUser()
 
+    const updateObj: Record<string, unknown> = {}
+    if (updates.interruptions !== undefined) updateObj.interruptions = updates.interruptions
+    if (updates.interruptionDetails !== undefined) updateObj.interruption_details = updates.interruptionDetails
+    if (updates.metadata !== undefined) updateObj.metadata = updates.metadata
+
     const { data, error } = await supabase
       .from('focus_sessions')
-      .update({
-        ...(updates.interruptions !== undefined && { interruptions: updates.interruptions }),
-        ...(updates.metadata !== undefined && { metadata: updates.metadata }),
-      })
+      .update(updateObj)
       .eq('session_id', sessionId)
       .eq('user_id', user.id)
       .select()
@@ -138,12 +190,7 @@ export async function updateFocusSession(
   }
 }
 
-export async function endFocusSession(input: {
-  sessionId: number
-  actualDuration: number
-  interruptions?: number
-  metadata?: Record<string, unknown>
-}): Promise<ActionResponse<FocusSession>> {
+export async function endFocusSession(input: EndFocusSessionInput): Promise<ActionResponse<FocusSession>> {
   try {
     const { user, supabase } = await getAuthenticatedUser()
 
@@ -151,7 +198,10 @@ export async function endFocusSession(input: {
       .from('focus_sessions')
       .update({
         actual_duration: Math.max(0, Math.round(input.actualDuration)),
+        mood_after: input.moodAfter,
+        energy_end: input.energyEnd ?? null,
         interruptions: input.interruptions ?? 0,
+        interruption_details: input.interruptionDetails ?? [],
         ended_at: new Date().toISOString(),
         ...(input.metadata !== undefined && { metadata: input.metadata }),
       })
@@ -166,6 +216,30 @@ export async function endFocusSession(input: {
   } catch (error) {
     console.error('endFocusSession error:', error)
     return { error: error instanceof Error ? error.message : 'Failed to finish focus session' }
+  }
+}
+
+export async function updateFocusSessionNotes(
+  sessionId: number,
+  metadata: Record<string, unknown>
+): Promise<ActionResponse<FocusSession>> {
+  try {
+    const { user, supabase } = await getAuthenticatedUser()
+
+    const { data, error } = await supabase
+      .from('focus_sessions')
+      .update({ metadata })
+      .eq('session_id', sessionId)
+      .eq('user_id', user.id)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return { data: data as FocusSession }
+  } catch (error) {
+    console.error('updateFocusSessionNotes error:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to update session notes' }
   }
 }
 
