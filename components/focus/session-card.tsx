@@ -72,8 +72,15 @@ export function SessionCard({ session, compact = false }: SessionCardProps) {
         <div className="mt-2 flex items-center gap-3 flex-wrap">
           {/* Mood delta */}
           {session.mood_before != null && session.mood_after != null && (
-            <span className="text-xs text-muted-foreground">
-              Mood: {getMoodEmoji(session.mood_before)} → {getMoodEmoji(session.mood_after)}
+            <span className={cn(
+              "text-xs font-medium px-1.5 py-0.5 rounded-full border",
+              session.mood_after - session.mood_before > 0 ? "bg-green-500/10 text-green-500 border-green-500/20" :
+              session.mood_after - session.mood_before < 0 ? "bg-orange-500/10 text-orange-500 border-orange-500/20" :
+              "bg-muted text-muted-foreground border-border/50"
+            )}>
+              {session.mood_after - session.mood_before > 0 ? `Mood +${session.mood_after - session.mood_before}` :
+               session.mood_after - session.mood_before < 0 ? `Mood ${session.mood_after - session.mood_before}` :
+               "Mood unchanged"}
             </span>
           )}
 

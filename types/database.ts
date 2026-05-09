@@ -213,6 +213,7 @@ export interface FocusSession {
   session_id: number
   user_id: string
   task_id: number | null
+  is_active: boolean
   planned_duration: number
   actual_duration: number | null
   interruptions: number | null

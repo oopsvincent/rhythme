@@ -1,14 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { getFocusSession, updateFocusSessionNotes } from '@/app/actions/focusSessions'
+import { fetchFocusSessionById, updateFocusSessionRecord } from '@/lib/focus/focus-session-client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { MoodBadge, MoodDelta } from '@/components/focus/mood-selector'
-import { EnergyBadge, ENERGY_LEVELS } from '@/components/focus/energy-selector'
-import { formatDuration, formatTime } from '@/lib/focus-mode'
+import { EnergyBadge } from '@/components/focus/energy-selector'
+import { formatDuration } from '@/lib/focus-mode'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
@@ -55,12 +55,11 @@ export function SessionDetailClient({ sessionId }: SessionDetailClientProps) {
     async function load() {
       setIsLoading(true)
       try {
-        const result = await getFocusSession(sessionId)
-        if (result.error) throw new Error(result.error)
-        setSession(result.data ?? null)
+        const result = await fetchFocusSessionById(sessionId)
+        setSession(result)
 
         // Initialize notes
-        const metadata = result.data?.metadata as Record<string, unknown> | null
+        const metadata = result?.metadata as Record<string, unknown> | null
         const existingNotes = metadata?.notes as string | null
         const reflection = metadata?.reflection as string | null
         setNotesText(existingNotes || reflection || '')
@@ -78,14 +77,15 @@ export function SessionDetailClient({ sessionId }: SessionDetailClientProps) {
     setIsSavingNotes(true)
     try {
       const existingMetadata = (session.metadata as Record<string, unknown>) ?? {}
-      const result = await updateFocusSessionNotes(session.session_id, {
-        ...existingMetadata,
-        notes: notesText.trim() || null,
-        reflection: notesText.trim() || null,
+      const result = await updateFocusSessionRecord(session.session_id, {
+        metadata: {
+          ...existingMetadata,
+          notes: notesText.trim() || null,
+          reflection: notesText.trim() || null,
+        },
       })
 
-      if (result.error) throw new Error(result.error)
-      setSession(result.data ?? session)
+      setSession(result)
       setIsEditingNotes(false)
       toast.success('Notes updated.')
     } catch {

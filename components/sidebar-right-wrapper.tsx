@@ -8,11 +8,11 @@ import { SidebarRight } from "@/components/sidebar-right"
 
 export function SidebarRightWrapper() {
   const pathname = usePathname()
-  
+
   // Hide sidebar on settings and weekly pages
-  if (pathname?.startsWith('/settings') || pathname?.startsWith('/dashboard/week') || pathname?.startsWith('/dashboard/tasks') || pathname?.startsWith('/dashboard/mood') || pathname?.startsWith('/dashboard/mood')) {
+  if (pathname?.startsWith('/settings') || pathname?.startsWith('/dashboard/week') || pathname?.startsWith('/dashboard/tasks') || pathname?.startsWith('/dashboard/mood') || pathname?.startsWith('/dashboard/journal') || pathname?.startsWith('/dashboard/focus')) {
     return null
   }
-  
+
   return <SidebarRight />
 }

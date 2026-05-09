@@ -4,7 +4,7 @@ import * as React from 'react'
 import { ChevronLeft, ChevronRight, Brain, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { getFocusSessionsForMonth } from '@/app/actions/focusSessions'
+import { fetchFocusSessionsForMonth } from '@/lib/focus/focus-session-client'
 import type { FocusSession } from '@/types/database'
 import { formatDuration } from '@/lib/focus-mode'
 
@@ -26,10 +26,8 @@ export function FocusHeatmapCalendar({ className }: FocusHeatmapCalendarProps) {
     async function loadSessions() {
       setIsLoading(true)
       try {
-        const result = await getFocusSessionsForMonth(year, month)
-        if (result.data) {
-          setSessions(result.data)
-        }
+        const result = await fetchFocusSessionsForMonth(year, month)
+        setSessions(result)
       } catch (error) {
         console.error('Failed to load sessions:', error)
       } finally {

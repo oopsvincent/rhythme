@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { MoodSelector } from '@/components/focus/mood-selector'
 import { EnergySelector } from '@/components/focus/energy-selector'
-import { endFocusSession } from '@/app/actions/focusSessions'
+import { useFocusSessionController } from '@/components/focus/focus-session-provider'
 import { formatDuration } from '@/lib/focus-mode'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -25,8 +25,9 @@ export function SessionCompletion({
   interruptions,
   onComplete,
 }: SessionCompletionProps) {
-  const [moodAfter, setMoodAfter] = useState<number | null>(null)
-  const [energyEnd, setEnergyEnd] = useState<number | null>(session.energy_start)
+  const { saveSessionReflection } = useFocusSessionController()
+  const [moodAfter, setMoodAfter] = useState<number | null>(session.mood_after ?? null)
+  const [energyEnd, setEnergyEnd] = useState<number | null>(session.energy_end ?? session.energy_start)
   const [reflection, setReflection] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
@@ -43,9 +44,7 @@ export function SessionCompletion({
     try {
       const existingMetadata = (session.metadata as Record<string, unknown>) ?? {}
 
-      const result = await endFocusSession({
-        sessionId: session.session_id,
-        actualDuration,
+      await saveSessionReflection(session.session_id, {
         moodAfter,
         energyEnd,
         interruptions: interruptions.length,
@@ -57,10 +56,6 @@ export function SessionCompletion({
         },
       })
 
-      if (result.error) {
-        throw new Error(result.error)
-      }
-
       toast.success('Session saved. Well done.')
       onComplete()
     } catch (error) {
@@ -69,83 +64,99 @@ export function SessionCompletion({
     } finally {
       setIsSaving(false)
     }
-  }, [moodAfter, energyEnd, reflection, session, actualDuration, interruptions, completed, onComplete])
+  }, [
+    completed,
+    energyEnd,
+    interruptions,
+    moodAfter,
+    onComplete,
+    reflection,
+    saveSessionReflection,
+    session.metadata,
+    session.session_id,
+  ])
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex items-center justify-center px-6 animate-in fade-in-0 duration-300">
-      <div className="w-full max-w-md space-y-8">
-        {/* Summary Header */}
-        <div className="text-center space-y-2">
-          <div className={cn(
-            'mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4',
+    <div className="w-full max-w-md mx-auto space-y-8 rounded-[28px] border border-border/60 bg-card/40 p-6 shadow-sm md:p-8">
+      <div className="space-y-2 text-center">
+        <div
+          className={cn(
+            'mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full',
             completed ? 'bg-primary/10' : 'bg-muted/40'
-          )}>
-            <Check className={cn('h-8 w-8', completed ? 'text-primary' : 'text-muted-foreground')} />
-          </div>
-          <h2 className="text-xl font-bold tracking-tight">
-            {completed ? 'Session Complete' : 'Session Ended'}
-          </h2>
-          <p className="text-sm text-muted-foreground truncate">{taskLabel}</p>
-          <p className="text-2xl font-bold text-primary">
-            {formatDuration(actualDuration)}
-          </p>
-          {interruptions.length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {interruptions.length} interruption{interruptions.length !== 1 ? 's' : ''}
-            </p>
           )}
-        </div>
-
-        {/* Ending Mood */}
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-foreground">
-            How are you feeling?
-            <span className="text-destructive ml-0.5">*</span>
-          </label>
-          <MoodSelector value={moodAfter} onChange={setMoodAfter} size="md" required />
-        </div>
-
-        {/* Ending Energy */}
-        <div className="space-y-3">
-          <label className="text-sm font-medium text-muted-foreground">
-            Ending Energy
-            <span className="text-xs ml-1">(optional)</span>
-          </label>
-          <EnergySelector value={energyEnd} onChange={setEnergyEnd} />
-        </div>
-
-        {/* Reflection */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">
-            What helped or distracted you?
-            <span className="text-xs ml-1">(optional)</span>
-          </label>
-          <Textarea
-            value={reflection}
-            onChange={(e) => setReflection(e.target.value)}
-            placeholder="Brief reflection…"
-            className="min-h-[60px] resize-none text-sm"
-            maxLength={500}
-          />
-        </div>
-
-        {/* Save Button */}
-        <Button
-          size="lg"
-          className="w-full h-12 rounded-xl text-base font-semibold"
-          disabled={isSaving || moodAfter === null}
-          onClick={handleSave}
         >
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Saving…
-            </>
-          ) : (
-            'Save Session'
-          )}
-        </Button>
+          <Check className={cn('h-8 w-8', completed ? 'text-primary' : 'text-muted-foreground')} />
+        </div>
+        <h2 className="text-xl font-bold tracking-tight">
+          {completed ? 'Session Complete' : 'Session Ended'}
+        </h2>
+        <p className="truncate text-sm text-muted-foreground">{taskLabel}</p>
+        <p className="text-2xl font-bold text-primary">{formatDuration(actualDuration)}</p>
+        {interruptions.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {interruptions.length} interruption{interruptions.length !== 1 ? 's' : ''}
+          </p>
+        )}
       </div>
+
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-foreground">
+          How are you feeling?
+          <span className="ml-0.5 text-destructive">*</span>
+        </label>
+        <MoodSelector value={moodAfter} onChange={setMoodAfter} size="md" />
+        
+        {moodAfter !== null && session.mood_before !== null && (
+          <div className={cn(
+            'text-sm font-medium animate-in fade-in slide-in-from-top-1',
+            moodAfter - session.mood_before > 0 ? 'text-green-500' :
+            moodAfter - session.mood_before < 0 ? 'text-orange-500' :
+            'text-muted-foreground'
+          )}>
+            {moodAfter - session.mood_before > 0 ? `Mood improved by +${moodAfter - session.mood_before} points` :
+             moodAfter - session.mood_before < 0 ? `Mood decreased by ${moodAfter - session.mood_before} points` :
+             'Mood stayed the same'}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-muted-foreground">
+          Ending Energy
+          <span className="ml-1 text-xs">(optional)</span>
+        </label>
+        <EnergySelector value={energyEnd} onChange={setEnergyEnd} />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-muted-foreground">
+          What helped or distracted you?
+          <span className="ml-1 text-xs">(optional)</span>
+        </label>
+        <Textarea
+          value={reflection}
+          onChange={(e) => setReflection(e.target.value)}
+          placeholder="Brief reflection…"
+          className="min-h-[60px] resize-none text-sm"
+          maxLength={500}
+        />
+      </div>
+
+      <Button
+        size="lg"
+        className="h-12 w-full rounded-xl text-base font-semibold"
+        disabled={isSaving || moodAfter === null}
+        onClick={handleSave}
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            Saving…
+          </>
+        ) : (
+          'Save Session'
+        )}
+      </Button>
     </div>
   )
 }

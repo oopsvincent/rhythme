@@ -1,7 +1,19 @@
+import { 
+  CloudLightning,
+  CloudRain,
+  Cloud,
+  Wind,
+  Minus,
+  SunMedium,
+  Sun,
+  Flame,
+  Star 
+} from "lucide-react"
+
 export const MOOD_SCALE = [
   {
     value: 1,
-    emoji: '😢',
+    icon: CloudLightning,
     label: 'Drained',
     description: 'Everything feels heavier than usual.',
     accent: 'bg-rose-500',
@@ -11,7 +23,7 @@ export const MOOD_SCALE = [
   },
   {
     value: 1.5,
-    emoji: '😞',
+    icon: CloudRain,
     label: 'Low',
     description: 'You are getting through the day with limited bandwidth.',
     accent: 'bg-orange-500',
@@ -21,7 +33,7 @@ export const MOOD_SCALE = [
   },
   {
     value: 2,
-    emoji: '🙁',
+    icon: Cloud,
     label: 'Heavy',
     description: 'A bit weighed down, tense, or mentally cluttered.',
     accent: 'bg-amber-500',
@@ -31,7 +43,7 @@ export const MOOD_SCALE = [
   },
   {
     value: 2.5,
-    emoji: '😐',
+    icon: Wind,
     label: 'Uneasy',
     description: 'Not at your best, but there is still some footing.',
     accent: 'bg-yellow-500',
@@ -41,7 +53,7 @@ export const MOOD_SCALE = [
   },
   {
     value: 3,
-    emoji: '🙂',
+    icon: Minus,
     label: 'Steady',
     description: 'A balanced middle ground.',
     accent: 'bg-lime-500',
@@ -51,7 +63,7 @@ export const MOOD_SCALE = [
   },
   {
     value: 3.5,
-    emoji: '😌',
+    icon: SunMedium,
     label: 'Grounded',
     description: 'Centered, calm, and reasonably present.',
     accent: 'bg-emerald-500',
@@ -61,7 +73,7 @@ export const MOOD_SCALE = [
   },
   {
     value: 4,
-    emoji: '😊',
+    icon: Sun,
     label: 'Bright',
     description: 'You have energy and emotional room to move.',
     accent: 'bg-sky-500',
@@ -71,7 +83,7 @@ export const MOOD_SCALE = [
   },
   {
     value: 4.5,
-    emoji: '😄',
+    icon: Flame,
     label: 'Lifted',
     description: 'Things feel light, capable, and encouraging.',
     accent: 'bg-blue-500',
@@ -81,7 +93,7 @@ export const MOOD_SCALE = [
   },
   {
     value: 5,
-    emoji: '🌟',
+    icon: Star,
     label: 'Excellent',
     description: 'You feel strong, clear, and fully switched on.',
     accent: 'bg-violet-500',
