@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { EnergySelector } from '@/components/focus/energy-selector'
+import { MoodSelector } from '@/components/focus/mood-selector'
+import { useFocusSessionController } from '@/components/focus/focus-session-provider'
 import { useTasks } from '@/hooks/use-tasks'
-import { startFocusSession } from '@/app/actions/focusSessions'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
@@ -28,6 +29,9 @@ interface FocusStarterProps {
 
 export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
   const { data: allTasks = [], isLoading: tasksLoading } = useTasks()
+  const { activeSession, isStarting, startSession, syncActiveSession } = useFocusSessionController()
+
+  // Form state
 
   // Form state
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
@@ -37,10 +41,9 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
   const [isCustomDuration, setIsCustomDuration] = useState(false)
   const [customDurationInput, setCustomDurationInput] = useState('')
   const [energyStart, setEnergyStart] = useState<number | null>(null)
+  const [moodStart, setMoodStart] = useState<number | null>(null)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [notes, setNotes] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
   // Task combobox state
   const [taskSearchOpen, setTaskSearchOpen] = useState(false)
   const [taskSearchQuery, setTaskSearchQuery] = useState('')
@@ -91,31 +94,44 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
   }, [])
 
   const handleStartSession = useCallback(async () => {
-    setIsSubmitting(true)
     try {
-      const result = await startFocusSession({
+      const current = await syncActiveSession()
+      if (current) {
+        toast.info('You already have an active focus session running.')
+        onSessionStarted(current)
+        return
+      }
+
+      const session = await startSession({
         taskId: selectedTaskId,
         customTaskText: isCustomTask ? customTaskText.trim() || null : null,
         plannedDuration: duration * 60,
         energyStart,
+        moodBefore: moodStart,
         tags: selectedTags.length > 0 ? selectedTags : null,
         metadata: {
           notes: notes.trim() || null,
         },
       })
 
-      if (result.error || !result.data) {
-        throw new Error(result.error ?? 'Could not start focus session')
-      }
-
-      onSessionStarted(result.data)
+      onSessionStarted(session)
     } catch (error) {
       console.error('Failed to start focus session:', error)
       toast.error('We could not start the focus session.')
-    } finally {
-      setIsSubmitting(false)
     }
-  }, [selectedTaskId, isCustomTask, customTaskText, duration, energyStart, selectedTags, notes, onSessionStarted])
+  }, [
+    customTaskText,
+    duration,
+    energyStart,
+    moodStart,
+    isCustomTask,
+    notes,
+    onSessionStarted,
+    selectedTags,
+    selectedTaskId,
+    startSession,
+    syncActiveSession,
+  ])
 
   return (
     <div className="w-full space-y-6">
@@ -284,13 +300,23 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
           </div>
         </div>
 
-        {/* Starting Energy */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">
-            Starting Energy
-            <span className="text-xs ml-1">(optional)</span>
-          </label>
-          <EnergySelector value={energyStart} onChange={setEnergyStart} />
+        {/* Starting Energy & Mood */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground">
+              Starting Energy
+              <span className="text-xs ml-1">(optional)</span>
+            </label>
+            <EnergySelector value={energyStart} onChange={setEnergyStart} />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Starting Mood
+              <span className="text-destructive ml-1">*</span>
+            </label>
+            <MoodSelector value={moodStart} onChange={setMoodStart} />
+          </div>
         </div>
 
         {/* Tags */}
@@ -337,10 +363,10 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
         <Button
           size="lg"
           className="w-full h-12 rounded-xl text-base font-semibold gap-2"
-          disabled={isSubmitting}
+          disabled={isStarting || Boolean(activeSession) || moodStart === null}
           onClick={handleStartSession}
         >
-          {isSubmitting ? (
+          {isStarting ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
               Starting…
@@ -348,7 +374,7 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
           ) : (
             <>
               <Play className="h-5 w-5" />
-              Start Focus Session
+              {activeSession ? 'Session Already Running' : 'Start Focus Session'}
             </>
           )}
         </Button>

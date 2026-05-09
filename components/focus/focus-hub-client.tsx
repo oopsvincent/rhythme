@@ -1,36 +1,33 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useFocusSessionController } from '@/components/focus/focus-session-provider'
 import { FocusStarter } from '@/components/focus/focus-starter'
 import { ActiveTimer } from '@/components/focus/active-timer'
 import { SessionCompletion } from '@/components/focus/session-completion'
 import { SessionCard } from '@/components/focus/session-card'
-import { getFocusSessions } from '@/app/actions/focusSessions'
+import { fetchRecentCompletedFocusSessions } from '@/lib/focus/focus-session-client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { History } from 'lucide-react'
 import Link from 'next/link'
-import type { FocusSession, InterruptionDetail } from '@/types/database'
-
-type FocusPhase = 'idle' | 'active' | 'completion'
+import type { FocusSession } from '@/types/database'
 
 export function FocusHubClient() {
-  const [phase, setPhase] = useState<FocusPhase>('idle')
-  const [activeSession, setActiveSession] = useState<FocusSession | null>(null)
-  const [completionData, setCompletionData] = useState<{
-    actualDuration: number
-    interruptions: InterruptionDetail[]
-  } | null>(null)
+  const {
+    activeSession,
+    endedSession,
+    isLoading: isLoadingActiveSession,
+    clearEndedSession,
+  } = useFocusSessionController()
   const [recentSessions, setRecentSessions] = useState<FocusSession[]>([])
   const [isLoadingRecent, setIsLoadingRecent] = useState(true)
 
   const loadRecentSessions = useCallback(async () => {
     setIsLoadingRecent(true)
     try {
-      const result = await getFocusSessions(4)
-      if (result.data) {
-        setRecentSessions(result.data)
-      }
+      const sessions = await fetchRecentCompletedFocusSessions(4)
+      setRecentSessions(sessions)
     } catch {
       // Non-critical
     } finally {
@@ -43,37 +40,24 @@ export function FocusHubClient() {
   }, [loadRecentSessions])
 
   const handleSessionStarted = useCallback((session: FocusSession) => {
-    setActiveSession(session)
-    setPhase('active')
+    setRecentSessions((current) => current.filter((item) => item.session_id !== session.session_id))
   }, [])
 
-  const handleSessionEnd = useCallback(
-    (actualDuration: number, interruptions: InterruptionDetail[]) => {
-      setCompletionData({ actualDuration, interruptions })
-      setPhase('completion')
-    },
-    []
-  )
-
   const handleCompletionDone = useCallback(() => {
-    setPhase('idle')
-    setActiveSession(null)
-    setCompletionData(null)
+    clearEndedSession()
     void loadRecentSessions()
-  }, [loadRecentSessions])
+  }, [clearEndedSession, loadRecentSessions])
 
-  // Active Timer
-  if (phase === 'active' && activeSession) {
-    return <ActiveTimer session={activeSession} onSessionEnd={handleSessionEnd} />
+  if (activeSession) {
+    return <ActiveTimer session={activeSession} />
   }
 
-  // Session Completion
-  if (phase === 'completion' && activeSession && completionData) {
+  if (endedSession) {
     return (
       <SessionCompletion
-        session={activeSession}
-        actualDuration={completionData.actualDuration}
-        interruptions={completionData.interruptions}
+        session={endedSession.session}
+        actualDuration={endedSession.actualDuration}
+        interruptions={endedSession.interruptions}
         onComplete={handleCompletionDone}
       />
     )

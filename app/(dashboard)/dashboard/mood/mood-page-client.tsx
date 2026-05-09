@@ -176,14 +176,15 @@ export default function MoodPageClient() {
                     isSaving && "pointer-events-none opacity-60"
                   )}
                 >
-                  {/* Emoji */}
+                  {/* Icon */}
                   <span
                     className={cn(
-                      "text-2xl leading-none transition-transform duration-200",
-                      isActive && "scale-110"
+                      "transition-transform duration-200",
+                      isActive && "scale-110",
+                      isActive ? option.text : "text-muted-foreground/60"
                     )}
                   >
-                    {option.emoji}
+                    <option.icon className="w-7 h-7" />
                   </span>
 
                   {/* Score */}

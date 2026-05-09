@@ -3,10 +3,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FocusHeatmapCalendar } from '@/components/focus/focus-heatmap-calendar'
 import { SessionCard } from '@/components/focus/session-card'
-import { getFocusSessionsPaginated } from '@/app/actions/focusSessions'
+import { fetchFocusSessionsPage } from '@/lib/focus/focus-session-client'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react'
 import Link from 'next/link'
 import type { FocusSession } from '@/types/database'
@@ -25,11 +24,9 @@ export function FocusHistoryClient() {
   const loadSessions = useCallback(async () => {
     setIsLoading(true)
     try {
-      const result = await getFocusSessionsPaginated(page, PAGE_SIZE, sortOrder)
-      if (result.data) {
-        setSessions(result.data.sessions)
-        setTotal(result.data.total)
-      }
+      const result = await fetchFocusSessionsPage(page, PAGE_SIZE, sortOrder)
+      setSessions(result.sessions)
+      setTotal(result.total)
     } catch {
       // handled
     } finally {

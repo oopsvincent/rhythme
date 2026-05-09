@@ -160,12 +160,15 @@ function CalendarHeatmap({
                 {day}
               </span>
 
-              {/* Emoji for logged days */}
-              {score !== null && (
-                <span className="text-[10px] leading-none mt-0.5">
-                  {getMoodOption(score)?.emoji}
-                </span>
-              )}
+              {/* Icon for logged days */}
+              {score !== null && (() => {
+                const MoodIcon = getMoodOption(score)?.icon
+                return MoodIcon ? (
+                  <span className="mt-0.5">
+                    <MoodIcon className="w-3.5 h-3.5 text-foreground/70" />
+                  </span>
+                ) : null
+              })()}
             </button>
           )
         })}
@@ -231,7 +234,9 @@ function DayDetail({
                   : "border-transparent hover:bg-muted/20"
               )}
             >
-              <span className="text-lg leading-none">{opt.emoji}</span>
+              <span className={cn("mb-1", active ? opt.text : "text-muted-foreground/60")}>
+                <opt.icon className="w-5 h-5" />
+              </span>
               <span
                 className={cn(
                   "mt-0.5 text-[9px] font-medium",
@@ -247,8 +252,9 @@ function DayDetail({
 
       {/* Selected mood label */}
       {mood && (
-        <p className="mb-3 text-xs text-muted-foreground">
-          {mood.emoji} {mood.label} — {mood.description}
+        <p className="mb-3 text-xs text-muted-foreground flex items-center gap-1.5">
+          <mood.icon className={cn("w-3.5 h-3.5", mood.text)} />
+          <span><strong className="font-medium">{mood.label}</strong> — {mood.description}</span>
         </p>
       )}
 
@@ -308,8 +314,10 @@ function EntryList({
               "hover:border-border hover:bg-muted/10"
             )}
           >
-            {/* Emoji */}
-            <span className="mt-0.5 text-xl leading-none">{mood?.emoji ?? "·"}</span>
+            {/* Icon */}
+            <span className={cn("mt-0.5", mood?.text ?? "text-muted-foreground")}>
+              {mood?.icon ? <mood.icon className="w-5 h-5" /> : "·"}
+            </span>
 
             {/* Content */}
             <div className="min-w-0 flex-1">

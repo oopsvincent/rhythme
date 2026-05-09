@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, Playfair_Display, Inter } from "next/font/google";
+import { Space_Grotesk, Playfair_Display, Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import './loading.css';
 import './styles/not-found.css'
@@ -152,6 +152,11 @@ const spaceGrotesk = Space_Grotesk({
 
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair-display",
+  subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
 });
 
@@ -311,7 +316,7 @@ export default function RootLayout({
         <JsonLd />
       </head>
       <body
-        className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} antialiased selection:bg-accent/50 selection:text-accent-foreground`}
+        className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} ${fraunces.variable} antialiased selection:bg-accent/50 selection:text-accent-foreground`}
       >
         <PwaRegistry />
         <QueryProvider>

@@ -100,8 +100,18 @@ const isCollapsed = state === "collapsed"
                 
                 <CollapsibleContent>
                   <SidebarMenuSub className="mt-1 border-sidebar-border ml-5 pl-3">
-                    {item.items.map((subItem) => {
-                      const isChildActive = pathname === subItem.url || pathname?.startsWith(subItem.url + "/");
+                    {(() => {
+                      const activeSubItemUrl = item.items.reduce((best, current) => {
+                        if (pathname === current.url || pathname?.startsWith(current.url + "/")) {
+                          if (!best || current.url.length > best.length) {
+                            return current.url;
+                          }
+                        }
+                        return best;
+                      }, "");
+
+                      return item.items.map((subItem) => {
+                        const isChildActive = subItem.url === activeSubItemUrl;
                       return (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton
@@ -125,7 +135,7 @@ const isCollapsed = state === "collapsed"
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       )
-                    })}
+                    })})()}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>
