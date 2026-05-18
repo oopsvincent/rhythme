@@ -175,7 +175,7 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
     localStorage.removeItem(QUICK_JOURNAL_KEY);
     
     // Navigate to journal
-    router.push("/dashboard/journal");
+    router.push("/journal");
   };
 
   // If user already has today's entry, show preview
@@ -193,7 +193,7 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
             <h3 className="font-semibold font-primary text-sm">Today&apos;s Journal</h3>
           </div>
           <button
-            onClick={() => router.push("/dashboard/journal/new")}
+            onClick={() => router.push("/journal/new")}
             className="text-xs text-primary font-medium hover:underline"
           >
             New entry
@@ -203,7 +203,7 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
           {todayEntry.body}
         </p>
         <button
-          onClick={() => router.push(`/dashboard/journal/${todayEntry.id}`)}
+          onClick={() => router.push(`/journal/${todayEntry.id}`)}
           className="text-xs text-primary hover:underline"
         >
           Continue reading →
@@ -232,7 +232,7 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
           <h3 className="font-semibold font-primary text-sm">Quick Journal</h3>
         </div>
         <button
-          onClick={() => router.push("/dashboard/journal/new")}
+          onClick={() => router.push("/journal/new")}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           Full editor

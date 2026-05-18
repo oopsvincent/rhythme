@@ -32,7 +32,7 @@ const quickActions: QuickAction[] = [
     id: "new-task",
     label: "New Task",
     icon: <IconPlus className="w-5 h-5 sm:w-6 sm:h-6" />,
-    href: "/dashboard/tasks",
+    href: "/tasks",
     color: "text-primary",
     gradient: "from-primary/20 to-primary/5"
   },
@@ -40,7 +40,7 @@ const quickActions: QuickAction[] = [
     id: "start-focus",
     label: "Start Focus",
     icon: <IconPlayerPlay className="w-5 h-5 sm:w-6 sm:h-6" />,
-    href: "/dashboard/focus",
+    href: "/focus",
     color: "text-accent",
     gradient: "from-accent/20 to-accent/5"
   },
@@ -48,7 +48,7 @@ const quickActions: QuickAction[] = [
     id: "habits",
     label: "Habits",
     icon: <IconSparkles className="w-5 h-5 sm:w-6 sm:h-6" />,
-    href: "/dashboard/habits",
+    href: "/habits",
     color: "text-green-500",
     gradient: "from-green-500/20 to-green-500/5"
   },
@@ -56,7 +56,7 @@ const quickActions: QuickAction[] = [
     id: "journal",
     label: "Journal",
     icon: <IconBook className="w-5 h-5 sm:w-6 sm:h-6" />,
-    href: "/dashboard/journal",
+    href: "/journal",
     color: "text-purple-500",
     gradient: "from-purple-500/20 to-purple-500/5"
   },
@@ -64,7 +64,7 @@ const quickActions: QuickAction[] = [
     id: "view-tasks",
     label: "All Tasks",
     icon: <IconListCheck className="w-5 h-5 sm:w-6 sm:h-6" />,
-    href: "/dashboard/tasks",
+    href: "/tasks",
     color: "text-yellow-500",
     gradient: "from-yellow-500/20 to-yellow-500/5"
   }

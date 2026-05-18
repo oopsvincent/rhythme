@@ -25,6 +25,7 @@ const sectionTitles: Record<string, string> = {
   ai: "Rhythmé AI",
   account: "Account",
   notifications: "Notifications",
+  activity: "Activity",
   appearance: "Appearance",
   language: "Language & Region",
   accessibility: "Accessibility",

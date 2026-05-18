@@ -46,10 +46,10 @@ export function SidebarRight({
   const setHabitDate = useHabitCalendarStore(s => s.setSelectedDate)
 
   const activeCalendarState = (() => {
-    if (pathname?.startsWith("/dashboard/habits")) {
+    if (pathname?.startsWith("/habits")) {
        return { selectedDate: habitDate, setSelectedDate: setHabitDate }
     }
-    if (pathname?.startsWith("/dashboard/tasks")) {
+    if (pathname?.startsWith("/tasks")) {
        return { selectedDate: taskDate, setSelectedDate: setTaskDate }
     }
     return { selectedDate: dashboardDate, setSelectedDate: setDashboardDate }
@@ -57,9 +57,9 @@ export function SidebarRight({
 
   // Determine sidebar mode based on route
   const getSidebarMode = (): SidebarMode => {
-    if (pathname?.startsWith("/dashboard/journal")) return 'journal'
-    if (pathname?.startsWith("/dashboard/focus")) return 'focus'
-    if (pathname?.startsWith("/dashboard/tasks")) return 'tasks'
+    if (pathname?.startsWith("/journal")) return 'journal'
+    if (pathname?.startsWith("/focus")) return 'focus'
+    if (pathname?.startsWith("/tasks")) return 'tasks'
     return 'calendar' // Default for dashboard home and other pages
   }
 

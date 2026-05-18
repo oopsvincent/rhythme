@@ -25,7 +25,7 @@ export function SessionCard({ session, compact = false }: SessionCardProps) {
 
   return (
     <Link
-      href={`/dashboard/focus/${session.session_id}`}
+      href={`/focus/${session.session_id}`}
       className={cn(
         'block rounded-xl border border-border/40 bg-card/30 p-4 transition-all duration-200',
         'hover:bg-card/60 hover:border-border/60 hover:shadow-sm',

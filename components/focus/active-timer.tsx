@@ -183,7 +183,7 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
           </div>
           {!isImmersiveMode && (
             <Link
-              href={`/dashboard/focus/${session.session_id}`}
+              href={`/focus/${session.session_id}`}
               className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Session Detail

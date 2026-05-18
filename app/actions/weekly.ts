@@ -305,6 +305,9 @@ export interface WeeklyStats {
   avgMood: number;
   journalCount: number;
 
+  // Focus
+  focusMinutes: number;
+
   // Week range info
   weekStart: string;
   weekEnd: string;
@@ -418,6 +421,20 @@ export async function getWeeklyStats(
 
     const allJournals = journals || [];
 
+    // Fetch focus sessions this week
+    const { data: focusSessions } = await supabase
+      .from("focus_sessions")
+      .select("actual_duration, planned_duration")
+      .eq("user_id", user.id)
+      .eq("is_active", false)
+      .gte("started_at", startISO)
+      .lte("started_at", endISO);
+
+    const allFocusSessions = focusSessions || [];
+    const focusMinutes = allFocusSessions.reduce((acc, s) => {
+      return acc + (s.actual_duration || s.planned_duration || 0);
+    }, 0);
+
     // Build mood entries by day
     const moodByDay = new Map<string, { values: number[]; moods: string[] }>();
     for (const j of allJournals) {
@@ -486,6 +503,7 @@ export async function getWeeklyStats(
         moodEntries,
         avgMood,
         journalCount: allJournals.length,
+        focusMinutes,
         weekStart: targetStart,
         weekEnd: targetEnd,
         weekLabel,

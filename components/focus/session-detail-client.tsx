@@ -110,7 +110,7 @@ export function SessionDetailClient({ sessionId }: SessionDetailClientProps) {
     return (
       <div className="w-full max-w-2xl mx-auto text-center py-16">
         <p className="text-destructive text-sm">{error ?? 'Session not found.'}</p>
-        <Link href="/dashboard/focus/history" className="text-sm text-primary hover:underline mt-2 inline-block">
+        <Link href="/focus/history" className="text-sm text-primary hover:underline mt-2 inline-block">
           Back to history
         </Link>
       </div>
@@ -130,7 +130,7 @@ export function SessionDetailClient({ sessionId }: SessionDetailClientProps) {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
-          href="/dashboard/focus/history"
+          href="/focus/history"
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-5 w-5" />

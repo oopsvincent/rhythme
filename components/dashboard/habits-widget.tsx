@@ -85,7 +85,7 @@ export function HabitsWidget() {
                 {completedCount}/{totalCount}
               </span>
               <Link 
-                href="/dashboard/habits"
+                href="/habits"
                 className="text-xs text-primary font-medium hover:underline"
               >
                 View all
@@ -138,7 +138,7 @@ export function HabitsWidget() {
 
                 {/* Habit name */}
                 <Link 
-                  href="/dashboard/habits"
+                  href="/habits"
                   className={cn(
                     "flex-1 text-sm font-medium truncate transition-colors",
                     habit.isCompletedForPeriod && "line-through text-muted-foreground"
@@ -179,7 +179,7 @@ export function HabitsWidget() {
               <h3 className="font-semibold font-primary text-sm">Other Habits</h3>
             </div>
             <Link 
-              href="/dashboard/habits"
+              href="/habits"
               className="text-xs text-primary font-medium hover:underline"
             >
               View all
@@ -220,7 +220,7 @@ export function HabitsWidget() {
 
                 {/* Habit name */}
                 <Link 
-                  href="/dashboard/habits"
+                  href="/habits"
                   className={cn(
                     "flex-1 text-sm font-medium truncate transition-colors",
                     habit.isCompletedForPeriod && "line-through text-muted-foreground"

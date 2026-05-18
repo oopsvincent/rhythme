@@ -48,7 +48,7 @@ export function QuickActionsFab() {
           className="justify-end gap-3 rounded-full transition-all duration-200 shadow-xl bg-background/80 backdrop-blur-3xl border-border/50 hover:bg-accent hover:text-accent-foreground h-12 px-5 cursor-pointer"
           onClick={() => {
             setIsOpen(false)
-            router.push("/dashboard/focus")
+            router.push("/focus")
           }}
         >
           <span className="font-medium text-sm">Start Focus</span>
@@ -66,7 +66,7 @@ export function QuickActionsFab() {
           className="justify-end gap-3 rounded-full transition-all duration-200 shadow-xl bg-background/80 backdrop-blur-3xl border-border/50 hover:bg-accent hover:text-accent-foreground h-12 px-5 cursor-pointer"
           onClick={() => {
             setIsOpen(false)
-            router.push("/dashboard/journal/new")
+            router.push("/journal/new")
           }}
         >
           <span className="font-medium text-sm">Create Journal</span>
@@ -84,7 +84,7 @@ export function QuickActionsFab() {
           className="justify-end gap-3 rounded-full transition-all duration-200 shadow-xl bg-background/80 backdrop-blur-3xl border-border/50 hover:bg-accent hover:text-accent-foreground h-12 px-5 cursor-pointer"
           onClick={() => {
             setIsOpen(false)
-            router.push("/dashboard/week")
+            router.push("/weekly")
           }}
         >
           <span className="font-medium text-sm">Current Week</span>

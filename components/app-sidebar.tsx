@@ -20,6 +20,7 @@ import {
   CalendarDays,
   ClockArrowUp,
   HeartPulse,
+  Activity,
   Home,
   ListCheck,
   NotebookPen,
@@ -49,87 +50,71 @@ const navigationItems = [
   },
   {
     title: "Tasks",
-    url: "/dashboard/tasks",
+    url: "/tasks",
     icon: ListCheck,
     section: "tasks",
   },
   {
     title: "Focus",
-    url: "/dashboard/focus",
+    url: "/focus",
     icon: ClockArrowUp,
     section: "focus",
     items: [
       {
         title: "Session",
-        url: "/dashboard/focus",
+        url: "/focus",
         icon: ClockArrowUp,
       },
       {
         title: "History",
-        url: "/dashboard/focus/history",
+        url: "/focus/history",
         icon: History,
       },
     ],
   },
   {
     title: "Mood",
-    url: "/dashboard/mood",
+    url: "/mood",
     icon: HeartPulse,
     section: "mood",
     items: [
       {
         title: "Log",
-        url: "/dashboard/mood",
+        url: "/mood",
         icon: HeartPulse,
       },
       {
         title: "History",
-        url: "/dashboard/mood/history",
+        url: "/mood/history",
         icon: CalendarDays,
       },
     ],
   },
   {
+    title: "Activity",
+    url: "/activity",
+    icon: Activity,
+    section: "activity",
+  },
+  {
     title: "Journal",
-    url: "/dashboard/journal",
+    url: "/journal",
     icon: NotebookPen,
     section: "journal",
   },
   {
     title: "Habits",
-    url: "/dashboard/habits",
+    url: "/habits",
     icon: CalendarSync,
     section: "habits",
   },
-  {
-    title: "Weekly Planning",
-    url: "/dashboard/week",
-    icon: BookText,
-    section: "week",
-    items: [
-      {
-        title: "Plan",
-        url: "/dashboard/week/plan",
-        icon: Map,
-      },
-      {
-        title: "Review",
-        url: "/dashboard/week/review",
-        icon: LineChart,
-      },
-      {
-        title: "History",
-        url: "/dashboard/week/history",
-        icon: History,
-      },
-    ],
-  },
+    { title: "Weekly", url: "/weekly", icon: BookText, section: "week" },
 ];
 
 const secondaryNavItems = [
   {
     title: "Ask AI",
-    url: "/dashboard/ai",
+    url: "/ai",
     icon: Sparkles,
     section: "ai",
   },

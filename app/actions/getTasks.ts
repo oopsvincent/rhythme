@@ -153,7 +153,7 @@ export async function createTask(input: CreateTaskInput): Promise<ActionResponse
 
     if (error) throw error
 
-    revalidatePath('/dashboard/tasks')
+    revalidatePath('/tasks')
     return { data: data as Task }
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Failed to create task' }
@@ -186,7 +186,7 @@ export async function updateTask(
 
     if (error) throw error
 
-    revalidatePath('/dashboard/tasks')
+    revalidatePath('/tasks')
     return { data: data as Task }
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Failed to update task' }
@@ -220,7 +220,7 @@ export async function deleteTask(taskId: string): Promise<ActionResponse<{ succe
 
     if (error) throw error
 
-    revalidatePath('/dashboard/tasks')
+    revalidatePath('/tasks')
     return { data: { success: true } }
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Failed to delete task' }
@@ -240,7 +240,7 @@ export async function deleteTasks(taskIds: string[]): Promise<ActionResponse<{ c
 
     if (error) throw error
 
-    revalidatePath('/dashboard/tasks')
+    revalidatePath('/tasks')
     return { data: { count: count || 0 } }
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Failed to delete tasks' }

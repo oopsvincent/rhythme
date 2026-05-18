@@ -61,7 +61,7 @@ export function JournalCard({ entry, variant = "default", className }: JournalCa
 
   if (variant === "compact") {
     return (
-      <Link href={`/dashboard/journal/${entry.id}`}>
+      <Link href={`/journal/${entry.id}`}>
         <div
           className={cn(
             "group relative p-3 rounded-xl cursor-pointer transition-colors duration-200",
@@ -87,7 +87,7 @@ export function JournalCard({ entry, variant = "default", className }: JournalCa
   }
 
   return (
-    <Link href={`/dashboard/journal/${entry.id}`}>
+    <Link href={`/journal/${entry.id}`}>
       <article
         className={cn(
           "group relative rounded-xl cursor-pointer transition-all duration-200",

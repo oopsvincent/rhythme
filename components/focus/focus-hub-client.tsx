@@ -79,7 +79,7 @@ export function FocusHubClient() {
           </p>
         </div>
         <Link
-          href="/dashboard/focus/history"
+          href="/focus/history"
           className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium',
             'text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors'

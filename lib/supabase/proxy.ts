@@ -49,11 +49,14 @@ export async function updateSession(request: NextRequest) {
 
   const user = data?.claims
 
-  // Protected routes that require authentication
-  const isProtectedRoute =
-    request.nextUrl.pathname.startsWith('/dashboard') ||
-    request.nextUrl.pathname.startsWith('/settings') ||
-    request.nextUrl.pathname.startsWith('/user')
+  const protectedPaths = [
+    '/dashboard', '/tasks', '/habits', '/journal', '/weekly', '/focus',
+    '/activity', '/analytics', '/ai', '/goals', '/mood', '/settings', '/user'
+  ]
+
+  const isProtectedRoute = protectedPaths.some(path => 
+    request.nextUrl.pathname.startsWith(path)
+  )
 
   // If user is not logged in and trying to access a protected route,
   // redirect to Amplecen ID with return_to so they land back here after login.
