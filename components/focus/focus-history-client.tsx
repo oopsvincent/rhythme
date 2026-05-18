@@ -48,7 +48,7 @@ export function FocusHistoryClient() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
-          href="/dashboard/focus"
+          href="/focus"
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-5 w-5" />

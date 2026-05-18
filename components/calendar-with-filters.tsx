@@ -113,7 +113,7 @@ export const CalendarWithFilters = ({
             {tasksForSelectedDate.slice(0, 5).map((task) => (
               <Link
                 key={task.task_id}
-                href={`/dashboard/tasks/${generateSlug(task.title)}-${task.task_id}`}
+                href={`/tasks/${generateSlug(task.title)}-${task.task_id}`}
                 onClick={onTaskClick}
                 className="flex items-center gap-2 p-2 rounded-md bg-card/40 backdrop-blur-sm border border-border/50 hover:bg-accent/50 transition-colors group"
               >

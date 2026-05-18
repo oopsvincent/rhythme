@@ -109,7 +109,7 @@ export function MoodInputCard() {
               Change
             </button>
             <Link
-              href="/dashboard/journal/new"
+              href="/journal/new"
               className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
             >
               Reflect <ChevronRight className="w-4 h-4" />

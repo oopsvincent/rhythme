@@ -147,7 +147,7 @@ export async function TodayOverview() {
           allItems.map((item) => (
             <Link
               key={item.id}
-              href={item.type === "task" ? `/dashboard/tasks` : `/dashboard/${item.type}s`}
+              href={item.type === "task" ? `/tasks` : `/${item.type}s`}
               className={`
                 flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl
                 bg-muted/30 hover:bg-muted/50
@@ -196,7 +196,7 @@ export async function TodayOverview() {
 
       {/* View all link */}
       <Link 
-        href="/dashboard/tasks"
+        href="/tasks"
         className="
           flex items-center justify-center gap-2
           text-xs sm:text-sm text-primary font-medium 

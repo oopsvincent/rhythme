@@ -50,7 +50,7 @@ export function FocusFloatingWidget() {
   const handleExpand = useCallback(() => {
     setIsExpanding(true)
     window.setTimeout(() => {
-      router.push('/dashboard/focus')
+      router.push('/focus')
       window.setTimeout(() => setIsExpanding(false), 800)
     }, 400)
   }, [router])
@@ -80,7 +80,7 @@ export function FocusFloatingWidget() {
   }, [activeSession, elapsedSeconds, endSession])
 
   // Don't show widget on the focus page itself
-  if (pathname === '/dashboard/focus') return null
+  if (pathname === '/focus') return null
 
   // Show pending completion widget when user hasn't filled reflection
   if (!activeSession && pendingCompletionSession && !isDismissed) {

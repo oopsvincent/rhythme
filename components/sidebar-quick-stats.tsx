@@ -135,7 +135,7 @@ export function SidebarQuickStats({
           className="flex-1 h-8 text-xs gap-1.5 bg-background/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30"
           asChild
         >
-          <Link href="/dashboard/tasks?new=true">
+          <Link href="/tasks?new=true">
             <Plus className="h-3 w-3" />
             Add Task
           </Link>
@@ -146,7 +146,7 @@ export function SidebarQuickStats({
           className="flex-1 h-8 text-xs gap-1.5 bg-background/50 hover:bg-accent/10 hover:text-accent hover:border-accent/30"
           asChild
         >
-          <Link href="/dashboard/focus">
+          <Link href="/focus">
             <Play className="h-3 w-3" />
             Focus
           </Link>

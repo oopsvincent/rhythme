@@ -113,7 +113,7 @@ export const createJournal = async (input: JournalInput) => {
       return { error: error.message };
     }
 
-    revalidatePath("/dashboard/journal");
+    revalidatePath("/journal");
     return { data };
   } catch (error) {
     return {
@@ -153,8 +153,8 @@ export const updateJournal = async (
       return { error: error.message };
     }
 
-    revalidatePath("/dashboard/journal");
-    revalidatePath(`/dashboard/journal/${journalId}`);
+    revalidatePath("/journal");
+    revalidatePath(`/journal/${journalId}`);
     return { data };
   } catch (error) {
     return {
@@ -180,7 +180,7 @@ export const deleteJournal = async (journalId: string) => {
       return { error: error.message };
     }
 
-    revalidatePath("/dashboard/journal");
+    revalidatePath("/journal");
     return { success: true };
   } catch (error) {
     return {
@@ -252,7 +252,7 @@ export const analyzeJournalSentiment = async (
       return { error: updateError.message };
     }
 
-    revalidatePath(`/dashboard/journal/${journalId}`);
+    revalidatePath(`/journal/${journalId}`);
 
     return {
       data: {

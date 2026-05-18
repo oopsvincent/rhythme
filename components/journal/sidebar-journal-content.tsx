@@ -173,7 +173,7 @@ export function SidebarJournalContent({ journals }: SidebarJournalContentProps) 
       className="flex flex-col gap-4 p-2"
     >
       {/* New Entry Button */}
-      <Link href="/dashboard/journal/new">
+      <Link href="/journal/new">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
