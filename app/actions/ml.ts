@@ -5,7 +5,6 @@ import type { SentimentRequest, SentimentResponse } from "@/lib/journal-sentimen
 
 const ML_ENDPOINT = process.env.ML_ENDPOINT;
 const API_SECRET = process.env.API_SECRET || "";
-const ML_HEALTH_TIMEOUT_MS = Number(process.env.ML_HEALTH_TIMEOUT_MS || "2500");
 
 export async function fetchPredictionAction(
   input: HabitPredictionInput
@@ -57,36 +56,5 @@ export async function fetchSentimentAction(
   } catch (error) {
     console.error("[JournalSentiment] Failed to fetch analysis:", error);
     return null;
-  }
-}
-
-export async function warmServicesAction(): Promise<boolean> {
-  if (!ML_ENDPOINT) {
-    console.warn("[WarmServices] No ML_ENDPOINT configured");
-    return false;
-  }
-
-  try {
-    // Keep warm-up bounded so ML cold starts never hold app startup work.
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), ML_HEALTH_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(`${ML_ENDPOINT}/v1/health`, {
-        method: "GET",
-        headers: {
-          "x-api-secret": API_SECRET,
-        },
-        cache: "no-store",
-        signal: controller.signal,
-      });
-
-      return response.ok;
-    } finally {
-      clearTimeout(timeout);
-    }
-  } catch (error) {
-    console.warn("[WarmServices] Failed to reach ML services:", error);
-    return false;
   }
 }

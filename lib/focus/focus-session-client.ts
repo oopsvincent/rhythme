@@ -284,3 +284,79 @@ export async function updateFocusSessionRecord(
 
   return mapSession(data as FocusSessionRow)
 }
+
+/**
+ * Fetch a session that is "pending completion" — is_active is still true but the
+ * planned duration has already elapsed (timer expired while user was away or
+ * the user hasn't submitted their reflection yet).
+ */
+export async function fetchPendingCompletionSession(): Promise<FocusSession | null> {
+  const { supabase, userId } = await getAuthenticatedUserId()
+
+  const { data, error } = await supabase
+    .from('focus_sessions')
+    .select(FOCUS_SESSION_SELECT)
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('started_at', { ascending: false })
+    .limit(1)
+
+  if (error) {
+    throw error
+  }
+
+  const row = data?.[0] as FocusSessionRow | undefined
+  if (!row) return null
+
+  const session = mapSession(row)
+  const startedMs = new Date(session.started_at).getTime()
+  const endMs = startedMs + session.planned_duration * 1000
+
+  // Session time has elapsed — it needs reflection
+  if (Date.now() >= endMs) {
+    return session
+  }
+
+  return null
+}
+
+/**
+ * Finalize a session after the user fills in their reflection.
+ * This is the ONLY place where is_active is set to false for completed sessions.
+ */
+export async function finalizeSessionReflection(
+  sessionId: number,
+  updates: {
+    moodAfter: number
+    energyEnd?: number | null
+    interruptions?: number
+    interruptionDetails?: InterruptionDetail[]
+    metadata?: Record<string, unknown>
+  }
+): Promise<FocusSession> {
+  const { supabase, userId } = await getAuthenticatedUserId()
+
+  const payload: Record<string, unknown> = {
+    is_active: false,
+    mood_after: updates.moodAfter,
+  }
+
+  if (updates.energyEnd !== undefined) payload.energy_end = updates.energyEnd
+  if (updates.interruptions !== undefined) payload.interruptions = updates.interruptions
+  if (updates.interruptionDetails !== undefined) payload.interruption_details = updates.interruptionDetails
+  if (updates.metadata !== undefined) payload.metadata = updates.metadata
+
+  const { data, error } = await supabase
+    .from('focus_sessions')
+    .update(payload)
+    .eq('session_id', sessionId)
+    .eq('user_id', userId)
+    .select(FOCUS_SESSION_SELECT)
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return mapSession(data as FocusSessionRow)
+}

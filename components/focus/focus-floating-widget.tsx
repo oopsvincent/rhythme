@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useFocusSessionController } from '@/components/focus/focus-session-provider'
-import { formatTime } from '@/lib/focus-mode'
-import { PauseCircle, Square, X, Minimize2, Maximize2 } from 'lucide-react'
+import { formatTime, formatDuration } from '@/lib/focus-mode'
+import { PauseCircle, Square, X, Minimize2, Maximize2, ClipboardCheck } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -14,7 +14,14 @@ import type { InterruptionDetail } from '@/types/database'
 export function FocusFloatingWidget() {
   const pathname = usePathname()
   const router = useRouter()
-  const { activeSession, remainingSeconds, elapsedSeconds, endSession, isEnding } = useFocusSessionController()
+  const {
+    activeSession,
+    pendingCompletionSession,
+    remainingSeconds,
+    elapsedSeconds,
+    endSession,
+    isEnding,
+  } = useFocusSessionController()
   const [isDismissed, setIsDismissed] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [isExpanding, setIsExpanding] = useState(false)
@@ -32,6 +39,13 @@ export function FocusFloatingWidget() {
       setConfirmEnd(false)
     }
   }, [activeSession])
+
+  // Reset dismissed state when a pending completion appears
+  useEffect(() => {
+    if (pendingCompletionSession) {
+      setIsDismissed(false)
+    }
+  }, [pendingCompletionSession])
 
   const handleExpand = useCallback(() => {
     setIsExpanding(true)
@@ -65,7 +79,69 @@ export function FocusFloatingWidget() {
     }
   }, [activeSession, elapsedSeconds, endSession])
 
+  // Don't show widget on the focus page itself
   if (pathname === '/dashboard/focus') return null
+
+  // Show pending completion widget when user hasn't filled reflection
+  if (!activeSession && pendingCompletionSession && !isDismissed) {
+    const pendingTaskLabel =
+      pendingCompletionSession.session.custom_task_text ||
+      pendingCompletionSession.session.tasks?.title ||
+      'Focus Session'
+
+    return (
+      <>
+        <div ref={constraintsRef} className="fixed inset-4 pointer-events-none z-[-1]" />
+        <motion.div
+          ref={widgetRef}
+          drag
+          dragMomentum={false}
+          dragElastic={0.05}
+          dragConstraints={constraintsRef}
+          className="fixed bottom-4 right-4 z-[100] flex cursor-grab flex-col active:cursor-grabbing select-none touch-none"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+        >
+          <div className="overflow-hidden rounded-[24px] border border-amber-500/30 bg-background/70 shadow-[0_8px_32px_0_rgba(0,0,0,0.12)] backdrop-blur-3xl w-[min(360px,calc(100vw-2rem))]">
+            <div className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <ClipboardCheck className="h-4 w-4 text-amber-500" />
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-500">
+                      Reflection needed
+                    </p>
+                  </div>
+                  <p className="mt-2 truncate text-sm text-muted-foreground">{pendingTaskLabel}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {formatDuration(pendingCompletionSession.actualDuration)} focused
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-3 text-xs text-muted-foreground">
+                Your session ended — please fill in your reflection to save it.
+              </p>
+
+              <div className="mt-4">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-10 w-full rounded-full px-4 font-medium"
+                  onClick={handleExpand}
+                >
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                  Complete Reflection
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </>
+    )
+  }
+
   if (isDismissed) return null
   if (!activeSession) return null
 
@@ -204,3 +280,4 @@ export function FocusFloatingWidget() {
     </>
   )
 }
+

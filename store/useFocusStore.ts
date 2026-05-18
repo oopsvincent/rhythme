@@ -2,7 +2,6 @@
 // Zustand store with persist middleware for Focus Timer state
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { toast } from 'sonner'
 
 export type SessionType = 'focus' | 'break'
 
@@ -142,19 +141,13 @@ export const useFocusStore = create<FocusTimerState>()(
           const remaining = Math.max(0, state.targetDuration - elapsed)
           
           if (remaining <= 0) {
-            // Timer completed while away — notify the user
+            // Timer completed while away — stop the local timer.
+            // The FocusSessionProvider will detect the expired session
+            // in the DB (is_active=true but time elapsed), add an
+            // interruption, and show the persistent completion screen.
             state.isRunning = false
             state.timeLeft = 0
             state.startedAt = null
-
-            // Play bell and show toast on next tick (after React mounts)
-            setTimeout(() => {
-              try {
-                const audio = new Audio('/sounds/bell.mp3')
-                audio.play().catch(() => {})
-              } catch {}
-              toast.info('A focus session completed while you were away!')
-            }, 500)
           } else {
             state.timeLeft = remaining
           }

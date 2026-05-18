@@ -13,8 +13,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import {
   createFocusSession,
-  endFocusSessionRecord,
   fetchActiveFocusSession,
+  finalizeSessionReflection,
   updateFocusSessionRecord,
 } from '@/lib/focus/focus-session-client'
 import { playFocusSound } from '@/lib/focus/audio'
@@ -55,6 +55,7 @@ interface FocusSessionContextValue {
   remainingSeconds: number
   elapsedSeconds: number
   endedSession: EndedSessionState | null
+  pendingCompletionSession: EndedSessionState | null
   startSession: (input: StartFocusSessionInput) => Promise<FocusSession>
   endSession: (options?: EndSessionOptions) => Promise<FocusSession | null>
   syncActiveSession: () => Promise<FocusSession | null>
@@ -63,6 +64,16 @@ interface FocusSessionContextValue {
     sessionId: number,
     updates: {
       moodAfter?: number | null
+      energyEnd?: number | null
+      interruptions?: number
+      interruptionDetails?: InterruptionDetail[]
+      metadata?: Record<string, unknown>
+    }
+  ) => Promise<FocusSession>
+  finalizeReflection: (
+    sessionId: number,
+    updates: {
+      moodAfter: number
       energyEnd?: number | null
       interruptions?: number
       interruptionDetails?: InterruptionDetail[]
@@ -83,9 +94,27 @@ function getElapsedSeconds(session: FocusSession) {
   return Math.max(0, elapsed)
 }
 
-function getRemainingSeconds(session: FocusSession) {
-  const remaining = Math.floor((getSessionEndTimestamp(session) - Date.now()) / 1000)
-  return Math.max(0, remaining)
+function getSessionInterruptions(session: FocusSession) {
+  return ((session.interruption_details as InterruptionDetail[] | null) ?? [])
+}
+
+function buildEndedSessionState(
+  session: FocusSession,
+  interruptions: InterruptionDetail[],
+  source: EndReason,
+  actualDuration = session.actual_duration ?? session.planned_duration
+): EndedSessionState {
+  return {
+    session: {
+      ...session,
+      actual_duration: actualDuration,
+      interruption_details: interruptions,
+    },
+    actualDuration,
+    interruptions,
+    completed: actualDuration >= session.planned_duration,
+    source,
+  }
 }
 
 export function FocusSessionProvider({ children }: { children: React.ReactNode }) {
@@ -96,14 +125,83 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
   const [isEnding, setIsEnding] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const [endedSession, setEndedSession] = useState<EndedSessionState | null>(null)
+  const [pendingCompletionSession, setPendingCompletionSession] = useState<EndedSessionState | null>(null)
 
   const supabaseRef = useRef(createClient())
   const autoEndingSessionIdRef = useRef<number | null>(null)
+  const lastCompletionSoundSessionIdRef = useRef<number | null>(null)
   const syncPromiseRef = useRef<Promise<FocusSession | null> | null>(null)
 
   const invalidateFocusQueries = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['focus-sessions'] })
   }, [queryClient])
+
+  const resolveSessionState = useCallback(async (session: FocusSession | null) => {
+    if (!session) {
+      setActiveSession(null)
+      setPendingCompletionSession(null)
+      return null
+    }
+
+    const endMs = getSessionEndTimestamp(session)
+    if (Date.now() < endMs) {
+      setPendingCompletionSession(null)
+      setActiveSession(session)
+      return session
+    }
+
+    const existingInterruptions = getSessionInterruptions(session)
+    const alreadyHasLeftAppInterruption = existingInterruptions.some(
+      (detail) => detail.type === 'other' && detail.label === 'User left the app'
+    )
+
+    let resolvedSession = session
+    let finalInterruptions = existingInterruptions
+    const endedAt = session.ended_at ?? new Date(endMs).toISOString()
+
+    if (!alreadyHasLeftAppInterruption) {
+      finalInterruptions = [
+        ...existingInterruptions,
+        {
+          type: 'other',
+          label: 'User left the app',
+          timestamp: new Date(endMs).toISOString(),
+        },
+      ]
+
+      try {
+        resolvedSession = await updateFocusSessionRecord(session.session_id, {
+          interruptionDetails: finalInterruptions,
+          interruptions: finalInterruptions.length,
+          actualDuration: session.planned_duration,
+          endedAt,
+        })
+      } catch (updateError) {
+        console.error('Failed to persist away interruption:', updateError)
+      }
+    }
+
+    setActiveSession(null)
+    setPendingCompletionSession(
+      buildEndedSessionState(
+        {
+          ...resolvedSession,
+          ended_at: endedAt,
+          actual_duration: resolvedSession.actual_duration ?? session.planned_duration,
+          interruption_details: finalInterruptions,
+        },
+        finalInterruptions,
+        'completed',
+        resolvedSession.actual_duration ?? session.planned_duration
+      )
+    )
+    if (lastCompletionSoundSessionIdRef.current !== session.session_id) {
+      lastCompletionSoundSessionIdRef.current = session.session_id
+      playFocusSound()
+    }
+
+    return null
+  }, [])
 
   const syncActiveSession = useCallback(async () => {
     if (syncPromiseRef.current) {
@@ -113,12 +211,11 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
     const promise = (async () => {
       try {
         const session = await fetchActiveFocusSession()
-        setActiveSession(session)
+        const resolvedSession = await resolveSessionState(session)
         setNow(Date.now())
         invalidateFocusQueries()
-        return session
+        return resolvedSession
       } finally {
-        // Small micro-throttle to prevent rapid consecutive calls
         setTimeout(() => {
           syncPromiseRef.current = null
         }, 1000)
@@ -127,7 +224,7 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
 
     syncPromiseRef.current = promise
     return promise
-  }, [invalidateFocusQueries])
+  }, [invalidateFocusQueries, resolveSessionState])
 
   useEffect(() => {
     let isMounted = true
@@ -135,9 +232,9 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
     async function initialSync() {
       try {
         const session = await fetchActiveFocusSession()
-        if (isMounted) {
-          setActiveSession(session)
-        }
+        if (!isMounted) return
+
+        await resolveSessionState(session)
       } catch (error) {
         console.error('Failed to sync active focus session:', error)
       } finally {
@@ -152,7 +249,7 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [resolveSessionState])
 
   useEffect(() => {
     if (!activeSession) return
@@ -253,14 +350,16 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
       try {
         const current = await fetchActiveFocusSession()
         if (current) {
-          setActiveSession(current)
-          return current
+          const resolvedCurrent = await resolveSessionState(current)
+          return resolvedCurrent ?? current
         }
 
         const session = await createFocusSession(input)
         setActiveSession(session)
         setNow(Date.now())
         setEndedSession(null)
+        setPendingCompletionSession(null)
+        lastCompletionSoundSessionIdRef.current = null
         invalidateFocusQueries()
         playFocusSound()
         return session
@@ -268,7 +367,7 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
         setIsStarting(false)
       }
     },
-    [invalidateFocusQueries]
+    [invalidateFocusQueries, resolveSessionState]
   )
 
   const endSession = useCallback(
@@ -279,8 +378,7 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
 
       try {
         const interruptionDetails =
-          options.interruptionDetails ??
-          ((activeSession.interruption_details as InterruptionDetail[] | null) ?? [])
+          options.interruptionDetails ?? getSessionInterruptions(activeSession)
 
         const actualDuration =
           options.actualDuration ?? Math.min(activeSession.planned_duration, getElapsedSeconds(activeSession))
@@ -296,11 +394,8 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
           endedReason: options.reason ?? 'manual',
         }
 
-        const session = await endFocusSessionRecord({
-          sessionId: activeSession.session_id,
+        const session = await updateFocusSessionRecord(activeSession.session_id, {
           actualDuration,
-          moodAfter: options.moodAfter ?? 3,
-          energyEnd: options.energyEnd ?? activeSession.energy_start ?? null,
           interruptions: options.interruptions ?? interruptionDetails.length,
           interruptionDetails,
           endedAt,
@@ -310,19 +405,10 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
         setActiveSession(null)
         setNow(Date.now())
         invalidateFocusQueries()
-
-        if (options.showCompletion) {
-          setEndedSession({
-            session,
-            actualDuration,
-            interruptions: interruptionDetails,
-            completed: actualDuration >= activeSession.planned_duration,
-            source: options.reason ?? 'manual',
-          })
-          playFocusSound()
-        } else if ((options.reason ?? 'manual') === 'remote') {
-          setEndedSession(null)
-        }
+        setPendingCompletionSession(
+          buildEndedSessionState(session, interruptionDetails, options.reason ?? 'manual', actualDuration)
+        )
+        playFocusSound()
 
         return session
       } finally {
@@ -337,7 +423,7 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
       if (!activeSession) return
 
       const interruptionDetails = [
-        ...(((activeSession.interruption_details as InterruptionDetail[] | null) ?? [])),
+        ...getSessionInterruptions(activeSession),
         detail,
       ]
 
@@ -385,6 +471,28 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
     [invalidateFocusQueries]
   )
 
+  const finalizeReflection = useCallback(
+    async (
+      sessionId: number,
+      updates: {
+        moodAfter: number
+        energyEnd?: number | null
+        interruptions?: number
+        interruptionDetails?: InterruptionDetail[]
+        metadata?: Record<string, unknown>
+      }
+    ) => {
+      const session = await finalizeSessionReflection(sessionId, updates)
+
+      invalidateFocusQueries()
+      setEndedSession(null)
+      setPendingCompletionSession(null)
+      lastCompletionSoundSessionIdRef.current = null
+      return session
+    },
+    [invalidateFocusQueries]
+  )
+
   useEffect(() => {
     if (!activeSession) {
       autoEndingSessionIdRef.current = null
@@ -403,18 +511,38 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
 
     autoEndingSessionIdRef.current = activeSession.session_id
 
-    void endSession({
-      actualDuration: activeSession.planned_duration,
-      reason: 'completed',
-      showCompletion: true,
-      metadata: {
-        autoCompleted: true,
-      },
-    }).catch((error) => {
-      autoEndingSessionIdRef.current = null
-      console.error('Failed to auto-complete focus session:', error)
-    })
-  }, [activeSession, endSession, now])
+    const endMs = getSessionEndTimestamp(activeSession)
+    const existingInterruptions = getSessionInterruptions(activeSession)
+
+    void (async () => {
+      try {
+        await updateFocusSessionRecord(activeSession.session_id, {
+          actualDuration: activeSession.planned_duration,
+          endedAt: new Date(endMs).toISOString(),
+        })
+
+        setActiveSession(null)
+        setPendingCompletionSession(
+          buildEndedSessionState(
+            {
+              ...activeSession,
+              actual_duration: activeSession.planned_duration,
+              ended_at: new Date(endMs).toISOString(),
+            },
+            existingInterruptions,
+            'completed',
+            activeSession.planned_duration
+          )
+        )
+        lastCompletionSoundSessionIdRef.current = activeSession.session_id
+        invalidateFocusQueries()
+        playFocusSound()
+      } catch (error) {
+        autoEndingSessionIdRef.current = null
+        console.error('Failed to auto-complete focus session:', error)
+      }
+    })()
+  }, [activeSession, invalidateFocusQueries, now])
 
   const remainingSeconds = useMemo(() => {
     if (!activeSession) return 0
@@ -435,12 +563,17 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
       remainingSeconds,
       elapsedSeconds,
       endedSession,
+      pendingCompletionSession,
       startSession,
       endSession,
       syncActiveSession,
       addInterruption,
       saveSessionReflection,
-      clearEndedSession: () => setEndedSession(null),
+      finalizeReflection,
+      clearEndedSession: () => {
+        setEndedSession(null)
+        setPendingCompletionSession(null)
+      },
     }),
     [
       activeSession,
@@ -448,9 +581,11 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
       elapsedSeconds,
       endSession,
       endedSession,
+      finalizeReflection,
       isEnding,
       isLoading,
       isStarting,
+      pendingCompletionSession,
       remainingSeconds,
       saveSessionReflection,
       startSession,
