@@ -17,6 +17,7 @@ export function FocusHubClient() {
   const {
     activeSession,
     endedSession,
+    pendingCompletionSession,
     isLoading: isLoadingActiveSession,
     clearEndedSession,
   } = useFocusSessionController()
@@ -52,12 +53,15 @@ export function FocusHubClient() {
     return <ActiveTimer session={activeSession} />
   }
 
-  if (endedSession) {
+  // Show completion screen for both in-memory ended sessions and
+  // sessions that were pending completion from previous page loads
+  const completionData = endedSession || pendingCompletionSession
+  if (completionData) {
     return (
       <SessionCompletion
-        session={endedSession.session}
-        actualDuration={endedSession.actualDuration}
-        interruptions={endedSession.interruptions}
+        session={completionData.session}
+        actualDuration={completionData.actualDuration}
+        interruptions={completionData.interruptions}
         onComplete={handleCompletionDone}
       />
     )

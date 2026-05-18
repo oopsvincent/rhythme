@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 type ServiceStatus = "idle" | "waking" | "ready" | "error";
 
@@ -10,30 +10,63 @@ interface UseWarmServicesResult {
   retry: () => void;
 }
 
-import { warmServicesAction } from "@/app/actions/ml";
 /**
  * Hook that pings the ML services to wake them from Render's cold start.
  * Runs automatically on mount, with subtle status tracking.
  */
 export function useWarmServices(): UseWarmServicesResult {
   const [status, setStatus] = useState<ServiceStatus>("idle");
+  const abortRef = useRef<AbortController | null>(null);
+  const retryTimerRef = useRef<number | null>(null);
 
   const warmUp = useCallback(async () => {
+    abortRef.current?.abort();
+    if (retryTimerRef.current !== null) {
+      window.clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+
     setStatus("waking");
 
     try {
-      const isOk = await warmServicesAction();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-      if (isOk) {
+      const response = await fetch("/api/ai/health", {
+        method: "GET",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+
+      const payload = (await response.json().catch(() => null)) as { status?: ServiceStatus } | null;
+      const nextStatus = payload?.status;
+
+      if (nextStatus === "ready") {
         setStatus("ready");
-        console.log("[WarmServices] ML services are ready");
-      } else {
-        setStatus("error");
-        console.warn("[WarmServices] Health check failed");
+        return;
       }
-    } catch (error) {
+
+      if (nextStatus === "waking") {
+        setStatus("waking");
+        retryTimerRef.current = window.setTimeout(() => {
+          retryTimerRef.current = null;
+          void warmUp();
+        }, 5000);
+        return;
+      }
+
+      if (!response.ok) {
+        setStatus("error");
+        return;
+      }
+
       setStatus("error");
-      console.warn("[WarmServices] Failed to reach ML services:", error);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      setStatus("error");
     }
   }, []);
 
@@ -58,6 +91,10 @@ export function useWarmServices(): UseWarmServicesResult {
     const timeoutId = globalThis.setTimeout(runWarmUp, 1200);
     return () => {
       cancelled = true;
+      abortRef.current?.abort();
+      if (retryTimerRef.current !== null) {
+        window.clearTimeout(retryTimerRef.current);
+      }
       globalThis.clearTimeout(timeoutId);
     };
   }, [warmUp]);

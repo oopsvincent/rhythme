@@ -25,7 +25,7 @@ export function SessionCompletion({
   interruptions,
   onComplete,
 }: SessionCompletionProps) {
-  const { saveSessionReflection } = useFocusSessionController()
+  const { finalizeReflection } = useFocusSessionController()
   const [moodAfter, setMoodAfter] = useState<number | null>(session.mood_after ?? null)
   const [energyEnd, setEnergyEnd] = useState<number | null>(session.energy_end ?? session.energy_start)
   const [reflection, setReflection] = useState('')
@@ -44,7 +44,7 @@ export function SessionCompletion({
     try {
       const existingMetadata = (session.metadata as Record<string, unknown>) ?? {}
 
-      await saveSessionReflection(session.session_id, {
+      await finalizeReflection(session.session_id, {
         moodAfter,
         energyEnd,
         interruptions: interruptions.length,
@@ -71,7 +71,7 @@ export function SessionCompletion({
     moodAfter,
     onComplete,
     reflection,
-    saveSessionReflection,
+    finalizeReflection,
     session.metadata,
     session.session_id,
   ])

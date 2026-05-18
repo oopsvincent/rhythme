@@ -17,7 +17,6 @@ import {
 export function ServiceStatusIndicator() {
   const { status, isReady, retry } = useWarmServices();
 
-  // Don't show anything if ready - completely invisible success
   if (isReady) {
     return null;
   }
@@ -38,7 +37,7 @@ export function ServiceStatusIndicator() {
           <button
             onClick={status === "error" ? retry : undefined}
             className={cn(
-              "w-2 h-2 rounded-full transition-all duration-300",
+              "w-2.5 h-2.5 rounded-full transition-all duration-300",
               config.color,
               status === "error" && "cursor-pointer hover:opacity-100"
             )}
