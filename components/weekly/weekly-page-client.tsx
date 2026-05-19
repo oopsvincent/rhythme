@@ -58,7 +58,7 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
 
   const [activeTab, setActiveTab] = useState<"plan" | "review">("plan")
   const [isGateOpen, setIsGateOpen] = useState(false)
-  const [gateReason, setGateReason] = useState<PremiumGateReason>("journal")
+  const [gateReason, setGateReason] = useState<PremiumGateReason>("weekly")
 
   // Data Hooks
   const { data: planData, isLoading: isLoadingPlan } = useWeeklyPlan(weekStart)
@@ -128,7 +128,7 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
   // Load Insight
   const loadInsight = async () => {
     if (!isPremium) {
-      setGateReason("journal")
+      setGateReason("weekly")
       setIsGateOpen(true)
       return
     }
@@ -164,7 +164,7 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
 
   const handleSaveReview = () => {
     if (!isPremium && reviewData === null) {
-      setGateReason("journal")
+      setGateReason("weekly")
       setIsGateOpen(true)
       return
     }
