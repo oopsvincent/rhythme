@@ -137,7 +137,8 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
     try {
       const res = await fetchInsightsAction({ from: weekStart, to: weekEnd })
       if (res.insights && res.insights.length > 0) {
-        setInsight(res.insights[0].sentence || res.insights[0].insight || "You are building strong habits.")
+        const first = res.insights[0]
+        setInsight(typeof first === 'string' ? first : (first.sentence || first.insight || "You are building strong habits."))
       } else {
         setInsight("No clear patterns surfaced for this week yet.")
       }
