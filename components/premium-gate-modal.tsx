@@ -13,7 +13,7 @@ import { Crown, Sparkles, Lock, Zap } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
-export type PremiumGateReason = "journal" | "task" | "habit" | "mood"
+export type PremiumGateReason = "journal" | "task" | "habit" | "mood" | "weekly"
 
 const GATE_CONFIG: Record<PremiumGateReason, {
   title: string
@@ -45,6 +45,12 @@ const GATE_CONFIG: Record<PremiumGateReason, {
     limit: "1 mood log/day",
     icon: Lock,
   },
+  weekly: {
+    title: "Weekly Review Locked",
+    description: "Free users can plan their week. Reviews and AI insights require Premium.",
+    limit: "Planning only",
+    icon: Sparkles,
+  },
 }
 
 interface PremiumGateModalProps {
@@ -67,9 +73,9 @@ export function PremiumGateModal({ open, onOpenChange, reason }: PremiumGateModa
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30"
+            className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20"
           >
-            <Icon className="h-8 w-8 text-amber-500" />
+            <Icon className="h-8 w-8 text-primary" />
           </motion.div>
 
           <DialogTitle className="text-center text-xl font-semibold">
@@ -91,11 +97,11 @@ export function PremiumGateModal({ open, onOpenChange, reason }: PremiumGateModa
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
+              className="h-full rounded-full bg-primary"
             />
           </div>
           <p className="mt-2 text-xs text-muted-foreground text-center">
-            You&apos;ve reached your limit for today
+            You've reached the free plan limit
           </p>
         </div>
 
@@ -107,7 +113,7 @@ export function PremiumGateModal({ open, onOpenChange, reason }: PremiumGateModa
           <div className="grid gap-1.5">
             {["Unlimited journals every day", "Unlimited tasks", "Unlimited mood logs", "Custom themes & more"].map((perk) => (
               <div key={perk} className="flex items-center gap-2 text-sm">
-                <Crown className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                <Crown className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span className="text-muted-foreground">{perk}</span>
               </div>
             ))}
@@ -116,7 +122,7 @@ export function PremiumGateModal({ open, onOpenChange, reason }: PremiumGateModa
 
         <DialogFooter className="mt-4 flex flex-col gap-2 sm:flex-col">
           <Button
-            className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25"
+            className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
             onClick={() => {
               onOpenChange(false)
               router.push("/settings/subscription")

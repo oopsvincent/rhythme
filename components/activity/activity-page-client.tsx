@@ -15,7 +15,11 @@ import {
   SlidersHorizontal,
   Sparkles,
   Timer,
+  Crown,
+  Lock,
 } from "lucide-react"
+import Link from "next/link"
+import { usePremium } from "@/hooks/use-premium"
 import { fetchInsightsAction } from "@/app/actions/ml"
 
 import {
@@ -117,6 +121,7 @@ export function ActivityPageClient({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const isMobile = useIsMobile()
+  const { isPremium } = usePremium()
 
   const [typeFilter, setTypeFilter] = useState<ActivityType>("all")
   const [search, setSearch] = useState("")
@@ -268,8 +273,13 @@ export function ActivityPageClient({
             <TabsTrigger value="calendar" className="rounded-xl px-4">
               Calendar
             </TabsTrigger>
-            <TabsTrigger value="insights" className="rounded-xl px-4">
+            <TabsTrigger value="insights" className="rounded-xl px-4 flex items-center gap-1.5">
               Insights
+              {!isPremium && (
+                <Badge variant="secondary" className="px-1.5 py-0 text-[10px] uppercase tracking-wider text-primary border-primary/20 bg-primary/10">
+                  Premium
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -298,7 +308,7 @@ export function ActivityPageClient({
           </TabsContent>
 
           <TabsContent value="insights">
-            <InsightsTab loggedDays={summary.loggedDays} range={range} />
+            <InsightsTab loggedDays={summary.loggedDays} range={range} isPremium={isPremium} />
           </TabsContent>
         </Tabs>
       </div>
@@ -700,18 +710,30 @@ function CalendarTab({
 function InsightsTab({
   loggedDays,
   range,
+  isPremium,
 }: {
   loggedDays: number
   range: ActivityRange
+  isPremium: boolean
 }) {
   const [insights, setInsights] = useState<NormalizedInsight[]>([])
   const [isLoading, setIsLoading] = useState(loggedDays >= 14)
   const [error, setError] = useState<string | null>(null)
 
   const loadInsights = useCallback(async () => {
-    // We no longer short-circuit based on loggedDays here.
-    // The backend action (fetchInsightsAction) will check total days 
-    // and daysWithActivity, and return a helpful message if needed.
+    if (!isPremium) {
+      setInsights([])
+      setError(null)
+      setIsLoading(false)
+      return
+    }
+
+    if (loggedDays < 14) {
+      setInsights([])
+      setError(null)
+      setIsLoading(false)
+      return
+    }
 
     setIsLoading(true)
     setError(null)
@@ -739,6 +761,33 @@ function InsightsTab({
   useEffect(() => {
     void loadInsights()
   }, [loadInsights])
+
+  if (!isPremium) {
+    return (
+      <Empty className="rounded-[28px] border-border/60 bg-card/60 py-16">
+        <EmptyHeader>
+          <EmptyMedia variant="icon" className="bg-primary/10 border-primary/20 text-primary mb-4">
+            <Sparkles className="h-6 w-6" />
+          </EmptyMedia>
+          <EmptyTitle>Unlock Behavioral Patterns</EmptyTitle>
+          <EmptyDescription className="max-w-md mx-auto mb-4">
+            Understand your personal productivity rhythm.
+            <ul className="mt-4 space-y-2 text-left">
+              <li className="flex items-center gap-2 text-foreground"><CheckCheck className="w-4 h-4 text-primary" /> Discover which habits improve your mood</li>
+              <li className="flex items-center gap-2 text-foreground"><CheckCheck className="w-4 h-4 text-primary" /> See when you focus best</li>
+              <li className="flex items-center gap-2 text-foreground"><CheckCheck className="w-4 h-4 text-primary" /> Know what affects your task completion</li>
+              <li className="flex items-center gap-2 text-foreground"><CheckCheck className="w-4 h-4 text-primary" /> Get actionable statistical insights</li>
+            </ul>
+          </EmptyDescription>
+          <Button asChild className="mt-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20">
+            <Link href="/settings/subscription">
+              <Crown className="w-4 h-4 mr-2" /> Upgrade to Premium
+            </Link>
+          </Button>
+        </EmptyHeader>
+      </Empty>
+    )
+  }
 
   return (
     <div className="space-y-5">
