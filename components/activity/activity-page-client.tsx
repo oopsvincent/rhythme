@@ -87,8 +87,8 @@ interface ActivityPageClientProps {
 interface NormalizedInsight {
   id: string
   sentence: string
-  strength: "Strong" | "Moderate"
-  explanation: string
+  strength?: "Strong" | "Moderate"
+  explanation?: string
 }
 
 const ACTIVITY_CALENDAR_CLASS_NAMES = {
@@ -744,7 +744,12 @@ function InsightsTab({
         to: range.to,
       })
 
-      setInsights(normalizeInsights(result).slice(0, 5))
+      if (result.message && (!result.insights || result.insights.length === 0)) {
+        setError(result.message)
+        setInsights([])
+      } else {
+        setInsights(normalizeInsights(result))
+      }
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "We couldn't refresh your insights.")
       setInsights([])
@@ -843,24 +848,33 @@ function InsightsTab({
       ) : (
         <div className="space-y-4">
           {insights.map((insight) => (
-            <Card key={insight.id} className="rounded-[28px] border-border/60 bg-card/70 shadow-sm">
-              <CardContent className="py-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-2">
-                    <p className="text-base font-medium leading-7">{insight.sentence}</p>
-                    <p className="text-sm leading-6 text-muted-foreground">{insight.explanation}</p>
+            <Card key={insight.id} className="group overflow-hidden rounded-[24px] border-border/40 bg-gradient-to-br from-card/80 to-card/40 shadow-sm transition-all hover:shadow-md hover:border-primary/20">
+              <CardContent className="p-5 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start md:justify-between">
+                  <div className="flex gap-4 items-start flex-1">
+                    <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-2xl bg-primary/10 text-primary mt-0.5 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-[15px] font-medium leading-relaxed text-foreground/90">{insight.sentence}</p>
+                      {insight.explanation && (
+                        <p className="text-sm leading-relaxed text-muted-foreground">{insight.explanation}</p>
+                      )}
+                    </div>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "shrink-0 rounded-full px-3 py-1",
-                      insight.strength === "Strong"
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                        : "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300"
-                    )}
-                  >
-                    {insight.strength}
-                  </Badge>
+                  {insight.strength && (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "shrink-0 rounded-full px-3 py-1 sm:mt-1",
+                        insight.strength === "Strong"
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                          : "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+                      )}
+                    >
+                      {insight.strength}
+                    </Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1044,7 +1058,16 @@ function normalizeInsights(payload: unknown): NormalizedInsight[] {
 }
 
 function normalizeInsightItem(item: unknown, index: number): NormalizedInsight | null {
-  if (!item || typeof item !== "object") return null
+  if (!item) return null
+
+  if (typeof item === "string") {
+    return {
+      id: `insight-${index}-${item.substring(0, 10)}`,
+      sentence: item,
+    }
+  }
+
+  if (typeof item !== "object") return null
 
   const record = item as Record<string, unknown>
   const sentence = getString(record.sentence) ?? getString(record.insight) ?? getString(record.headline) ?? getString(record.title)
