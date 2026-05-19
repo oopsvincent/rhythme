@@ -30,7 +30,7 @@ export async function fetchPredictionAction(
 }
 
 export interface InsightResult {
-  insights: Array<{
+  insights: Array<string | {
     sentence?: string
     insight?: string
     headline?: string
@@ -44,6 +44,8 @@ export interface InsightResult {
     score?: number
     strength_score?: number
   }>
+  days_analyzed?: number
+  message?: string | null
 }
 
 export async function fetchInsightsAction(params: {
@@ -64,8 +66,14 @@ export async function fetchInsightsAction(params: {
     throw new Error("Not authenticated")
   }
 
-  const fromIso = new Date(`${params.from}T00:00:00`).toISOString()
-  const toIso = new Date(`${params.to}T23:59:59`).toISOString()
+  const toDate = new Date()
+  const fromDate = new Date()
+  fromDate.setDate(toDate.getDate() - 90)
+  fromDate.setHours(0, 0, 0, 0)
+  toDate.setHours(23, 59, 59, 999)
+
+  const fromIso = fromDate.toISOString()
+  const toIso = toDate.toISOString()
 
   const [tasksResult, habitLogsResult, journalsResult, moodResult, focusResult] =
     await Promise.all([
@@ -105,33 +113,42 @@ export async function fetchInsightsAction(params: {
   // Build daily log entries grouped by date
   const dayMap = new Map<string, {
     date: string
-    tasks_completed: number
+    tasks_done: number
     tasks_created: number
     habits_completed: number
-    journal_count: number
-    mood_score: number | null
-    focus_minutes: number
+    journaled: boolean
+    mood: number
+    focus_mins: number
     focus_sessions: number
   }>()
+
+  // Pre-fill every date in the range
+  for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
+    const key = d.toISOString().slice(0, 10)
+    dayMap.set(key, {
+      date: key, tasks_done: 0, tasks_created: 0, habits_completed: 0,
+      journaled: false, mood: 6, focus_mins: 0, focus_sessions: 0,
+    })
+  }
 
   const getDateKey = (value: string) => value.slice(0, 10)
 
   for (const task of tasksResult.data ?? []) {
     const key = getDateKey(task.created_at)
     const entry = dayMap.get(key) ?? {
-      date: key, tasks_completed: 0, tasks_created: 0, habits_completed: 0,
-      journal_count: 0, mood_score: null, focus_minutes: 0, focus_sessions: 0,
+      date: key, tasks_done: 0, tasks_created: 0, habits_completed: 0,
+      journaled: false, mood: 6, focus_mins: 0, focus_sessions: 0,
     }
     entry.tasks_created += 1
-    if (task.status === "completed" || task.completed_at) entry.tasks_completed += 1
+    if (task.status === "completed" || task.completed_at) entry.tasks_done += 1
     dayMap.set(key, entry)
   }
 
   for (const log of habitLogsResult.data ?? []) {
     const key = getDateKey(log.completed_at)
     const entry = dayMap.get(key) ?? {
-      date: key, tasks_completed: 0, tasks_created: 0, habits_completed: 0,
-      journal_count: 0, mood_score: null, focus_minutes: 0, focus_sessions: 0,
+      date: key, tasks_done: 0, tasks_created: 0, habits_completed: 0,
+      journaled: false, mood: 6, focus_mins: 0, focus_sessions: 0,
     }
     entry.habits_completed += 1
     dayMap.set(key, entry)
@@ -140,42 +157,51 @@ export async function fetchInsightsAction(params: {
   for (const journal of journalsResult.data ?? []) {
     const key = getDateKey(journal.created_at)
     const entry = dayMap.get(key) ?? {
-      date: key, tasks_completed: 0, tasks_created: 0, habits_completed: 0,
-      journal_count: 0, mood_score: null, focus_minutes: 0, focus_sessions: 0,
+      date: key, tasks_done: 0, tasks_created: 0, habits_completed: 0,
+      journaled: false, mood: 6, focus_mins: 0, focus_sessions: 0,
     }
-    entry.journal_count += 1
+    entry.journaled = true
     dayMap.set(key, entry)
   }
 
   for (const mood of moodResult.data ?? []) {
     const key = mood.logged_at
     const entry = dayMap.get(key) ?? {
-      date: key, tasks_completed: 0, tasks_created: 0, habits_completed: 0,
-      journal_count: 0, mood_score: null, focus_minutes: 0, focus_sessions: 0,
+      date: key, tasks_done: 0, tasks_created: 0, habits_completed: 0,
+      journaled: false, mood: 6, focus_mins: 0, focus_sessions: 0,
     }
-    entry.mood_score = Number(mood.mood_score)
+    entry.mood = Math.round(Number(mood.mood_score) * 2)
     dayMap.set(key, entry)
   }
 
   for (const session of focusResult.data ?? []) {
     const key = getDateKey(session.started_at)
     const entry = dayMap.get(key) ?? {
-      date: key, tasks_completed: 0, tasks_created: 0, habits_completed: 0,
-      journal_count: 0, mood_score: null, focus_minutes: 0, focus_sessions: 0,
+      date: key, tasks_done: 0, tasks_created: 0, habits_completed: 0,
+      journaled: false, mood: 6, focus_mins: 0, focus_sessions: 0,
     }
-    entry.focus_minutes += session.actual_duration ?? session.planned_duration
+    entry.focus_mins += session.actual_duration ?? session.planned_duration
     entry.focus_sessions += 1
     dayMap.set(key, entry)
   }
 
   const logs = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date))
 
-  if (logs.length < 7) {
-    return { insights: [] }
+  const totalDays = logs.length;
+  const daysWithActivity = logs.filter(l => 
+    l.tasks_done > 0 || l.habits_completed > 0 || l.journaled || l.focus_mins > 0 || l.mood !== 6
+  ).length;
+
+  if (daysWithActivity < 14) {
+    return { 
+      insights: [], 
+      days_analyzed: totalDays,
+      message: `Need at least 14 days of activity to generate insights. You currently have ${daysWithActivity} days with activity.` 
+    };
   }
 
   try {
-    const response = await fetch(`${ML_ENDPOINT}/v1/insight_weekly`, {
+    const response = await fetch(`${ML_ENDPOINT}/v1/insights_weekly`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -185,14 +211,15 @@ export async function fetchInsightsAction(params: {
     })
 
     if (!response.ok) {
-      throw new Error(`Insights service returned ${response.status}`)
+      const errorText = await response.text().catch(() => "Could not read error text")
+      throw new Error(`Insights service returned ${response.status}: ${errorText}`)
     }
 
     const payload = await response.json()
     return payload as InsightResult
-  } catch (error) {
+  } catch (error: any) {
     console.error("[Insights] Failed to fetch insights:", error)
-    throw new Error("The insights service is temporarily unavailable.")
+    throw new Error(`The insights service is temporarily unavailable. Details: ${error?.message || error}`)
   }
 }
 
