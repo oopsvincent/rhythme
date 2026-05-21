@@ -48,9 +48,33 @@ export interface InsightResult {
   message?: string | null
 }
 
+function convertToLocalYYYYMMDD(utcString: string, timeZone?: string): string {
+  if (!timeZone || timeZone === "UTC") {
+    return utcString.slice(0, 10);
+  }
+  try {
+    const date = new Date(utcString);
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const parts = formatter.formatToParts(date);
+    const year = parts.find(p => p.type === "year")?.value;
+    const month = parts.find(p => p.type === "month")?.value;
+    const day = parts.find(p => p.type === "day")?.value;
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    return utcString.slice(0, 10);
+  }
+}
+
 export async function fetchInsightsAction(params: {
   from: string
   to: string
+  user_timezone?: string
+  localToday?: string
 }): Promise<InsightResult> {
   if (!ML_ENDPOINT) {
     throw new Error("Insights service unavailable (missing endpoint)")
@@ -66,14 +90,16 @@ export async function fetchInsightsAction(params: {
     throw new Error("Not authenticated")
   }
 
-  const toDate = new Date()
-  const fromDate = new Date()
-  fromDate.setDate(toDate.getDate() - 90)
-  fromDate.setHours(0, 0, 0, 0)
-  toDate.setHours(23, 59, 59, 999)
+  const tz = params.user_timezone || "UTC";
+  const todayStr = params.localToday || new Date().toISOString().split("T")[0];
 
-  const fromIso = fromDate.toISOString()
-  const toIso = toDate.toISOString()
+  const toDate = new Date(`${todayStr}T23:59:59.999Z`);
+  const fromDate = new Date(`${todayStr}T00:00:00.000Z`);
+  fromDate.setUTCDate(fromDate.getUTCDate() - 90);
+
+  // Buffer 24h to avoid timezone boundary issues when querying UTC timestamptz
+  const queryFrom = new Date(fromDate.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const queryTo = new Date(toDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
   const [tasksResult, habitLogsResult, journalsResult, moodResult, focusResult] =
     await Promise.all([
@@ -81,20 +107,20 @@ export async function fetchInsightsAction(params: {
         .from("tasks")
         .select("task_id, title, status, completed_at, created_at")
         .eq("user_id", user.id)
-        .gte("created_at", fromIso)
-        .lte("created_at", toIso),
+        .gte("created_at", queryFrom)
+        .lte("created_at", queryTo),
       supabase
         .from("habit_logs")
         .select("habit_id, completed_at")
         .eq("user_id", user.id)
-        .gte("completed_at", fromIso)
-        .lte("completed_at", toIso),
+        .gte("completed_at", queryFrom)
+        .lte("completed_at", queryTo),
       supabase
         .from("journals")
         .select("journal_id, title, content, sentiment_score, mood_tags, created_at, iv")
         .eq("user_id", user.id)
-        .gte("created_at", fromIso)
-        .lte("created_at", toIso),
+        .gte("created_at", queryFrom)
+        .lte("created_at", queryTo),
       supabase
         .from("mood_logs")
         .select("mood_score, note, logged_at")
@@ -106,8 +132,8 @@ export async function fetchInsightsAction(params: {
         .select("session_id, planned_duration, actual_duration, mood_before, mood_after, energy_start, energy_end, started_at, ended_at")
         .eq("user_id", user.id)
         .eq("is_active", false)
-        .gte("started_at", fromIso)
-        .lte("started_at", toIso),
+        .gte("started_at", queryFrom)
+        .lte("started_at", queryTo),
     ])
 
   // Build daily log entries grouped by date
@@ -123,7 +149,7 @@ export async function fetchInsightsAction(params: {
   }>()
 
   // Pre-fill every date in the range
-  for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
+  for (let d = new Date(fromDate); d <= toDate; d.setUTCDate(d.getUTCDate() + 1)) {
     const key = d.toISOString().slice(0, 10)
     dayMap.set(key, {
       date: key, tasks_done: 0, tasks_created: 0, habits_completed: 0,
@@ -131,7 +157,10 @@ export async function fetchInsightsAction(params: {
     })
   }
 
-  const getDateKey = (value: string) => value.slice(0, 10)
+  const getDateKey = (value: string) => {
+    if (value.length === 10) return value;
+    return convertToLocalYYYYMMDD(value, tz);
+  }
 
   for (const task of tasksResult.data ?? []) {
     const key = getDateKey(task.created_at)

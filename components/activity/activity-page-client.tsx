@@ -21,6 +21,7 @@ import {
 import Link from "next/link"
 import { usePremium } from "@/hooks/use-premium"
 import { fetchInsightsAction } from "@/app/actions/ml"
+import { getUserTimezone, getLocalDateString } from "@/lib/timezone"
 
 import {
   ACTIVITY_TYPE_OPTIONS,
@@ -742,6 +743,8 @@ function InsightsTab({
       const result = await fetchInsightsAction({
         from: range.from,
         to: range.to,
+        user_timezone: getUserTimezone(),
+        localToday: getLocalDateString(),
       })
 
       if (result.message && (!result.insights || result.insights.length === 0)) {

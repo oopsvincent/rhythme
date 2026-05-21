@@ -38,6 +38,7 @@ import { useRouter } from "next/navigation";
 import { Journal, MoodTags } from "@/types/database";
 import { createJournal } from "@/app/actions/journals";
 import { canCreateJournal } from "@/app/actions/usage-limits";
+import { getLocalDateString, getUserTimezone } from "@/lib/timezone";
 import { PremiumGateModal } from "@/components/premium-gate-modal";
 
 const QUICK_JOURNAL_KEY = "rhythme_quick_journal_draft";
@@ -56,7 +57,7 @@ function getRandomPrompt(): string {
 }
 
 function getTodayKey(): string {
-  return new Date().toISOString().split('T')[0];
+  return getLocalDateString();
 }
 
 // Normalized entry type for component use
@@ -152,6 +153,8 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
       mood_tags: "neutral",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      timezone: getUserTimezone(),
+      local_date: getLocalDateString(),
     });
 
     if (result.error) {

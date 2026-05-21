@@ -27,6 +27,7 @@ import { decryptJournal } from "@/lib/crypto";
 import { useJournalEncryptionStore } from "@/store/useJournalEncryptionStore";
 import { JournalUnlockModal } from "@/components/journal/journal-unlock-modal";
 import { analyzeJournalSentiment } from "@/app/actions/journals";
+import { toLocalDateTimeString } from "@/lib/timezone";
 
 // Mood labels
 const moodLabels: Record<MoodType, string> = {
@@ -683,7 +684,7 @@ export default function InsightsClient({
                     {analysis.analyzed_at && (
                       <>
                         {" · "}
-                        {new Date(analysis.analyzed_at).toLocaleString()}
+                        {toLocalDateTimeString(analysis.analyzed_at)}
                       </>
                     )}
                   </p>

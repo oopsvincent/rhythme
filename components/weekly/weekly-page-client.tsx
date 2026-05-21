@@ -29,6 +29,7 @@ import { useWeeklyPlan, useSaveWeeklyPlan } from "@/hooks/use-weekly-plan"
 import { useWeeklyStats } from "@/hooks/use-weekly-stats"
 import { useWeeklyReview, useSaveWeeklyReview } from "@/hooks/use-weekly-review"
 import { fetchInsightsAction } from "@/app/actions/ml"
+import { getUserTimezone, getLocalDateString } from "@/lib/timezone"
 import { getLastWeekPlan } from "@/app/actions/weekly"
 import { toast } from "sonner"
 
@@ -135,7 +136,12 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
     
     setIsLoadingInsight(true)
     try {
-      const res = await fetchInsightsAction({ from: weekStart, to: weekEnd })
+      const res = await fetchInsightsAction({
+        from: weekStart,
+        to: weekEnd,
+        user_timezone: getUserTimezone(),
+        localToday: getLocalDateString(),
+      })
       if (res.insights && res.insights.length > 0) {
         const first = res.insights[0]
         setInsight(typeof first === 'string' ? first : (first.sentence || first.insight || "You are building strong habits."))
