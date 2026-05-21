@@ -89,7 +89,7 @@ const AT_RISK_THRESHOLD = 0.6;
 
 // === CRUD Operations ===
 
-export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
+export async function getHabits(localToday?: string): Promise<ActionResponse<HabitWithStats[]>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
 
@@ -120,7 +120,8 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
       return { error: logsError.message };
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    // Use client-provided local date to avoid UTC day-boundary bugs
+    const today = localToday || new Date().toISOString().split("T")[0];
 
     // Map habits with their stats
     const habitsWithStats: HabitWithStats[] = habits.map((habit: Habit) => {
@@ -132,7 +133,7 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
       );
 
       // Period-based progress
-      const { start, end } = getPeriodBounds(freq);
+      const { start, end } = getPeriodBounds(freq, localToday);
       const periodLogs = habitLogs.filter(
         (log: HabitLog) => log.completed_at >= start && log.completed_at <= end,
       );
@@ -144,7 +145,7 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
         (log: HabitLog) => log.completed_at.split("T")[0] === today,
       );
       const completedThisWeek = (() => {
-        const weekBounds = getPeriodBounds(1);
+        const weekBounds = getPeriodBounds(1, localToday);
         return habitLogs.some(
           (log: HabitLog) =>
             log.completed_at >= weekBounds.start && log.completed_at <= weekBounds.end,
@@ -153,7 +154,7 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
 
       // Streak
       const completionDates = habitLogs.map((log: HabitLog) => log.completed_at);
-      const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates);
+      const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates, localToday);
 
       const daysOld = daysSince(new Date(habit.created_at));
       const canPredict = daysOld >= MIN_DAYS_FOR_PREDICTION;
@@ -186,6 +187,7 @@ export async function getHabits(): Promise<ActionResponse<HabitWithStats[]>> {
 
 export async function getHabit(
   habitId: number,
+  localToday?: string,
 ): Promise<ActionResponse<HabitWithStats>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -215,10 +217,10 @@ export async function getHabit(
 
     const freq = resolveFrequency(habit as unknown as Record<string, unknown>);
     const targetCount = habit.target_count ?? 1;
-    const today = new Date().toISOString().split("T")[0];
+    const today = localToday || new Date().toISOString().split("T")[0];
 
     // Period-based progress
-    const { start, end } = getPeriodBounds(freq);
+    const { start, end } = getPeriodBounds(freq, localToday);
     const periodLogs = (logs || []).filter(
       (log: HabitLog) => log.completed_at >= start && log.completed_at <= end,
     );
@@ -229,7 +231,7 @@ export async function getHabit(
     const completedToday = (logs || []).some(
       (log: HabitLog) => log.completed_at.split("T")[0] === today,
     );
-    const weekBounds = getPeriodBounds(1);
+    const weekBounds = getPeriodBounds(1, localToday);
     const completedThisWeek = (logs || []).some(
       (log: HabitLog) =>
         log.completed_at >= weekBounds.start && log.completed_at <= weekBounds.end,
@@ -237,7 +239,7 @@ export async function getHabit(
 
     // Streak
     const completionDates = (logs || []).map((log: HabitLog) => log.completed_at);
-    const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates);
+    const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates, localToday);
 
     const daysOld = daysSince(new Date(habit.created_at));
     const canPredict = daysOld >= MIN_DAYS_FOR_PREDICTION;
@@ -380,6 +382,7 @@ export async function deleteHabit(
 export async function logHabitCompletion(
   habitId: number,
   note?: string,
+  localToday?: string,
 ): Promise<ActionResponse<HabitLog>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -400,7 +403,7 @@ export async function logHabitCompletion(
     const targetCount = habit.target_count ?? 1;
 
     // Count-based validation: check if limit is reached for the current period
-    const { start, end } = getPeriodBounds(freq);
+    const { start, end } = getPeriodBounds(freq, localToday);
     const currentCount = await countPeriodCompletions(supabase, habitId, user.id, start, end);
 
     if (currentCount >= targetCount) {
@@ -433,7 +436,7 @@ export async function logHabitCompletion(
       .order("completed_at", { ascending: false });
 
     const completionDates = (allLogs || []).map((l) => l.completed_at);
-    const newStreak = computeUnifiedStreak(freq, targetCount, completionDates);
+    const newStreak = computeUnifiedStreak(freq, targetCount, completionDates, localToday);
 
     // Update streak_count in habits table
     await supabase
@@ -456,6 +459,7 @@ export async function logHabitCompletion(
 export async function removeHabitCompletion(
   habitId: number,
   date: string,
+  localToday?: string,
 ): Promise<ActionResponse<{ success: boolean }>> {
   try {
     const { supabase, user } = await getAuthenticatedUser();
@@ -492,7 +496,7 @@ export async function removeHabitCompletion(
       .order("completed_at", { ascending: false });
 
     const completionDates = (remainingLogs || []).map((l) => l.completed_at);
-    const newStreak = computeUnifiedStreak(freq as HabitFrequency, targetCount, completionDates);
+    const newStreak = computeUnifiedStreak(freq as HabitFrequency, targetCount, completionDates, localToday);
 
     // Update streak_count in habits table
     await supabase
@@ -514,7 +518,10 @@ export async function removeHabitCompletion(
 
 // === Statistics ===
 
-export async function getHabitStats(habitId: number): Promise<
+export async function getHabitStats(
+  habitId: number,
+  localToday?: string,
+): Promise<
   ActionResponse<{
     completion_rate_7d: number;
     completion_rate_30d: number;
@@ -593,7 +600,7 @@ export async function getHabitStats(habitId: number): Promise<
 
     // Unified streak
     const completionDates = (logs || []).map((log: HabitLog) => log.completed_at);
-    const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates);
+    const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates, localToday);
 
     // Rule-based prediction
     const prediction =

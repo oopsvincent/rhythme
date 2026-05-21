@@ -14,6 +14,7 @@ import {
   LucideIcon,
   ChevronRight
 } from "lucide-react";
+import { getLocalDateString } from "@/lib/timezone";
 import Link from "next/link";
 
 type MoodType = 'happy' | 'calm' | 'neutral' | 'sad' | 'frustrated' | 'excited' | 'anxious';
@@ -52,7 +53,7 @@ export function MoodInputCard() {
     if (stored) {
       try {
         const parsed: StoredMood = JSON.parse(stored);
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalDateString();
         if (parsed.date === today) {
           setSelectedMood(parsed.mood);
         }
@@ -64,7 +65,7 @@ export function MoodInputCard() {
   }, []);
 
   const handleMoodSelect = (mood: MoodType) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const data: StoredMood = { mood, date: today };
     localStorage.setItem(MOOD_STORAGE_KEY, JSON.stringify(data));
     setSelectedMood(mood);

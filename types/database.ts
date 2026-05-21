@@ -178,6 +178,8 @@ export interface JournalInput {
   mood_tags?: MoodTags;
   created_at?: string;
   updated_at?: string;
+  timezone?: string; // IANA timezone string, e.g. "Asia/Kolkata"
+  local_date?: string; // User's local date as YYYY-MM-DD
 }
 
 export type MoodTags = "happy" | "calm" | "neutral" | "sad" | "frustrated" | "excited" | "anxious"

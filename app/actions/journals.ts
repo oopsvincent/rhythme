@@ -96,6 +96,9 @@ export const createJournal = async (input: JournalInput) => {
       mood_tags: {
         mood: input.mood_tags || "neutral",
       },
+      // Timezone metadata for accurate day-boundary logic
+      ...(input.timezone && { timezone: input.timezone }),
+      ...(input.local_date && { local_date: input.local_date }),
     };
 
     // Include iv if provided (indicates encrypted content)

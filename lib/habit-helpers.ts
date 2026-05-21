@@ -77,16 +77,20 @@ export function getStreakUnit(freq: HabitFrequency): string {
 }
 
 /**
- * Get the current period boundaries (UTC) for a given frequency.
- * Returns ISO strings suitable for Supabase range queries.
+ * Get the current period boundaries for a given frequency.
+ * Returns date strings suitable for Supabase range queries.
+ *
+ * @param freq - Habit frequency
+ * @param localToday - Optional local date string (YYYY-MM-DD) from the client.
+ *                     If omitted, falls back to UTC-based date (server context).
  */
-export function getPeriodBounds(freq: HabitFrequency): { start: string; end: string } {
+export function getPeriodBounds(freq: HabitFrequency, localToday?: string): { start: string; end: string } {
   const now = new Date();
 
   switch (freq) {
     case 0: {
-      // Daily: today 00:00 to 23:59:59.999 UTC
-      const dayStr = now.toISOString().split("T")[0];
+      // Daily: use client-provided local date if available, else UTC
+      const dayStr = localToday || now.toISOString().split("T")[0];
       return {
         start: `${dayStr}T00:00:00.000Z`,
         end: `${dayStr}T23:59:59.999Z`,
@@ -152,12 +156,19 @@ function getISOMonthKey(dateStr: string): string {
  * Compute a daily streak: consecutive days with >= targetCount completions.
  * dateStrs must be unique date strings in descending order.
  * dateCounts maps each date string to its completion count.
+ *
+ * @param todayOverride - Optional local "today" string. Falls back to UTC.
  */
-function computeDailyStreak(dateStrs: string[], dateCounts: Map<string, number>, targetCount: number): number {
+function computeDailyStreak(
+  dateStrs: string[],
+  dateCounts: Map<string, number>,
+  targetCount: number,
+  todayOverride?: string,
+): number {
   if (dateStrs.length === 0) return 0;
 
-  const today = new Date().toISOString().split("T")[0];
-  const yesterdayDate = new Date();
+  const today = todayOverride || new Date().toISOString().split("T")[0];
+  const yesterdayDate = new Date(`${today}T12:00:00Z`); // noon to avoid DST edge cases
   yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
   const yesterday = yesterdayDate.toISOString().split("T")[0];
 
@@ -287,12 +298,14 @@ function computeMonthlyStreak(dateStrs: string[], targetCount: number): number {
  * @param freq - habit frequency (0=daily, 1=weekly, 2=monthly, 3=multiple-per-week)
  * @param targetCount - required completions per period
  * @param completionDates - array of ISO date strings (completion timestamps), unsorted ok
+ * @param localToday - optional local "today" string (YYYY-MM-DD) from client
  * @returns current streak count
  */
 export function computeUnifiedStreak(
   freq: HabitFrequency,
   targetCount: number,
   completionDates: string[],
+  localToday?: string,
 ): number {
   if (completionDates.length === 0) return 0;
 
@@ -308,7 +321,7 @@ export function computeUnifiedStreak(
         dateCounts.set(d, (dateCounts.get(d) ?? 0) + 1);
       }
       const uniqueDatesDesc = [...new Set(sortedDesc)];
-      return computeDailyStreak(uniqueDatesDesc, dateCounts, targetCount);
+      return computeDailyStreak(uniqueDatesDesc, dateCounts, targetCount, localToday);
     }
     case 1:
     case 3:

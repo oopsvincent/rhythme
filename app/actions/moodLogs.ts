@@ -40,6 +40,11 @@ function normalizeMoodScore(value: number) {
 }
 
 function normalizeLoggedAt(value?: string) {
+  // IMPORTANT: Client must provide local_date to avoid UTC day-boundary bugs.
+  // Fallback uses server time which may differ from user's local date.
+  if (!value) {
+    console.warn('[moodLogs] logged_at not provided — falling back to server date. Client should send getLocalDateString().')
+  }
   return value ?? new Date().toISOString().split('T')[0]
 }
 

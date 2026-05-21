@@ -1,8 +1,9 @@
 // app/(dashboard)/settings/general/_components/general-section.tsx
-// General settings with flat design
+// General settings with timezone display
 
 "use client"
 
+import { useState, useEffect } from "react"
 import { Globe, Clock, Info } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import {
@@ -13,8 +14,17 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
+import { getUserTimezone, getUTCOffsetString } from "@/lib/timezone"
 
 export function GeneralSection() {
+  const [timezone, setTimezone] = useState<string>("")
+  const [utcOffset, setUtcOffset] = useState<string>("")
+
+  useEffect(() => {
+    setTimezone(getUserTimezone())
+    setUtcOffset(getUTCOffsetString())
+  }, [])
+
   const handleComingSoon = () => {
     toast.info("This setting is coming soon!", {
       description: "We're working on making this configurable.",
@@ -59,22 +69,35 @@ export function GeneralSection() {
           <h3 className="font-medium">Timezone</h3>
         </div>
         
-        <div className="max-w-sm">
-          <Select defaultValue="auto" onValueChange={handleComingSoon}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select timezone" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="auto">Automatic (Browser)</SelectItem>
-              <SelectItem value="utc">UTC</SelectItem>
-              <SelectItem value="est">Eastern Time (ET)</SelectItem>
-              <SelectItem value="pst">Pacific Time (PT)</SelectItem>
-              <SelectItem value="ist">India Standard Time (IST)</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground mt-2">
-            Used for scheduling reminders and displaying times.
-          </p>
+        <div className="max-w-sm space-y-3">
+          {/* Auto-detected timezone display */}
+          <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+            <p className="text-sm font-medium">
+              Current timezone:{" "}
+              <span className="text-primary">
+                {timezone || "Detecting..."}
+                {utcOffset && ` (${utcOffset})`}
+              </span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Your daily reset happens at 00:00 in your local time.
+            </p>
+          </div>
+
+          {/* Manual override — coming soon */}
+          <div className="opacity-60 pointer-events-none">
+            <Select defaultValue="auto" disabled>
+              <SelectTrigger>
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Automatic (Browser)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-2">
+              Manual timezone override coming soon.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -82,7 +105,7 @@ export function GeneralSection() {
       <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-border/50">
         <Info className="h-4 w-4 text-muted-foreground mt-0.5" />
         <p className="text-sm text-muted-foreground">
-          Additional preferences like date format and week start day will be added soon.
+          Your timezone is auto-detected from your browser. All daily logs, habits, and insights use your local time for accurate tracking.
         </p>
       </div>
     </div>
