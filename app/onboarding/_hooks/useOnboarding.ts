@@ -303,9 +303,18 @@ export function useOnboarding() {
 
       if (goalError) throw goalError
 
-      // Delete existing tasks and habits for this user to avoid duplicates on retry
-      await supabase.from('tasks').delete().eq('user_id', userId)
-      await supabase.from('habits').delete().eq('user_id', userId)
+      // Delete existing tasks and habits linked to this goal to avoid duplicates on retry
+      await supabase
+        .from('tasks')
+        .delete()
+        .eq('user_id', userId)
+        .eq('goal_id', goal.id)
+
+      await supabase
+        .from('habits')
+        .delete()
+        .eq('user_id', userId)
+        .eq('goal_id', goal.id)
 
       // 3. Insert tasks
       const tasksToInsert = tasks
