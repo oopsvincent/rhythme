@@ -24,11 +24,11 @@ export default function OnboardingCheck({ children }: { children: React.ReactNod
     // Check if user has completed onboarding
     const { data: preferences } = await supabase
       .from("user_preferences")
-      .select("user_preferences_id")
+      .select("onboarding_completed")
       .eq("user_id", user.id)
       .single();
 
-    if (!preferences) {
+    if (!preferences || !preferences.onboarding_completed) {
       // User hasn't completed onboarding, redirect
       window.location.href = "/onboarding";
     }

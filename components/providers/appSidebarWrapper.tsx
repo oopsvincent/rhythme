@@ -43,17 +43,18 @@ export default function AppSidebarWrapper(
           authUser.user_metadata?.avatar_url || "/avatars/default-user.png",
       });
 
-      // Fetch workspace goal
-      const { data, error } = await supabase
-        .from("user_preferences")
-        .select("onboarding_data")
+      // Fetch workspace goal from user_goals table
+      const { data: goalData, error: goalError } = await supabase
+        .from("user_goals")
+        .select("title, description")
         .eq("user_id", authUser.id)
+        .eq("is_primary", true)
         .single();
 
-      if (!error && data?.onboarding_data?.long_term_goal) {
+      if (!goalError && goalData) {
         setWorkspaceGoal({
-          title: data.onboarding_data.long_term_goal,
-          description: data.onboarding_data.long_term_goal_description,
+          title: goalData.title,
+          description: goalData.description ?? undefined,
         });
       }
     }

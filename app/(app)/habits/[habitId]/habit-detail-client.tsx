@@ -57,7 +57,6 @@ import {
   getFrequencyLabel,
   getTargetLabel,
   getStreakUnit,
-  getPeriodLabel,
 } from "@/lib/habit-helpers";
 import { HabitHeatmap } from "@/components/dashboard/habit-heatmap";
 

@@ -56,8 +56,6 @@ import {
 import TaskItem from "@/components/task-item";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type TimeFrame =
   | "this_week"
   | "last_week"
@@ -76,8 +74,6 @@ const TIME_FRAME_OPTIONS: { value: TimeFrame; label: string }[] = [
   { value: "this_year", label: "This Year" },
   { value: "all", label: "All Time" },
 ];
-
-// ─── Date filtering ───────────────────────────────────────────────────────────
 
 function getTimeFrameDateRange(timeFrame: TimeFrame) {
   const now = new Date();
@@ -125,8 +121,6 @@ function getTimeFrameDateRange(timeFrame: TimeFrame) {
   return { start, end };
 }
 
-// ─── Date label helpers ───────────────────────────────────────────────────────
-
 function getDateKey(dateStr: string) {
   const d = new Date(dateStr);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -144,7 +138,6 @@ function formatDateGroupLabel(dateKey: string): string {
   if (diff === 0) return "Today";
   if (diff === 1) return "Yesterday";
 
-  // Older — show a readable date
   return d.toLocaleDateString("en-US", {
     weekday: "long",
     month: "short",
@@ -164,8 +157,6 @@ function isTaskOverdue(task: Task) {
   return due < today;
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function TasksPage() {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -178,7 +169,6 @@ export default function TasksPage() {
   const deleteMutation = useDeleteTask();
   const statusMutation = useUpdateTaskStatus();
 
-  // ── state ──────────────────────────────────────────────────────────────────
   const [timeFrame, setTimeFrame] = useState<TimeFrame>(() => {
     if (typeof window === "undefined") return "this_week";
     return (sessionStorage.getItem("task_timeframe") as TimeFrame) || "this_week";
@@ -200,7 +190,6 @@ export default function TasksPage() {
     sessionStorage.setItem("task_timeframe", timeFrame);
   }, [timeFrame]);
 
-  // ── filter + group ─────────────────────────────────────────────────────────
   const filteredTasks = useMemo(() => {
     if (timeFrame === "all") return tasks;
     const { start, end } = getTimeFrameDateRange(timeFrame);
@@ -248,7 +237,6 @@ export default function TasksPage() {
     [tasksByDate]
   );
 
-  // ── stats ──────────────────────────────────────────────────────────────────
   const filteredTotal = filteredTasks.length;
   const filteredCompleted = filteredTasks.filter((t) => t.status === "completed").length;
   const filteredInProgress = filteredTasks.filter((t) => t.status === "in_progress").length;
@@ -260,7 +248,6 @@ export default function TasksPage() {
   const isPending =
     createMutation.isPending || deleteMutation.isPending || statusMutation.isPending;
 
-  // ── actions ────────────────────────────────────────────────────────────────
   const handleAddTask = () => {
     if (!newTask.title.trim()) return;
     createMutation.mutate(newTask, {
@@ -288,14 +275,11 @@ export default function TasksPage() {
   const navigateToTask = (taskId: string) =>
     setSelectedTask(tasks.find((t) => t.task_id === taskId) ?? null);
 
-  // ── render ─────────────────────────────────────────────────────────────────
   return (
     <>
       <SiteHeader />
 
       <div className="px-4 md:px-10 pb-28 md:pb-10">
-
-        {/* ── Header ── */}
         <motion.div
           className="flex items-center justify-between py-4"
           initial={{ opacity: 0, y: -8 }}
@@ -309,13 +293,12 @@ export default function TasksPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Time frame picker */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
                   <CalendarDays className="h-3.5 w-3.5" />
                   {currentTimeFrameLabel}
-                  <span className="text-xs opacity-50">▾</span>
+                  <span className="text-xs opacity-50">â–¾</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -332,7 +315,6 @@ export default function TasksPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Add task (desktop dialog) */}
             {isDesktop && (
               <Dialog
                 open={isAddDialogOpen}
@@ -463,7 +445,6 @@ export default function TasksPage() {
           </div>
         </motion.div>
 
-        {/* ── Stats strip ── */}
         {!isLoading && !error && (
           <motion.div
             className="grid grid-cols-4 gap-3 mb-6"
@@ -471,7 +452,6 @@ export default function TasksPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
           >
-            {/* Total */}
             <div className="col-span-2 md:col-span-1 rounded-xl border border-border/40 bg-card/50 p-3">
               <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                 <ListTodo className="h-3 w-3" /> Total
@@ -479,7 +459,6 @@ export default function TasksPage() {
               <p className="text-2xl font-semibold">{filteredTotal}</p>
             </div>
 
-            {/* Completion */}
             <div className="col-span-2 md:col-span-1 rounded-xl border border-border/40 bg-card/50 p-3">
               <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                 <TrendingUp className="h-3 w-3" /> Done
@@ -488,7 +467,6 @@ export default function TasksPage() {
               <Progress value={completionRate} className="h-1 mt-1.5" />
             </div>
 
-            {/* In progress */}
             <div className="col-span-2 md:col-span-1 rounded-xl border border-border/40 bg-card/50 p-3">
               <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                 <PlayCircle className="h-3 w-3" /> Active
@@ -496,7 +474,6 @@ export default function TasksPage() {
               <p className="text-2xl font-semibold">{filteredInProgress}</p>
             </div>
 
-            {/* Due today */}
             <div className="col-span-2 md:col-span-1 rounded-xl border border-border/40 bg-card/50 p-3">
               <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                 <Calendar className="h-3 w-3" /> Due today
@@ -506,7 +483,6 @@ export default function TasksPage() {
           </motion.div>
         )}
 
-        {/* ── Desktop inline input ── */}
         {isDesktop && (
           <div className="flex items-center gap-3 border-b border-border/40 pb-2 mb-4">
             <div className="h-5 w-5 shrink-0 rounded border border-muted-foreground/30" />
@@ -521,14 +497,12 @@ export default function TasksPage() {
           </div>
         )}
 
-        {/* ── Loading ── */}
         {isLoading && (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         )}
 
-        {/* ── Error ── */}
         {error && (
           <div className="flex flex-col items-center justify-center py-20 text-destructive gap-2">
             <AlertCircle className="h-6 w-6" />
@@ -536,7 +510,6 @@ export default function TasksPage() {
           </div>
         )}
 
-        {/* ── Empty state ── */}
         {!isLoading && !error && tasks.length === 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
@@ -580,7 +553,6 @@ export default function TasksPage() {
           </motion.div>
         )}
 
-        {/* ── Task list ── */}
         {!isLoading && !error && tasks.length > 0 && (
           <div className="space-y-6">
             <AnimatePresence>
@@ -628,7 +600,6 @@ export default function TasksPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
                   >
-                    {/* Date group header */}
                     <div className="flex items-center justify-between mb-1 px-1">
                       <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                         {label}
@@ -638,7 +609,6 @@ export default function TasksPage() {
                       </span>
                     </div>
 
-                    {/* Tasks */}
                     <div>
                       <AnimatePresence mode="popLayout">
                         {dayTasks.map((task) => (
@@ -661,10 +631,8 @@ export default function TasksPage() {
         )}
       </div>
 
-      {/* ── Mobile FAB + sticky input ── */}
       {!isDesktop && (
         <>
-          {/* Sticky bottom input bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border/40 px-4 py-3 flex items-center gap-3">
             <div className="h-5 w-5 shrink-0 rounded border border-muted-foreground/30" />
             <input
@@ -692,7 +660,6 @@ export default function TasksPage() {
         </>
       )}
 
-      {/* Task detail overlay */}
       <TaskDetailOverlay
         task={selectedTask}
         open={!!selectedTask}

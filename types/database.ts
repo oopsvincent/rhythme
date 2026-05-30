@@ -32,6 +32,22 @@ export interface UpdateTaskInput {
   completed_at?: string | null
 }
 
+// User Goals (onboarding 3.1)
+export type TaskSource = 'ai_generated' | 'user_edited' | 'manual'
+export type HabitSource = 'ai_generated' | 'user_edited' | 'manual'
+
+export interface UserGoal {
+  id: string
+  user_id: string
+  workspace_id: string | null
+  title: string
+  description: string | null
+  is_primary: boolean
+  created_at: string
+  updated_at: string
+  metadata: Record<string, unknown>
+}
+
 // Habits
 // Frequency mapping (ML model dependency — DO NOT CHANGE):
 //   0 = Daily, 1 = Weekly, 2 = Monthly, 3 = Multiple times per week
@@ -48,6 +64,7 @@ export interface Habit {
   target_count: number
   streak_count: number
   is_active: boolean
+  source?: HabitSource
   created_at: string
   updated_at: string
 }

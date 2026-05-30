@@ -61,9 +61,7 @@ import {
 } from "@/hooks/use-habits";
 import { HabitHeatmap } from "@/components/dashboard/habit-heatmap";
 import {
-  FREQUENCY_LABELS,
   getTargetLabel,
-  getFrequencyLabel,
   getStreakUnit,
 } from "@/lib/habit-helpers";
 import { canCreateHabit } from "@/app/actions/usage-limits";

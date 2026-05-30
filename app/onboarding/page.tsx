@@ -1,505 +1,142 @@
 // app/onboarding/page.tsx
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { 
-  Loader2, 
-  User, 
-  Briefcase, 
-  GraduationCap, 
-  Laptop, 
-  Rocket, 
-  MoreHorizontal,
-  Target,
-  ListTodo,
-  Sparkles,
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  Goal
-} from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { OnboardingData } from "@/types/database";
-import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Lora, Outfit } from 'next/font/google'
+import { useOnboarding } from './_hooks/useOnboarding'
+import { GoalInputStep } from './_components/GoalInputStep'
+import { ProfileStep } from './_components/ProfileStep'
+import { GeneratingStep } from './_components/GeneratingStep'
+import { EditStep } from './_components/EditStep'
+import { CommitmentStep } from './_components/CommitmentStep'
 
-type Role = OnboardingData["role"];
+const lora = Lora({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-lora',
+})
 
-const roles: { value: Role; label: string; icon: React.ReactNode; description: string }[] = [
-  { 
-    value: "student", 
-    label: "Student", 
-    icon: <GraduationCap className="w-6 h-6" />,
-    description: "Managing studies & assignments"
-  },
-  { 
-    value: "working_professional", 
-    label: "Professional", 
-    icon: <Briefcase className="w-6 h-6" />,
-    description: "Balancing work & life"
-  },
-  { 
-    value: "freelancer", 
-    label: "Freelancer", 
-    icon: <Laptop className="w-6 h-6" />,
-    description: "Juggling multiple projects"
-  },
-  { 
-    value: "entrepreneur", 
-    label: "Entrepreneur", 
-    icon: <Rocket className="w-6 h-6" />,
-    description: "Building something great"
-  },
-  { 
-    value: "other", 
-    label: "Other", 
-    icon: <MoreHorizontal className="w-6 h-6" />,
-    description: "Something unique"
-  },
-];
-
-const dailyTargetOptions = [1, 3, 5, 7, 10];
+const outfit = Outfit({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-outfit',
+})
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState(0);
-  const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState<Role | null>(null);
-  const [dailyTasksTarget, setDailyTasksTarget] = useState(3);
-  const [dailyHabitsTarget, setDailyHabitsTarget] = useState(3);
-  const [longTermGoal, setLongTermGoal] = useState("");
-  const [longTermGoalDescription, setLongTermGoalDescription] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const onboarding = useOnboarding()
 
-  const router = useRouter();
-  const supabase = createClient();
-
-  const totalSteps = 5;
-
-  useEffect(() => {
-    checkUserAndRedirect();
-  }, []);
-
-  async function checkUserAndRedirect() {
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      window.location.href =
-        process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com";
-      return;
-    }
-
-    setUserId(user.id);
-    
-    // Pre-fill name if available
-    if (user.user_metadata?.display_name) {
-      setDisplayName(user.user_metadata.display_name);
-    } else if (user.user_metadata?.full_name) {
-      setDisplayName(user.user_metadata.full_name);
-    }
-
-    // Check if user has already completed onboarding
-    const { data: preferences } = await supabase
-      .from("user_preferences")
-      .select("user_preferences_id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (preferences) {
-      router.push("/dashboard");
-    }
-  }
-
-  function nextStep() {
-    if (step === 0 && !displayName.trim()) {
-      setErrorMsg("Please enter your name");
-      return;
-    }
-    if (step === 1 && !role) {
-      setErrorMsg("Please select your role");
-      return;
-    }
-    if (step === 4 && !longTermGoal.trim()) {
-      setErrorMsg("Please enter your long-term goal");
-      return;
-    }
-    setErrorMsg(null);
-    setStep(s => Math.min(s + 1, totalSteps - 1));
-  }
-
-  function prevStep() {
-    setErrorMsg(null);
-    setStep(s => Math.max(s - 1, 0));
-  }
-
-  async function handleComplete() {
-    if (!userId) {
-      setErrorMsg("User session not found");
-      return;
-    }
-
-    setStatus("loading");
-    setErrorMsg(null);
-
-    try {
-      // Update display name in auth.users metadata
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          display_name: displayName,
-          full_name: displayName
-        }
-      });
-
-      if (updateError) throw updateError;
-
-      const onboardingData: OnboardingData = {
-        role: role!,
-        daily_tasks_target: dailyTasksTarget,
-        daily_habits_target: dailyHabitsTarget,
-        long_term_goal: longTermGoal.trim(),
-        long_term_goal_description: longTermGoalDescription.trim() || undefined,
-      };
-
-      // Save goal to localStorage for quick access in nav-user
-      if (typeof window !== "undefined") {
-        localStorage.setItem("user_goal", JSON.stringify({
-          title: longTermGoal.trim(),
-          description: longTermGoalDescription.trim() || undefined,
-        }));
-      }
-
-      // Create user preferences with onboarding data
-      const { error: prefsError } = await supabase
-        .from("user_preferences")
-        .insert({
-          user_id: userId,
-          notifications_enabled: true,
-          onboarding_data: onboardingData,
-        });
-
-      if (prefsError) throw prefsError;
-
-      await supabase.auth.refreshSession();
-      router.push("/dashboard");
-      router.refresh();
-    } catch (error: any) {
-      console.error("Onboarding error:", error);
-      setStatus("error");
-      setErrorMsg(error.message || "Failed to complete onboarding");
-    }
-  }
-
-  if (!userId) {
+  // Loading auth check
+  if (onboarding.isAuthLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
-      {/* Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-muted z-50">
-        <motion.div 
-          className="h-full bg-gradient-to-r from-primary to-secondary"
-          initial={{ width: 0 }}
-          animate={{ width: `${((step + 1) / totalSteps) * 100}%` }}
-          transition={{ duration: 0.3 }}
-        />
-      </div>
+    <div
+      className={`${lora.variable} ${outfit.variable} min-h-[100dvh] bg-background text-foreground font-sans-display relative overflow-hidden flex flex-col justify-center py-10`}
+      style={{
+        fontFamily: 'var(--font-outfit), sans-serif',
+      }}
+    >
+      {/* Scope specific font-serif-display and font-sans-display helper classes */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .font-serif-display {
+          font-family: var(--font-lora), Georgia, serif;
+        }
+        .font-sans-display {
+          font-family: var(--font-outfit), sans-serif;
+        }
+        .noise-overlay {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.015'/%3E%3C/svg%3E");
+        }
+      ` }} />
 
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-lg">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-8"
-            >
-              {/* Step 0: Welcome & Name */}
-              {step === 0 && (
-                <>
-                  <div className="text-center space-y-4">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground mb-4">
-                      <Sparkles className="w-10 h-10" />
-                    </div>
-                    <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                      Welcome to Rhythmé
-                    </h1>
-                    <p className="text-muted-foreground text-lg">
-                      Let&apos;s personalize your productivity journey
-                    </p>
-                  </div>
+      {/* Grain noise overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay noise-overlay z-50" />
 
-                  <div className="space-y-4 bg-card rounded-2xl p-6 border shadow-lg">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                        <User className="w-5 h-5" />
-                      </div>
-                      <Label htmlFor="displayName" className="text-lg font-medium">
-                        What should we call you?
-                      </Label>
-                    </div>
-                    <Input
-                      id="displayName"
-                      type="text"
-                      placeholder="Enter your name"
-                      value={displayName}
-                      onChange={(e) => {
-                        setDisplayName(e.target.value);
-                        setErrorMsg(null);
-                      }}
-                      className="text-lg h-14 rounded-xl"
-                      autoFocus
-                    />
-                  </div>
-                </>
-              )}
+      {/* Subtle background glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/3 rounded-full blur-[120px] pointer-events-none" />
 
-              {/* Step 1: Role Selection */}
-              {step === 1 && (
-                <>
-                  <div className="text-center space-y-2">
-                    <h2 className="text-2xl sm:text-3xl font-bold">
-                      What describes you best?
-                    </h2>
-                    <p className="text-muted-foreground">
-                      We&apos;ll tailor your experience accordingly
-                    </p>
-                  </div>
+      <div className="w-full max-w-[480px] mx-auto px-6 relative z-10 flex-1 flex flex-col justify-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={onboarding.currentStep}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
+            className="w-full"
+          >
+            {/* Step 2 — Goal Input */}
+            {onboarding.currentStep === 'goal' && (
+              <GoalInputStep
+                goalTitle={onboarding.goalTitle}
+                goalDescription={onboarding.goalDescription}
+                onGoalTitleChange={onboarding.setGoalTitle}
+                onGoalDescriptionChange={onboarding.setGoalDescription}
+                onContinue={() => onboarding.goToStep('profile')}
+              />
+            )}
 
-                  <div className="grid gap-3">
-                    {roles.map((r) => (
-                      <button
-                        key={r.value}
-                        onClick={() => { setRole(r.value); setErrorMsg(null); }}
-                        className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
-                          role === r.value
-                            ? "border-primary bg-primary/5 shadow-md"
-                            : "border-border hover:border-primary/50 hover:bg-muted/50"
-                        }`}
-                      >
-                        <div className={`p-3 rounded-xl ${
-                          role === r.value ? "bg-primary text-primary-foreground" : "bg-muted"
-                        }`}>
-                          {r.icon}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold">{r.label}</p>
-                          <p className="text-sm text-muted-foreground">{r.description}</p>
-                        </div>
-                        {role === r.value && (
-                          <Check className="w-5 h-5 text-primary" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+            {/* Step 3 — Quick Profile */}
+            {onboarding.currentStep === 'profile' && (
+              <ProfileStep
+                firstName={onboarding.firstName}
+                dailyTaskTarget={onboarding.dailyTaskTarget}
+                dailyHabitTarget={onboarding.dailyHabitTarget}
+                onFirstNameChange={onboarding.setFirstName}
+                onDailyTaskTargetChange={onboarding.setDailyTaskTarget}
+                onDailyHabitTargetChange={onboarding.setDailyHabitTarget}
+                onContinue={() => onboarding.goToStep('generating')}
+                onBack={() => onboarding.goToStep('goal')}
+              />
+            )}
 
-              {/* Step 2: Daily Tasks Target */}
-              {step === 2 && (
-                <>
-                  <div className="text-center space-y-2">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 text-blue-500 mb-2">
-                      <ListTodo className="w-8 h-8" />
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-bold">
-                      Daily task goal
-                    </h2>
-                    <p className="text-muted-foreground">
-                      How many tasks do you want to complete daily?
-                    </p>
-                  </div>
+            {/* Step 4 — Generation Loading */}
+            {onboarding.currentStep === 'generating' && (
+              <GeneratingStep
+                isGenerating={onboarding.isGenerating}
+                error={onboarding.generationError}
+                onGenerate={onboarding.generate}
+              />
+            )}
 
-                  <div className="flex flex-wrap justify-center gap-3">
-                    {dailyTargetOptions.map((num) => (
-                      <button
-                        key={num}
-                        onClick={() => setDailyTasksTarget(num)}
-                        className={`w-16 h-16 rounded-2xl text-xl font-bold transition-all ${
-                          dailyTasksTarget === num
-                            ? "bg-blue-500 text-white shadow-lg scale-110"
-                            : "bg-muted hover:bg-muted/80"
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
+            {/* Step 5 — Edit Screen */}
+            {onboarding.currentStep === 'edit' && (
+              <EditStep
+                tasks={onboarding.tasks}
+                habits={onboarding.habits}
+                fallbackUsed={onboarding.generatedPlan?.fallback_used ?? false}
+                regenerateCount={onboarding.regenerateCount}
+                isRegenerating={onboarding.isGenerating}
+                regenerationError={onboarding.generationError}
+                onUpdateTask={onboarding.updateTask}
+                onDeleteTask={onboarding.deleteTask}
+                onAddTask={onboarding.addTask}
+                onUpdateHabit={onboarding.updateHabit}
+                onDeleteHabit={onboarding.deleteHabit}
+                onAddHabit={onboarding.addHabit}
+                onRegenerate={onboarding.regenerate}
+                onContinue={() => onboarding.goToStep('commitment')}
+              />
+            )}
 
-                  <p className="text-center text-sm text-muted-foreground">
-                    You can always change this later in settings
-                  </p>
-                </>
-              )}
-
-              {/* Step 3: Daily Habits Target */}
-              {step === 3 && (
-                <>
-                  <div className="text-center space-y-2">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 text-green-500 mb-2">
-                      <Target className="w-8 h-8" />
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-bold">
-                      Daily habit goal
-                    </h2>
-                    <p className="text-muted-foreground">
-                      How many habits do you want to maintain?
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap justify-center gap-3">
-                    {dailyTargetOptions.map((num) => (
-                      <button
-                        key={num}
-                        onClick={() => setDailyHabitsTarget(num)}
-                        className={`w-16 h-16 rounded-2xl text-xl font-bold transition-all ${
-                          dailyHabitsTarget === num
-                            ? "bg-green-500 text-white shadow-lg scale-110"
-                            : "bg-muted hover:bg-muted/80"
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-
-                  <p className="text-center text-sm text-muted-foreground">
-                    Start small and build up over time
-                  </p>
-                </>
-              )}
-
-              {/* Step 4: Long-term Goal */}
-              {step === 4 && (
-                <>
-                  <div className="text-center space-y-2">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 text-primary mb-2">
-                      <Goal className="w-8 h-8" />
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-bold">
-                      Your long-term goal
-                    </h2>
-                    <p className="text-muted-foreground">
-                      What&apos;s the one thing you want to achieve?
-                    </p>
-                  </div>
-
-                  <div className="space-y-4 bg-card rounded-2xl p-6 border shadow-lg">
-                    <div className="space-y-2">
-                      <Label htmlFor="longTermGoal" className="text-base font-medium">
-                        Your Goal
-                      </Label>
-                      <Input
-                        id="longTermGoal"
-                        type="text"
-                        placeholder="e.g., Launch my startup, Get fit, Learn a new skill"
-                        value={longTermGoal}
-                        onChange={(e) => {
-                          setLongTermGoal(e.target.value);
-                          setErrorMsg(null);
-                        }}
-                        className="text-lg h-14 rounded-xl"
-                        autoFocus
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="goalDescription" className="text-sm text-muted-foreground">
-                        Description (optional)
-                      </Label>
-                      <Textarea
-                        id="goalDescription"
-                        placeholder="Why is this goal important to you?"
-                        value={longTermGoalDescription}
-                        onChange={(e) => setLongTermGoalDescription(e.target.value)}
-                        className="min-h-[100px] rounded-xl resize-none"
-                      />
-                    </div>
-                  </div>
-
-                  <p className="text-center text-sm text-muted-foreground">
-                    Everything in Rhythmé will help you work towards this goal
-                  </p>
-                </>
-              )}
-
-              {/* Error Message */}
-              {errorMsg && (
-                <div className="p-4 rounded-xl bg-destructive/10 text-destructive text-sm text-center">
-                  {errorMsg}
-                </div>
-              )}
-
-              {/* Navigation Buttons */}
-              <div className="flex gap-3">
-                {step > 0 && (
-                  <Button
-                    variant="outline"
-                    onClick={prevStep}
-                    className="flex-1 h-14 rounded-xl text-lg"
-                    disabled={status === "loading"}
-                  >
-                    <ArrowLeft className="w-5 h-5 mr-2" />
-                    Back
-                  </Button>
-                )}
-                
-                {step < totalSteps - 1 ? (
-                  <Button
-                    onClick={nextStep}
-                    className="flex-1 h-14 rounded-xl text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                  >
-                    Continue
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleComplete}
-                    className="flex-1 h-14 rounded-xl text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                    disabled={status === "loading"}
-                  >
-                    {status === "loading" ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Setting up...
-                      </>
-                    ) : (
-                      <>
-                        Get Started
-                        <Sparkles className="w-5 h-5 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-
-              {/* Step Indicator */}
-              <div className="flex justify-center gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-2 rounded-full transition-all ${
-                      i === step ? "w-8 bg-primary" : i < step ? "w-2 bg-primary/50" : "w-2 bg-muted"
-                    }`}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+            {/* Step 6 — Commitment Screen */}
+            {onboarding.currentStep === 'commitment' && (
+              <CommitmentStep
+                goalTitle={onboarding.goalTitle}
+                isSaving={onboarding.isSaving}
+                saveError={onboarding.saveError}
+                onCommit={onboarding.save}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
-  );
+  )
 }
