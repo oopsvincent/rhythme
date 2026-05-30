@@ -43,6 +43,8 @@ import {
   Target,
   Calendar,
   TrendingUp,
+  User,
+  Pencil,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,7 +61,6 @@ import {
   useLogCompletion,
   useHabitPrediction,
 } from "@/hooks/use-habits";
-import { HabitHeatmap } from "@/components/dashboard/habit-heatmap";
 import {
   getTargetLabel,
   getStreakUnit,
@@ -219,7 +220,7 @@ export default function HabitsPage() {
     <>
       <SiteHeader />
       <div className="flex flex-1 flex-col px-4 md:px-10 pb-8 select-none">
-        <div className="@container/main flex flex-1 flex-col gap-2">
+        <div className="@container/main flex flex-1 flex-col gap-2 max-w-5xl mx-auto w-full">
           <div className="flex flex-col gap-6 py-6">
             {/* Header */}
             <motion.div
@@ -464,43 +465,52 @@ export default function HabitsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="grid grid-cols-1 md:grid-cols-3 gap-4"
                 >
-                  <Card className="glass border-border/30">
-                    <CardHeader className="pb-3">
-                      <CardDescription className="text-xs font-medium">
-                        Today&apos;s Progress
-                      </CardDescription>
-                      <CardTitle className="text-2xl font-primary">
+                  {/* Today's Progress */}
+                  <div className="relative overflow-hidden rounded-xl border border-primary/20 p-5 bg-gradient-to-br from-primary/15 to-primary/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+                    <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-primary/10 text-primary">
+                      <Target className="h-5 w-5" />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium truncate">Today&apos;s Progress</p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-2xl font-bold font-primary tracking-tight">
                         {completedToday} / {totalDaily}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Progress value={completionRate} className="h-2" />
-                    </CardContent>
-                  </Card>
+                      </span>
+                    </div>
+                    <Progress value={completionRate} className="h-1.5 mt-3 bg-muted/50" />
+                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-primary" />
+                  </div>
 
-                  <Card className="glass border-border/30">
-                    <CardHeader className="pb-3">
-                      <CardDescription className="text-xs font-medium">
-                        Total Streak
-                      </CardDescription>
-                      <CardTitle className="text-2xl font-primary flex items-center gap-2">
-                        <Flame className="h-5 w-5 text-primary" />
+                  {/* Total Streak */}
+                  <div className="relative overflow-hidden rounded-xl border border-accent/20 p-5 bg-gradient-to-br from-accent/15 to-accent/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+                    <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-accent/10 text-accent">
+                      <Flame className="h-5 w-5" />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium truncate">Total Streak</p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-2xl font-bold font-primary tracking-tight">
                         {totalStreak}
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
+                      </span>
+                      <span className="text-xs text-muted-foreground font-normal">days active</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-2">Combined streaks across all habits</p>
+                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-accent" />
+                  </div>
 
-                  <Card className="glass border-border/30">
-                    <CardHeader className="pb-3">
-                      <CardDescription className="text-xs font-medium">
-                        Longest Streak
-                      </CardDescription>
-                      <CardTitle className="text-2xl font-primary flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-accent" />
+                  {/* Longest Streak */}
+                  <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 p-5 bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+                    <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-emerald-500/10 text-emerald-500">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium truncate">Longest Streak</p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-2xl font-bold font-primary tracking-tight">
                         {longestStreak}
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
+                      </span>
+                      <span className="text-xs text-muted-foreground font-normal">days</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-2">Your personal best streak</p>
+                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-emerald-500" />
+                  </div>
                 </motion.div>
 
                 {/* Habit Lists by Frequency */}
@@ -643,13 +653,21 @@ function HabitItem({
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.2, delay: index * 0.03 }}
     >
-      <div className="glass border-border/30 rounded-xl p-4 hover:border-border/50 transition-all duration-200 group">
-        <div className="flex items-center gap-4">
-          {/* Complete Button */}
+      <div
+        className={`glass rounded-xl p-4 sm:p-5 transition-all duration-200 group border ${
+          habit.isCompletedForPeriod
+            ? "border-primary/20 bg-gradient-to-r from-primary/5 to-transparent shadow-sm shadow-primary/5"
+            : "border-border/30 hover:border-border/50"
+        }`}
+      >
+        {/* Mobile Layout: Stacked. Desktop Layout: Single Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          
+          {/* Desktop-only Complete Button (hidden on mobile) */}
           <button
             onClick={onComplete}
             disabled={isPending || habit.isCompletedForPeriod}
-            className={`shrink-0 h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 ${
+            className={`hidden sm:flex shrink-0 h-11 w-11 rounded-xl items-center justify-center transition-all duration-300 ${
               habit.isCompletedForPeriod
                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 cursor-default"
                 : "border-2 border-dashed border-border hover:border-primary hover:bg-primary/5"
@@ -664,117 +682,119 @@ function HabitItem({
             )}
           </button>
 
-          {/* Content - Clickable to navigate */}
-          <div className="flex-1 min-w-0 cursor-pointer" onClick={onNavigate}>
-            <div className="flex items-center gap-2">
-              <h3
-                className={`font-medium ${
-                  habit.isCompletedForPeriod ? "text-muted-foreground line-through" : ""
-                }`}
-              >
-                {habit.name}
-              </h3>
-              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          {/* Header Row on Mobile: Title on left, Three-dots on right.
+              On desktop, this merges into the single row flow. */}
+          <div className="flex items-start justify-between sm:contents">
+            {/* Content (Title, Description, completions details) */}
+            <div className="flex-1 min-w-0 cursor-pointer" onClick={onNavigate}>
+              <div className="flex items-center gap-1.5">
+                <h3
+                  className={`font-medium text-base sm:text-base transition-colors ${
+                    habit.isCompletedForPeriod ? "text-muted-foreground line-through" : "text-foreground"
+                  }`}
+                >
+                  {habit.name}
+                </h3>
+                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-1 sm:mt-0.5">
+                {habit.description && (
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate max-w-[280px]">
+                    {habit.description}
+                  </p>
+                )}
+                {habit.description && <span className="hidden sm:inline text-muted-foreground/30">•</span>}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
+                  </span>
+                  {habit.periodTarget > 1 && (
+                    <div className="w-16 h-1 bg-muted/60 dark:bg-muted/30 rounded-full overflow-hidden shrink-0">
+                      <div
+                        className="bg-primary h-full transition-all duration-500 rounded-full"
+                        style={{
+                          width: `${Math.min(100, (habit.periodCompletions / habit.periodTarget) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              {habit.description && (
-                <p className="text-sm text-muted-foreground truncate">
-                  {habit.description}
-                </p>
-              )}
-              <span className="text-xs text-muted-foreground shrink-0">
-                {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
-              </span>
+
+            {/* Desktop Actions and Mobile Top-Right Actions */}
+            <div className="flex items-center gap-2 sm:contents">
+              {/* Desktop-only Badges */}
+              <div className="hidden sm:flex items-center gap-2">
+                {renderSourceBadge(habit.source)}
+
+                {habit.current_streak > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary border-0"
+                  >
+                    <Flame className="mr-1 h-3 w-3" />
+                    {habit.current_streak}{streakUnit.charAt(0)}
+                  </Badge>
+                )}
+
+                {habit.canPredict &&
+                  (isPredictionLoading ? (
+                    <Badge variant="outline" className="bg-accent/5 text-accent/60 border-accent/20 animate-pulse">
+                      <Brain className="mr-1 h-3 w-3" />
+                      <span className="inline-block w-6 h-3 bg-accent/20 rounded"></span>
+                    </Badge>
+                  ) : prediction ? (
+                    <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
+                      <Brain className="mr-1 h-3 w-3 text-accent" />
+                      {prediction.probability_percent}
+                    </Badge>
+                  ) : null)}
+
+                {habit.daysUntilPrediction !== undefined &&
+                  habit.daysUntilPrediction > 0 && (
+                    <Badge variant="outline" className="border-accent/30 text-muted-foreground">
+                      <Sparkles className="mr-1 h-3 w-3 text-accent" />
+                      AI in {habit.daysUntilPrediction}d
+                    </Badge>
+                  )}
+              </div>
+
+              {/* Three-dots actions menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center transition-opacity hover:bg-muted">
+                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem onClick={onNavigate}>
+                    <Calendar className="mr-2 h-4 w-4" />
+                    View Details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onDelete}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-
-          {/* Stats & Badges */}
-          <div className="hidden sm:flex items-center gap-2">
-            {habit.current_streak > 0 && (
-              <Badge
-                variant="secondary"
-                className="bg-primary/10 text-primary border-0"
-              >
-                <Flame className="mr-1 h-3 w-3" />
-                {habit.current_streak}{streakUnit.charAt(0)}
-              </Badge>
-            )}
-
-            {/* Prediction Badge - Independent loading */}
-            {habit.canPredict &&
-              (isPredictionLoading ? (
-                <Badge
-                  variant="outline"
-                  className="bg-accent/5 text-accent/60 border-accent/20 animate-pulse"
-                >
-                  <Brain className="mr-1 h-3 w-3" />
-                  <span className="inline-block w-6 h-3 bg-accent/20 rounded"></span>
-                </Badge>
-              ) : prediction ? (
-                <Badge
-                  variant="outline"
-                  className="bg-accent/10 text-accent border-accent/20"
-                >
-                  <Brain className="mr-1 h-3 w-3" />
-                  {prediction.probability_percent}
-                </Badge>
-              ) : null)}
-
-            {habit.daysUntilPrediction !== undefined &&
-              habit.daysUntilPrediction > 0 && (
-                <Badge
-                  variant="outline"
-                  className="border-accent/30 text-muted-foreground"
-                >
-                  <Sparkles className="mr-1 h-3 w-3 text-accent" />
-                  AI in {habit.daysUntilPrediction}d
-                </Badge>
-              )}
-          </div>
-
-          {/* Actions */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-muted">
-                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={onNavigate}>
-                <Calendar className="mr-2 h-4 w-4" />
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onDelete}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        {/* Heatmap Section */}
-        <div className="mt-4 pt-4 border-t border-border/10">
-          <HabitHeatmap
-            logs={habit.completionLogs || []}
-            frequency={habit.frequency_num}
-            targetCount={habit.target_count}
-          />
         </div>
 
-        {/* Mobile Badges */}
-        <div className="flex sm:hidden flex-wrap items-center gap-2 mt-3">
-          <span className="text-xs text-muted-foreground">
-            {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
-          </span>
+        {/* Mobile Badges (Source, Streak, Prediction) */}
+        <div className="flex sm:hidden flex-wrap items-center gap-2 mt-3 pt-2 border-t border-border/5">
+          {renderSourceBadge(habit.source)}
+
           {habit.current_streak > 0 && (
             <Badge
               variant="secondary"
-              className="bg-primary/10 text-primary border-0 text-xs"
+              className="bg-primary/10 text-primary border-0 text-[10px] py-0.5 px-2 font-medium"
             >
-              <Flame className="mr-1 h-3 w-3" />
+              <Flame className="mr-1 h-3 w-3 text-primary" />
               {habit.current_streak}{streakUnit.charAt(0)} streak
             </Badge>
           )}
@@ -784,17 +804,17 @@ function HabitItem({
             (isPredictionLoading ? (
               <Badge
                 variant="outline"
-                className="bg-accent/5 text-accent/60 border-accent/20 text-xs animate-pulse"
+                className="bg-accent/5 text-accent/60 border-accent/20 text-[10px] py-0.5 px-2 animate-pulse"
               >
-                <Brain className="mr-1 h-3 w-3" />
+                <Brain className="mr-1 h-3 w-3 animate-pulse text-accent" />
                 <span className="inline-block w-6 h-2 bg-accent/20 rounded"></span>
               </Badge>
             ) : prediction ? (
               <Badge
                 variant="outline"
-                className="bg-accent/10 text-accent border-accent/20 text-xs"
+                className="bg-accent/10 text-accent border-accent/20 text-[10px] py-0.5 px-2 font-medium"
               >
-                <Brain className="mr-1 h-3 w-3" />
+                <Brain className="mr-1 h-3 w-3 text-accent" />
                 {prediction.probability_percent}
               </Badge>
             ) : null)}
@@ -803,14 +823,85 @@ function HabitItem({
             habit.daysUntilPrediction > 0 && (
               <Badge
                 variant="outline"
-                className="border-accent/30 text-muted-foreground text-xs"
+                className="border-accent/30 text-muted-foreground text-[10px] py-0.5 px-2"
               >
                 <Sparkles className="mr-1 h-3 w-3 text-accent" />
                 AI in {habit.daysUntilPrediction}d
               </Badge>
             )}
         </div>
+
+        {/* Mobile Complete Button: Centered, Full Width */}
+        <div className="flex sm:hidden w-full mt-3.5">
+          <button
+            onClick={onComplete}
+            disabled={isPending || habit.isCompletedForPeriod}
+            className={`w-full h-9.5 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide transition-all duration-300 ${
+              habit.isCompletedForPeriod
+                ? "bg-primary/10 text-primary border border-primary/20 cursor-default"
+                : "bg-primary text-primary-foreground hover:bg-primary/95 shadow-md shadow-primary/10 active:scale-[0.98]"
+            }`}
+          >
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : habit.isCompletedForPeriod ? (
+              <>
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <span>Completed</span>
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                <span>Mark Complete</span>
+              </>
+            )}
+          </button>
+        </div>
+
       </div>
     </motion.div>
+  );
+}
+
+// === Helper to Render Habit Source Badge ===
+function renderSourceBadge(source?: string) {
+  const badgeBaseClass = "text-[9px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded border flex items-center gap-1 w-fit select-none font-sans";
+  
+  if (source === "ai_generated") {
+    return (
+      <Badge
+        variant="outline"
+        className={`${badgeBaseClass} bg-primary/10 text-primary border-primary/20`}
+      >
+        <Sparkles className="h-2.5 w-2.5 text-primary" />
+        Generated by Rhythmé
+      </Badge>
+    );
+  }
+  
+  if (source === "user_edited") {
+    return (
+      <Badge
+        variant="outline"
+        className={`${badgeBaseClass} bg-primary/10 text-primary border-primary/20`}
+      >
+        <Sparkles className="h-2.5 w-2.5 text-primary" />
+        Generated by Rhythmé
+        <span className="inline-flex items-center text-[8px] text-muted-foreground/80 ml-0.5 gap-0.5">
+          <Pencil className="h-2 w-2 text-muted-foreground/75" />
+          (Edited)
+        </span>
+      </Badge>
+    );
+  }
+  
+  return (
+    <Badge
+      variant="outline"
+      className={`${badgeBaseClass} bg-muted/30 text-muted-foreground border-border/50`}
+    >
+      <User className="h-2.5 w-2.5 text-muted-foreground" />
+      Manual
+    </Badge>
   );
 }

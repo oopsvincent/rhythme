@@ -13,6 +13,7 @@ export interface Task {
   completed_at: string | null
   created_at: string
   updated_at: string
+  source?: TaskSource
 }
 
 export interface CreateTaskInput {
@@ -30,6 +31,7 @@ export interface UpdateTaskInput {
   priority?: Priority
   status?: Status
   completed_at?: string | null
+  source?: TaskSource
 }
 
 // User Goals (onboarding 3.1)
