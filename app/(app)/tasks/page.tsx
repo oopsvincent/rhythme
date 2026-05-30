@@ -279,7 +279,7 @@ export default function TasksPage() {
     <>
       <SiteHeader />
 
-      <div className="px-4 md:px-10 pb-28 md:pb-10">
+      <div className="px-4 md:px-10 pb-28 md:pb-10 max-w-5xl mx-auto w-full">
         <motion.div
           className="flex items-center justify-between py-4"
           initial={{ opacity: 0, y: -8 }}
@@ -298,7 +298,6 @@ export default function TasksPage() {
                 <button className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
                   <CalendarDays className="h-3.5 w-3.5" />
                   {currentTimeFrameLabel}
-                  <span className="text-xs opacity-50">â–¾</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -447,38 +446,50 @@ export default function TasksPage() {
 
         {!isLoading && !error && (
           <motion.div
-            className="grid grid-cols-4 gap-3 mb-6"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
           >
-            <div className="col-span-2 md:col-span-1 rounded-xl border border-border/40 bg-card/50 p-3">
-              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                <ListTodo className="h-3 w-3" /> Total
-              </p>
-              <p className="text-2xl font-semibold">{filteredTotal}</p>
+            {/* Total Tasks */}
+            <div className="relative overflow-hidden rounded-xl border border-primary/20 p-5 bg-gradient-to-br from-primary/15 to-primary/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+              <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-primary/10 text-primary">
+                <ListTodo className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium truncate">Total Tasks</p>
+              <p className="text-2xl font-bold font-primary tracking-tight mt-1">{filteredTotal}</p>
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-primary" />
             </div>
 
-            <div className="col-span-2 md:col-span-1 rounded-xl border border-border/40 bg-card/50 p-3">
-              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> Done
-              </p>
-              <p className="text-2xl font-semibold">{Math.round(completionRate)}%</p>
-              <Progress value={completionRate} className="h-1 mt-1.5" />
+            {/* Completion Rate */}
+            <div className="relative overflow-hidden rounded-xl border border-accent/20 p-5 bg-gradient-to-br from-accent/15 to-accent/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+              <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-accent/10 text-accent">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium truncate">Completion Rate</p>
+              <p className="text-2xl font-bold font-primary tracking-tight mt-1">{Math.round(completionRate)}%</p>
+              <Progress value={completionRate} className="h-1.5 mt-3 bg-muted/50" />
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-accent" />
             </div>
 
-            <div className="col-span-2 md:col-span-1 rounded-xl border border-border/40 bg-card/50 p-3">
-              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                <PlayCircle className="h-3 w-3" /> Active
-              </p>
-              <p className="text-2xl font-semibold">{filteredInProgress}</p>
+            {/* Active Tasks */}
+            <div className="relative overflow-hidden rounded-xl border border-purple-500/20 p-5 bg-gradient-to-br from-purple-500/15 to-purple-500/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+              <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-purple-500/10 text-purple-400">
+                <PlayCircle className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium truncate">Active Tasks</p>
+              <p className="text-2xl font-bold font-primary tracking-tight mt-1">{filteredInProgress}</p>
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-purple-500" />
             </div>
 
-            <div className="col-span-2 md:col-span-1 rounded-xl border border-border/40 bg-card/50 p-3">
-              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                <Calendar className="h-3 w-3" /> Due today
-              </p>
-              <p className="text-2xl font-semibold">{stats?.dueToday ?? 0}</p>
+            {/* Due Today */}
+            <div className="relative overflow-hidden rounded-xl border border-amber-500/20 p-5 bg-gradient-to-br from-amber-500/15 to-amber-500/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+              <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-amber-500/10 text-amber-500">
+                <Calendar className="h-5 w-5" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium truncate">Due Today</p>
+              <p className="text-2xl font-bold font-primary tracking-tight mt-1">{stats?.dueToday ?? 0}</p>
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-amber-500" />
             </div>
           </motion.div>
         )}
@@ -571,7 +582,7 @@ export default function TasksPage() {
                     </span>
                   </div>
 
-                  <div>
+                  <div className="space-y-3">
                     <AnimatePresence mode="popLayout">
                       {overdueTasks.map((task) => (
                         <TaskItem
@@ -609,7 +620,7 @@ export default function TasksPage() {
                       </span>
                     </div>
 
-                    <div>
+                    <div className="space-y-3">
                       <AnimatePresence mode="popLayout">
                         {dayTasks.map((task) => (
                           <TaskItem
