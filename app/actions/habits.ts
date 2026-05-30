@@ -126,7 +126,7 @@ export async function getHabits(localToday?: string): Promise<ActionResponse<Hab
     // Map habits with their stats
     const habitsWithStats: HabitWithStats[] = habits.map((habit: Habit) => {
       const freq = resolveFrequency(habit);
-      const targetCount = (habit as any).target_count as number ?? 1;
+      const targetCount = (habit as Habit & { target_count?: number }).target_count ?? 1;
 
       const habitLogs = (logs || []).filter(
         (log: HabitLog) => log.habit_id === habit.habit_id,
@@ -564,7 +564,7 @@ export async function getHabitStats(
     const now = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const thirtyDaysAgo = new Date();
+    const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const logs7d = (logs || []).filter(

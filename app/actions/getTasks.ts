@@ -146,7 +146,7 @@ export async function createTask(input: CreateTaskInput): Promise<ActionResponse
         description: input.description || null,
         due_date: input.due_date || null,
         priority: input.priority || 'medium',
-        status: input.status || 'pending'
+        status: input.status || 'pending',
       })
       .select()
       .single()

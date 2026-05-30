@@ -90,7 +90,7 @@ body {
   --radius: 0.75rem;
   
   /* Cleaner warm base */
-  --background: #F8F4F0;
+  --background: #F5F2EE;    /* was #F8F4F0 — cooler, cleaner, less aged */
   --foreground: #1F2A38;
 
   /* Refined Terracotta Primary */
@@ -110,7 +110,7 @@ body {
   --muted-foreground: #6B7785;
 
   /* Surfaces */
-  --card: #FFFBF6;
+  --card: #FDFAF7;          /* was #FFFBF6 — marginal, keeps warmth */
   --card-foreground: #1F2A38;
   --popover: #FFFBF6;
   --popover-foreground: #1F2A38;
@@ -146,7 +146,7 @@ body {
 /* --- DARK MODE --- */
 .dark {
   /* Deep calm navy-black */
-  --background: #0F1724;
+  --background: #12141A;    /* was #0F1724 — warmer neutral dark, no blue cast */
   --foreground: #F1EDE6;
 
   --primary: #E07A5F;
@@ -161,7 +161,7 @@ body {
   --muted: rgba(241, 237, 230, 0.06);
   --muted-foreground: rgba(241, 237, 230, 0.55);
 
-  --card: rgba(255, 251, 246, 0.045);
+  --card: rgba(255, 251, 246, 0.04);  /* was 0.045 — negligible, keep as is */
   --card-foreground: #F1EDE6;
   --popover: rgba(15, 23, 36, 0.96);
   --popover-foreground: #F1EDE6;

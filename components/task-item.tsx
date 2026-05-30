@@ -2,7 +2,7 @@
 
 import { Status, Task, Priority } from "@/types/database";
 import { useMotionValue, useTransform, animate, motion } from "framer-motion";
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -116,9 +116,9 @@ export default function TaskItem({
   const completeOpacity = useTransform(x, [0, SWIPE_COMPLETE], [0, 1]);
   const deleteOpacity = useTransform(x, [SWIPE_DELETE, 0], [1, 0]);
 
-  const handleDragEnd = (
-    _: unknown,
-    info: { offset: { x: number }; velocity: { x: number } }
+  const handleDragEnd: NonNullable<ComponentProps<typeof motion.div>["onDragEnd"]> = (
+    _,
+    info
   ) => {
     const { offset, velocity } = info;
 
@@ -167,7 +167,7 @@ export default function TaskItem({
         drag="x"
         dragConstraints={{ left: -100, right: 100 }}
         dragElastic={0.12}
-        onDragEnd={handleDragEnd as any}
+        onDragEnd={handleDragEnd}
         className="
           relative z-10 group flex items-start gap-3
           py-2.5 px-2 rounded-md

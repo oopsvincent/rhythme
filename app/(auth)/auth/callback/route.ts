@@ -38,12 +38,12 @@ export async function GET(request: NextRequest) {
         // Check if user has completed onboarding
         const { data: preferences } = await supabase
           .from('user_preferences')
-          .select('user_preferences_id')
+          .select('onboarding_completed')
           .eq('user_id', user.id)
           .single()
         
-        // If no preferences exist, this is a new OAuth user - redirect to onboarding
-        if (!preferences) {
+        // If no preferences exist or onboarding not completed, redirect to onboarding
+        if (!preferences || !preferences.onboarding_completed) {
           return NextResponse.redirect(`${origin}/onboarding`)
         }
         

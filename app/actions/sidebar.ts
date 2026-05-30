@@ -5,19 +5,16 @@ export async function getWorkspaceGoal(userId: string) {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("user_preferences")
-    .select("onboarding_data")
+    .from("user_goals")
+    .select("title, description")
     .eq("user_id", userId)
+    .eq("is_primary", true)
     .single()
 
-  if (error || !data?.onboarding_data) return null
-
-  const obData = data.onboarding_data
-
-  if (!obData.long_term_goal) return null
+  if (error || !data) return null
 
   return {
-    title: obData.long_term_goal,
-    description: obData.long_term_goal_description,
+    title: data.title,
+    description: data.description ?? undefined,
   }
 }
