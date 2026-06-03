@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner"
 import { SessionInfo } from "@/components/settings/session-info"
 import { ChangePassphraseSection } from "./change-passphrase-section"
-import { updatePassword } from "@/app/actions/auth"
+import { changePasswordWithVerification, checkUserAuthType } from "@/app/actions/auth"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -25,15 +25,36 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function SecuritySection({ userId }: { userId: string }) {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [oldPassword, setOldPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
 
+  const [hasPassword, setHasPassword] = useState(true)
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true)
+
+  useEffect(() => {
+    if (isPasswordModalOpen) {
+      checkUserAuthType()
+        .then((res) => {
+          setHasPassword(res.hasPassword)
+        })
+        .finally(() => {
+          setIsLoadingAuth(false)
+        })
+    }
+  }, [isPasswordModalOpen])
+
   const handlePasswordUpdate = async () => {
+    if (hasPassword && !oldPassword) {
+      toast.error("Current password is required")
+      return
+    }
+
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match")
       return
@@ -45,14 +66,16 @@ export default function SecuritySection({ userId }: { userId: string }) {
     }
 
     setIsUpdatingPassword(true)
-    const result = await updatePassword(newPassword)
+    const result = await changePasswordWithVerification(oldPassword, newPassword)
     setIsUpdatingPassword(false)
 
     if (result.success) {
       toast.success("Password updated successfully")
       setIsPasswordModalOpen(false)
+      setOldPassword("")
       setNewPassword("")
       setConfirmPassword("")
+      setHasPassword(true)
     } else {
       toast.error(result.error || "Failed to update password")
     }
@@ -81,7 +104,14 @@ export default function SecuritySection({ userId }: { userId: string }) {
             </p>
           </div>
           
-          <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+          <Dialog open={isPasswordModalOpen} onOpenChange={(open) => { 
+            setIsPasswordModalOpen(open); 
+            if (!open) { 
+              setOldPassword(""); 
+              setNewPassword(""); 
+              setConfirmPassword(""); 
+            } 
+          }}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 Update
@@ -95,24 +125,46 @@ export default function SecuritySection({ userId }: { userId: string }) {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input 
-                    id="new-password" 
-                    type="password" 
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input 
-                    id="confirm-password" 
-                    type="password" 
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </div>
+                {isLoadingAuth ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <>
+                    {hasPassword && (
+                      <div className="space-y-2">
+                        <Label htmlFor="old-password">Current Password</Label>
+                        <Input 
+                          id="old-password" 
+                          type="password" 
+                          value={oldPassword}
+                          onChange={(e) => setOldPassword(e.target.value)}
+                          placeholder="Enter current password"
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input 
+                        id="new-password" 
+                        type="password" 
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="At least 6 characters"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm New Password</Label>
+                      <Input 
+                        id="confirm-password" 
+                        type="password" 
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Repeat new password"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
               <DialogFooter>
                 <Button variant="ghost" onClick={() => setIsPasswordModalOpen(false)}>Cancel</Button>
