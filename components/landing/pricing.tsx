@@ -42,11 +42,11 @@ interface Pricing {
 const pricing: Pricing = {
   monthly: {
     starter: 0,
-    premium: 12.99
+    premium: 9.99
   },
   yearly: {
     starter: 0,
-    premium: 79.99
+    premium: 99.99
   }
 };
 
@@ -61,7 +61,7 @@ interface PremiumFeature {
 // Starter plan features
 const starterFeatures = [
   { text: "1 Goal workspace", icon: Target, description: "Focus on one long-term goal at a time" },
-  { text: "Track up to 3 habits", icon: Flame, description: "Build your core daily habits" },
+  { text: "Track up to 5 habits", icon: Flame, description: "Build your core daily habits" },
   { text: "10 tasks per day", icon: Check, description: "Manage your daily priorities" },
   { text: "10 journal entries/month", icon: BookOpen, description: "Reflect on your journey" },
   { text: "Basic NBA suggestions", icon: Compass, description: "Simple next best action hints" },
@@ -157,10 +157,10 @@ export default function PricingComponent() {
             Simple Pricing
           </span>
           <h2 className="text-4xl md:text-5xl font-bold mb-4 font-primary">
-            Choose Your Path
+            One plan. Full depth.
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Start free. Upgrade when you&apos;re ready for <span className="text-primary font-semibold">AI-powered clarity</span>.
+            Start free. Go deeper when you&apos;re ready.
           </p>
         </motion.div>
 
@@ -225,7 +225,7 @@ export default function PricingComponent() {
                 <span className="text-5xl font-bold">$0</span>
                 <span className="text-muted-foreground">/forever</span>
               </div>
-              <p className="text-muted-foreground">Perfect for getting started</p>
+              <p className="text-muted-foreground">Everything you need to begin.</p>
             </div>
             <div className="p-8 text-left">
               <div className="space-y-4 mb-8">
@@ -258,16 +258,10 @@ export default function PricingComponent() {
             viewport={{ once: true }}
             className="relative glass-card rounded-2xl overflow-hidden border-primary/50 shadow-2xl shadow-primary/10 transition-all duration-500 ease-out hover:scale-[1.02]"
           >
-            {/* Recommended badge */}
-            <div className="absolute -top-0 left-1/2 transform -translate-x-1/2 translate-y-3 z-10">
-              <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
-                <Crown className="w-4 h-4 inline mr-1" />
-                RECOMMENDED
-              </span>
-            </div>
+
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none"></div>
             
-            <div className="p-8 border-b border-border/50 pt-12">
+            <div className="p-8 border-b border-border/50 pt-8">
               <h3 className="text-2xl font-bold font-primary mb-2 flex items-center gap-2">
                 Premium <Sparkles className="w-5 h-5 text-accent" />
               </h3>
@@ -282,7 +276,7 @@ export default function PricingComponent() {
                   ${(yearlyPrice / 12).toFixed(2)}/month billed yearly
                 </p>
               )}
-              <p className="text-muted-foreground mt-2">Full power, AI-enhanced productivity</p>
+              <p className="text-muted-foreground mt-2">The complete system for builders who ship.</p>
             </div>
             
             <div className="p-8 text-left relative">
@@ -339,7 +333,7 @@ export default function PricingComponent() {
               <Link href="/signup/intro" className="block mt-6">
                 <button className="w-full px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-500 ease-out">
                   <Sparkles className="w-4 h-4 inline mr-2" />
-                  Upgrade to Premium
+                  Go Premium
                 </button>
               </Link>
             </div>
@@ -355,11 +349,11 @@ export default function PricingComponent() {
           className="mt-16 space-y-4"
         >
           <p className="text-3xl md:text-4xl font-bold font-primary">
-            <span className="text-foreground">Start free, </span>
-            <span className="text-gradient-primary">grow with clarity</span>
+            <span className="text-foreground">Start free.</span>{" "}
+            <span className="text-gradient-primary">Go deeper when you&apos;re ready.</span>
           </p>
           <p className="text-muted-foreground text-lg">
-            No credit card required • Cancel anytime • 30-day money-back guarantee
+            No credit card required • Cancel anytime
           </p>
         </motion.div>
       </div>

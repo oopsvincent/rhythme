@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
     // Get app URL for redirect
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const returnUrl = `${appUrl}/settings/subscription`;
+    const returnUrl = `${appUrl}/welcome-premium`;
     const dodopayments = getDodoClient();
 
     const session = await dodopayments.checkoutSessions.create({

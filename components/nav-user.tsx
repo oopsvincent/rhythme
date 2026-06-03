@@ -22,6 +22,7 @@ import {
   User,
   Goal,
   EllipsisVertical,
+  ArrowRight,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -201,7 +202,7 @@ export function NavUser({
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="flex items-center gap-2 rounded-lg px-2 py-2 text-muted-foreground cursor-pointer"
-                onClick={() => handleNavigation("/settings/billing")}
+                onClick={() => handleNavigation("/settings/subscription")}
               >
                 <span className="flex h-6 w-6 items-center justify-center rounded-md border border-dashed border-muted-foreground/50">
                   <Plus className="h-3 w-3" />
@@ -229,10 +230,8 @@ export function NavUser({
                 onClick={() => handleNavigation("/settings/subscription")}
               >
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="flex-1 text-sm font-medium">Upgrade to Pro</span>
-                <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
-                  NEW
-                </Badge>
+                <span className="flex-1 text-sm font-medium">Go Premium</span>
+                <ArrowRight className="h-3.5 w-3.5 text-primary" />
               </DropdownMenuItem>
             )}
 

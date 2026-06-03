@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { getUser } from "../../actions/auth"
 import { getJournals } from "@/app/actions/journals"
 import { DashboardGreeting } from "@/components/dashboard/dashboard-greeting"
+import { isCurrentUserPremium } from "@/app/actions/subscription"
 
 // Dashboard components
 import {
@@ -25,11 +26,13 @@ import {
   MoodChartSkeleton,
   SentimentChartSkeleton,
   QuickActionsFab,
+  PremiumUpsellBanner,
 } from "@/components/dashboard"
 
 export default async function DashboardPage() {
   const user = await getUser()
   const journals = await getJournals()
+  const isPremium = await isCurrentUserPremium()
 
   return (
     <>
@@ -42,6 +45,9 @@ export default async function DashboardPage() {
             <DashboardGreeting userName={user?.name} />
 
             <Separator className="my-2" />
+
+            {/* Premium Upsell for Free Users */}
+            {!isPremium && <PremiumUpsellBanner />}
 
             {/* Daily Reflection Prompt */}
             <Suspense fallback={<ReflectionPromptSkeleton />}>

@@ -9,46 +9,34 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Crown, Sparkles, Lock, Zap } from "lucide-react"
+import { Sparkles, Lock, Zap } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
 export type PremiumGateReason = "journal" | "task" | "habit" | "mood" | "weekly"
 
 const GATE_CONFIG: Record<PremiumGateReason, {
-  title: string
   description: string
-  limit: string
   icon: React.ElementType
 }> = {
   journal: {
-    title: "Journal Limit Reached",
-    description: "Free users can create 1 journal entry per day.",
-    limit: "1 journal/day",
+    description: "Your reflections deserve space. Premium gives you unlimited entries to capture every insight.",
     icon: Lock,
   },
   task: {
-    title: "Task Limit Reached",
-    description: "Free users can create up to 10 tasks per day.",
-    limit: "10 tasks/day",
+    description: "Big days need room to breathe. Premium means no cap on what you can plan.",
     icon: Zap,
   },
   habit: {
-    title: "Habit Limit Reached",
-    description: "Free users can track up to 3 habits.",
-    limit: "3 habits total",
+    description: "You're building real momentum. Premium removes the ceiling — track every habit that matters to you.",
     icon: Sparkles,
   },
   mood: {
-    title: "Mood Log Limit Reached",
-    description: "Free users can save 1 mood log per day.",
-    limit: "1 mood log/day",
+    description: "Consistent tracking reveals the deepest patterns. Premium unlocks unlimited mood logging.",
     icon: Lock,
   },
   weekly: {
-    title: "Weekly Review Locked",
-    description: "Free users can plan their week. Reviews and AI insights require Premium.",
-    limit: "Planning only",
+    description: "Weekly reviews are where patterns become clarity. This is a Premium capability.",
     icon: Sparkles,
   },
 }
@@ -66,78 +54,45 @@ export function PremiumGateModal({ open, onOpenChange, reason }: PremiumGateModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px]">
+      <DialogContent className="sm:max-w-[380px]">
         <DialogHeader className="space-y-4">
-          {/* Icon with glow */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20"
+            className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20"
           >
-            <Icon className="h-8 w-8 text-primary" />
+            <Icon className="h-7 w-7 text-primary" />
           </motion.div>
 
-          <DialogTitle className="text-center text-xl font-semibold">
-            {config.title}
+          <DialogTitle className="text-center text-lg font-semibold">
+            You&apos;re ready for more.
           </DialogTitle>
-          <DialogDescription className="text-center text-sm">
+          <DialogDescription className="text-center text-sm leading-relaxed">
             {config.description}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Limit indicator */}
-        <div className="my-4 p-4 rounded-xl bg-muted/50 border border-border/50">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Free plan limit</span>
-            <span className="text-sm font-semibold text-foreground">{config.limit}</span>
-          </div>
-          <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="h-full rounded-full bg-primary"
-            />
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground text-center">
-            You've reached the free plan limit
-          </p>
-        </div>
-
-        {/* Premium perks */}
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            With Premium you get
-          </p>
-          <div className="grid gap-1.5">
-            {["Unlimited journals every day", "Unlimited tasks", "Unlimited mood logs", "Custom themes & more"].map((perk) => (
-              <div key={perk} className="flex items-center gap-2 text-sm">
-                <Crown className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="text-muted-foreground">{perk}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <DialogFooter className="mt-4 flex flex-col gap-2 sm:flex-col">
           <Button
-            className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+            className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => {
               onOpenChange(false)
               router.push("/settings/subscription")
             }}
           >
-            <Crown className="h-4 w-4" />
-            Upgrade to Premium
+            Go Premium
           </Button>
           <Button
             variant="ghost"
             className="w-full text-muted-foreground"
             onClick={() => onOpenChange(false)}
           >
-            Maybe later
+            Not yet
           </Button>
+          <p className="text-[11px] text-muted-foreground/60 text-center mt-1">
+            Cancel anytime
+          </p>
         </DialogFooter>
       </DialogContent>
     </Dialog>

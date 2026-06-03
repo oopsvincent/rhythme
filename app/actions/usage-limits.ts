@@ -64,13 +64,13 @@ export async function canCreateTask(): Promise<{ allowed: boolean; count: number
 
 /**
  * Check if the user can create a habit.
- * Free users: 3 active habits total. Premium users: unlimited.
+ * Free users: 5 active habits total. Premium users: unlimited.
  */
 export async function canCreateHabit(): Promise<{ allowed: boolean; count: number; limit: number }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return { allowed: false, count: 0, limit: 3 }
+  if (!user) return { allowed: false, count: 0, limit: 5 }
 
   if (await isCurrentUserPremium()) return { allowed: true, count: 0, limit: Infinity }
 
@@ -82,7 +82,7 @@ export async function canCreateHabit(): Promise<{ allowed: boolean; count: numbe
     .eq('is_active', true)
 
   const currentCount = count ?? 0
-  return { allowed: currentCount < 3, count: currentCount, limit: 3 }
+  return { allowed: currentCount < 5, count: currentCount, limit: 5 }
 }
 
 /**
