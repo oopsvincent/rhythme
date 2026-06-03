@@ -141,7 +141,7 @@ const RhythmeLanding: React.FC<RhythmeLandingProps> = ({ user }) => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-700"></div>
             <div className="relative w-full h-full backdrop-blur-xl bg-background/60 border-2 border-primary/30 rounded-full flex items-center justify-center group-hover:border-primary/60 transition-all duration-500 group-hover:scale-105 shadow-2xl shadow-primary/20">
               <Image 
-                src="/rhythme.svg" 
+                src="/Rhythme.svg" 
                 alt="Rhythmé logo" 
                 width={50} 
                 height={50}

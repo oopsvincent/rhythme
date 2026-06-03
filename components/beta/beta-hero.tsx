@@ -30,7 +30,7 @@ const BetaHero: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/40 to-accent/40 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500 animate-pulse"></div>
           <div className="relative w-full h-full backdrop-blur-xl bg-background/60 border-2 border-primary/40 rounded-full flex items-center justify-center shadow-2xl shadow-primary/30">
             <Image 
-              src="/rhythme.svg" 
+              src="/Rhythme.svg" 
               alt="Rhythmé logo" 
               width={40} 
               height={40}

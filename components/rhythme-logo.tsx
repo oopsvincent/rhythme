@@ -43,7 +43,7 @@ export function RhythmeLogo({ size = "md", showText = true, className }: Rhythme
           current.box
         )}>
           <Image
-            src="/rhythme.svg"
+            src="/Rhythme.svg"
             alt="Rhythmé logo"
             width={current.img}
             height={current.img}
