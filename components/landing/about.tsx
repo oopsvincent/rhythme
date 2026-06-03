@@ -126,7 +126,7 @@ const AboutPage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-full blur-2xl"></div>
               <div className="relative w-full h-full backdrop-blur-xl bg-background/60 border-2 border-primary/30 rounded-full flex items-center justify-center shadow-2xl shadow-primary/20">
                 <Image 
-                  src="/Rhythme.svg" 
+                  src="/rhythme.svg" 
                   alt="Rhythmé logo" 
                   width={50} 
                   height={50}

@@ -10,6 +10,7 @@ import OAuthButtons from "./OAuth-buttons";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 
 export function LoginForm({
   className,
@@ -52,139 +53,160 @@ export function LoginForm({
 
   return (
     <form
-      className={cn("flex flex-col gap-5", className)}
+      className={cn("flex flex-col gap-4.5", className)}
       onSubmit={signInWithEmail}
       {...props}
     >
       {/* Header */}
-      <div className="flex flex-col items-center gap-1.5 text-center mb-1">
-        <h1 className="text-2xl font-bold tracking-tight font-primary text-foreground">
+      <div className="flex flex-col items-center gap-1 text-center">
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-primary bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent">
           Welcome back
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Sign in to your Rhythmé account
+        </h2>
+        <p className="text-xs text-muted-foreground max-w-[280px]">
+          Sign in to your Rhythmé account using your social profile or email.
         </p>
       </div>
 
-      {/* OAuth row */}
-      <OAuthButtons redirectTo={redirectTo} />
+      {/* OAuth Row */}
+      <div className="w-full">
+        <OAuthButtons redirectTo={redirectTo} />
+      </div>
 
       {/* Divider */}
-      <div className="relative flex items-center gap-3">
-        <div className="h-px flex-1 bg-border/60" />
-        <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider select-none">
-          or
+      <div className="relative flex items-center gap-4 py-1">
+        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-border/50 to-border" />
+        <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest select-none">
+          or continue with
         </span>
-        <div className="h-px flex-1 bg-border/60" />
+        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-border/50 to-border" />
       </div>
 
       {/* Error alerts */}
       {(oauthErrorMsg || (status === "error" && errorMsg)) && (
-        <Alert
-          variant="destructive"
-          className="rounded-xl border-destructive/30 bg-destructive/5 py-2.5"
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full"
         >
-          <OctagonAlert className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            {oauthErrorMsg || errorMsg}
-          </AlertDescription>
-        </Alert>
+          <Alert
+            variant="destructive"
+            className="rounded-2xl border-destructive/20 bg-destructive/5 py-3 shadow-md shadow-destructive/5"
+          >
+            <OctagonAlert className="h-4 w-4" />
+            <AlertDescription className="text-sm leading-relaxed">
+              {oauthErrorMsg || errorMsg}
+            </AlertDescription>
+          </Alert>
+        </motion.div>
       )}
 
-      {/* Email field */}
-      <div className="space-y-1.5">
-        <label
-          htmlFor="login-email"
-          className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider pl-0.5"
-        >
-          Email
-        </label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
-          <input
-            onChange={(e) => setEmail(e.target.value)}
-            id="login-email"
-            type="email"
-            placeholder="you@example.com"
-            required
-            autoComplete="email"
-            className="
-              flex h-11 w-full rounded-xl border border-border/60
-              bg-card/50 backdrop-blur-sm
-              pl-10 pr-4 text-sm text-foreground
-              placeholder:text-muted-foreground/40
-              transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50
-              hover:border-border
-            "
-          />
+      {/* Inputs Group */}
+      <div className="space-y-3.5">
+        {/* Email field */}
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center pl-1">
+            <label
+              htmlFor="login-email"
+              className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest"
+            >
+              Email Address
+            </label>
+          </div>
+          <div className="relative group">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors duration-200 pointer-events-none" />
+            <input
+              onChange={(e) => setEmail(e.target.value)}
+              id="login-email"
+              type="email"
+              placeholder="you@example.com"
+              required
+              autoComplete="email"
+              className="
+                flex h-11 w-full rounded-2xl border border-border/50
+                bg-muted/10 dark:bg-card/30 backdrop-blur-xs
+                pl-11 pr-4 text-sm text-foreground
+                placeholder:text-muted-foreground/30
+                transition-all duration-300
+                focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/60
+                hover:border-border/80 hover:bg-muted/15 dark:hover:bg-card/45
+                shadow-inner
+              "
+            />
+          </div>
+        </div>
+
+        {/* Password field */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between pl-1">
+            <label
+              htmlFor="login-password"
+              className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest"
+            >
+              Password
+            </label>
+            <Link
+              href="/auth/reset-password"
+              className="text-xs font-semibold text-primary/80 hover:text-primary hover:underline transition-all"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative group">
+            <PasswordInput
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              id="login-password"
+              placeholder="Enter your password"
+              required
+              autoComplete="current-password"
+              className="
+                h-11 rounded-2xl border-border/50 
+                bg-muted/10 dark:bg-card/30 backdrop-blur-xs
+                pl-4 pr-10 text-sm text-foreground
+                transition-all duration-300
+                focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/60
+                hover:border-border/80 hover:bg-muted/15 dark:hover:bg-card/45
+                shadow-inner
+              "
+            />
+          </div>
         </div>
       </div>
 
-      {/* Password field */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between pl-0.5">
-          <label
-            htmlFor="login-password"
-            className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider"
-          >
-            Password
-          </label>
-          <Link
-            href="/auth/reset-password"
-            className="text-xs text-primary/70 hover:text-primary transition-colors"
-          >
-            Forgot password?
-          </Link>
-        </div>
-        <PasswordInput
-          onChange={(e) => setPassword(e.target.value)}
-          value={password}
-          id="login-password"
-          placeholder="Enter your password"
-          required
-          autoComplete="current-password"
+      {/* Submit Button */}
+      <motion.div whileTap={{ scale: 0.98 }} className="w-full">
+        <Button
+          type="submit"
+          disabled={status === "loading"}
           className="
-            h-11 rounded-xl border-border/60 
-            bg-card/50 backdrop-blur-sm 
-            focus:ring-2 focus:ring-primary/20 focus:border-primary/50
-            hover:border-border
+            relative h-11 w-full rounded-2xl font-semibold text-sm
+            bg-primary text-primary-foreground shadow-lg shadow-primary/15
+            hover:brightness-110 hover:shadow-primary/25
+            transition-all duration-200
+            disabled:opacity-60 disabled:shadow-none
+            cursor-pointer
+            flex items-center justify-center gap-2
           "
-        />
-      </div>
+        >
+          {status === "loading" ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <>
+              <span>Sign in</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </Button>
+      </motion.div>
 
-      {/* Submit button */}
-      <Button
-        type="submit"
-        disabled={status === "loading"}
-        className="
-          relative h-11 w-full rounded-xl font-medium
-          bg-primary text-primary-foreground
-          hover:brightness-110
-          active:scale-[0.98]
-          transition-all duration-200
-          disabled:opacity-60
-          cursor-pointer
-        "
-      >
-        {status === "loading" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <span className="flex items-center justify-center gap-2">
-            Sign in
-            <ArrowRight className="h-4 w-4" />
-          </span>
-        )}
-      </Button>
-
-      {/* Sign up link */}
+      {/* Signup Link */}
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link
           href="/signup/intro"
-          className="font-medium text-primary hover:text-primary/80 transition-colors"
+          className="font-bold text-primary hover:text-primary/80 hover:underline transition-all"
         >
-          Create account
+          Create free account
         </Link>
       </p>
     </form>

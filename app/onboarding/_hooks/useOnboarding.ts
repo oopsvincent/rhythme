@@ -86,8 +86,7 @@ export function useOnboarding() {
       } = await supabase.auth.getUser()
 
       if (error || !user) {
-        window.location.href =
-          process.env.NEXT_PUBLIC_ACCOUNTS_URL || 'https://accounts.amplecen.com'
+        window.location.href = '/login?redirect=/onboarding'
         return
       }
 

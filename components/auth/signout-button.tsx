@@ -7,9 +7,8 @@ export default function SignOutButton() {
 
   async function handleSignOut() {
     await supabase.auth.signOut({});
-    // Full page redirect so the cleared cookie is visible to the new domain
-    window.location.href =
-      process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com";
+    // Redirect back to the local login page
+    window.location.href = "/login";
   }
 
   return (

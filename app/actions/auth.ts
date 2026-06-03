@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 
 // Supported OAuth providers
-export type OAuthProvider = 'google' | 'github' | 'discord' | 'apple' | 'facebook'
+export type OAuthProvider = 'google' | 'github' | 'discord' | 'x' | 'facebook' | 'twitch'
 
 /**
  * Get the base URL from environment or headers (for server actions).
@@ -57,7 +57,7 @@ export async function signOut() {
   const supabase = await createClient()
 
   await supabase.auth.signOut()
-  redirect(process.env.NEXT_PUBLIC_ACCOUNTS_URL || 'https://accounts.amplecen.com')
+  redirect('/login')
 }
 
 export async function getUser() {
@@ -116,7 +116,7 @@ export async function signInWithProviderAction(
   }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
+    provider: provider as any,
     options: {
       redirectTo: callbackUrl.toString(),
     },
@@ -172,7 +172,7 @@ export async function linkProvider(provider: OAuthProvider) {
   const baseUrl = await getBaseUrl()
 
   const { data, error } = await supabase.auth.linkIdentity({
-    provider,
+    provider: provider as any,
     options: {
       // Redirect back to callback which will detect linked param and redirect to settings
       redirectTo: `${baseUrl}/auth/callback?linked=${provider}`,

@@ -59,12 +59,11 @@ export async function updateSession(request: NextRequest) {
   )
 
   // If user is not logged in and trying to access a protected route,
-  // redirect to Amplecen ID with return_to so they land back here after login.
+  // redirect to local login with redirect path so they land back here after login.
   if (!user && isProtectedRoute) {
-    const accountsUrl = process.env.NEXT_PUBLIC_ACCOUNTS_URL || 'https://accounts.amplecen.com'
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rhythme.amplecen.com'
-    const returnTo = encodeURIComponent(`${appUrl}${request.nextUrl.pathname}`)
-    return NextResponse.redirect(`${accountsUrl}/login?return_to=${returnTo}`)
+    const redirectUrl = new URL('/login', request.nextUrl.origin)
+    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+    return NextResponse.redirect(redirectUrl)
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
