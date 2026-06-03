@@ -90,7 +90,7 @@ const Footer: React.FC = () => {
                 <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/30 transition-all duration-500"></div>
                 <div className="relative backdrop-blur-sm bg-background/50 border border-primary/30 rounded-xl p-2 group-hover:border-primary/50 transition-all duration-500">
                   <Image 
-                    src="/Rhythme.svg" 
+                    src="/rhythme.svg" 
                     alt="Rhythmé logo" 
                     width={24} 
                     height={24}

@@ -157,7 +157,7 @@ const isCollapsed = state === "collapsed"
 <SidebarHeader className="px-2 pt-4 pb-2 flex flex-col gap-3">
   <div className="flex px-2">
     <div className="flex items-center justify-center rounded-md w-7 h-7 shrink-0 bg-sidebar-primary/5 border border-sidebar-border shadow-sm">
-      <Image alt="Rhythme Logo" src="/Rhythme.svg" width={18} height={18} className="opacity-90" />
+      <Image alt="Rhythme Logo" src="/rhythme.svg" width={18} height={18} className="opacity-90" />
     </div>
   </div>
 

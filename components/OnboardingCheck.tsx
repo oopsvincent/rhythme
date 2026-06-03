@@ -16,8 +16,7 @@ export default function OnboardingCheck({ children }: { children: React.ReactNod
 
     if (!user) {
       // Middleware should catch this first — this is a safety net
-      window.location.href =
-        process.env.NEXT_PUBLIC_ACCOUNTS_URL || "https://accounts.amplecen.com";
+      window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
       return;
     }
 

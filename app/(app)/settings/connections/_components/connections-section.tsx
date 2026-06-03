@@ -37,11 +37,12 @@ const PROVIDERS: Record<
   google: { name: "Google", icon: "G.svg", color: "bg-red-500" },
   github: { name: "GitHub", icon: "GitHub_Lockup_Black.svg", color: "bg-gray-800" },
   discord: { name: "Discord", icon: "Discord-Logo-Blurple.svg", color: "bg-indigo-500" },
-  apple: { name: "Apple", icon: "Apple.svg", color: "bg-gray-900" },
+  x: { name: "X", icon: "x.svg", color: "bg-black" },
   facebook: { name: "Facebook", icon: "Facebook_Logo_Primary.png", color: "bg-blue-600" },
+  twitch: { name: "Twitch", icon: "twitch.svg", color: "bg-purple-600" },
 };
 
-const ALL_PROVIDERS: OAuthProvider[] = ["google", "github", "discord", "apple", "facebook"];
+const ALL_PROVIDERS: OAuthProvider[] = ["google", "github", "discord", "x", "facebook", "twitch"];
 
 interface ConnectionsSectionProps {
   identities: LinkedIdentity[];
@@ -222,9 +223,10 @@ return (
                         className={clsx(
                           "object-contain",
                           {
-                            "w-12": provider.name === "Apple",
+                            "w-8": provider.name === "X",
+                            "w-10": provider.name === "Twitch",
                             "w-42 ": provider.name === "Github",
-                            "w-42": provider.name !== "Apple",
+                            "w-42": provider.name !== "X" && provider.name !== "Twitch",
                             "p-3": provider.name === "Discord",
                             "w-[25%]": provider.name === "Facebook",
                           }
