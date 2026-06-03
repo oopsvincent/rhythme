@@ -14,7 +14,10 @@ import {
   Calendar,
   CheckCircle2,
   Loader2,
+  AlertTriangle,
 } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { AccountDeletionModal } from "@/components/settings/AccountDeletionModal"
 
 interface ProfileSectionProps {
   user: {
@@ -132,6 +135,27 @@ export function ProfileSection({ user }: ProfileSectionProps) {
           )}
         </Button>
       </form>
+
+      {/* Danger Zone */}
+      <div className="border-b border-border/50 my-6" />
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2 text-destructive">
+          <AlertTriangle className="h-5 w-5" />
+          Danger Zone
+        </h3>
+        <Card className="border-destructive/20 bg-destructive/5 overflow-hidden">
+          <CardContent className="p-4 flex items-center justify-between sm:flex-row flex-col gap-4">
+            <div className="space-y-1">
+              <p className="font-semibold text-destructive">Delete Account</p>
+              <p className="text-xs text-muted-foreground max-w-md leading-relaxed">
+                Permanently remove your personal data, habits, daily logs, focus history, journals, and subscription. 
+                This action is irreversible.
+              </p>
+            </div>
+            <AccountDeletionModal />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

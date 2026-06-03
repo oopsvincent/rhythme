@@ -4,7 +4,7 @@
 "use client"
 
 import { AlertTriangle, Trash2, Info } from "lucide-react"
-import { DeleteAccountModal } from "@/components/settings/delete-account-modal"
+import { AccountDeletionModal } from "@/components/settings/AccountDeletionModal"
 
 interface DeleteAccountSectionProps {
   userEmail: string
@@ -76,7 +76,7 @@ export function DeleteAccountSection({ userEmail }: DeleteAccountSectionProps) {
               Permanently remove your account and all data
             </p>
           </div>
-          <DeleteAccountModal />
+          <AccountDeletionModal />
         </div>
       </section>
     </div>

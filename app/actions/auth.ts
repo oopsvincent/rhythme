@@ -3,6 +3,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 
@@ -304,4 +305,199 @@ export async function sendPasswordResetEmail(email: string): Promise<{ success: 
   }
 
   return { success: true }
+}
+
+/**
+ * Verifies if the current logged-in user password is correct
+ */
+export async function verifyCurrentPassword(password: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    if (!user.email) {
+      return { success: false, error: "User email not found" }
+    }
+
+    // Create standalone client without writing local session/cookies
+    const tempClient = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        }
+      }
+    )
+
+    const { error: authError } = await tempClient.auth.signInWithPassword({
+      email: user.email,
+      password: password,
+    })
+
+    if (authError) {
+      return { success: false, error: "Incorrect password" }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error("Password verification error:", err)
+    return { success: false, error: "Failed to verify password" }
+  }
+}
+
+/**
+ * Checks the authentication providers for the current user
+ */
+export async function checkUserAuthType(): Promise<{ hasPassword: boolean; provider: string }> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { hasPassword: false, provider: "" }
+    }
+
+    // Direct database check on auth.users using Security Definer RPC
+    const { data: dbHasPassword, error: rpcError } = await supabase.rpc("user_has_password", {
+      target_user_id: user.id
+    })
+
+    let hasPassword = false
+    if (rpcError) {
+      console.warn("[WARNING] user_has_password RPC failed, falling back to providers list metadata:", rpcError)
+      hasPassword = (user.app_metadata?.providers || []).includes("email")
+    } else {
+      hasPassword = !!dbHasPassword
+    }
+
+    const providers = user.app_metadata?.providers || []
+    return {
+      hasPassword,
+      provider: providers[0] || "oauth",
+    }
+  } catch (err) {
+    console.error("Auth type check error:", err)
+    return { hasPassword: true, provider: "email" } // Default to email/password on error to be safe
+  }
+}
+
+/**
+ * Sets the initial password for a social login (OAuth) user who doesn't have a password.
+ * Strictly guarded to prevent users with existing passwords from abusing it.
+ */
+export async function setInitialSocialPassword(password: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    // Direct database check on auth.users using Security Definer RPC
+    const { data: dbHasPassword, error: rpcError } = await supabase.rpc("user_has_password", {
+      target_user_id: user.id
+    })
+
+    let hasPassword = false
+    if (rpcError) {
+      console.warn("[WARNING] user_has_password RPC failed, falling back to providers list metadata:", rpcError)
+      hasPassword = (user.app_metadata?.providers || []).includes("email")
+    } else {
+      hasPassword = !!dbHasPassword
+    }
+
+    if (hasPassword) {
+      return { success: false, error: "Account already has a password set. Bypassing is prohibited." }
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: password
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error("Failed to set social password:", err)
+    return { success: false, error: "Failed to configure password" }
+  }
+}
+
+/**
+ * Changes user password after verifying the old password.
+ */
+export async function changePasswordWithVerification(
+  oldPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    if (!user.email) {
+      return { success: false, error: "User email not found" }
+    }
+
+    // Direct database check on auth.users using Security Definer RPC
+    const { data: dbHasPassword, error: rpcError } = await supabase.rpc("user_has_password", {
+      target_user_id: user.id
+    })
+
+    let hasPassword = false
+    if (rpcError) {
+      console.warn("[WARNING] user_has_password RPC failed, falling back to providers list metadata:", rpcError)
+      hasPassword = (user.app_metadata?.providers || []).includes("email")
+    } else {
+      hasPassword = !!dbHasPassword
+    }
+
+    if (hasPassword) {
+      const tempClient = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+          }
+        }
+      )
+
+      const { error: signInError } = await tempClient.auth.signInWithPassword({
+        email: user.email,
+        password: oldPassword,
+      })
+
+      if (signInError) {
+        return { success: false, error: "Incorrect current password" }
+      }
+    }
+
+    // 2. Perform the update
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
+
+    if (updateError) {
+      return { success: false, error: updateError.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error("Change password error:", err)
+    return { success: false, error: "Failed to change password" }
+  }
 }
