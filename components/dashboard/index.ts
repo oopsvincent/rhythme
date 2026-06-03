@@ -17,6 +17,7 @@ export { ProductivitySummary } from "./productivity-summary"
 export { MoodChart } from "./mood-chart"
 export { SentimentChart } from "./sentiment-chart"
 export { WeeklyWidget } from "./weekly-widget"
+export { PremiumUpsellBanner } from "./premium-upsell-banner"
 
 export {
   DashboardStatsSkeleton,

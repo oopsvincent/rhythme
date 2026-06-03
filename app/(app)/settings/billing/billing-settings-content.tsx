@@ -43,7 +43,7 @@ const pricing = {
 
 const starterPlanFeatures = [
   "1 Goal workspace",
-  "Track up to 3 habits",
+  "Track up to 5 habits",
   "10 tasks per day",
   "10 journal entries/month",
   "Basic focus timer",
@@ -383,13 +383,12 @@ export default function BillingSettingsContent({ currentPlan }: BillingSettingsC
                         </>
                       ) : (
                         <>
-                          <Sparkles className="h-4 w-4" />
-                          Upgrade Now
+                          Go Premium
                         </>
                       )}
                     </Button>
                     <p className="text-xs text-center text-muted-foreground">
-                      30-day money-back guarantee
+                      Cancel anytime · Your data stays yours
                     </p>
                   </div>
                 </div>
