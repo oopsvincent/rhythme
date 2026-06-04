@@ -46,7 +46,7 @@ import {
   User,
   Pencil,
 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { motion, AnimatePresence } from "framer-motion";
 import type {
   HabitWithStats,
@@ -476,7 +476,7 @@ export default function HabitsPage() {
                         {completedToday} / {totalDaily}
                       </span>
                     </div>
-                    <Progress value={completionRate} className="h-1.5 mt-3 bg-muted/50" />
+                    <ProgressBar value={completedToday} max={totalDaily} className="mt-3" color="primary" />
                     <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-primary" />
                   </div>
 
@@ -753,9 +753,16 @@ function HabitItem({
 
                 {habit.daysUntilPrediction !== undefined &&
                   habit.daysUntilPrediction > 0 && (
-                    <Badge variant="outline" className="border-accent/30 text-muted-foreground">
-                      <Sparkles className="mr-1 h-3 w-3 text-accent" />
-                      AI in {habit.daysUntilPrediction}d
+                    <Badge variant="outline" className="border-accent/30 text-muted-foreground flex items-center gap-1.5 px-2 py-0.5 select-none h-6">
+                      <Sparkles className="h-3 w-3 text-accent shrink-0" />
+                      <span className="text-[10px] leading-none shrink-0">AI in {habit.daysUntilPrediction}d</span>
+                      <ProgressBar
+                        value={Math.max(0, 7 - habit.daysUntilPrediction)}
+                        max={7}
+                        className="w-10 mt-0!"
+                        size="sm"
+                        color="accent"
+                      />
                     </Badge>
                   )}
               </div>

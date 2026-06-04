@@ -4,8 +4,9 @@
 "use client"
 
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import { updateUserProfile } from "@/app/actions/settings"
+import { updateUserProfile, updateUserEmail } from "@/app/actions/settings"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -27,8 +28,7 @@ import {
   AlertTriangle,
   Pencil,
 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { AccountDeletionModal } from "@/components/settings/AccountDeletionModal"
+
 
 interface ProfileSectionProps {
   user: {
@@ -47,6 +47,10 @@ export function ProfileSection({ user }: ProfileSectionProps) {
   const [avatarUrl, setAvatarUrl] = useState(user.avatar)
   const [isUpdating, setIsUpdating] = useState(false)
   const [success, setSuccess] = useState(false)
+  
+  const [email, setEmail] = useState(user.email)
+  const [isEmailUpdating, setIsEmailUpdating] = useState(false)
+  const [emailFeedback, setEmailFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
   // Detect current avatar type
   const currentAvatarId = (() => {
@@ -114,6 +118,35 @@ export function ProfileSection({ user }: ProfileSectionProps) {
     }
   }
 
+  const handleEmailUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim() || email === user.email) return
+    setIsEmailUpdating(true)
+    setEmailFeedback(null)
+    
+    try {
+      const result = await updateUserEmail(email)
+      if (result.success) {
+        setEmailFeedback({
+          type: "success",
+          message: "Verification links sent! Please check both your old and new email addresses to confirm.",
+        })
+      } else {
+        setEmailFeedback({
+          type: "error",
+          message: result.error || "Failed to update email address.",
+        })
+      }
+    } catch (err) {
+      setEmailFeedback({
+        type: "error",
+        message: "An error occurred while updating your email.",
+      })
+    } finally {
+      setIsEmailUpdating(false)
+    }
+  }
+
   return (
     <div className="space-y-8">
       {/* Profile Header */}
@@ -173,20 +206,6 @@ export function ProfileSection({ user }: ProfileSectionProps) {
               This is how you&apos;ll appear throughout the app.
             </p>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              type="email"
-              value={user.email}
-              disabled
-              className="bg-muted/50 cursor-not-allowed"
-            />
-            <p className="text-xs text-muted-foreground">
-              Email cannot be changed. Contact support if you need to update it.
-            </p>
-          </div>
         </div>
 
         <Button 
@@ -210,26 +229,49 @@ export function ProfileSection({ user }: ProfileSectionProps) {
         </Button>
       </form>
 
-      {/* Danger Zone */}
+      {/* Divider */}
       <div className="border-b border-border/50 my-6" />
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2 text-destructive">
-          <AlertTriangle className="h-5 w-5" />
-          Danger Zone
-        </h3>
-        <Card className="border-destructive/20 bg-destructive/5 overflow-hidden">
-          <CardContent className="p-4 flex items-center justify-between sm:flex-row flex-col gap-4">
-            <div className="space-y-1">
-              <p className="font-semibold text-destructive">Delete Account</p>
-              <p className="text-xs text-muted-foreground max-w-md leading-relaxed">
-                Permanently remove your personal data, habits, daily logs, focus history, journals, and subscription. 
-                This action is irreversible.
-              </p>
+
+      {/* Email Update Form */}
+      <form onSubmit={handleEmailUpdate} className="space-y-6">
+        <div className="grid gap-4 max-w-md">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <div className="flex gap-2">
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email address"
+                className="bg-background"
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={isEmailUpdating || email === user.email || !email.trim()}
+              >
+                {isEmailUpdating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Update Email"
+                )}
+              </Button>
             </div>
-            <AccountDeletionModal />
-          </CardContent>
-        </Card>
-      </div>
+            {emailFeedback && (
+              <p className={cn(
+                "text-xs font-medium",
+                emailFeedback.type === "success" ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"
+              )}>
+                {emailFeedback.message}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Updating your email requires confirmation. We will send verification links to complete this action.
+            </p>
+          </div>
+        </div>
+      </form>
     </div>
   )
 }

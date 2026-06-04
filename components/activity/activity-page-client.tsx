@@ -34,6 +34,7 @@ import {
 } from "@/lib/activity"
 import { getMoodOption } from "@/lib/mood"
 import { cn } from "@/lib/utils"
+import { ProgressBar } from "@/components/ui/progress-bar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -819,9 +820,18 @@ function InsightsTab({
               <Sparkles className="h-5 w-5" />
             </EmptyMedia>
             <EmptyTitle>More consistency unlocks stronger patterns.</EmptyTitle>
-            <EmptyDescription>
+            <EmptyDescription className="max-w-md mx-auto">
               Keep logging for at least 14 active days and this space will start surfacing stable correlations.
             </EmptyDescription>
+            <div className="w-full max-w-xs mx-auto mt-6 px-4">
+              <ProgressBar
+                value={loggedDays}
+                max={14}
+                showLabel
+                label="Days logged progress"
+                color="primary"
+              />
+            </div>
           </EmptyHeader>
         </Empty>
       ) : isLoading ? (

@@ -18,10 +18,10 @@ import {
   Timer,
   Flame,
   BarChart3,
-  MessageSquare,
   Palette,
   ChevronDown,
   ChevronUp,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,7 +38,6 @@ interface Pricing {
   yearly: PricingTier;
 }
 
-// Updated pricing
 const pricing: Pricing = {
   monthly: {
     starter: 0,
@@ -50,56 +49,30 @@ const pricing: Pricing = {
   }
 };
 
-// Feature type definition
-interface PremiumFeature {
-  text: string;
-  icon: React.ElementType;
-  description: string;
-  inDevelopment?: boolean;
-}
-
-// Starter plan features
 const starterFeatures = [
   { text: "1 Goal workspace", icon: Target, description: "Focus on one long-term goal at a time" },
   { text: "Track up to 5 habits", icon: Flame, description: "Build your core daily habits" },
   { text: "10 tasks per day", icon: Check, description: "Manage your daily priorities" },
   { text: "10 journal entries/month", icon: BookOpen, description: "Reflect on your journey" },
-  { text: "Basic NBA suggestions", icon: Compass, description: "Simple next best action hints" },
   { text: "Basic focus timer", icon: Timer, description: "Stay focused on your work" },
   { text: "Weekly progress overview", icon: TrendingUp, description: "Track your weekly wins" },
 ];
 
-// Premium plan features - organized by category
-const premiumFeatures: { core: PremiumFeature[]; ai: PremiumFeature[]; analytics: PremiumFeature[]; extras: PremiumFeature[] } = {
-  core: [
-    { text: "Unlimited goal workspaces", icon: Target, description: "Pursue multiple long-term goals simultaneously" },
-    { text: "Unlimited habits & tasks", icon: Zap, description: "No limits on your productivity system" },
-    { text: "Unlimited journaling", icon: BookOpen, description: "Write as much as you need" },
-  ],
-  ai: [
-    { text: "Rhythmé AI Agent", icon: Brain, inDevelopment: true, description: "Your intelligent planning partner" },
-    { text: "NBA Engine (Full Access)", icon: Rocket, inDevelopment: true, description: "AI-powered next best action recommendations" },
-    { text: "Journal Sentiment Analysis", icon: Heart, inDevelopment: true, description: "Understand your emotional patterns with rvo2-sentiment" },
-    { text: "AI Goal Roadmaps", icon: Compass, inDevelopment: true, description: "Auto-generated milestones for your goals" },
-    { text: "Smart Task Generation", icon: Sparkles, inDevelopment: true, description: "AI creates tasks linked to your goals" },
-    { text: "Habit Suggestions", icon: Flame, inDevelopment: true, description: "Personalized habit recommendations" },
-  ],
-  analytics: [
-    { text: "Weekly & monthly insights", icon: TrendingUp, description: "Deep dive into your patterns" },
-    { text: "Advanced analytics", icon: BarChart3, description: "Comprehensive progress tracking" },
-    { text: "Identity reinforcement", icon: Heart, description: "Track who you're becoming" },
-  ],
-  extras: [
-    { text: "Cloud backup & sync", icon: Cloud, description: "Access from any device" },
-    { text: "Priority support", icon: Shield, description: "Get help when you need it" },
-    { text: "Custom themes", icon: Palette, description: "Personalize your experience" },
-    { text: "Early access to features", icon: Crown, description: "Be the first to try new updates" },
-  ],
-};
+const premiumFeatures = [
+  { text: "Unlimited goal workspaces", icon: Target, description: "Pursue multiple goals simultaneously" },
+  { text: "Unlimited habits & tasks", icon: Zap, description: "No limits on your productivity enclaves" },
+  { text: "Unlimited journaling", icon: BookOpen, description: "Write and reflect without limits" },
+  { text: "Rhythmé AI Agent & Roadmaps", icon: Brain, description: "Generates custom steps for your goals" },
+  { text: "NBA Engine (Full Access)", icon: Rocket, description: "AI-powered Next Best Action recommendation" },
+  { text: "Journal Sentiment Insights", icon: Heart, description: "Understand your emotional and focus patterns" },
+  { text: "Advanced Analytics Charts", icon: BarChart3, description: "Track weekly and monthly deep work details" },
+  { text: "Premium Custom Themes", icon: Palette, description: "Custom colors matching your aesthetic" },
+  { text: "Cloud Sync & Backups", icon: Cloud, description: "Real-time sync with local IndexedDB caches" }
+];
 
 export default function PricingComponent() {
+  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'premium'>('premium');
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
-  const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
@@ -115,24 +88,15 @@ export default function PricingComponent() {
   const monthlySavings = (monthlyPrice * 12) - yearlyPrice;
   const savingsPercentage = Math.round((monthlySavings / (monthlyPrice * 12)) * 100);
 
-  const allPremiumFeatures = [
-    ...premiumFeatures.core,
-    ...premiumFeatures.ai,
-    ...premiumFeatures.analytics,
-    ...premiumFeatures.extras,
-  ];
-
-  const visibleFeatures = showAllFeatures ? allPremiumFeatures : allPremiumFeatures.slice(0, 8);
-
   return (
     <section 
       id="pricing" 
-      className="py-20 px-6 bg-background relative overflow-hidden"
+      className="py-24 px-6 bg-background relative overflow-hidden z-10"
       onMouseMove={handleMouseMove}
     >
-      {/* Mouse-following Glow */}
+      {/* Mouse Follow Glow */}
       <div 
-        className="pointer-events-none absolute w-[400px] h-[400px] rounded-full opacity-15 blur-[100px] transition-all duration-700 ease-out z-0"
+        className="pointer-events-none absolute w-[400px] h-[400px] rounded-full opacity-10 blur-[100px] transition-all duration-700 ease-out z-0"
         style={{ 
           background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)",
           left: mousePosition.x - 200,
@@ -140,222 +104,246 @@ export default function PricingComponent() {
         }}
       />
 
-      {/* Ambient glow effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl transition-all duration-700"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl transition-all duration-700"></div>
-      
-      <div className="max-w-7xl mx-auto text-center relative z-10 font-marketing">
+      <div className="max-w-4xl mx-auto text-center relative z-10">
+        
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
+          className="space-y-4 mb-10"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4 backdrop-blur-sm border border-primary/20">
-            <Sparkles className="w-4 h-4 inline mr-2" />
-            Simple Pricing
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 backdrop-blur-sm">
+            <Sparkles className="w-3.5 h-3.5 inline mr-1.5 align-text-bottom" />
+            Pricing Plans
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 font-primary">
-            One plan. Full depth.
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-primary text-foreground text-balance">
+            Choose your focus baseline
           </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Start free. Go deeper when you&apos;re ready.
+          <p className="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            Kickstart with our forever free Starter plan, or unlock the full depth of Rhythmé with our Premium Enclave.
           </p>
         </motion.div>
 
-        {/* Billing Toggle - Fixed width container */}
-        <div className="flex items-center justify-center mb-12">
-          <div className="inline-flex items-center gap-4 p-2 rounded-2xl glass-card">
-            <span className={cn(
-              "text-sm font-medium transition-all duration-500 ease-out px-3 py-1.5 rounded-lg",
-              billingCycle === 'monthly' ? 'text-foreground bg-muted' : 'text-muted-foreground'
-            )}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-              className="relative w-14 h-7 bg-muted rounded-full transition-all duration-500 ease-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+        {/* Brand Segmented Plan Selector - Desktop & Mobile Unified */}
+        <div className="flex justify-center mb-8 select-none">
+          <div className="relative inline-flex p-1 rounded-2xl bg-card border border-border/40 w-full max-w-[340px]">
+            <button 
+              onClick={() => setSelectedPlan('starter')}
+              className={cn(
+                "flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 relative text-center",
+                selectedPlan === 'starter' ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+              )}
             >
-              <span
-                className={cn(
-                  "absolute top-1 w-5 h-5 bg-primary rounded-full transition-all duration-500 ease-out shadow-lg shadow-primary/50",
-                  billingCycle === 'yearly' ? 'left-8' : 'left-1'
-                )}
-              />
+              {selectedPlan === 'starter' && (
+                <motion.div 
+                  layoutId="planSelectorBg" 
+                  className="absolute inset-0 bg-primary rounded-xl shadow-lg shadow-primary/20"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">Starter Plan</span>
             </button>
-            <span className={cn(
-              "text-sm font-medium transition-all duration-500 ease-out px-3 py-1.5 rounded-lg",
-              billingCycle === 'yearly' ? 'text-foreground bg-muted' : 'text-muted-foreground'
-            )}>
-              Yearly
-            </span>
-            {/* Fixed width badge container to prevent layout shift */}
-            <div className="w-24 flex justify-start">
-              <AnimatePresence mode="wait">
-                {billingCycle === 'yearly' && (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.3 }}
-                    className="px-3 py-1 bg-green-500/10 text-green-500 text-sm font-semibold rounded-full border border-green-500/20"
-                  >
-                    Save {savingsPercentage}%
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </div>
+            <button 
+              onClick={() => setSelectedPlan('premium')}
+              className={cn(
+                "flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 relative text-center flex items-center justify-center gap-1",
+                selectedPlan === 'premium' ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {selectedPlan === 'premium' && (
+                <motion.div 
+                  layoutId="planSelectorBg" 
+                  className="absolute inset-0 bg-primary rounded-xl shadow-lg shadow-primary/20"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">Premium Enclave</span>
+              <Sparkles className={cn("w-3 h-3 relative z-10 fill-current", selectedPlan === 'premium' ? 'text-amber-400 animate-pulse' : 'text-muted-foreground')} />
+            </button>
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Starter Plan */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            viewport={{ once: true }}
-            className="glass-card rounded-2xl overflow-hidden transition-all duration-500 ease-out hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30"
-          >
-            <div className="p-8 border-b border-border/50">
-              <h3 className="text-2xl font-bold font-primary mb-2">Starter</h3>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-5xl font-bold">$0</span>
-                <span className="text-muted-foreground">/forever</span>
-              </div>
-              <p className="text-muted-foreground">Everything you need to begin.</p>
-            </div>
-            <div className="p-8 text-left">
-              <div className="space-y-4 mb-8">
-                {starterFeatures.map((feature, i) => {
-                  const Icon = feature.icon;
-                  return (
-                    <div key={i} className="flex items-start gap-3 group">
-                      <Icon className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 transition-colors duration-300" />
-                      <div>
-                        <span className="text-foreground font-medium">{feature.text}</span>
-                        <p className="text-xs text-muted-foreground">{feature.description}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <Link href="/signup/intro">
-                <button className="w-full px-6 py-3 rounded-xl font-semibold border-2 border-border hover:border-primary hover:text-primary transition-all duration-500 ease-out">
-                  Get Started Free
-                </button>
-              </Link>
-            </div>
-          </motion.div>
+        {/* Dashboard Plan Canvas (Single full width container) */}
+        <div className="glass-card rounded-3xl border border-border/60 shadow-2xl relative overflow-hidden p-6 sm:p-10 min-h-[420px] flex flex-col justify-center">
+          
+          <AnimatePresence mode="wait">
+            {selectedPlan === 'starter' ? (
+              <motion.div
+                key="starter"
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 15 }}
+                transition={{ duration: 0.25 }}
+                className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center text-left"
+              >
+                {/* Starter: Pricing Column */}
+                <div className="md:col-span-5 space-y-6">
+                  <div className="space-y-2">
+                    <span className="text-[10px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Baseline Free</span>
+                    <h3 className="text-xl font-bold font-primary text-foreground">Starter Baseline</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      A quiet, focused starting point. Build habits and track tasks without notifications or distraction triggers.
+                    </p>
+                  </div>
 
-          {/* Premium Plan */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="relative glass-card rounded-2xl overflow-hidden border-primary/50 shadow-2xl shadow-primary/10 transition-all duration-500 ease-out hover:scale-[1.02]"
-          >
+                  <div className="flex items-baseline gap-1 select-text">
+                    <span className="text-5xl font-black text-foreground">$0</span>
+                    <span className="text-muted-foreground text-xs font-semibold">/ forever</span>
+                  </div>
 
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none"></div>
-            
-            <div className="p-8 border-b border-border/50 pt-8">
-              <h3 className="text-2xl font-bold font-primary mb-2 flex items-center gap-2">
-                Premium <Sparkles className="w-5 h-5 text-accent" />
-              </h3>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  ${pricing[billingCycle].premium}
-                </span>
-                <span className="text-muted-foreground">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
-              </div>
-              {billingCycle === 'yearly' && (
-                <p className="text-primary font-medium text-sm">
-                  ${(yearlyPrice / 12).toFixed(2)}/month billed yearly
-                </p>
-              )}
-              <p className="text-muted-foreground mt-2">The complete system for builders who ship.</p>
-            </div>
-            
-            <div className="p-8 text-left relative">
-              <div className="space-y-3 mb-6">
-                {visibleFeatures.map((feature, i) => {
-                  const Icon = feature.icon;
-                  return (
-                    <motion.div 
-                      key={i} 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="flex items-start gap-3 group"
-                    >
-                      <Icon className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 group-hover:text-primary transition-colors duration-300" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-foreground font-medium">{feature.text}</span>
-                          {'inDevelopment' in feature && feature.inDevelopment && (
-                            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                              In Development
-                            </span>
-                          )}
+                  <Link href="/signup/intro" className="block pt-2">
+                    <button className="w-full px-6 py-3.5 rounded-xl font-bold border border-border hover:border-primary hover:text-primary transition-all duration-300">
+                      Get Started Free
+                    </button>
+                  </Link>
+
+                  <div className="text-[11px] text-muted-foreground select-none">
+                    No credit card required • Cancel anytime
+                  </div>
+                </div>
+
+                {/* Starter: Features Column */}
+                <div className="md:col-span-7 border-t md:border-t-0 md:border-l border-border/30 pt-6 md:pt-0 md:pl-8 space-y-4">
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Features Included:</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {starterFeatures.map((feat, i) => {
+                      const Icon = feat.icon;
+                      return (
+                        <div key={i} className="flex gap-2.5 items-start">
+                          <Icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-xs font-bold text-foreground">{feat.text}</span>
+                            <p className="text-[10px] text-muted-foreground leading-normal mt-0.5">{feat.description}</p>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">{feature.description}</p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="premium"
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -15 }}
+                transition={{ duration: 0.25 }}
+                className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center text-left"
+              >
+                {/* Premium: Pricing & Switcher Column */}
+                <div className="md:col-span-5 space-y-6">
+                  {/* Internal Monthly/Yearly toggle */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
+                        <Crown className="w-3 h-3 fill-primary" /> Premium Access
+                      </span>
+                      {billingCycle === 'yearly' && (
+                        <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-2 py-0.5 rounded font-black uppercase">
+                          Save {savingsPercentage}%
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-xl font-bold font-primary text-foreground">Premium Focus Enclave</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The complete cognitive productivity space. Full access to goal onboarding, custom themes, and AI guidance.
+                    </p>
+                  </div>
 
-              {/* Show More/Less Toggle */}
-              {allPremiumFeatures.length > 8 && (
-                <button
-                  onClick={() => setShowAllFeatures(!showAllFeatures)}
-                  className="w-full py-2 text-sm text-primary font-medium flex items-center justify-center gap-1 hover:underline transition-all duration-300"
-                >
-                  {showAllFeatures ? (
-                    <>Show Less <ChevronUp className="w-4 h-4" /></>
-                  ) : (
-                    <>Show All {allPremiumFeatures.length} Features <ChevronDown className="w-4 h-4" /></>
-                  )}
-                </button>
-              )}
+                  {/* Pricing Toggle Switch */}
+                  <div className="relative inline-flex p-1 rounded-xl bg-muted border border-border/40 select-none">
+                    <button 
+                      onClick={() => setBillingCycle('monthly')}
+                      className={cn(
+                        "relative z-10 px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300",
+                        billingCycle === 'monthly' ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      Monthly
+                    </button>
+                    <button 
+                      onClick={() => setBillingCycle('yearly')}
+                      className={cn(
+                        "relative z-10 px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300",
+                        billingCycle === 'yearly' ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      Yearly
+                    </button>
 
-              {/* Early Access Notice */}
-              <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                <p className="text-xs text-muted-foreground">
-                  <Crown className="w-3 h-3 inline mr-1 text-primary" />
-                  <span className="text-primary font-medium">Premium members</span> get early access to features currently in development.
-                </p>
-              </div>
+                    <motion.div 
+                      layoutId="internalBillingToggleBg"
+                      className="absolute bg-primary rounded-lg shadow"
+                      style={{
+                        top: 4,
+                        bottom: 4,
+                        left: billingCycle === 'monthly' ? 4 : '50%',
+                        width: 'calc(50% - 8px)',
+                        height: 'calc(100% - 8px)'
+                      }}
+                      transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                    />
+                  </div>
 
-              <Link href="/signup/intro" className="block mt-6">
-                <button className="w-full px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-500 ease-out">
-                  <Sparkles className="w-4 h-4 inline mr-2" />
-                  Go Premium
-                </button>
-              </Link>
-            </div>
-          </motion.div>
+                  <div className="space-y-1 select-text">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                        ${pricing[billingCycle].premium}
+                      </span>
+                      <span className="text-muted-foreground text-xs font-semibold">/ {billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                    </div>
+                    {billingCycle === 'yearly' && (
+                      <p className="text-primary font-bold text-[10px]">
+                        ${(yearlyPrice / 12).toFixed(2)}/month billed yearly
+                      </p>
+                    )}
+                  </div>
+
+                  <Link href="/signup/intro" className="block pt-2">
+                    <button className="w-full px-6 py-3.5 rounded-xl font-bold bg-gradient-to-r from-primary to-accent text-white shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 hover:scale-[1.01]">
+                      Go Premium
+                    </button>
+                  </Link>
+
+                  <div className="text-[11px] text-muted-foreground select-none">
+                    14-day premium refunds • Cancel anytime
+                  </div>
+                </div>
+
+                {/* Premium: Features Column */}
+                <div className="md:col-span-7 border-t md:border-t-0 md:border-l border-border/30 pt-6 md:pt-0 md:pl-8 space-y-4">
+                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Features Included:</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {premiumFeatures.map((feat, i) => {
+                      return (
+                        <div key={i} className="flex gap-2.5 items-start">
+                          <Check className="w-4 h-4 text-emerald-500 bg-emerald-500/10 p-0.5 rounded-full shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-xs font-bold text-foreground">{feat.text}</span>
+                            <p className="text-[10px] text-muted-foreground leading-normal mt-0.5">{feat.description}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </div>
 
-        {/* Bottom Message */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          viewport={{ once: true }}
-          className="mt-16 space-y-4"
-        >
-          <p className="text-3xl md:text-4xl font-bold font-primary">
-            <span className="text-foreground">Start free.</span>{" "}
-            <span className="text-gradient-primary">Go deeper when you&apos;re ready.</span>
+        {/* Bottom details */}
+        <div className="mt-12 space-y-1 select-text">
+          <p className="text-xl font-bold font-primary text-foreground">
+            Start free. <span className="text-gradient-primary">Go deeper when you&apos;re ready.</span>
           </p>
-          <p className="text-muted-foreground text-lg">
-            No credit card required • Cancel anytime
+          <p className="text-muted-foreground text-xs">
+            No setup fees • Full data exports allowed anytime
           </p>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

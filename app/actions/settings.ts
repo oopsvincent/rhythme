@@ -109,6 +109,29 @@ export async function updateUserProfile(formData: FormData): Promise<SettingsAct
 }
 
 // ============================================================================
+// UPDATE USER EMAIL ADDRESS
+// ============================================================================
+
+export async function updateUserEmail(email: string): Promise<SettingsActionResult> {
+  const supabase = await createClient()
+
+  if (!email || email.trim() === "") {
+    return { success: false, error: "Email is required" }
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    email: email.trim(),
+  })
+
+  if (error) {
+    console.error("Error updating email:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+// ============================================================================
 // UPDATE NOTIFICATION PREFERENCES
 // ============================================================================
 
