@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProgressBar } from "@/components/ui/progress-bar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -47,6 +48,17 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
     d.setDate(d.getDate() + 6)
     return fmtLocalDate(d)
   }, [weekStart])
+
+  const weekProgressDays = useMemo(() => {
+    const todayStr = getLocalDateString()
+    if (todayStr < weekStart) return 0
+    if (todayStr > weekEnd) return 7
+    
+    const start = new Date(weekStart + "T00:00:00")
+    const today = new Date(todayStr + "T00:00:00")
+    const diff = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+    return Math.min(7, Math.max(0, diff + 1))
+  }, [weekStart, weekEnd])
 
   // Formatting date range for header
   const headerDateRange = useMemo(() => {
@@ -240,6 +252,23 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
         </div>
       </div>
 
+      {/* Week Progress Bar */}
+      <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-sm p-4">
+        <ProgressBar
+          value={weekProgressDays}
+          max={7}
+          showLabel
+          label={
+            weekProgressDays === 7 
+              ? "Week completed" 
+              : weekProgressDays === 0 
+                ? "Week hasn't started" 
+                : `Day ${weekProgressDays} of the week`
+          }
+          color="accent"
+        />
+      </div>
+
       {isEarlyInWeek && isCurrentWeek && activeTab === "review" && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/10 border border-primary/20 text-primary p-4 rounded-2xl text-sm flex items-center gap-3">
           <Sparkles className="w-5 h-5 shrink-0" />
@@ -370,14 +399,26 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
           {/* Stats Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="rounded-[24px] border-border/60 bg-background/60 shadow-sm flex flex-col items-center justify-center p-6 text-center">
-              <CheckCircle2 className="w-6 h-6 text-emerald-500 mb-3 opacity-80" />
+              <CheckCircle2 className="w-6 h-6 text-emerald-500 mb-2 opacity-80" />
               <div className="text-2xl font-bold">{statsData?.tasksCompletionPct ?? 0}%</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 font-medium">Task Completion</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 mb-3 font-medium">Task Completion</div>
+              <ProgressBar
+                value={statsData?.tasksCompletionPct ?? 0}
+                max={100}
+                color="emerald"
+                size="sm"
+              />
             </Card>
             <Card className="rounded-[24px] border-border/60 bg-background/60 shadow-sm flex flex-col items-center justify-center p-6 text-center">
-              <Flame className="w-6 h-6 text-orange-500 mb-3 opacity-80" />
+              <Flame className="w-6 h-6 text-orange-500 mb-2 opacity-80" />
               <div className="text-2xl font-bold">{statsData?.habitCompletionPct ?? 0}%</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 font-medium">Habit Completion</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 mb-3 font-medium">Habit Completion</div>
+              <ProgressBar
+                value={statsData?.habitCompletionPct ?? 0}
+                max={100}
+                color="primary"
+                size="sm"
+              />
             </Card>
             <Card className="rounded-[24px] border-border/60 bg-background/60 shadow-sm flex flex-col items-center justify-center p-6 text-center">
               <Heart className="w-6 h-6 text-rose-500 mb-3 opacity-80" />

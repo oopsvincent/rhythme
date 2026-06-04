@@ -2,18 +2,18 @@
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
-import Image from "next/image";
-import { useSidebar } from "@/components/ui/sidebar"
-
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
   SidebarGroup,
   SidebarGroupLabel,
+  useSidebar,
+  SidebarHeader,
 } from "@/components/ui/sidebar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronDown } from "lucide-react";
+import Image from "next/image";
 import {
   BookText,
   CalendarSync,
@@ -31,14 +31,6 @@ import {
   History,
   GalleryVerticalEnd,
 } from "lucide-react";
-
-const workspaceData = [
-  {
-    name: "Personal Workspace",
-    logo: GalleryVerticalEnd,
-    plan: "Pro",
-  }
-];
 
 const navigationItems = [
   {
@@ -144,9 +136,8 @@ export function AppSidebarClient({
   } | null;
 }) {
 
-    const { state } = useSidebar()
-const isCollapsed = state === "collapsed"
-
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   return (
     <Sidebar
@@ -154,15 +145,72 @@ const isCollapsed = state === "collapsed"
       className="border-r border-sidebar-border bg-sidebar"
       {...props}
     >
-<SidebarHeader className="px-2 pt-4 pb-2 flex flex-col gap-3">
-  <div className="flex px-2">
-    <div className="flex items-center justify-center rounded-md w-7 h-7 shrink-0 bg-sidebar-primary/5 border border-sidebar-border shadow-sm">
-      <Image alt="Rhythme Logo" src="/Rhythme.svg" width={18} height={18} className="opacity-90" />
-    </div>
-  </div>
-
-  {!isCollapsed && <TeamSwitcher teams={workspaceData} workspaceGoal={workspaceGoal} />}
-</SidebarHeader>
+      <SidebarHeader className="px-2 pt-4 pb-2">
+        {isCollapsed ? (
+          <div className="flex justify-center py-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center justify-center rounded-full size-8 bg-primary/10 border border-primary/25 shadow-sm cursor-pointer hover:border-primary/50 transition-all duration-300 focus:outline-none shrink-0">
+                  <Image src="/Rhythme.svg" alt="R" width={16} height={16} className="opacity-90" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 rounded-xl border border-sidebar-border bg-sidebar shadow-xl p-4" align="start" side="right" sideOffset={12}>
+                <div className="space-y-3 font-sans select-text">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Current Goal Focus</div>
+                  <div className="h-[1px] bg-sidebar-border/60" />
+                  <h4 className="text-sm font-bold leading-snug text-sidebar-foreground">
+                    {workspaceGoal?.title || "No active goal"}
+                  </h4>
+                  {workspaceGoal?.description ? (
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {workspaceGoal.description}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic leading-relaxed">
+                      No description provided for this goal.
+                    </p>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        ) : (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-sidebar-border/85 hover:border-primary/30 hover:bg-sidebar-primary/5 transition-all duration-300 cursor-pointer select-none text-left w-full focus:outline-none bg-sidebar-primary/5">
+                <div className="flex items-center justify-center rounded-full size-6.5 bg-primary/15 border border-primary/25 shadow-sm shrink-0">
+                  <Image src="/Rhythme.svg" alt="R" width={13} height={13} className="opacity-90" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] font-bold text-muted-foreground/60 tracking-wider font-sans uppercase">Current Goal</div>
+                  <div className="text-xs font-semibold text-sidebar-foreground font-sans truncate leading-tight">
+                    {workspaceGoal?.title || "No active goal"}
+                  </div>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 rounded-xl border border-sidebar-border bg-sidebar shadow-xl p-4" align="start" side="bottom" sideOffset={4}>
+              <div className="space-y-3 font-sans select-text">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Goal Focus Details</div>
+                <div className="h-[1px] bg-sidebar-border/60" />
+                <h4 className="text-sm font-bold leading-snug text-sidebar-foreground">
+                  {workspaceGoal?.title || "No active goal"}
+                </h4>
+                {workspaceGoal?.description ? (
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {workspaceGoal.description}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic leading-relaxed">
+                    No description provided for this goal.
+                  </p>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+      </SidebarHeader>
 
       <SidebarContent className="flex flex-col gap-0 overflow-y-auto custom-scrollbar pt-2">
         {/* Main Navigation */}

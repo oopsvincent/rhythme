@@ -539,4 +539,57 @@ body {
     transform: rotate(0) scale(1);
     opacity: 1;
   }
+
+  /* Premium Progress Bar Animations */
+  @keyframes liquid-flow-slow {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 200% 0%;
+    }
+  }
+
+  @keyframes liquid-flow-reverse {
+    0% {
+      background-position: 200% 0%;
+    }
+    100% {
+      background-position: 0% 0%;
+    }
+  }
+
+  .animate-liquid-1 {
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.15) 30%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0.15) 70%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: liquid-flow-slow 8s linear infinite;
+  }
+
+  .animate-liquid-2 {
+    background-image: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.08) 40%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.08) 60%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: liquid-flow-reverse 12s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-liquid-1,
+    .animate-liquid-2 {
+      animation: none !important;
+      background-image: none !important;
+    }
+  }
 }

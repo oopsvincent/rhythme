@@ -37,7 +37,7 @@ import {
   Pencil,
   User,
 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { motion } from "framer-motion";
 import type {
   HabitWithStats,
@@ -575,9 +575,10 @@ export function HabitDetailClient({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-1">
-                  <Progress
-                    value={stats ? stats.completion_rate_7d * 100 : 0}
-                    className="h-1"
+                  <ProgressBar
+                    value={stats ? Math.round(stats.completion_rate_7d * 100) : 0}
+                    max={100}
+                    color="primary"
                   />
                 </CardContent>
               </Card>
@@ -592,9 +593,10 @@ export function HabitDetailClient({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-1">
-                  <Progress
-                    value={stats ? stats.completion_rate_30d * 100 : 0}
-                    className="h-1"
+                  <ProgressBar
+                    value={stats ? Math.round(stats.completion_rate_30d * 100) : 0}
+                    max={100}
+                    color="primary"
                   />
                 </CardContent>
               </Card>
@@ -665,15 +667,24 @@ export function HabitDetailClient({
                 </CardHeader>
                 <CardContent>
                   {daysUntilPrediction > 0 ? (
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <Sparkles className="h-5 w-5 text-accent" />
-                      <span>
-                        AI insights will be available in{" "}
-                        <strong className="text-foreground">
-                          {daysUntilPrediction} days
-                        </strong>
-                        . Keep completing your habit to unlock predictions!
-                      </span>
+                    <div className="space-y-4 w-full">
+                      <div className="flex items-center gap-3 text-muted-foreground">
+                        <Sparkles className="h-5 w-5 text-accent shrink-0" />
+                        <span>
+                          AI insights will be available in{" "}
+                          <strong className="text-foreground">
+                            {daysUntilPrediction} days
+                          </strong>
+                          . Keep completing your habit to unlock predictions!
+                        </span>
+                      </div>
+                      <ProgressBar
+                        value={Math.max(0, 7 - daysUntilPrediction)}
+                        max={7}
+                        color="accent"
+                        showLabel
+                        label="Data collection progress"
+                      />
                     </div>
                   ) : isPredictionLoading ? (
                     <div className="flex items-center gap-3 text-muted-foreground">
@@ -697,9 +708,10 @@ export function HabitDetailClient({
                           {prediction.probability_percent}
                         </span>
                       </div>
-                      <Progress
-                        value={prediction.probability * 100}
-                        className="h-2"
+                      <ProgressBar
+                        value={Math.round(prediction.probability * 100)}
+                        max={100}
+                        color="accent"
                       />
                       <p className="text-sm text-muted-foreground">
                         {getPredictionMessage(prediction.probability)}
