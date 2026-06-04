@@ -39,7 +39,8 @@ export interface OnboardingState {
   goalDescription: string
 
   // Profile data (Step 3)
-  firstName: string
+  displayName: string
+  avatarId: string
   dailyTaskTarget: number
   dailyHabitTarget: number
 

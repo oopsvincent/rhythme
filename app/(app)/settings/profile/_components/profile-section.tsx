@@ -1,20 +1,31 @@
 // app/(dashboard)/settings/profile/_components/profile-section.tsx
-// Profile editing component with flat design
+// Profile editing component with avatar picker
 
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { updateUserProfile } from "@/app/actions/settings"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { AvatarPickerDialog } from "@/components/avatar-picker"
+import {
+  getAvatarDataUri,
+  getAvatarIdFromDataUri,
+  isStaticAvatar,
+  resolveAvatarUrl,
+  SOCIAL_AVATAR_ID,
+  INITIALS_AVATAR_ID,
+} from "@/lib/avatars"
 import { 
   Mail, 
   Calendar,
   CheckCircle2,
   Loader2,
   AlertTriangle,
+  Pencil,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { AccountDeletionModal } from "@/components/settings/AccountDeletionModal"
@@ -26,18 +37,60 @@ interface ProfileSectionProps {
     email: string
     avatar: string
     createdAt: string
+    socialAvatarUrl?: string | null
   }
 }
 
 export function ProfileSection({ user }: ProfileSectionProps) {
+  const router = useRouter()
   const [displayName, setDisplayName] = useState(user.name)
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar)
   const [isUpdating, setIsUpdating] = useState(false)
   const [success, setSuccess] = useState(false)
+
+  // Detect current avatar type
+  const currentAvatarId = (() => {
+    // Check if it's the social avatar
+    if (user.socialAvatarUrl && user.avatar === user.socialAvatarUrl) return SOCIAL_AVATAR_ID
+    // Check if it's one of our static avatars
+    if (isStaticAvatar(user.avatar)) {
+      const id = getAvatarIdFromDataUri(user.avatar)
+      if (id) return id
+      // Check if it's an initials avatar (contains <text> element)
+      if (decodeURIComponent(user.avatar).includes("<text")) return INITIALS_AVATAR_ID
+    }
+    // External URL (likely social)
+    if (user.avatar.startsWith("http") && user.socialAvatarUrl) return SOCIAL_AVATAR_ID
+    return "gradient-violet"
+  })()
 
   const memberSince = new Date(user.createdAt).toLocaleDateString("en-US", {
     month: "long",
     year: "numeric"
   })
+
+  const handleAvatarSelect = async (avatarId: string) => {
+    const newUrl = resolveAvatarUrl(avatarId, {
+      socialAvatarUrl: user.socialAvatarUrl,
+      userName: displayName,
+    })
+    setAvatarUrl(newUrl)
+
+    // Save immediately
+    setIsUpdating(true)
+    const formData = new FormData()
+    formData.append("displayName", displayName)
+    formData.append("avatarUrl", newUrl)
+    
+    const result = await updateUserProfile(formData)
+    setIsUpdating(false)
+    
+    if (result.success) {
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+      router.refresh()
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,6 +99,10 @@ export function ProfileSection({ user }: ProfileSectionProps) {
     
     const formData = new FormData()
     formData.append("displayName", displayName)
+    // Include current avatar URL if it was changed
+    if (avatarUrl !== user.avatar) {
+      formData.append("avatarUrl", avatarUrl)
+    }
     
     const result = await updateUserProfile(formData)
     
@@ -53,6 +110,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
     if (result.success) {
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
+      router.refresh()
     }
   }
 
@@ -60,12 +118,28 @@ export function ProfileSection({ user }: ProfileSectionProps) {
     <div className="space-y-8">
       {/* Profile Header */}
       <div className="flex items-start gap-6">
-        <Avatar className="h-20 w-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
-          <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
-            {user.name.split(" ").map(n => n[0]).join("").toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <AvatarPickerDialog
+          currentAvatarId={currentAvatarId}
+          onSelect={handleAvatarSelect}
+          socialAvatarUrl={user.socialAvatarUrl}
+          userName={displayName}
+        >
+          <button
+            type="button"
+            className="group relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-full"
+          >
+            <Avatar className="h-20 w-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-opacity group-hover:opacity-80">
+              <AvatarImage src={avatarUrl} alt={user.name} />
+              <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
+                {user.name.split(" ").map(n => n[0]).join("").toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {/* Edit overlay */}
+            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 group-hover:bg-black/30 transition-colors">
+              <Pencil className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+            </span>
+          </button>
+        </AvatarPickerDialog>
         
         <div className="flex-1 space-y-2">
           <h2 className="text-xl font-bold">{user.name}</h2>
