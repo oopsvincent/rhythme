@@ -64,16 +64,23 @@ export async function updateUserProfile(formData: FormData): Promise<SettingsAct
   const supabase = await createClient()
   
   const displayName = formData.get("displayName") as string
+  const avatarUrl = formData.get("avatarUrl") as string | null
   
   if (!displayName || displayName.trim() === "") {
     return { success: false, error: "Display name is required" }
   }
 
+  // Build the metadata update — always include name, optionally avatar
+  const metadataUpdate: Record<string, string> = {
+    full_name: displayName.trim(),
+    display_name: displayName.trim(),
+  }
+  if (avatarUrl) {
+    metadataUpdate.avatar_url = avatarUrl
+  }
+
   const { error } = await supabase.auth.updateUser({
-    data: {
-      full_name: displayName.trim(),
-      display_name: displayName.trim()
-    }
+    data: metadataUpdate,
   })
 
   if (error) {
@@ -89,7 +96,7 @@ export async function updateUserProfile(formData: FormData): Promise<SettingsAct
         id: user.id,
         email: user.email,
         full_name: displayName.trim(),
-        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        avatar_url: avatarUrl || user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         updated_at: new Date().toISOString(),
       }, { onConflict: "id" })
   }

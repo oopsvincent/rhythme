@@ -85,10 +85,13 @@ export default function OnboardingPage() {
             {/* Step 3 — Quick Profile */}
             {onboarding.currentStep === 'profile' && (
               <ProfileStep
-                firstName={onboarding.firstName}
+                displayName={onboarding.displayName}
                 dailyTaskTarget={onboarding.dailyTaskTarget}
                 dailyHabitTarget={onboarding.dailyHabitTarget}
-                onFirstNameChange={onboarding.setFirstName}
+                avatarId={onboarding.avatarId}
+                socialAvatarUrl={onboarding.socialAvatarUrl}
+                onDisplayNameChange={onboarding.setDisplayName}
+                onAvatarIdChange={onboarding.setAvatarId}
                 onDailyTaskTargetChange={onboarding.setDailyTaskTarget}
                 onDailyHabitTargetChange={onboarding.setDailyHabitTarget}
                 onContinue={() => onboarding.goToStep('generating')}

@@ -4,6 +4,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { DEFAULT_AVATAR_ID, extractSocialAvatarUrl, resolveAvatarUrl } from '@/lib/avatars'
 import type { HabitSource } from '@/types/database'
 import type {
   OnboardingStep,
@@ -59,7 +60,9 @@ export function useOnboarding() {
   const [goalDescription, setGoalDescription] = useState('')
 
   // Profile (Step 3)
-  const [firstName, setFirstName] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [avatarId, setAvatarId] = useState(DEFAULT_AVATAR_ID)
+  const [socialAvatarUrl, setSocialAvatarUrl] = useState<string | null>(null)
   const [dailyTaskTarget, setDailyTaskTarget] = useState(3)
   const [dailyHabitTarget, setDailyHabitTarget] = useState(2)
 
@@ -94,10 +97,14 @@ export function useOnboarding() {
 
       // Pre-fill name
       if (user.user_metadata?.display_name) {
-        setFirstName(user.user_metadata.display_name)
+        setDisplayName(user.user_metadata.display_name)
       } else if (user.user_metadata?.full_name) {
-        setFirstName(user.user_metadata.full_name)
+        setDisplayName(user.user_metadata.full_name)
       }
+
+      // Extract social avatar from OAuth identity
+      const oauthAvatar = extractSocialAvatarUrl(user.identities)
+      if (oauthAvatar) setSocialAvatarUrl(oauthAvatar)
 
       // Check if already onboarded
       const { data: preferences } = await supabase
@@ -274,14 +281,24 @@ export function useOnboarding() {
     setSaveError(null)
 
     try {
-      // 1. Update display name in auth metadata
+      // 1. Update display name + avatar in auth metadata
+      const avatarUrl = resolveAvatarUrl(avatarId, { socialAvatarUrl, userName: displayName })
       const { error: authError } = await supabase.auth.updateUser({
         data: {
-          display_name: firstName,
-          full_name: firstName,
+          display_name: displayName,
+          full_name: displayName,
+          avatar_url: avatarUrl,
         },
       })
       if (authError) throw authError
+
+      // 1b. Upsert profiles record with avatar + name
+      await supabase.from('profiles').upsert({
+        id: userId,
+        avatar_url: avatarUrl,
+        full_name: displayName,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' })
 
       // 2. Upsert user_goals record (handles retries or existing goals cleanly)
       const { data: goal, error: goalError } = await supabase
@@ -415,7 +432,8 @@ export function useOnboarding() {
     }
   }, [
     userId,
-    firstName,
+    displayName,
+    avatarId,
     goalTitle,
     goalDescription,
     tasks,
@@ -440,8 +458,11 @@ export function useOnboarding() {
     setGoalDescription,
 
     // Profile
-    firstName,
-    setFirstName,
+    displayName,
+    setDisplayName,
+    avatarId,
+    setAvatarId,
+    socialAvatarUrl,
     dailyTaskTarget,
     setDailyTaskTarget,
     dailyHabitTarget,

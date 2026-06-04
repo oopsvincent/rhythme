@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { ProfileSection } from "./_components/profile-section"
 import { getAmplecenLoginUrl } from "@/lib/auth-redirect"
 import { createClient } from "@/lib/supabase/server"
+import { extractSocialAvatarUrl } from "@/lib/avatars"
 
 export default async function ProfilePage() {
   const user = await getFullUser()
@@ -28,6 +29,9 @@ export default async function ProfilePage() {
     user.email?.split("@")[0] ||
     "User"
 
+  // Extract the original OAuth avatar URL from identity data
+  const socialAvatarUrl = extractSocialAvatarUrl(user.identities)
+
   return (
     <ProfileSection
       user={{
@@ -36,7 +40,9 @@ export default async function ProfilePage() {
         email: profile?.email || user.email || "",
         avatar: profile?.avatar_url || user.user_metadata?.avatar_url || `https://avatar.vercel.sh/${user.email}`,
         createdAt: profile?.created_at || user.created_at,
+        socialAvatarUrl,
       }}
     />
   )
 }
+
