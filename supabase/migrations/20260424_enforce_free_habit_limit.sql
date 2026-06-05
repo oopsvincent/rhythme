@@ -36,8 +36,8 @@ begin
     and (tg_op = 'INSERT' or h.habit_id <> new.habit_id)
   into active_habit_count;
 
-  if active_habit_count >= 3 then
-    raise exception 'Free accounts can track up to 3 active habits. Upgrade to Premium for unlimited habits.'
+  if active_habit_count >= 5 then
+    raise exception 'Free accounts can track up to 5 active habits. Upgrade to Premium for unlimited habits.'
       using errcode = 'P0001';
   end if;
 

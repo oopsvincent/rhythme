@@ -55,6 +55,7 @@ import {
 } from "@/hooks/use-tasks";
 import TaskItem from "@/components/task-item";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { toast } from "sonner";
 
 type TimeFrame =
   | "this_week"
@@ -174,6 +175,7 @@ export default function TasksPage() {
     return (sessionStorage.getItem("task_timeframe") as TimeFrame) || "this_week";
   });
 
+  // Dialog new task state
   const [newTask, setNewTask] = useState<CreateTaskInput>({
     title: "",
     description: "",
@@ -181,6 +183,14 @@ export default function TasksPage() {
     status: "pending",
     due_date: undefined,
   });
+
+  // Separate inline creation state
+  const [inlineTitle, setInlineTitle] = useState("");
+  const [isCreatingInline, setIsCreatingInline] = useState(false);
+
+  // Localized mutation loading states
+  const [mutatingTaskId, setMutatingTaskId] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -245,9 +255,6 @@ export default function TasksPage() {
   const currentTimeFrameLabel =
     TIME_FRAME_OPTIONS.find((o) => o.value === timeFrame)?.label ?? "This Week";
 
-  const isPending =
-    createMutation.isPending || deleteMutation.isPending || statusMutation.isPending;
-
   const handleAddTask = () => {
     if (!newTask.title.trim()) return;
     createMutation.mutate(newTask, {
@@ -255,22 +262,70 @@ export default function TasksPage() {
         setNewTask({ title: "", description: "", priority: "medium", status: "pending", due_date: undefined });
         setIsAddDialogOpen(false);
         setShowAdvanced(false);
+        toast.success("Task created successfully");
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : "Failed to create task");
       },
     });
   };
 
   const handleAddInline = () => {
-    if (!newTask.title.trim()) return;
-    createMutation.mutate(newTask, {
-      onSuccess: () =>
-        setNewTask({ title: "", description: "", priority: "medium", status: "pending", due_date: undefined }),
-    });
+    if (isCreatingInline || !inlineTitle.trim()) return;
+    setIsCreatingInline(true);
+    createMutation.mutate(
+      {
+        title: inlineTitle.trim(),
+        priority: "medium",
+        status: "pending",
+      },
+      {
+        onSuccess: () => {
+          setInlineTitle("");
+          toast.success("Task added");
+        },
+        onError: (err) => {
+          toast.error(err instanceof Error ? err.message : "Failed to add task");
+        },
+        onSettled: () => {
+          setIsCreatingInline(false);
+        },
+      }
+    );
   };
 
-  const handleStatusChange = (taskId: string, status: Status) =>
-    statusMutation.mutate({ taskId, status });
+  const handleStatusChange = (taskId: string, status: Status) => {
+    setMutatingTaskId(taskId);
+    statusMutation.mutate(
+      { taskId, status },
+      {
+        onSuccess: () => {
+          toast.success(status === "completed" ? "Task completed" : "Task updated");
+        },
+        onError: () => {
+          toast.error("Could not update task status");
+        },
+        onSettled: () => {
+          setMutatingTaskId(null);
+        },
+      }
+    );
+  };
 
-  const handleDeleteTask = (taskId: string) => deleteMutation.mutate(taskId);
+  const handleDeleteTask = (taskId: string) => {
+    setDeletingTaskId(taskId);
+    deleteMutation.mutate(taskId, {
+      onSuccess: () => {
+        toast.success("Task deleted");
+      },
+      onError: () => {
+        toast.error("Could not delete task");
+      },
+      onSettled: () => {
+        setDeletingTaskId(null);
+      },
+    });
+  };
 
   const navigateToTask = (taskId: string) =>
     setSelectedTask(tasks.find((t) => t.task_id === taskId) ?? null);
@@ -446,65 +501,83 @@ export default function TasksPage() {
 
         {!isLoading && !error && (
           <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
           >
             {/* Total Tasks */}
-            <div className="relative overflow-hidden rounded-xl border border-primary/20 p-5 bg-gradient-to-br from-primary/15 to-primary/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+            <div className="relative overflow-hidden rounded-2xl border border-primary/10 p-5 bg-gradient-to-br from-primary/10 to-primary/5 dark:bg-card/20 backdrop-blur-md shadow-sm hover:scale-[1.02] hover:shadow transition-all duration-300 group">
               <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-primary/10 text-primary">
-                <ListTodo className="h-5 w-5" />
+                <ListTodo className="h-4.5 w-4.5" />
               </div>
               <p className="text-xs text-muted-foreground font-medium truncate">Total Tasks</p>
               <p className="text-2xl font-bold font-primary tracking-tight mt-1">{filteredTotal}</p>
-              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-primary" />
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-3xl opacity-15 bg-primary" />
             </div>
 
             {/* Completion Rate */}
-            <div className="relative overflow-hidden rounded-xl border border-accent/20 p-5 bg-gradient-to-br from-accent/15 to-accent/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+            <div className="relative overflow-hidden rounded-2xl border border-accent/10 p-5 bg-gradient-to-br from-accent/10 to-accent/5 dark:bg-card/20 backdrop-blur-md shadow-sm hover:scale-[1.02] hover:shadow transition-all duration-300 group">
               <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-accent/10 text-accent">
-                <TrendingUp className="h-5 w-5" />
+                <TrendingUp className="h-4.5 w-4.5" />
               </div>
               <p className="text-xs text-muted-foreground font-medium truncate">Completion Rate</p>
               <p className="text-2xl font-bold font-primary tracking-tight mt-1">{Math.round(completionRate)}%</p>
-              <Progress value={completionRate} className="h-1.5 mt-3 bg-muted/50" />
-              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-accent" />
+              <Progress value={completionRate} className="h-1.5 mt-3 bg-muted/40" />
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-3xl opacity-15 bg-accent" />
             </div>
 
             {/* Active Tasks */}
-            <div className="relative overflow-hidden rounded-xl border border-purple-500/20 p-5 bg-gradient-to-br from-purple-500/15 to-purple-500/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+            <div className="relative overflow-hidden rounded-2xl border border-purple-500/10 p-5 bg-gradient-to-br from-purple-500/10 to-purple-500/5 dark:bg-card/20 backdrop-blur-md shadow-sm hover:scale-[1.02] hover:shadow transition-all duration-300 group">
               <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-purple-500/10 text-purple-400">
-                <PlayCircle className="h-5 w-5" />
+                <PlayCircle className="h-4.5 w-4.5" />
               </div>
               <p className="text-xs text-muted-foreground font-medium truncate">Active Tasks</p>
               <p className="text-2xl font-bold font-primary tracking-tight mt-1">{filteredInProgress}</p>
-              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-purple-500" />
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-3xl opacity-15 bg-purple-500" />
             </div>
 
             {/* Due Today */}
-            <div className="relative overflow-hidden rounded-xl border border-amber-500/20 p-5 bg-gradient-to-br from-amber-500/15 to-amber-500/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
+            <div className="relative overflow-hidden rounded-2xl border border-amber-500/10 p-5 bg-gradient-to-br from-amber-500/10 to-amber-500/5 dark:bg-card/20 backdrop-blur-md shadow-sm hover:scale-[1.02] hover:shadow transition-all duration-300 group">
               <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-amber-500/10 text-amber-500">
-                <Calendar className="h-5 w-5" />
+                <Calendar className="h-4.5 w-4.5" />
               </div>
               <p className="text-xs text-muted-foreground font-medium truncate">Due Today</p>
               <p className="text-2xl font-bold font-primary tracking-tight mt-1">{stats?.dueToday ?? 0}</p>
-              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-amber-500" />
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-3xl opacity-15 bg-amber-500" />
             </div>
           </motion.div>
         )}
 
         {isDesktop && (
-          <div className="flex items-center gap-3 border-b border-border/40 pb-2 mb-4">
-            <div className="h-5 w-5 shrink-0 rounded border border-muted-foreground/30" />
-            <input
-              ref={inputRef}
-              placeholder="Add a task and press Enter..."
-              value={newTask.title}
-              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-              onKeyDown={(e) => { if (e.key === "Enter") handleAddInline(); }}
-              className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground/50"
-            />
+          <div className="relative border border-border/30 bg-muted/10 rounded-2xl p-2.5 mb-6 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-5 shrink-0 rounded-lg border border-muted-foreground/30 flex items-center justify-center bg-background" />
+              <input
+                ref={inputRef}
+                placeholder="Add a task and press Enter..."
+                value={inlineTitle}
+                onChange={(e) => setInlineTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddInline();
+                }}
+                disabled={isCreatingInline}
+                className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground/40"
+              />
+              {inlineTitle.trim() && (
+                <button
+                  onClick={handleAddInline}
+                  disabled={isCreatingInline}
+                  className="inline-flex items-center justify-center rounded-xl bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {isCreatingInline ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    "Add"
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -573,7 +646,7 @@ export default function TasksPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <div className="flex items-center justify-between mb-1 px-1">
+                  <div className="flex items-center justify-between mb-1.5 px-1">
                     <h2 className="text-xs font-semibold uppercase tracking-widest text-destructive/80">
                       Overdue
                     </h2>
@@ -591,7 +664,7 @@ export default function TasksPage() {
                           onStatusChange={handleStatusChange}
                           onDelete={() => handleDeleteTask(task.task_id)}
                           onNavigate={() => navigateToTask(task.task_id)}
-                          isPending={isPending}
+                          isPending={mutatingTaskId === task.task_id || deletingTaskId === task.task_id}
                         />
                       ))}
                     </AnimatePresence>
@@ -611,7 +684,7 @@ export default function TasksPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
                   >
-                    <div className="flex items-center justify-between mb-1 px-1">
+                    <div className="flex items-center justify-between mb-1.5 px-1">
                       <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                         {label}
                       </h2>
@@ -629,7 +702,7 @@ export default function TasksPage() {
                             onStatusChange={handleStatusChange}
                             onDelete={() => handleDeleteTask(task.task_id)}
                             onNavigate={() => navigateToTask(task.task_id)}
-                            isPending={isPending}
+                            isPending={mutatingTaskId === task.task_id || deletingTaskId === task.task_id}
                           />
                         ))}
                       </AnimatePresence>
@@ -643,32 +716,38 @@ export default function TasksPage() {
       </div>
 
       {!isDesktop && (
-        <>
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border/40 px-4 py-3 flex items-center gap-3">
-            <div className="h-5 w-5 shrink-0 rounded border border-muted-foreground/30" />
-            <input
-              ref={inputRef}
-              placeholder="Add a task..."
-              value={newTask.title}
-              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-              onKeyDown={(e) => { if (e.key === "Enter") handleAddInline(); }}
-              className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground/50"
-            />
-            <AnimatePresence>
-              {newTask.title && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  onClick={handleAddInline}
-                  className="text-sm font-medium text-primary"
-                >
-                  Add
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
-        </>
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-t border-border/20 px-4 py-3 flex items-center gap-3.5 shadow-lg">
+          <div className="h-5 w-5 shrink-0 rounded-lg border border-muted-foreground/35 bg-background/50" />
+          <input
+            ref={inputRef}
+            placeholder="Add a task..."
+            value={inlineTitle}
+            onChange={(e) => setInlineTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAddInline();
+            }}
+            disabled={isCreatingInline}
+            className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground/40 text-foreground"
+          />
+          <AnimatePresence>
+            {inlineTitle.trim() && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                onClick={handleAddInline}
+                disabled={isCreatingInline}
+                className="inline-flex items-center justify-center rounded-xl bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isCreatingInline ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  "Add"
+                )}
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
       <TaskDetailOverlay

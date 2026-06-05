@@ -11,11 +11,9 @@ export default function FocusHistoryPage() {
   return (
     <>
       <SiteHeader />
-      <div className="flex flex-1 flex-col px-4 md:px-10">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <FocusHistoryClient />
-          </div>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="@container/main flex flex-1 flex-col overflow-x-hidden">
+          <FocusHistoryClient />
         </div>
       </div>
     </>

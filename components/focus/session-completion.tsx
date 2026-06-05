@@ -25,7 +25,7 @@ export function SessionCompletion({
   interruptions,
   onComplete,
 }: SessionCompletionProps) {
-  const { finalizeReflection } = useFocusSessionController()
+  const { finalizeReflection, skipReflection } = useFocusSessionController()
   const [moodAfter, setMoodAfter] = useState<number | null>(session.mood_after ?? null)
   const [energyEnd, setEnergyEnd] = useState<number | null>(session.energy_end ?? session.energy_start)
   const [reflection, setReflection] = useState('')
@@ -33,6 +33,20 @@ export function SessionCompletion({
 
   const taskLabel = session.custom_task_text || session.tasks?.title || 'Focus Session'
   const completed = actualDuration >= session.planned_duration
+
+  const handleSkipReflection = useCallback(async () => {
+    setIsSaving(true)
+    try {
+      await skipReflection(session.session_id)
+      toast.success('Session saved without reflection.')
+      onComplete()
+    } catch (error) {
+      console.error('Failed to skip reflection:', error)
+      toast.error('We could not save the session.')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [session.session_id, skipReflection, onComplete])
 
   const handleSave = useCallback(async () => {
     if (moodAfter === null) {
@@ -77,7 +91,7 @@ export function SessionCompletion({
   ])
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-8 rounded-[28px] border border-border/60 bg-card/40 p-6 shadow-sm md:p-8">
+    <div className="w-full max-w-md mx-auto space-y-8 py-4 sm:py-6 px-1">
       <div className="space-y-2 text-center">
         <div
           className={cn(
@@ -142,21 +156,33 @@ export function SessionCompletion({
         />
       </div>
 
-      <Button
-        size="lg"
-        className="h-12 w-full rounded-xl text-base font-semibold"
-        disabled={isSaving || moodAfter === null}
-        onClick={handleSave}
-      >
-        {isSaving ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Saving…
-          </>
-        ) : (
-          'Save Session'
-        )}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button
+          size="lg"
+          className="h-12 w-full rounded-xl text-base font-semibold shadow-sm transition-all duration-300 hover:shadow-md"
+          disabled={isSaving || moodAfter === null}
+          onClick={handleSave}
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Saving…
+            </>
+          ) : (
+            'Save Session'
+          )}
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-10 w-full rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground"
+          disabled={isSaving}
+          onClick={handleSkipReflection}
+        >
+          Skip Reflection
+        </Button>
+      </div>
     </div>
   )
 }

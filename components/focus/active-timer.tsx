@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
+import { generateSlug } from '@/lib/slug'
 import { getBackgroundsForMode, getDefaultBackground, type BackgroundMode } from '@/components/focus/focus-backgrounds'
 import type { FocusSession, InterruptionDetail } from '@/types/database'
 
@@ -183,7 +184,7 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
           </div>
           {!isImmersiveMode && (
             <Link
-              href={`/focus/${session.session_id}`}
+              href={`/focus/${generateSlug(taskLabel)}-${session.session_id}`}
               className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Session Detail
@@ -219,10 +220,15 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
         </div>
 
         <div className={cn(
-          "rounded-[28px] border border-border/60 bg-card/40 p-4 sm:p-5 shadow-sm md:p-8",
-          isImmersiveMode && `w-full max-w-5xl mx-auto rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 md:p-12 ${activeBg.cardClass}`
+          isImmersiveMode 
+            ? `rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 md:p-12 border border-border/60 shadow-sm bg-card/40 ${activeBg.cardClass}`
+            : "w-full pt-4"
         )}>
-          <div className="grid gap-6 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
+          <div className={cn(
+            isImmersiveMode 
+              ? "grid gap-6 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center"
+              : "grid gap-8 lg:gap-16 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
+          )}>
             <div className="flex flex-col items-center justify-center">
               <div className={cn("relative flex aspect-square w-full items-center justify-center mx-auto", isImmersiveMode ? "max-w-[260px] sm:max-w-[320px]" : "max-w-[280px] sm:max-w-[320px]")}>
                 <svg
@@ -276,8 +282,11 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-border/50 bg-background/60 p-4">
+            <div className="space-y-6 w-full">
+              <div className={cn(
+                "rounded-2xl border p-4",
+                isImmersiveMode ? "border-border/50 bg-background/60" : "border-border/40 bg-card/30"
+              )}>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                   Session Status
                 </p>
@@ -299,11 +308,11 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 sm:gap-3">
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 sm:gap-3">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-10 sm:h-12 rounded-full px-4 sm:px-5 text-sm w-full"
+                  className="h-12 rounded-xl text-sm w-full transition-all duration-300 hover:bg-muted"
                   onClick={() => setShowInterruptionModal(true)}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -312,7 +321,7 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
                 <Button
                   size="lg"
                   variant="destructive"
-                  className="h-10 sm:h-12 rounded-full px-4 sm:px-5 text-sm w-full"
+                  className="h-12 rounded-xl text-sm w-full shadow-lg shadow-destructive/15 transition-all duration-300 hover:shadow-destructive/25"
                   disabled={isEnding}
                   onClick={() => setShowEndConfirm(true)}
                 >

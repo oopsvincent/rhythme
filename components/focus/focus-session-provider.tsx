@@ -81,6 +81,7 @@ interface FocusSessionContextValue {
     }
   ) => Promise<FocusSession>
   clearEndedSession: () => void
+  skipReflection: (sessionId: number) => Promise<void>
 }
 
 const FocusSessionContext = createContext<FocusSessionContextValue | null>(null)
@@ -140,6 +141,19 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
     if (!session) {
       setActiveSession(null)
       setPendingCompletionSession(null)
+      return null
+    }
+
+    if (session.ended_at) {
+      setActiveSession(null)
+      setPendingCompletionSession(
+        buildEndedSessionState(
+          session,
+          getSessionInterruptions(session),
+          (session.metadata as Record<string, unknown>)?.endedReason as EndReason ?? 'manual',
+          session.actual_duration ?? session.planned_duration
+        )
+      )
       return null
     }
 
@@ -574,6 +588,15 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
         setEndedSession(null)
         setPendingCompletionSession(null)
       },
+      skipReflection: async (sessionId: number) => {
+        await updateFocusSessionRecord(sessionId, {
+          isActive: false,
+        })
+        invalidateFocusQueries()
+        setEndedSession(null)
+        setPendingCompletionSession(null)
+        lastCompletionSoundSessionIdRef.current = null
+      },
     }),
     [
       activeSession,
@@ -590,6 +613,7 @@ export function FocusSessionProvider({ children }: { children: React.ReactNode }
       saveSessionReflection,
       startSession,
       syncActiveSession,
+      invalidateFocusQueries,
     ]
   )
 

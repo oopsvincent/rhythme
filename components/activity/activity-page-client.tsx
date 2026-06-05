@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useDeferredValue, useEffect, useMemo, useState, useCallback, startTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { format, parseISO, subDays } from "date-fns"
@@ -17,8 +18,11 @@ import {
   Timer,
   Crown,
   Lock,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { usePremium } from "@/hooks/use-premium"
 import { fetchInsightsAction } from "@/app/actions/ml"
 import { getUserTimezone, getLocalDateString } from "@/lib/timezone"
@@ -61,6 +65,7 @@ import {
 } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   Select,
   SelectContent,
@@ -93,6 +98,48 @@ interface NormalizedInsight {
   explanation?: string
 }
 
+function getWeeksForMonth(year: number, monthIndex: number) {
+  const firstDay = new Date(year, monthIndex, 1);
+  const lastDay = new Date(year, monthIndex + 1, 0);
+
+  const firstDayOfWeek = firstDay.getDay(); // 0 (Sun) to 6 (Sat)
+  const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+  const startDate = new Date(firstDay);
+  startDate.setDate(firstDay.getDate() - startOffset);
+
+  const lastDayOfWeek = lastDay.getDay();
+  const endOffset = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek;
+  const endDate = new Date(lastDay);
+  endDate.setDate(lastDay.getDate() + endOffset);
+
+  const weeks = [];
+  const curr = new Date(startDate);
+  curr.setHours(0, 0, 0, 0);
+  const endLimit = new Date(endDate);
+  endLimit.setHours(23, 59, 59, 999);
+
+  while (curr <= endLimit) {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      days.push(new Date(curr));
+      curr.setDate(curr.getDate() + 1);
+    }
+    weeks.push({
+      label: days[0].toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      days,
+    });
+  }
+  return weeks;
+}
+
+const isDayInFuture = (date: Date) => {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  const todayMidnight = new Date()
+  todayMidnight.setHours(0, 0, 0, 0)
+  return d > todayMidnight
+}
+
 const ACTIVITY_CALENDAR_CLASS_NAMES = {
   root: "w-full",
   months: "relative w-full flex flex-col",
@@ -114,7 +161,7 @@ const RANGE_PRESETS = [
   { label: "Last 90 days", days: 90 },
 ] as const
 
-export function ActivityPageClient({
+function ActivityPageClientContent({
   days,
   range,
   summary,
@@ -129,9 +176,39 @@ export function ActivityPageClient({
   const [search, setSearch] = useState("")
   const [selectedDate, setSelectedDate] = useState<string>(days.find((day) => day.totalEvents > 0)?.date ?? range.to)
   const [timelineDialogDate, setTimelineDialogDate] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState("timeline")
+
+  const tabParam = searchParams.get("tab")
+  const activeTab = (tabParam === "timeline" || tabParam === "calendar" || tabParam === "insights") ? tabParam : "timeline"
+
+  const setActiveTab = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tab", tab)
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+
   const [currentMonth, setCurrentMonth] = useState<Date>(range.toDate)
+
+  useEffect(() => {
+    setCurrentMonth(range.toDate)
+  }, [range.toDate])
+
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+
+  const getEventsForDate = (date: Date) => {
+    const key = getDateKey(date)
+    return filteredDayMap.get(key)?.totalEvents ?? 0
+  }
+
+  const getIntensityClass = (count: number) => {
+    if (count === 0) {
+      return "bg-muted/15 border-border/20 dark:bg-zinc-900/40 dark:border-zinc-850/60 text-transparent"
+    }
+    if (count <= 2) return "bg-primary/25 border-primary/20 text-transparent"
+    if (count <= 5) return "bg-primary/45 border-primary/30 text-transparent"
+    if (count <= 8) return "bg-primary/65 border-primary/40 text-transparent"
+    if (count <= 12) return "bg-primary/85 border-primary/50 text-transparent"
+    return "bg-primary border-primary glow-primary text-transparent"
+  }
 
   const deferredSearch = useDeferredValue(search)
 
@@ -141,6 +218,10 @@ export function ActivityPageClient({
 
   const filteredDayMap = useMemo(() => {
     return new Map(filteredDays.map((day) => [day.date, day]))
+  }, [filteredDays])
+
+  const activeDates = useMemo(() => {
+    return new Set(filteredDays.map((day) => day.date))
   }, [filteredDays])
 
   useEffect(() => {
@@ -194,133 +275,372 @@ export function ActivityPageClient({
     })
   }
 
-  return (
-    <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:px-4 md:py-6 lg:px-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-1.5">
-          <h1 className="text-3xl font-semibold tracking-tight">Activity</h1>
-          <p className="text-sm text-muted-foreground">
-            A single, calm place to revisit how your days have been unfolding.
-          </p>
-        </div>
+  const handleMonthChange = (newMonth: Date) => {
+    setCurrentMonth(newMonth)
+    const from = new Date(newMonth.getFullYear(), newMonth.getMonth(), 1)
+    const to = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0)
+    applyRange({ from, to })
+  }
 
-        <div className="hidden flex-wrap items-center gap-3 md:flex">
-          <ActivityDateRangePicker range={range} onApply={applyRange} />
-          <ActivityTypeSelect value={typeFilter} onChange={setTypeFilter} />
-          <div className="relative min-w-[240px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search notes, tasks, or entries"
-              className="h-10 rounded-xl border-border/60 bg-background/70 pl-9 shadow-sm"
-            />
+  const stats = [
+    {
+      label: "Completion rate",
+      value: summary.completionRate !== null ? `${summary.completionRate}%` : "—",
+      icon: CheckCheck,
+    },
+    {
+      label: "Avg mood",
+      value: summary.averageMood !== null ? summary.averageMood.toFixed(1) : "—",
+      icon: Heart,
+    },
+    {
+      label: "Logged days",
+      value: String(summary.loggedDays),
+      icon: CalendarDays,
+    },
+    {
+      label: "Current streak",
+      value: `${summary.currentStreak} day${summary.currentStreak === 1 ? "" : "s"}`,
+      icon: Flame,
+    },
+  ]
+
+  return (
+    <>
+      {/* ========================================================================= */}
+      {/* MOBILE ONLY LAYOUT (Centered, narrow native mobile mockup screen)         */}
+      {/* ========================================================================= */}
+      <div className="block md:hidden flex flex-1 flex-col px-4 pb-8 w-full max-w-md mx-auto">
+        <div className="@container/main flex flex-1 flex-col gap-4 py-6">
+          
+          {/* Mobile Header */}
+          <div className="flex flex-col gap-4">
+            <div className="space-y-1.5 text-center">
+              <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
+              <p className="text-xs text-muted-foreground">
+                A single, calm place to revisit how your days have been unfolding.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 justify-center">
+              <ActivityDateRangePicker range={range} onApply={applyRange} compact />
+              <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="h-10 rounded-xl border-border/60 px-4">
+                    <SlidersHorizontal className="mr-2 h-4 w-4" />
+                    Filters
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="max-h-[85vh] rounded-t-[28px] border-border/60">
+                  <SheetHeader>
+                    <SheetTitle>Refine activity</SheetTitle>
+                    <SheetDescription>
+                      Adjust the range, type, and search terms without leaving this page.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-6">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Type</div>
+                      <ActivityTypeSelect value={typeFilter} onChange={setTypeFilter} className="w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Search</div>
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          value={search}
+                          onChange={(event) => setSearch(event.target.value)}
+                          placeholder="Search your activity"
+                          className="h-11 rounded-xl border-border/60 bg-background/70 pl-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Date range</div>
+                      <ActivityDateRangePanel range={range} onApply={(nextRange) => {
+                        applyRange(nextRange)
+                        setMobileFiltersOpen(false)
+                      }} />
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
+
+          {/* Premium sliding segmented control */}
+          <div className="flex bg-muted/40 dark:bg-zinc-900/60 p-1 rounded-full border border-border/40 dark:border-zinc-800/50 w-full relative my-6">
+            {(
+              [
+                { id: "timeline", label: "Timeline" },
+                { id: "calendar", label: "Calendar" },
+                { id: "insights", label: "Insights" },
+              ] as const
+            ).map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-full relative transition-colors duration-200 select-none z-10 cursor-pointer ${
+                    isActive
+                      ? "text-foreground font-bold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeActivityTabIndicatorMobile"
+                      className="absolute inset-0 bg-[#27272a]/80 dark:bg-zinc-850/80 rounded-full -z-10 shadow-xs border border-white/5 dark:border-zinc-700/30"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  {tab.label}
+                  {tab.id === "insights" && !isPremium && (
+                    <Crown className="inline-block h-3 w-3 ml-1 text-primary animate-pulse" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mobile Tab Contents */}
+          {activeTab === "timeline" && (
+            <div className="animate-in fade-in-50 duration-200">
+              <TimelineTab
+                days={filteredDays}
+                onOpenDay={(date) => setTimelineDialogDate(date)}
+              />
+            </div>
+          )}
+
+          {activeTab === "calendar" && (
+            <div className="flex flex-col gap-6 animate-in fade-in-50 duration-200">
+              <DayPanel day={selectedDay} compact />
+              <CalendarTab
+                selectedDate={selectedDate}
+                selectedDay={selectedDay}
+                currentMonth={currentMonth}
+                onDateSelect={setSelectedDate}
+                onMonthChange={handleMonthChange}
+                getEventsForDate={getEventsForDate}
+                getIntensityClass={getIntensityClass}
+                isMobile={true}
+              />
+            </div>
+          )}
+
+          {activeTab === "insights" && (
+            <div className="animate-in fade-in-50 duration-200">
+              <InsightsTab loggedDays={summary.loggedDays} range={range} isPremium={isPremium} />
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* PC/DESKTOP ONLY LAYOUT (Spacious dashboard design with columns)            */}
+      {/* ========================================================================= */}
+      <div className="hidden md:flex flex-1 flex-col px-6 py-8 gap-8 max-w-7xl mx-auto w-full">
+        {/* Header Section */}
+        <div className="flex items-center justify-between border-b border-border/20 pb-6 w-full">
+          <div className="space-y-1.5">
+            <h1 className="text-3xl font-bold font-primary tracking-wide text-foreground">Activity Analytics</h1>
+            <p className="text-sm text-muted-foreground">
+              A single, calm place to revisit how your days have been unfolding.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <ActivityDateRangePicker range={range} onApply={applyRange} />
+            <ActivityTypeSelect value={typeFilter} onChange={setTypeFilter} />
+            <div className="relative min-w-[240px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search notes, tasks, or entries"
+                className="h-10 rounded-xl border-border/60 bg-background/70 pl-9 shadow-sm"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 md:hidden">
-          <ActivityDateRangePicker range={range} onApply={applyRange} compact />
-          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="h-10 rounded-xl border-border/60 px-4">
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                Filters
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="max-h-[85vh] rounded-t-[28px] border-border/60">
-              <SheetHeader>
-                <SheetTitle>Refine activity</SheetTitle>
-                <SheetDescription>
-                  Adjust the range, type, and search terms without leaving this page.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-6">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Type</div>
-                  <ActivityTypeSelect value={typeFilter} onChange={setTypeFilter} className="w-full" />
+        {/* Stats Summary Grid Row */}
+        <div className="grid grid-cols-4 gap-4 w-full">
+          {stats.map((stat) => (
+            <Card key={stat.label} className="rounded-2xl border-border/40 bg-card/40 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {stat.label}
                 </div>
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Search</div>
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search your activity"
-                      className="h-11 rounded-xl border-border/60 bg-background/70 pl-9"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Date range</div>
-                  <ActivityDateRangePanel range={range} onApply={(nextRange) => {
-                    applyRange(nextRange)
-                    setMobileFiltersOpen(false)
-                  }} />
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <stat.icon className="h-4 w-4" />
                 </div>
               </div>
-            </SheetContent>
-          </Sheet>
+              <div className="mt-2.5 text-2xl font-bold font-primary tracking-tight text-foreground">{stat.value}</div>
+            </Card>
+          ))}
         </div>
-      </div>
 
-      <div className="grid gap-6 xl:grid-cols-[220px_minmax(0,1fr)]">
-        <ActivitySummaryRail summary={summary} />
+        {/* Tab Selection Row */}
+        <div className="flex justify-center w-full mb-2">
+          {/* Premium sliding segmented control */}
+          <div className="flex bg-muted/40 dark:bg-zinc-900/60 p-1 rounded-full border border-border/40 dark:border-zinc-800/50 w-full max-w-md relative">
+            {(
+              [
+                { id: "timeline", label: "Activity Timeline" },
+                { id: "calendar", label: "Interactive Calendar" },
+                { id: "insights", label: "Behavioral Insights" },
+              ] as const
+            ).map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-full relative transition-colors duration-200 select-none z-10 cursor-pointer ${
+                    isActive
+                      ? "text-foreground font-bold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeActivityTabIndicatorPC"
+                      className="absolute inset-0 bg-[#27272a]/80 dark:bg-zinc-850/80 rounded-full -z-10 shadow-xs border border-white/5 dark:border-zinc-700/30"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  {tab.label}
+                  {tab.id === "insights" && !isPremium && (
+                    <Crown className="inline-block h-3 w-3 ml-1 text-primary animate-pulse" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-4">
-          <TabsList className="h-11 w-full justify-start rounded-2xl bg-muted/60 p-1 md:w-auto">
-            <TabsTrigger value="timeline" className="rounded-xl px-4">
-              Timeline
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="rounded-xl px-4">
-              Calendar
-            </TabsTrigger>
-            <TabsTrigger value="insights" className="rounded-xl px-4 flex items-center gap-1.5">
-              Insights
-              {!isPremium && (
-                <Badge variant="secondary" className="px-1.5 py-0 text-[10px] uppercase tracking-wider text-primary border-primary/20 bg-primary/10">
-                  Premium
-                </Badge>
+        {/* Desktop Tab Contents */}
+        {activeTab === "timeline" && (
+          <div className="grid grid-cols-[1fr_380px] gap-8 items-start animate-in fade-in-50 duration-200">
+            {/* Left side timeline list */}
+            <div className="space-y-4 max-h-[700px] overflow-y-auto pr-3">
+              {filteredDays.length === 0 ? (
+                <Empty className="rounded-[28px] border-border/60 bg-card/60 py-16">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Search className="h-5 w-5" />
+                    </EmptyMedia>
+                    <EmptyTitle>No matching activity</EmptyTitle>
+                    <EmptyDescription>
+                      Try widening your date range or removing a filter.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                filteredDays.map((day) => {
+                  const mood = day.moodLog ? getMoodOption(Number(day.moodLog.mood_score)) : null
+                  const journalPreview = day.journalEntries[0]?.preview ?? null
+                  const isSelected = day.date === selectedDate
+
+                  return (
+                    <button
+                      key={day.date}
+                      type="button"
+                      onClick={() => setSelectedDate(day.date)}
+                      className={cn(
+                        "w-full rounded-2xl border p-5 text-left shadow-xs transition-all duration-200 cursor-pointer",
+                        isSelected
+                          ? "border-primary bg-card/90 dark:border-primary/50 dark:bg-zinc-900/60 shadow-md ring-1 ring-primary/20"
+                          : "border-border/60 bg-card/50 hover:border-border hover:bg-card"
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-6">
+                        <div className="space-y-3 flex-1 min-w-0">
+                          <div>
+                            <div className="text-lg font-bold tracking-tight text-foreground">
+                              {format(parseISO(`${day.date}T12:00:00`), "EEEE, MMMM d")}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {day.totalEvents} signal{day.totalEvents === 1 ? "" : "s"} captured
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <SummaryPill icon={CheckCheck} label={`${day.completedTasks.length} tasks`} />
+                            <SummaryPill
+                              icon={Flame}
+                              label={`${day.habitsChecked.reduce((sum, habit) => sum + habit.count, 0)} habits`}
+                            />
+                            <SummaryPill icon={Timer} label={`${day.focusMinutes} focus min`} />
+                            {mood ? (
+                              <Badge
+                                variant="outline"
+                                className={cn("rounded-full border px-2.5 py-0.5 text-[10px]", mood.border, mood.softAccent, mood.text)}
+                              >
+                                <mood.icon className="h-3 w-3 mr-1" />
+                                {mood.label}
+                              </Badge>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {journalPreview && (
+                          <div className="max-w-[240px] text-xs text-muted-foreground line-clamp-3 leading-relaxed italic border-l border-border/20 pl-4 select-none">
+                            “{journalPreview}”
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })
               )}
-            </TabsTrigger>
-          </TabsList>
+            </div>
 
-          <TabsContent value="timeline">
-            <TimelineTab
-              days={filteredDays}
-              onOpenDay={(date) => setTimelineDialogDate(date)}
-            />
-          </TabsContent>
+            {/* Right side detailed day panel */}
+            <div className="sticky top-6">
+              <DayPanel day={selectedDay} compact />
+            </div>
+          </div>
+        )}
 
-          <TabsContent value="calendar">
+        {activeTab === "calendar" && (
+          <div className="grid grid-cols-[1fr_380px] gap-8 items-start animate-in fade-in-50 duration-200">
             <CalendarTab
-              filteredDays={filteredDays}
-              range={range}
               selectedDate={selectedDate}
               selectedDay={selectedDay}
               currentMonth={currentMonth}
-              onDateSelect={(date) => {
-                const key = getDateKey(date)
-                if (filteredDayMap.has(key)) setSelectedDate(key)
-              }}
-              onMonthChange={setCurrentMonth}
-              heatmapLevels={heatmapLevels}
-              isMobile={isMobile}
+              onDateSelect={setSelectedDate}
+              onMonthChange={handleMonthChange}
+              getEventsForDate={getEventsForDate}
+              getIntensityClass={getIntensityClass}
+              isMobile={false}
             />
-          </TabsContent>
 
-          <TabsContent value="insights">
+            {/* Right side detailed day panel */}
+            <div className="sticky top-6">
+              <DayPanel day={selectedDay} compact />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "insights" && (
+          <div className="animate-in fade-in-50 duration-200">
             <InsightsTab loggedDays={summary.loggedDays} range={range} isPremium={isPremium} />
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </div>
 
+      {/* Global Dialogs */}
       <Dialog open={Boolean(timelineDialogDay)} onOpenChange={(open) => !open && setTimelineDialogDate(null)}>
         <DialogContent className="max-h-[85vh] overflow-y-auto rounded-[28px] border-border/60 p-0 sm:max-w-2xl">
           {timelineDialogDay ? <DayDetail day={timelineDialogDay} /> : null}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }
 
@@ -625,87 +945,159 @@ function TimelineTab({
 }
 
 function CalendarTab({
-  filteredDays,
-  range,
   selectedDate,
   selectedDay,
   currentMonth,
   onDateSelect,
   onMonthChange,
-  heatmapLevels,
+  getEventsForDate,
+  getIntensityClass,
   isMobile,
 }: {
-  filteredDays: ActivityDaySummary[]
-  range: ActivityRange
   selectedDate: string
   selectedDay: ActivityDaySummary | null
   currentMonth: Date
-  onDateSelect: (date: Date) => void
+  onDateSelect: (dateStr: string) => void
   onMonthChange: (date: Date) => void
-  heatmapLevels: { soft: Date[]; low: Date[]; medium: Date[]; high: Date[] }
+  getEventsForDate: (date: Date) => number
+  getIntensityClass: (count: number) => string
   isMobile: boolean
 }) {
-  const activeDates = useMemo(() => {
-    return new Set(filteredDays.map((day) => day.date))
-  }, [filteredDays])
+  const weeks = React.useMemo(() => {
+    return getWeeksForMonth(currentMonth.getFullYear(), currentMonth.getMonth());
+  }, [currentMonth]);
+
+  // Mobile layout elements vs Desktop layout elements
+  const gridLayoutClass = isMobile
+    ? "grid grid-cols-[55px_1fr] gap-x-2 gap-y-3 w-full mb-4 items-center"
+    : "grid grid-cols-[70px_1fr] gap-x-3 gap-y-4 w-full mb-6 items-center";
+
+  const headersLayoutClass = isMobile
+    ? "grid grid-cols-7 gap-1 text-center"
+    : "grid grid-cols-7 gap-1.5 text-center";
+
+  const headerDayLabelClass = isMobile
+    ? "text-[10px] font-bold text-muted-foreground/60 select-none"
+    : "text-xs font-bold text-muted-foreground/60 select-none";
+
+  const weekLabelClass = isMobile
+    ? "text-[9px] text-muted-foreground/50 font-bold select-none uppercase truncate text-right pr-1"
+    : "text-xs text-muted-foreground/50 font-bold select-none uppercase truncate text-right pr-2";
+
+  const daysGridClass = isMobile
+    ? "grid grid-cols-7 gap-1"
+    : "grid grid-cols-7 gap-1.5";
+
+  const days = isMobile
+    ? ["M", "T", "W", "T", "F", "S", "S"]
+    : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
-    <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_320px]">
-      {isMobile && (
-        <div className="space-y-4">
-          <DayPanel day={selectedDay} compact />
+    <Card className={cn(
+      "rounded-3xl border-border/60 bg-card/70 shadow-sm p-6 flex flex-col items-center w-full",
+      isMobile ? "p-4" : "p-6"
+    )}>
+      <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 border-b border-border/10 pb-4 gap-4">
+        <div className={cn("text-left", isMobile && "text-center w-full")}>
+          <CardTitle className="text-base font-bold font-primary flex items-center gap-2 justify-center sm:justify-start">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            Interactive Heatmap Calendar
+          </CardTitle>
+          <CardDescription className="text-xs mt-1">Select any logged date to view daily signals.</CardDescription>
         </div>
-      )}
 
-      <Card className="rounded-[28px] border-border/60 bg-card/70 py-0 shadow-sm">
-        <CardHeader className="border-b border-border/50 py-6">
-          <CardTitle className="text-lg">Calendar</CardTitle>
-          <CardDescription>Tap a day to open its full summary.</CardDescription>
-        </CardHeader>
-        <CardContent className="overflow-hidden px-2 py-4 sm:px-6 sm:py-6">
-          <Calendar
-            mode="single"
-            month={currentMonth}
-            onMonthChange={onMonthChange}
-            selected={selectedDate ? parseISO(`${selectedDate}T12:00:00`) : undefined}
-            onSelect={(date) => date && onDateSelect(date)}
-            defaultMonth={range.toDate}
-            startMonth={range.fromDate}
-            endMonth={range.toDate}
-            disabled={(date) => !activeDates.has(getDateKey(date))}
-            modifiers={{
-              soft: heatmapLevels.soft,
-              low: heatmapLevels.low,
-              medium: heatmapLevels.medium,
-              high: heatmapLevels.high,
-            }}
-            modifiersClassNames={{
-              soft: "bg-primary/8 text-foreground hover:bg-primary/10",
-              low: "bg-primary/15 text-foreground hover:bg-primary/20",
-              medium: "bg-primary/30 text-foreground hover:bg-primary/35",
-              high: "bg-primary text-primary-foreground hover:bg-primary/90",
-            }}
-            className="[--cell-size:2rem] w-full max-w-full overflow-hidden rounded-2xl border border-border/50 bg-background/60 p-1.5 sm:[--cell-size:2.5rem] sm:p-4"
-            classNames={ACTIVITY_CALENDAR_CLASS_NAMES}
-          />
-
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground sm:mt-5">
-            <span>Less</span>
-            <div className="h-3 w-3 rounded-sm bg-primary/8" />
-            <div className="h-3 w-3 rounded-sm bg-primary/15" />
-            <div className="h-3 w-3 rounded-sm bg-primary/30" />
-            <div className="h-3 w-3 rounded-sm bg-primary" />
-            <span>More</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {!isMobile && (
-        <div className="space-y-4">
-          <DayPanel day={selectedDay} compact />
+        {/* Month Navigation */}
+        <div className="flex items-center justify-center gap-4 w-full sm:w-auto">
+          <button
+            onClick={() => onMonthChange(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+            className="p-1.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer"
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+          </button>
+          <span className="text-sm font-bold select-none uppercase tracking-wider text-muted-foreground/90 min-w-[120px] text-center">
+            {currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+          </span>
+          <button
+            onClick={() => onMonthChange(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+            className="p-1.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer"
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+          </button>
         </div>
-      )}
-    </div>
+      </div>
+
+      {/* Custom Calendar Heatmap Grid */}
+      <div className={gridLayoutClass}>
+        <div />
+        <div className={headersLayoutClass}>
+          {days.map((day, idx) => (
+            <span key={idx} className={headerDayLabelClass}>
+              {day}
+            </span>
+          ))}
+        </div>
+
+        {weeks.map((week, weekIdx) => (
+          <React.Fragment key={weekIdx}>
+            <span className={weekLabelClass}>
+              {week.label}
+            </span>
+            <div className={daysGridClass}>
+              {week.days.map((day, dayIdx) => {
+                const count = getEventsForDate(day);
+                const isFuture = isDayInFuture(day);
+                const intensityClass = getIntensityClass(count);
+                const isSelected = getDateKey(day) === selectedDate;
+
+                return (
+                  <TooltipProvider key={dayIdx} delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          disabled={isFuture}
+                          onClick={() => onDateSelect(getDateKey(day))}
+                          className={cn(
+                            "aspect-square rounded-lg transition-all duration-200 border w-full relative",
+                            intensityClass,
+                            isSelected && "ring-2 ring-primary scale-105",
+                            isFuture && "opacity-20 cursor-not-allowed border-muted/10 bg-transparent",
+                            !isFuture && "hover:scale-105 active:scale-95 cursor-pointer"
+                          )}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        <p className="font-semibold">
+                          {day.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                        <p className="text-muted-foreground">
+                          {isFuture
+                            ? "Future date"
+                            : `${count} ${count === 1 ? "activity signal" : "activity signals"}`
+                          }
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              })}
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground select-none">
+        <span>Less activity</span>
+        <div className="h-3.5 w-3.5 rounded-sm bg-muted/15 border border-border/20 dark:bg-zinc-900/40 dark:border-zinc-850/60" />
+        <div className="h-3.5 w-3.5 rounded-sm bg-primary/25 border border-primary/20" />
+        <div className="h-3.5 w-3.5 rounded-sm bg-primary/45 border border-primary/30" />
+        <div className="h-3.5 w-3.5 rounded-sm bg-primary/65 border border-primary/40" />
+        <div className="h-3.5 w-3.5 rounded-sm bg-primary/85 border border-primary/50" />
+        <div className="h-3.5 w-3.5 rounded-sm bg-primary border border-primary glow-primary" />
+        <span>More activity</span>
+      </div>
+    </Card>
   )
 }
 
@@ -1109,4 +1501,19 @@ function getString(value: unknown) {
 
 function formatRangeLabel(range: ActivityRange) {
   return `${format(range.fromDate, "MMM d")} – ${format(range.toDate, "MMM d")}`
+}
+
+export function ActivityPageClient(props: ActivityPageClientProps) {
+  return (
+    <React.Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-background text-muted-foreground select-none">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-xs font-semibold">Loading activity...</span>
+        </div>
+      </div>
+    }>
+      <ActivityPageClientContent {...props} />
+    </React.Suspense>
+  )
 }

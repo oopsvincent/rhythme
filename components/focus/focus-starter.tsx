@@ -32,11 +32,9 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
   const { activeSession, isStarting, startSession, syncActiveSession } = useFocusSessionController()
 
   // Form state
-
-  // Form state
+  const [taskInput, setTaskInput] = useState('')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
-  const [customTaskText, setCustomTaskText] = useState('')
-  const [isCustomTask, setIsCustomTask] = useState(false)
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [duration, setDuration] = useState(35)
   const [isCustomDuration, setIsCustomDuration] = useState(false)
   const [customDurationInput, setCustomDurationInput] = useState('')
@@ -44,9 +42,7 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
   const [moodStart, setMoodStart] = useState<number | null>(null)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [notes, setNotes] = useState('')
-  // Task combobox state
-  const [taskSearchOpen, setTaskSearchOpen] = useState(false)
-  const [taskSearchQuery, setTaskSearchQuery] = useState('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Filter today's pending tasks
   const pendingTasks = useMemo(() => {
@@ -56,10 +52,10 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
   }, [allTasks])
 
   const filteredTasks = useMemo(() => {
-    if (!taskSearchQuery.trim()) return pendingTasks
-    const q = taskSearchQuery.toLowerCase()
+    if (!taskInput.trim() || selectedTaskId) return pendingTasks
+    const q = taskInput.toLowerCase()
     return pendingTasks.filter((task: Task) => task.title.toLowerCase().includes(q))
-  }, [pendingTasks, taskSearchQuery])
+  }, [pendingTasks, taskInput, selectedTaskId])
 
   const selectedTask = useMemo(
     () => pendingTasks.find((t: Task) => t.task_id === selectedTaskId),
@@ -72,28 +68,20 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
     )
   }, [])
 
-  const handleSelectTask = useCallback((task: Task) => {
-    setSelectedTaskId(task.task_id)
-    setIsCustomTask(false)
-    setCustomTaskText('')
-    setTaskSearchOpen(false)
-    setTaskSearchQuery('')
-  }, [])
-
-  const handleSelectCustom = useCallback(() => {
-    setSelectedTaskId(null)
-    setIsCustomTask(true)
-    setTaskSearchOpen(false)
-    setTaskSearchQuery('')
-  }, [])
-
-  const clearSelection = useCallback(() => {
-    setSelectedTaskId(null)
-    setIsCustomTask(false)
-    setCustomTaskText('')
-  }, [])
+  const handleInputChange = useCallback((value: string) => {
+    setTaskInput(value)
+    if (selectedTaskId) {
+      setSelectedTaskId(null)
+    }
+    setSuggestionsOpen(true)
+  }, [selectedTaskId])
 
   const handleStartSession = useCallback(async () => {
+    if (!taskInput.trim() && !selectedTaskId) {
+      toast.error('Please enter what you want to focus on.')
+      return
+    }
+
     try {
       const current = await syncActiveSession()
       if (current) {
@@ -104,7 +92,7 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
 
       const session = await startSession({
         taskId: selectedTaskId,
-        customTaskText: isCustomTask ? customTaskText.trim() || null : null,
+        customTaskText: selectedTaskId ? null : taskInput.trim() || null,
         plannedDuration: duration * 60,
         energyStart,
         moodBefore: moodStart,
@@ -120,11 +108,10 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
       toast.error('We could not start the focus session.')
     }
   }, [
-    customTaskText,
+    taskInput,
     duration,
     energyStart,
     moodStart,
-    isCustomTask,
     notes,
     onSessionStarted,
     selectedTags,
@@ -134,103 +121,88 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
   ])
 
   return (
-    <div className="w-full space-y-6">
-      {/* Start Session Card */}
-      <div className="rounded-2xl border border-border/60 bg-card/50 p-6 md:p-8 space-y-6 shadow-sm">
+    <div className="w-full space-y-8">
+      {/* Start Session Section */}
+      <div className="space-y-8">
         {/* Task Selector */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">What will you focus on?</label>
+        <div className="space-y-3">
+          <label className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">What will you focus on?</label>
 
-          {/* Selected task display */}
-          {(selectedTask || isCustomTask) && (
-            <div className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 px-4 py-3">
-              <div className="flex-1 min-w-0">
-                {selectedTask ? (
-                  <span className="text-sm font-medium truncate block">{selectedTask.title}</span>
-                ) : (
-                  <Input
-                    value={customTaskText}
-                    onChange={(e) => setCustomTaskText(e.target.value)}
-                    placeholder="What are you working on?"
-                    className="border-0 bg-transparent p-0 h-auto text-sm font-medium shadow-none focus-visible:ring-0"
-                    maxLength={120}
-                    autoFocus
-                  />
+          <div className="relative">
+            <div className="relative flex items-center">
+              <Input
+                value={taskInput}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onFocus={() => setSuggestionsOpen(true)}
+                placeholder="What are you working on? (e.g. Design, Reading, Coding...)"
+                className={cn(
+                  "w-full bg-background/40 hover:bg-background/80 border border-border/40 focus:border-primary/50 focus:bg-background/80 px-5 py-4 h-14 rounded-2xl text-base font-semibold tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                  selectedTaskId && "pl-12 pr-32 text-primary font-bold bg-primary/5 border-primary/30 hover:bg-primary/5"
+                )}
+              />
+              {/* Linked task indicator icon */}
+              {selectedTaskId && (
+                <span className="absolute left-4 text-primary">
+                  <Play className="h-4 w-4 fill-current animate-pulse" />
+                </span>
+              )}
+              {/* Actions/Clear buttons on right */}
+              <div className="absolute right-3 flex items-center gap-1.5">
+                {selectedTaskId && (
+                  <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary border-primary/30 bg-primary/10 select-none">
+                    Linked Task
+                  </Badge>
+                )}
+                {(taskInput.length > 0 || selectedTaskId) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setTaskInput('')
+                      setSelectedTaskId(null)
+                      setSuggestionsOpen(true)
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground shrink-0"
-                onClick={clearSelection}
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
             </div>
-          )}
 
-          {/* Task search combobox */}
-          {!selectedTask && !isCustomTask && (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setTaskSearchOpen(!taskSearchOpen)}
-                className={cn(
-                  'w-full flex items-center gap-2 rounded-xl border border-border/60 bg-background px-4 py-3 text-left text-sm transition-colors',
-                  'hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30',
-                  taskSearchOpen && 'ring-2 ring-primary/30 border-primary/40'
-                )}
-              >
-                <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">Search tasks or enter custom…</span>
-                <ChevronDown className={cn('h-4 w-4 text-muted-foreground ml-auto shrink-0 transition-transform', taskSearchOpen && 'rotate-180')} />
-              </button>
-
-              {taskSearchOpen && (
-                <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-popover shadow-lg animate-in fade-in-0 zoom-in-95 duration-150">
-                  <div className="p-2">
-                    <Input
-                      value={taskSearchQuery}
-                      onChange={(e) => setTaskSearchQuery(e.target.value)}
-                      placeholder="Search tasks…"
-                      className="h-9 text-sm"
-                      autoFocus
-                    />
+            {/* Suggestions Dropdown */}
+            {suggestionsOpen && pendingTasks.length > 0 && (
+              <>
+                {/* Click-away backdrop */}
+                <div className="fixed inset-0 z-40" onClick={() => setSuggestionsOpen(false)} />
+                
+                <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border bg-popover/95 backdrop-blur-xl shadow-xl overflow-hidden p-2 max-h-60 overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-200">
+                  <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/30 mb-1 select-none">
+                    Link a pending task (optional)
                   </div>
-
-                  <div className="max-h-48 overflow-y-auto px-1 pb-1">
-                    {/* Custom focus option */}
-                    <button
-                      type="button"
-                      onClick={handleSelectCustom}
-                      className="w-full flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-muted/60 transition-colors"
-                    >
-                      <span className="text-primary font-medium">✦ Custom Focus Session</span>
-                    </button>
-
-                    {tasksLoading ? (
-                      <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1" />
-                        Loading tasks…
-                      </div>
-                    ) : filteredTasks.length === 0 ? (
-                      <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                        No matching tasks
+                  <div className="space-y-1">
+                    {filteredTasks.length === 0 ? (
+                      <div className="px-3 py-4 text-center text-sm text-muted-foreground select-none">
+                        No matching tasks. Press Enter or tab out to focus on your custom topic.
                       </div>
                     ) : (
                       filteredTasks.map((task: Task) => (
                         <button
                           key={task.task_id}
                           type="button"
-                          onClick={() => handleSelectTask(task)}
+                          onClick={() => {
+                            setSelectedTaskId(task.task_id)
+                            setTaskInput(task.title)
+                            setSuggestionsOpen(false)
+                          }}
                           className={cn(
-                            'w-full flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-muted/60 transition-colors',
-                            selectedTaskId === task.task_id && 'bg-primary/5'
+                            'w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-muted/60 transition-colors',
+                            selectedTaskId === task.task_id && 'bg-primary/10 text-primary'
                           )}
                         >
                           <span className="truncate">{task.title}</span>
                           {task.priority === 'high' && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 text-destructive border-destructive/30">
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 text-destructive border-destructive/30 bg-destructive/5 select-none">
                               High
                             </Badge>
                           )}
@@ -239,15 +211,15 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
                     )}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Duration Chips */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Duration</label>
-          <div className="flex flex-wrap items-center gap-2">
+        {/* Duration chips */}
+        <div className="space-y-3">
+          <label className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Duration</label>
+          <div className="flex flex-wrap items-center gap-2.5">
             {DURATION_CHIPS.map((d) => (
               <button
                 key={d}
@@ -258,19 +230,19 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
                   setCustomDurationInput('')
                 }}
                 className={cn(
-                  'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200',
+                  'px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300',
                   !isCustomDuration && duration === d
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-muted/50 text-foreground hover:bg-muted border border-border/40'
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-95'
+                    : 'bg-muted/30 text-foreground hover:bg-muted/60 border border-border/20 hover:border-border/40'
                 )}
               >
-                {d}m
+                {d} min
               </button>
             ))}
 
             {/* Custom duration chip + inline input */}
             {isCustomDuration ? (
-              <div className="flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground shadow-sm pl-3 pr-1 py-1">
+              <div className="flex items-center gap-1.5 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 pl-4 pr-2 py-1.5">
                 <Input
                   type="number"
                   min={1}
@@ -283,16 +255,16 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
                     if (num >= 1 && num <= 180) setDuration(num)
                   }}
                   placeholder="min"
-                  className="h-7 w-14 border-0 bg-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 text-sm text-center rounded-full px-2 shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="h-8 w-16 border-0 bg-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 text-sm font-semibold text-center rounded-lg px-2 shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   autoFocus
                 />
-                <span className="text-xs font-medium pr-1">min</span>
+                <span className="text-xs font-semibold pr-1">min</span>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={() => setIsCustomDuration(true)}
-                className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-muted/50 text-foreground hover:bg-muted border border-dashed border-border/60"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-muted/30 text-foreground hover:bg-muted border border-dashed border-border/40 hover:border-border/80"
               >
                 Custom
               </button>
@@ -301,69 +273,85 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
         </div>
 
         {/* Starting Energy & Mood */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <label className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
               Starting Energy
-              <span className="text-xs ml-1">(optional)</span>
+              <span className="text-[10px] font-normal lowercase ml-1">(optional)</span>
             </label>
             <EnergySelector value={energyStart} onChange={setEnergyStart} />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
+          <div className="space-y-3">
+            <label className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">
               Starting Mood
-              <span className="text-destructive ml-1">*</span>
+              <span className="text-destructive ml-0.5">*</span>
             </label>
             <MoodSelector value={moodStart} onChange={setMoodStart} />
           </div>
         </div>
 
-        {/* Tags */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">
-            Tags
-            <span className="text-xs ml-1">(optional)</span>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {TAG_OPTIONS.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => toggleTag(tag)}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
-                  selectedTags.includes(tag)
-                    ? 'bg-accent/20 text-accent-foreground border border-accent/40'
-                    : 'bg-muted/30 text-muted-foreground hover:bg-muted/60 border border-transparent'
-                )}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
+        {/* Collapsible Advanced Options Toggle */}
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform duration-300", showAdvanced && "rotate-180")} />
+            {showAdvanced ? "Hide options" : "Additional options (Tags, Notes)"}
+          </button>
         </div>
 
-        {/* Notes */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">
-            Notes
-            <span className="text-xs ml-1">(optional)</span>
-          </label>
-          <Textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Any intentions for this session…"
-            className="min-h-[60px] resize-none text-sm bg-background/50"
-            maxLength={500}
-          />
-        </div>
+        {showAdvanced && (
+          <div className="space-y-6 pt-2 animate-in fade-in-50 slide-in-from-top-2 duration-300">
+            {/* Tags */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                Tags
+                <span className="text-[10px] font-normal lowercase ml-1">(optional)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {TAG_OPTIONS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      'px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-300',
+                      selectedTags.includes(tag)
+                        ? 'bg-accent/25 text-accent-foreground border border-accent/40 shadow-sm'
+                        : 'bg-muted/20 text-muted-foreground hover:bg-muted/50 border border-transparent'
+                    )}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                Notes
+                <span className="text-[10px] font-normal lowercase ml-1">(optional)</span>
+              </label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Any intentions for this session…"
+                className="min-h-[80px] resize-none text-sm bg-background/30 rounded-xl"
+                maxLength={500}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Start Button */}
         <Button
           size="lg"
-          className="w-full h-12 rounded-xl text-base font-semibold gap-2"
-          disabled={isStarting || Boolean(activeSession) || moodStart === null}
+          className="w-full h-14 rounded-2xl text-base font-bold tracking-tight gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.01] transition-all duration-300"
+          disabled={isStarting || Boolean(activeSession) || moodStart === null || !taskInput.trim()}
           onClick={handleStartSession}
         >
           {isStarting ? (
@@ -373,7 +361,7 @@ export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
             </>
           ) : (
             <>
-              <Play className="h-5 w-5" />
+              <Play className="h-5 w-5 fill-current" />
               {activeSession ? 'Session Already Running' : 'Start Focus Session'}
             </>
           )}
