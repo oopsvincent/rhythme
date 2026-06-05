@@ -21,6 +21,7 @@ export function FocusFloatingWidget() {
     elapsedSeconds,
     endSession,
     isEnding,
+    skipReflection,
   } = useFocusSessionController()
   const [isDismissed, setIsDismissed] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
@@ -118,6 +119,21 @@ export function FocusFloatingWidget() {
                     {formatDuration(pendingCompletionSession.actualDuration)} focused
                   </p>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                  onClick={async () => {
+                    try {
+                      await skipReflection(pendingCompletionSession.session.session_id)
+                      toast.success('Reflection skipped.')
+                    } catch (err) {
+                      console.error('Failed to skip reflection from widget:', err)
+                    }
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
 
               <p className="mt-3 text-xs text-muted-foreground">

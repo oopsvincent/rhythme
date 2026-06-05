@@ -117,6 +117,31 @@ export function useUpdateTaskStatus() {
       if (result.error) throw new Error(result.error);
       return result.data;
     },
+    onMutate: async ({ taskId, status }) => {
+      await queryClient.cancelQueries({ queryKey: taskKeys.all });
+      const previousTasks = queryClient.getQueryData<Task[]>(taskKeys.all);
+      if (previousTasks) {
+        queryClient.setQueryData<Task[]>(
+          taskKeys.all,
+          previousTasks.map((t) =>
+            t.task_id === taskId
+              ? {
+                  ...t,
+                  status,
+                  completed_at: status === "completed" ? new Date().toISOString() : null,
+                  updated_at: new Date().toISOString(),
+                }
+              : t
+          )
+        );
+      }
+      return { previousTasks };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(taskKeys.all, context.previousTasks);
+      }
+    },
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
@@ -136,6 +161,22 @@ export function useDeleteTask() {
       const result = await deleteTask(taskId);
       if (result.error) throw new Error(result.error);
       return result.data;
+    },
+    onMutate: async (taskId) => {
+      await queryClient.cancelQueries({ queryKey: taskKeys.all });
+      const previousTasks = queryClient.getQueryData<Task[]>(taskKeys.all);
+      if (previousTasks) {
+        queryClient.setQueryData<Task[]>(
+          taskKeys.all,
+          previousTasks.filter((t) => t.task_id !== taskId)
+        );
+      }
+      return { previousTasks };
+    },
+    onError: (err, taskId, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(taskKeys.all, context.previousTasks);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });

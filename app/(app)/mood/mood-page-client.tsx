@@ -157,75 +157,106 @@ export default function MoodPageClient() {
 
           {/* ── Mood selector grid ───────────────────────── */}
           <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 lg:grid-cols-9 lg:gap-3">
-            {MOOD_SCALE.map((option) => {
-              const isActive = selectedScore === option.value
-              return (
-                <motion.button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleMoodTap(option.value)}
-                  whileTap={{ scale: 0.93 }}
-                  disabled={isSaving}
-                  className={cn(
-                    "relative flex flex-col items-center justify-center rounded-2xl border-2 p-3 transition-all duration-200",
-                    "min-h-[96px] select-none",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2",
-                    isActive
-                      ? `${option.softAccent} ${option.border} shadow-md`
-                      : "border-border/40 bg-background hover:border-border hover:bg-muted/15",
-                    isSaving && "pointer-events-none opacity-60"
-                  )}
-                >
-                  {/* Icon */}
-                  <span
-                    className={cn(
-                      "transition-transform duration-200",
-                      isActive && "scale-110",
-                      isActive ? option.text : "text-muted-foreground/60"
-                    )}
-                  >
-                    <option.icon className="w-7 h-7" />
-                  </span>
-
-                  {/* Score */}
-                  <span
-                    className={cn(
-                      "mt-1.5 text-sm font-semibold tabular-nums leading-none",
-                      isActive ? option.text : "text-foreground/80"
-                    )}
-                  >
-                    {formatMoodScore(option.value)}
-                  </span>
-
-                  {/* Label */}
-                  <span
-                    className={cn(
-                      "mt-1 text-[10px] font-medium leading-tight",
-                      isActive ? option.text : "text-muted-foreground"
-                    )}
-                  >
-                    {option.label}
-                  </span>
-
-                  {/* Saved check */}
-                  <AnimatePresence>
-                    {isActive && justSaved && (
-                      <motion.span
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
+            {isSaving
+              ? MOOD_SCALE.map((option) => {
+                  const isActive = selectedScore === option.value
+                  return (
+                    <div
+                      key={option.value}
+                      className={cn(
+                        "relative flex flex-col items-center justify-center rounded-2xl border-2 p-3 min-h-[96px] select-none animate-pulse pointer-events-none",
+                        isActive
+                          ? `${option.softAccent} ${option.border} opacity-85`
+                          : "border-border/20 bg-muted/10 opacity-40"
+                      )}
+                    >
+                      {/* Icon */}
+                      <span
                         className={cn(
-                          "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-sm",
-                          option.accent
+                          "opacity-45",
+                          isActive ? option.text : "text-muted-foreground/60"
                         )}
                       >
-                        <Check className="h-3 w-3" strokeWidth={3} />
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-              )
-            })}
+                        <option.icon className="w-7 h-7" />
+                      </span>
+
+                      {/* Score Placeholder */}
+                      <div className="mt-2.5 h-3.5 w-6 rounded bg-current opacity-20" />
+
+                      {/* Label Placeholder */}
+                      <div className="mt-1.5 h-2 w-10 rounded bg-current opacity-15" />
+                    </div>
+                  )
+                })
+              : MOOD_SCALE.map((option) => {
+                  const isActive = selectedScore === option.value
+                  return (
+                    <motion.button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleMoodTap(option.value)}
+                      whileTap={{ scale: 0.93 }}
+                      disabled={isSaving}
+                      className={cn(
+                        "relative flex flex-col items-center justify-center rounded-2xl border-2 p-3 transition-all duration-200",
+                        "min-h-[96px] select-none",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2",
+                        isActive
+                          ? `${option.softAccent} ${option.border} shadow-md`
+                          : "border-border/40 bg-background hover:border-border hover:bg-muted/15",
+                        isSaving && "pointer-events-none opacity-60"
+                      )}
+                    >
+                      {/* Icon */}
+                      <span
+                        className={cn(
+                          "transition-transform duration-200",
+                          isActive && "scale-110",
+                          isActive ? option.text : "text-muted-foreground/60"
+                        )}
+                      >
+                        <option.icon className="w-7 h-7" />
+                      </span>
+
+                      {/* Score */}
+                      <span
+                        className={cn(
+                          "mt-1.5 text-sm font-semibold tabular-nums leading-none",
+                          isActive ? option.text : "text-foreground/80"
+                        )}
+                      >
+                        {formatMoodScore(option.value)}
+                      </span>
+
+                      {/* Label */}
+                      <span
+                        className={cn(
+                          "mt-1 text-[10px] font-medium leading-tight",
+                          isActive ? option.text : "text-muted-foreground"
+                        )}
+                      >
+                        {option.label}
+                      </span>
+
+                      {/* Saved check */}
+                      <AnimatePresence>
+                        {isActive && justSaved && (
+                          <motion.span
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            className={cn(
+                              "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-sm",
+                              option.accent
+                            )}
+                          >
+                            <Check className="h-3 w-3" strokeWidth={3} />
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  )
+                })}
           </div>
 
           {/* ── Loading skeleton ──────────────────────────── */}

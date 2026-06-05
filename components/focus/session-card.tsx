@@ -6,6 +6,7 @@ import { Clock, AlertCircle } from 'lucide-react'
 import { EnergyBadge } from '@/components/focus/energy-selector'
 import type { FocusSession } from '@/types/database'
 import Link from 'next/link'
+import { generateSlug } from '@/lib/slug'
 
 interface SessionCardProps {
   session: FocusSession
@@ -23,9 +24,11 @@ export function SessionCard({ session, compact = false }: SessionCardProps) {
   const interruptions = session.interruptions ?? 0
   const tags = session.tags ?? []
 
+  const slug = generateSlug(taskLabel)
+
   return (
     <Link
-      href={`/focus/${session.session_id}`}
+      href={`/focus/${slug}-${session.session_id}`}
       className={cn(
         'block rounded-xl border border-border/40 bg-card/30 p-4 transition-all duration-200',
         'hover:bg-card/60 hover:border-border/60 hover:shadow-sm',

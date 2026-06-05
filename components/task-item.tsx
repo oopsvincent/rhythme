@@ -2,7 +2,8 @@
 
 import { Status, Task, Priority } from "@/types/database";
 import { useMotionValue, useTransform, animate, motion } from "framer-motion";
-import { useState, type ComponentProps } from "react";
+import { useState, useEffect, type ComponentProps } from "react";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -113,6 +114,11 @@ export default function TaskItem({
   const dueDateInfo = getDueDateInfo(task);
   const statusMeta = STATUS_META[task.status] ?? STATUS_META.pending;
 
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    setIsTouch(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
+
   // ── swipe ──────────────────────────────────────────────────────────────────
   const x = useMotionValue(0);
   const [dismissed, setDismissed] = useState(false);
@@ -144,11 +150,18 @@ export default function TaskItem({
   if (dismissed) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-md">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-xl border transition-all duration-200 shadow-sm",
+        isCompleted
+          ? "bg-muted/5 border-border/10 opacity-75"
+          : "bg-card/45 border-border/20 dark:bg-card/10 hover:border-border/50 hover:bg-muted/10 hover:shadow"
+      )}
+    >
       {/* Swipe-right: complete */}
       <motion.div
         style={{ opacity: completeOpacity }}
-        className="pointer-events-none absolute inset-0 flex items-center gap-2 px-4 bg-emerald-500/15 rounded-md"
+        className="pointer-events-none absolute inset-0 flex items-center gap-2 px-4 bg-emerald-500/10 rounded-xl"
       >
         <CheckCircle2 className="h-4 w-4 text-emerald-400" />
         <span className="text-xs font-medium text-emerald-400">
@@ -159,7 +172,7 @@ export default function TaskItem({
       {/* Swipe-left: delete */}
       <motion.div
         style={{ opacity: deleteOpacity }}
-        className="pointer-events-none absolute inset-0 flex items-center justify-end gap-2 px-4 bg-red-500/15 rounded-md"
+        className="pointer-events-none absolute inset-0 flex items-center justify-end gap-2 px-4 bg-red-500/10 rounded-xl"
       >
         <span className="text-xs font-medium text-red-400">Delete</span>
         <Trash2 className="h-4 w-4 text-red-400" />
@@ -168,14 +181,15 @@ export default function TaskItem({
       {/* Row */}
       <motion.div
         style={{ x }}
-        drag="x"
+        drag={isTouch ? "x" : false}
         dragConstraints={{ left: -100, right: 100 }}
-        dragElastic={0.12}
+        dragElastic={0.06}
+        dragDirectionLock={true}
         onDragEnd={handleDragEnd}
         className="
-          relative z-10 group flex items-start gap-3
-          py-2.5 px-2 rounded-md
-          cursor-pointer transition-colors hover:bg-muted/40
+          relative z-10 group flex items-start gap-3.5
+          py-3 px-3.5 rounded-xl
+          cursor-pointer transition-colors
           touch-pan-y select-none
         "
       >
@@ -185,20 +199,17 @@ export default function TaskItem({
             e.stopPropagation();
             onStatusChange(task.task_id, isCompleted ? "pending" : "completed");
           }}
-          className={`
-            mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center
-            transition-all
-            ${
-              isCompleted
-                ? "bg-primary text-primary-foreground border-primary"
-                : "border-muted-foreground/40 hover:border-primary"
-            }
-          `}
+          className={cn(
+            "mt-0.5 h-5 w-5 shrink-0 rounded-lg border flex items-center justify-center transition-all",
+            isCompleted
+              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+              : "border-muted-foreground/35 hover:border-primary hover:bg-primary/5"
+          )}
         >
           {isPending ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Loader2 className="h-3 w-3 animate-spin text-current" />
           ) : isCompleted ? (
-            <Check className="h-3 w-3" />
+            <Check className="h-3.5 w-3.5" strokeWidth={3} />
           ) : null}
         </button>
 
@@ -206,32 +217,37 @@ export default function TaskItem({
         <div className="flex-1 min-w-0" onClick={onNavigate}>
           {/* Title */}
           <span
-            className={`block text-sm leading-snug ${
-              isCompleted ? "line-through text-muted-foreground opacity-60" : ""
-            }`}
+            className={cn(
+              "block text-sm font-medium leading-snug text-foreground/90 transition-all",
+              isCompleted && "line-through text-muted-foreground/60 opacity-60"
+            )}
           >
             {task.title}
           </span>
 
           {/* Description */}
           {task.description && (
-            <span className="block text-xs text-muted-foreground mt-0.5 truncate">
+            <span className="block text-xs text-muted-foreground/75 mt-0.5 truncate">
               {task.description}
             </span>
           )}
 
           {/* Badges */}
-          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
             <span
-              className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none ${
+              className={cn(
+                "inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-semibold tracking-wide uppercase leading-none",
                 PRIORITY_STYLES[task.priority]
-              }`}
+              )}
             >
               {task.priority}
             </span>
 
             <span
-              className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none ${statusMeta.className}`}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[9px] font-medium leading-none",
+                statusMeta.className
+              )}
             >
               {statusMeta.icon}
               {statusMeta.label}
@@ -239,9 +255,10 @@ export default function TaskItem({
 
             {task.due_date && dueDateInfo && (
               <span
-                className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none ${
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[9px] font-medium leading-none",
                   DUE_DATE_STYLES[dueDateInfo.type]
-                }`}
+                )}
               >
                 {dueDateInfo.type === "overdue" ? (
                   <AlertTriangle className="h-2.5 w-2.5" />
@@ -259,11 +276,29 @@ export default function TaskItem({
         {/* Actions */}
         <div
           onClick={(e) => e.stopPropagation()}
-          className="md:opacity-0 md:group-hover:opacity-100 transition-opacity mt-0.5"
+          className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity mt-0.5 shrink-0"
         >
+          {/* Quick Edit */}
+          <button
+            onClick={onNavigate}
+            title="Edit Details"
+            className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors hidden md:flex"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Quick Delete */}
+          <button
+            onClick={onDelete}
+            title="Delete Task"
+            className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors hidden md:flex"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted">
+              <button className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors">
                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>

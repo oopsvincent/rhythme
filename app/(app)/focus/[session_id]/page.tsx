@@ -13,9 +13,12 @@ export default async function SessionDetailPage({
   params: Promise<{ session_id: string }>;
 }) {
   const { session_id } = await params;
-  const sessionId = Number(session_id);
 
-  if (!Number.isFinite(sessionId)) {
+  // Extract ID from slug if present (e.g., "morning-focus-52" -> "52")
+  const idFromSlug = session_id.split("-").pop();
+  const sessionId = Number(idFromSlug || session_id);
+
+  if (isNaN(sessionId) || !Number.isFinite(sessionId)) {
     return (
       <>
         <SiteHeader />
@@ -29,11 +32,9 @@ export default async function SessionDetailPage({
   return (
     <>
       <SiteHeader />
-      <div className="flex flex-1 flex-col px-4 md:px-10">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <SessionDetailClient sessionId={sessionId} />
-          </div>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="@container/main flex flex-1 flex-col overflow-x-hidden">
+          <SessionDetailClient sessionId={sessionId} />
         </div>
       </div>
     </>

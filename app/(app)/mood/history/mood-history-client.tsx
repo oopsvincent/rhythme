@@ -219,35 +219,57 @@ function DayDetail({
 
       {/* Mood selector row */}
       <div className="mb-4 flex flex-wrap gap-1.5">
-        {MOOD_SCALE.map((opt) => {
-          const active = score === opt.value
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setScore(opt.value)}
-              className={cn(
-                "flex flex-col items-center rounded-xl border-2 px-2 py-1.5 transition-all",
-                "min-w-[48px]",
-                active
-                  ? `${opt.softAccent} ${opt.border} shadow-sm`
-                  : "border-transparent hover:bg-muted/20"
-              )}
-            >
-              <span className={cn("mb-1", active ? opt.text : "text-muted-foreground/60")}>
-                <opt.icon className="w-5 h-5" />
-              </span>
-              <span
-                className={cn(
-                  "mt-0.5 text-[9px] font-medium",
-                  active ? opt.text : "text-muted-foreground"
-                )}
-              >
-                {formatMoodScore(opt.value)}
-              </span>
-            </button>
-          )
-        })}
+        {isSaving
+          ? MOOD_SCALE.map((opt) => {
+              const active = score === opt.value
+              return (
+                <div
+                  key={opt.value}
+                  className={cn(
+                    "flex flex-col items-center rounded-xl border-2 px-2 py-1.5 select-none animate-pulse pointer-events-none",
+                    "min-w-[48px]",
+                    active
+                      ? `${opt.softAccent} ${opt.border} opacity-85`
+                      : "border-transparent bg-muted/10 opacity-40"
+                  )}
+                >
+                  <span className={cn("mb-1 opacity-45", active ? opt.text : "text-muted-foreground/60")}>
+                    <opt.icon className="w-5 h-5" />
+                  </span>
+                  <div className="mt-1 h-2.5 w-5 rounded bg-current opacity-15" />
+                </div>
+              )
+            })
+          : MOOD_SCALE.map((opt) => {
+              const active = score === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setScore(opt.value)}
+                  disabled={isSaving}
+                  className={cn(
+                    "flex flex-col items-center rounded-xl border-2 px-2 py-1.5 transition-all",
+                    "min-w-[48px]",
+                    active
+                      ? `${opt.softAccent} ${opt.border} shadow-sm`
+                      : "border-transparent hover:bg-muted/20"
+                  )}
+                >
+                  <span className={cn("mb-1", active ? opt.text : "text-muted-foreground/60")}>
+                    <opt.icon className="w-5 h-5" />
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-0.5 text-[9px] font-medium",
+                      active ? opt.text : "text-muted-foreground"
+                    )}
+                  >
+                    {formatMoodScore(opt.value)}
+                  </span>
+                </button>
+              )
+            })}
       </div>
 
       {/* Selected mood label */}
@@ -366,6 +388,8 @@ export default function MoodHistoryClient() {
   const [viewMonth, setViewMonth] = useState(now.getMonth())
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [showGate, setShowGate] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
 
   const isSaving = createMut.isPending || updateMut.isPending
 
@@ -384,6 +408,15 @@ export default function MoodHistoryClient() {
       .sort((a, b) => b.logged_at.localeCompare(a.logged_at))
   }, [logs, viewYear, viewMonth])
 
+  /* Paginated logs */
+  const totalPages = Math.max(1, Math.ceil(monthLogs.length / itemsPerPage))
+  const activePage = Math.min(currentPage, totalPages)
+
+  const paginatedLogs = useMemo(() => {
+    const start = (activePage - 1) * itemsPerPage
+    return monthLogs.slice(start, start + itemsPerPage)
+  }, [monthLogs, activePage, itemsPerPage])
+
   /* Month stats */
   const monthAvg = useMemo(() => {
     if (monthLogs.length === 0) return null
@@ -400,6 +433,7 @@ export default function MoodHistoryClient() {
       setViewMonth((m) => m - 1)
     }
     setSelectedDay(null)
+    setCurrentPage(1)
   }
 
   function nextMonth() {
@@ -413,6 +447,7 @@ export default function MoodHistoryClient() {
       setViewMonth((m) => m + 1)
     }
     setSelectedDay(null)
+    setCurrentPage(1)
   }
 
   const isCurrentMonth =
@@ -571,7 +606,40 @@ export default function MoodHistoryClient() {
                 ))}
               </div>
             ) : (
-              <EntryList logs={monthLogs} onEntryClick={handleDayClick} />
+              <div className="space-y-4">
+                <EntryList logs={paginatedLogs} onEntryClick={handleDayClick} />
+                
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between border-t border-border/20 pt-4">
+                    <p className="text-xs text-muted-foreground">
+                      Showing {Math.min(monthLogs.length, (activePage - 1) * itemsPerPage + 1)}-{Math.min(monthLogs.length, activePage * itemsPerPage)} of {monthLogs.length} entries
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-muted/20"
+                        disabled={activePage === 1}
+                        onClick={() => setCurrentPage(activePage - 1)}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-xs font-medium px-2 tabular-nums">
+                        Page {activePage} of {totalPages}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-muted/20"
+                        disabled={activePage === totalPages}
+                        onClick={() => setCurrentPage(activePage + 1)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
