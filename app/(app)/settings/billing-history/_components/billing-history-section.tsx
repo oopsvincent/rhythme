@@ -91,7 +91,7 @@ export function BillingHistorySection({ invoices }: BillingHistorySectionProps) 
             <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <p className="text-sm text-muted-foreground leading-relaxed">
               Invoices are generated automatically after each billing cycle. Need help with billing?
-              <a href="mailto:support@rhythme.io" className="text-primary font-medium hover:underline ml-1">Contact support</a>
+              <a href="mailto:support@amplecen.com" className="text-primary font-medium hover:underline ml-1">Contact support</a>
             </p>
           </div>
         </>
