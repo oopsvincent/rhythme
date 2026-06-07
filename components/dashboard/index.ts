@@ -18,6 +18,7 @@ export { MoodChart } from "./mood-chart"
 export { SentimentChart } from "./sentiment-chart"
 export { WeeklyWidget } from "./weekly-widget"
 export { PremiumUpsellBanner } from "./premium-upsell-banner"
+export { NowPanel } from "./now-panel"
 
 export {
   DashboardStatsSkeleton,

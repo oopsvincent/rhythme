@@ -87,6 +87,23 @@ const navigationItems = [
     url: "/activity",
     icon: Activity,
     section: "activity",
+    items: [
+      {
+        title: "Timeline",
+        url: "/activity?tab=timeline",
+        icon: History,
+      },
+      {
+        title: "Calendar",
+        url: "/activity?tab=calendar",
+        icon: CalendarDays,
+      },
+      {
+        title: "Insights",
+        url: "/activity?tab=insights",
+        icon: LineChart,
+      },
+    ],
   },
   {
     title: "Journal",

@@ -16,7 +16,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 export function NavMain({
   items,
@@ -36,6 +36,7 @@ export function NavMain({
 }) {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { setOpenMobile } = useSidebar()
   const { state } = useSidebar()
 const isCollapsed = state === "collapsed"
@@ -102,9 +103,25 @@ const isCollapsed = state === "collapsed"
                   <SidebarMenuSub className="mt-1 border-sidebar-border ml-5 pl-3">
                     {(() => {
                       const activeSubItemUrl = item.items.reduce((best, current) => {
-                        if (pathname === current.url || pathname?.startsWith(current.url + "/")) {
-                          if (!best || current.url.length > best.length) {
+                        const hasQuery = current.url.includes("?");
+                        if (hasQuery) {
+                          const [basePath, queryString] = current.url.split("?");
+                          const params = new URLSearchParams(queryString);
+                          const isMatch = pathname === basePath && Array.from(params.entries()).every(([key, value]) => {
+                            const currentParamVal = searchParams.get(key);
+                            if (basePath === "/activity" && key === "tab" && !currentParamVal) {
+                              return value === "timeline";
+                            }
+                            return currentParamVal === value;
+                          });
+                          if (isMatch) {
                             return current.url;
+                          }
+                        } else {
+                          if (pathname === current.url || pathname?.startsWith(current.url + "/")) {
+                            if (!best || current.url.length > best.length) {
+                              return current.url;
+                            }
                           }
                         }
                         return best;

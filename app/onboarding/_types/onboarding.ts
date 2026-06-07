@@ -2,7 +2,9 @@
 
 export type OnboardingStep =
   | 'goal'
-  | 'profile'
+  | 'profile-name'
+  | 'profile-avatar'
+  | 'notifications'
   | 'generating'
   | 'edit'
   | 'commitment'
@@ -41,8 +43,6 @@ export interface OnboardingState {
   // Profile data (Step 3)
   displayName: string
   avatarId: string
-  dailyTaskTarget: number
-  dailyHabitTarget: number
 
   // Generation (Step 4)
   generatedPlan: GeneratedPlan | null
@@ -54,7 +54,7 @@ export interface OnboardingState {
   habits: HabitItem[]
   regenerateCount: number
 
-  // Save (Step 6 â†’ 7)
+  // Save (Step 6 → 7)
   isSaving: boolean
   saveError: string | null
 }

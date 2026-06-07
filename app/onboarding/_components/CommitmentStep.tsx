@@ -91,13 +91,56 @@ export function CommitmentStep({
       onCommit()
     }
   }
+  if (isSaving) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes pulse-ring-1 {
+            0%, 100% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.12); opacity: 0.55; }
+          }
+          @keyframes pulse-ring-2 {
+            0%, 100% { transform: scale(0.9); opacity: 0.1; }
+            50% { transform: scale(1.24); opacity: 0.35; }
+          }
+          .pulse-ring-1 {
+            animation: pulse-ring-1 3.5s ease-in-out infinite;
+          }
+          .pulse-ring-2 {
+            animation: pulse-ring-2 3.5s ease-in-out infinite;
+            animation-delay: 0.6s;
+          }
+        ` }} />
+        <div className="w-full max-w-md space-y-12 text-center flex flex-col items-center">
+          {/* Breathing concentric rings */}
+          <div className="relative flex h-36 w-36 items-center justify-center mb-4 select-none">
+            {/* Outer ring */}
+            <div className="absolute inset-0 rounded-full border border-primary pulse-ring-2" />
+            {/* Inner ring */}
+            <div className="absolute inset-4 rounded-full border-2 border-primary pulse-ring-1" />
+            {/* Center anchor dot */}
+            <div className="h-2.5 w-2.5 rounded-full bg-primary opacity-80" />
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-2xl font-normal tracking-tight text-foreground font-serif-display sm:text-3xl leading-tight">
+              Creating your workspace...
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+              Setting up your primary goal, tasks, habits, and profile preferences.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-10 text-center py-6"
+      className="space-y-10 text-center py-6 pb-20 sm:pb-0"
     >
       {/* Monumental Goal Title display */}
       <motion.h1
@@ -144,24 +187,23 @@ export function CommitmentStep({
 
       {/* CTA Button */}
       {!saveError && (
-        <motion.div variants={buttonVariants} className="pt-4">
+        <motion.div variants={buttonVariants} className="pt-4 max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:bg-background/85 max-sm:backdrop-blur-md max-sm:p-4 max-sm:border-t max-sm:border-border/50 max-sm:z-50">
           <Button
             onClick={handleClick}
             disabled={isSaving}
-            className="h-14 rounded-lg px-12 text-base font-semibold transition-all bg-primary text-primary-foreground hover:bg-primary/95 focus-visible:ring-offset-0 focus-visible:ring-primary flex items-center justify-center gap-2 mx-auto"
+            className="relative overflow-hidden h-14 rounded-lg px-12 text-base font-semibold transition-all bg-primary text-primary-foreground hover:bg-primary/95 focus-visible:ring-offset-0 focus-visible:ring-primary flex items-center justify-center gap-2 mx-auto w-full sm:w-auto"
             size="lg"
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin text-primary-foreground" />
-                Saving...
-              </>
-            ) : (
-              <>
-                Start Building
-                <ArrowRight className="h-5 w-5" />
-              </>
-            )}
+            <motion.div
+              initial={{ width: '0%' }}
+              animate={{ width: '100%' }}
+              transition={{ duration: 4, ease: 'linear' }}
+              className="absolute inset-y-0 left-0 bg-white/20 pointer-events-none"
+            />
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              Start Building
+              <ArrowRight className="h-5 w-5" />
+            </span>
           </Button>
         </motion.div>
       )}

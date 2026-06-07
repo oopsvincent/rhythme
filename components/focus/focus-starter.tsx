@@ -25,15 +25,21 @@ const TAG_OPTIONS = ['Deep Work', 'Creative', 'Admin', 'Learning', 'Review', 'Ot
 
 interface FocusStarterProps {
   onSessionStarted: (session: FocusSession) => void
+  initialTaskId?: string | null
+  initialTaskTitle?: string | null
 }
 
-export function FocusStarter({ onSessionStarted }: FocusStarterProps) {
+export function FocusStarter({ 
+  onSessionStarted, 
+  initialTaskId = null, 
+  initialTaskTitle = '' 
+}: FocusStarterProps) {
   const { data: allTasks = [], isLoading: tasksLoading } = useTasks()
   const { activeSession, isStarting, startSession, syncActiveSession } = useFocusSessionController()
 
   // Form state
-  const [taskInput, setTaskInput] = useState('')
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [taskInput, setTaskInput] = useState(initialTaskTitle || '')
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(initialTaskId || null)
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [duration, setDuration] = useState(35)
   const [isCustomDuration, setIsCustomDuration] = useState(false)

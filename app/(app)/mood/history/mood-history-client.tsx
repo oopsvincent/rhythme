@@ -27,12 +27,14 @@ import { cn } from "@/lib/utils"
 import type { MoodLog } from "@/types/database"
 import { toast } from "sonner"
 
+import { getLocalDateString } from "@/lib/timezone"
+
 /* ── Helpers ──────────────────────────────────────────────── */
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 function toDateKey(d: Date) {
-  return d.toISOString().split("T")[0]
+  return getLocalDateString(d)
 }
 
 function daysInMonth(year: number, month: number) {

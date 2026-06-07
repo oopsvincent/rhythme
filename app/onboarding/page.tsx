@@ -1,12 +1,15 @@
 // app/onboarding/page.tsx
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Lora, Outfit } from 'next/font/google'
 import { useOnboarding } from './_hooks/useOnboarding'
 import { GoalInputStep } from './_components/GoalInputStep'
-import { ProfileStep } from './_components/ProfileStep'
+import { ProfileNameStep } from './_components/ProfileNameStep'
+import { ProfileAvatarStep } from './_components/ProfileAvatarStep'
+import { NotificationsStep } from './_components/NotificationsStep'
 import { GeneratingStep } from './_components/GeneratingStep'
 import { EditStep } from './_components/EditStep'
 import { CommitmentStep } from './_components/CommitmentStep'
@@ -25,6 +28,43 @@ const outfit = Outfit({
 
 export default function OnboardingPage() {
   const onboarding = useOnboarding()
+  const {
+    currentStep,
+    isGenerating,
+    generatedPlan,
+    generationError,
+    generationStartTime,
+    goToStep,
+    generate,
+    logout,
+  } = onboarding
+
+  const [generatingScreenEntryTime, setGeneratingScreenEntryTime] = useState<number | null>(null)
+
+  // Track when we enter the 'generating' step
+  useEffect(() => {
+    if (currentStep === 'generating') {
+      setGeneratingScreenEntryTime(Date.now())
+    } else {
+      setGeneratingScreenEntryTime(null)
+    }
+  }, [currentStep])
+
+  // Handle generation to edit step transition with 2s minimum timer from generating screen entry
+  useEffect(() => {
+    if (currentStep !== 'generating' || !generatingScreenEntryTime) return
+
+    if (!isGenerating && generatedPlan && !generationError) {
+      const elapsed = Date.now() - generatingScreenEntryTime
+      const remainingTime = Math.max(0, 2000 - elapsed)
+
+      const timer = setTimeout(() => {
+        goToStep('edit')
+      }, remainingTime)
+
+      return () => clearTimeout(timer)
+    }
+  }, [currentStep, isGenerating, generatedPlan, generationError, generatingScreenEntryTime, goToStep])
 
   // Loading auth check
   if (onboarding.isAuthLoading) {
@@ -35,9 +75,13 @@ export default function OnboardingPage() {
     )
   }
 
+  const stepsList: string[] = ['goal', 'profile-name', 'profile-avatar', 'notifications']
+  const currentStepIndex = stepsList.indexOf(currentStep)
+  const showProgress = currentStepIndex !== -1
+
   return (
     <div
-      className={`${lora.variable} ${outfit.variable} min-h-[100dvh] bg-background text-foreground font-sans-display relative overflow-hidden flex flex-col justify-center py-10`}
+      className={`${lora.variable} ${outfit.variable} min-h-[100dvh] bg-background text-foreground font-sans-display relative overflow-hidden flex flex-col justify-center py-10 max-sm:pb-28`}
       style={{
         fontFamily: 'var(--font-outfit), sans-serif',
       }}
@@ -61,62 +105,127 @@ export default function OnboardingPage() {
       {/* Subtle background glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/3 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-[480px] mx-auto px-6 relative z-10 flex-1 flex flex-col justify-center">
+      {/* Non-blocking logout button */}
+      <div className="absolute top-4 right-6 z-50">
+        <button
+          onClick={() => logout()}
+          className="text-xs font-semibold tracking-wider text-muted-foreground hover:text-primary transition-colors uppercase py-2 px-3 hover:bg-muted/10 rounded-md"
+        >
+          Log Out
+        </button>
+      </div>
+
+      {/* Step Indicator */}
+      {showProgress && (
+        <div className="w-full max-w-[480px] mx-auto px-6 mb-8 select-none">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Step {currentStepIndex + 1} of 4
+            </span>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+              {currentStep === 'goal' && 'Goal'}
+              {currentStep === 'profile-name' && 'Name'}
+              {currentStep === 'profile-avatar' && 'Avatar'}
+              {currentStep === 'notifications' && 'Notifications'}
+            </span>
+          </div>
+          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex gap-1">
+            {stepsList.map((step, idx) => {
+              const isActive = idx === currentStepIndex
+              const isCompleted = idx < currentStepIndex
+              return (
+                <div
+                  key={step}
+                  className={`h-full flex-1 rounded-full transition-all duration-500 ${
+                    isCompleted
+                      ? 'bg-primary'
+                      : isActive
+                      ? 'bg-primary'
+                      : 'bg-muted-foreground/20'
+                  }`}
+                />
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className={`w-full mx-auto px-6 relative z-10 flex-1 flex flex-col justify-center transition-all duration-300 ${
+        currentStep === 'edit' ? 'max-w-5xl' : 'max-w-[480px]'
+      }`}>
         <AnimatePresence mode="wait">
           <motion.div
-            key={onboarding.currentStep}
+            key={currentStep}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
             className="w-full"
           >
-            {/* Step 2 — Goal Input */}
-            {onboarding.currentStep === 'goal' && (
+            {/* Step 1 — Goal Input */}
+            {currentStep === 'goal' && (
               <GoalInputStep
                 goalTitle={onboarding.goalTitle}
                 goalDescription={onboarding.goalDescription}
                 onGoalTitleChange={onboarding.setGoalTitle}
                 onGoalDescriptionChange={onboarding.setGoalDescription}
-                onContinue={() => onboarding.goToStep('profile')}
+                onContinue={() => {
+                  goToStep('profile-name')
+                  generate()
+                }}
               />
             )}
 
-            {/* Step 3 — Quick Profile */}
-            {onboarding.currentStep === 'profile' && (
-              <ProfileStep
+            {/* Step 2 — Profile Name */}
+            {currentStep === 'profile-name' && (
+              <ProfileNameStep
                 displayName={onboarding.displayName}
-                dailyTaskTarget={onboarding.dailyTaskTarget}
-                dailyHabitTarget={onboarding.dailyHabitTarget}
+                onDisplayNameChange={onboarding.setDisplayName}
+                onContinue={() => goToStep('profile-avatar')}
+                onBack={() => goToStep('goal')}
+              />
+            )}
+
+            {/* Step 3 — Profile Avatar */}
+            {currentStep === 'profile-avatar' && (
+              <ProfileAvatarStep
+                displayName={onboarding.displayName}
                 avatarId={onboarding.avatarId}
                 socialAvatarUrl={onboarding.socialAvatarUrl}
-                onDisplayNameChange={onboarding.setDisplayName}
                 onAvatarIdChange={onboarding.setAvatarId}
-                onDailyTaskTargetChange={onboarding.setDailyTaskTarget}
-                onDailyHabitTargetChange={onboarding.setDailyHabitTarget}
-                onContinue={() => onboarding.goToStep('generating')}
-                onBack={() => onboarding.goToStep('goal')}
+                onContinue={() => goToStep('notifications')}
+                onBack={() => goToStep('profile-name')}
               />
             )}
 
-            {/* Step 4 — Generation Loading */}
-            {onboarding.currentStep === 'generating' && (
+            {/* Step 4 — Notifications */}
+            {currentStep === 'notifications' && (
+              <NotificationsStep
+                notificationsEnabled={onboarding.notificationsEnabled}
+                onNotificationsEnabledChange={onboarding.setNotificationsEnabled}
+                onContinue={() => goToStep('generating')}
+                onBack={() => goToStep('profile-avatar')}
+              />
+            )}
+
+            {/* Step 5 — Generation Loading */}
+            {currentStep === 'generating' && (
               <GeneratingStep
-                isGenerating={onboarding.isGenerating}
-                error={onboarding.generationError}
-                onGenerate={onboarding.generate}
+                isGenerating={isGenerating}
+                error={generationError}
+                onGenerate={generate}
               />
             )}
 
-            {/* Step 5 — Edit Screen */}
-            {onboarding.currentStep === 'edit' && (
+            {/* Step 6 — Edit Screen */}
+            {currentStep === 'edit' && (
               <EditStep
                 tasks={onboarding.tasks}
                 habits={onboarding.habits}
                 fallbackUsed={onboarding.generatedPlan?.fallback_used ?? false}
                 regenerateCount={onboarding.regenerateCount}
-                isRegenerating={onboarding.isGenerating}
-                regenerationError={onboarding.generationError}
+                isRegenerating={isGenerating}
+                regenerationError={generationError}
                 onUpdateTask={onboarding.updateTask}
                 onDeleteTask={onboarding.deleteTask}
                 onAddTask={onboarding.addTask}
@@ -124,12 +233,12 @@ export default function OnboardingPage() {
                 onDeleteHabit={onboarding.deleteHabit}
                 onAddHabit={onboarding.addHabit}
                 onRegenerate={onboarding.regenerate}
-                onContinue={() => onboarding.goToStep('commitment')}
+                onContinue={() => goToStep('commitment')}
               />
             )}
 
-            {/* Step 6 — Commitment Screen */}
-            {onboarding.currentStep === 'commitment' && (
+            {/* Step 7 — Commitment Screen */}
+            {currentStep === 'commitment' && (
               <CommitmentStep
                 goalTitle={onboarding.goalTitle}
                 isSaving={onboarding.isSaving}

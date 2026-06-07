@@ -27,6 +27,7 @@ import {
   SentimentChartSkeleton,
   QuickActionsFab,
   PremiumUpsellBanner,
+  NowPanel,
 } from "@/components/dashboard"
 
 export default async function DashboardPage() {
@@ -49,10 +50,8 @@ export default async function DashboardPage() {
             {/* Premium Upsell for Free Users */}
             {!isPremium && <PremiumUpsellBanner />}
 
-            {/* Daily Reflection Prompt */}
-            <Suspense fallback={<ReflectionPromptSkeleton />}>
-              <ReflectionPrompt />
-            </Suspense>
+            {/* Now Panel centerpiece */}
+            <NowPanel />
 
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start pb-8">
@@ -99,6 +98,11 @@ export default async function DashboardPage() {
 
               </div>
             </div>
+
+            {/* Daily Reflection Prompt / Quote */}
+            <Suspense fallback={<ReflectionPromptSkeleton />}>
+              <ReflectionPrompt />
+            </Suspense>
           </div>
         </div>
       </div>

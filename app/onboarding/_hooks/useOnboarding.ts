@@ -27,7 +27,7 @@ function generateId(): string {
 function mapMLTasks(mlTasks: MLGenerateResponse['tasks']): TaskItem[] {
   return mlTasks.map((t) => ({
     id: generateId(),
-    title: t.title,
+    title: t.title || (t as any).name || '',
     description: t.description,
     type: t.type,
     isEdited: false,
@@ -37,7 +37,7 @@ function mapMLTasks(mlTasks: MLGenerateResponse['tasks']): TaskItem[] {
 function mapMLHabits(mlHabits: MLGenerateResponse['habits']): HabitItem[] {
   return mlHabits.map((h) => ({
     id: generateId(),
-    title: h.title,
+    title: h.title || (h as any).name || '',
     frequency: h.frequency,
     reason: h.reason,
     isEdited: false,
@@ -63,13 +63,13 @@ export function useOnboarding() {
   const [displayName, setDisplayName] = useState('')
   const [avatarId, setAvatarId] = useState(DEFAULT_AVATAR_ID)
   const [socialAvatarUrl, setSocialAvatarUrl] = useState<string | null>(null)
-  const [dailyTaskTarget, setDailyTaskTarget] = useState(3)
-  const [dailyHabitTarget, setDailyHabitTarget] = useState(2)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
 
   // Generation (Step 4)
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
+  const [generationStartTime, setGenerationStartTime] = useState<number | null>(null)
 
   // Edit (Step 5)
   const [tasks, setTasks] = useState<TaskItem[]>([])
@@ -134,6 +134,8 @@ export function useOnboarding() {
   const generate = useCallback(async () => {
     setIsGenerating(true)
     setGenerationError(null)
+    setGenerationStartTime(Date.now())
+    setGeneratedPlan(null)
 
     try {
       const response = await fetch('/api/onboarding/generate', {
@@ -163,7 +165,6 @@ export function useOnboarding() {
       setTasks(plan.tasks)
       setHabits(plan.habits)
       setIsGenerating(false)
-      setCurrentStep('edit')
     } catch (err) {
       setIsGenerating(false)
       setGenerationError(
@@ -382,7 +383,10 @@ export function useOnboarding() {
       if (existingPref) {
         const { error: prefError } = await supabase
           .from('user_preferences')
-          .update({ onboarding_completed: true })
+          .update({
+            onboarding_completed: true,
+            notifications_enabled: notificationsEnabled,
+          })
           .eq('user_id', userId)
 
         if (prefError) throw prefError
@@ -391,8 +395,8 @@ export function useOnboarding() {
           .from('user_preferences')
           .insert({
             user_id: userId,
-            notifications_enabled: true,
-            onboarding_completed: true,
+            notifications_enabled: notificationsEnabled,
+          onboarding_completed: true,
           })
 
         if (prefError) throw prefError
@@ -442,6 +446,11 @@ export function useOnboarding() {
     router,
   ])
 
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }, [supabase])
+
   return {
     // Auth
     userId,
@@ -463,10 +472,8 @@ export function useOnboarding() {
     avatarId,
     setAvatarId,
     socialAvatarUrl,
-    dailyTaskTarget,
-    setDailyTaskTarget,
-    dailyHabitTarget,
-    setDailyHabitTarget,
+    notificationsEnabled,
+    setNotificationsEnabled,
 
     // Generation
     generatedPlan,
@@ -475,6 +482,7 @@ export function useOnboarding() {
     generate,
     regenerate,
     regenerateCount,
+    generationStartTime,
 
     // Tasks
     tasks,
@@ -492,5 +500,6 @@ export function useOnboarding() {
     isSaving,
     saveError,
     save,
+    logout,
   }
 }
