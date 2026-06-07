@@ -5,6 +5,7 @@ export type Status = 'pending' | 'in_progress' | 'completed'
 export interface Task {
   task_id: string
   user_id: string
+  goal_id?: string | null
   title: string
   description: string | null
   due_date: string | null
@@ -22,6 +23,7 @@ export interface CreateTaskInput {
   due_date?: Date | undefined
   priority?: Priority
   status?: Status
+  goal_id?: string | null
 }
 
 export interface UpdateTaskInput {
@@ -32,6 +34,7 @@ export interface UpdateTaskInput {
   status?: Status
   completed_at?: string | null
   source?: TaskSource
+  goal_id?: string | null
 }
 
 // User Goals (onboarding 3.1)

@@ -18,9 +18,10 @@ import {
 import { MOOD_SCALE, formatMoodScore } from "@/lib/mood"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { getLocalDateString } from "@/lib/timezone"
 
 function getTodayDate() {
-  return new Date().toISOString().split("T")[0]
+  return getLocalDateString()
 }
 
 function formatTimeLabel(ts: string | null) {

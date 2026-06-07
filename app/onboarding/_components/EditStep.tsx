@@ -1,7 +1,7 @@
 // app/onboarding/_components/EditStep.tsx
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { X, Plus, RefreshCw, Loader2, ArrowRight } from 'lucide-react'
@@ -31,9 +31,22 @@ function AutoResizingTextarea({
 
   useEffect(() => {
     const textarea = textareaRef.current
-    if (textarea) {
+    if (!textarea) return
+
+    const adjustHeight = () => {
       textarea.style.height = 'auto'
-      textarea.style.height = `${textarea.scrollHeight}px`
+      if (textarea.scrollHeight > 0) {
+        textarea.style.height = `${textarea.scrollHeight}px`
+      }
+    }
+
+    adjustHeight()
+
+    const observer = new ResizeObserver(adjustHeight)
+    observer.observe(textarea)
+
+    return () => {
+      observer.disconnect()
     }
   }, [value])
 
@@ -134,8 +147,10 @@ export function EditStep({
     )
   }
 
+  const [activeTab, setActiveTab] = useState<'tasks' | 'habits'>('tasks')
+
   return (
-    <div className="space-y-10 py-6 max-w-2xl mx-auto">
+    <div className="space-y-10 py-6 max-w-5xl mx-auto">
       {/* Heading */}
       <div className="space-y-3 text-center">
         <h1 className="text-3xl font-normal tracking-tight text-foreground font-serif-display sm:text-4xl leading-tight">
@@ -146,145 +161,174 @@ export function EditStep({
         </p>
       </div>
 
-      {/* Tasks Section */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between border-b border-border/30 pb-2">
-          <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">Tasks</h2>
-          <span className="text-xs text-muted-foreground/60 tabular-nums">
-            {tasks.length}/{MAX_TASKS}
-          </span>
-        </div>
+      {/* Mobile Tab Selector */}
+      <div className="flex border border-border bg-muted/20 rounded-lg p-0.5 md:hidden w-full select-none justify-between text-sm mb-6">
+        <button
+          type="button"
+          onClick={() => setActiveTab('tasks')}
+          className={`flex-1 text-center py-2 rounded-md font-semibold transition-all ${
+            activeTab === 'tasks'
+              ? 'bg-primary text-primary-foreground shadow-xs'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Tasks ({tasks.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('habits')}
+          className={`flex-1 text-center py-2 rounded-md font-semibold transition-all ${
+            activeTab === 'habits'
+              ? 'bg-primary text-primary-foreground shadow-xs'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Habits ({habits.length})
+        </button>
+      </div>
 
-        <div className="space-y-3">
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:bg-muted/10"
-            >
-              {/* Delete button (hover only) */}
-              <button
-                onClick={() => onDeleteTask(task.id)}
-                className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-[#ef4444] group-hover:opacity-100 focus:opacity-100"
-                aria-label="Delete task"
+      {/* Layout Grid */}
+      <div className="md:grid md:grid-cols-2 md:gap-8 md:space-y-0 space-y-8 items-start">
+        {/* Tasks Section */}
+        <section className={`space-y-4 ${activeTab === 'tasks' ? 'block' : 'hidden md:block'}`}>
+          <div className="flex items-center justify-between border-b border-border/30 pb-2">
+            <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">Tasks</h2>
+            <span className="text-xs text-muted-foreground/60 tabular-nums">
+              {tasks.length}/{MAX_TASKS}
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {tasks.map((task) => (
+              <div
+                key={task.id}
+                className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:bg-muted/10"
               >
-                <X className="h-3.5 w-3.5" />
-              </button>
+                {/* Delete button (hover only) */}
+                <button
+                  onClick={() => onDeleteTask(task.id)}
+                  className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-[#ef4444] group-hover:opacity-100 focus:opacity-100"
+                  aria-label="Delete task"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
 
-              <div className="space-y-2 pr-6">
-                {/* Title input with badge */}
-                <div className="flex items-start justify-between gap-3">
+                <div className="space-y-2 pr-6">
+                  {/* Title input with badge */}
+                  <div className="flex items-start justify-between gap-3">
+                    <AutoResizingTextarea
+                      value={task.title}
+                      onChange={(e) =>
+                        onUpdateTask(task.id, { title: e.target.value })
+                      }
+                      placeholder="Task title"
+                      className="w-full bg-transparent border border-transparent hover:border-border/40 focus:border-primary focus:bg-background/20 px-2 py-1 rounded text-foreground font-medium text-base transition-all focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder-muted-foreground/50 shadow-none resize-none overflow-hidden outline-none"
+                    />
+                    {renderBadge(getTaskSource(task))}
+                  </div>
+
+                  {/* Description textarea */}
                   <AutoResizingTextarea
-                    value={task.title}
+                    value={task.description}
                     onChange={(e) =>
-                      onUpdateTask(task.id, { title: e.target.value })
+                      onUpdateTask(task.id, { description: e.target.value })
                     }
-                    placeholder="Task title"
-                    className="w-full bg-transparent border border-transparent hover:border-border/40 focus:border-primary focus:bg-background/20 px-2 py-1 rounded text-foreground font-medium text-base transition-all focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder-muted-foreground/50 shadow-none resize-none overflow-hidden outline-none"
+                    placeholder="Add description (optional)"
+                    className="w-full bg-transparent border border-transparent hover:border-border/40 focus:border-primary focus:bg-background/20 px-2 py-1 rounded text-sm text-muted-foreground transition-all focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder-muted-foreground/50 shadow-none resize-none min-h-[32px] h-auto overflow-hidden outline-none"
                   />
-                  {renderBadge(getTaskSource(task))}
-                </div>
-
-                {/* Description textarea */}
-                <AutoResizingTextarea
-                  value={task.description}
-                  onChange={(e) =>
-                    onUpdateTask(task.id, { description: e.target.value })
-                  }
-                  placeholder="Add description (optional)"
-                  className="w-full bg-transparent border border-transparent hover:border-border/40 focus:border-primary focus:bg-background/20 px-2 py-1 rounded text-sm text-muted-foreground transition-all focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder-muted-foreground/50 shadow-none resize-none min-h-[32px] h-auto overflow-hidden outline-none"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {tasks.length < MAX_TASKS && (
-          <button
-            onClick={onAddTask}
-            className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-primary hover:text-primary/80 transition-colors uppercase pt-1"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add a task
-          </button>
-        )}
-      </section>
-
-      {/* Habits Section */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between border-b border-border/30 pb-2">
-          <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">Habits</h2>
-          <span className="text-xs text-muted-foreground/60 tabular-nums">
-            {habits.length}/{MAX_HABITS}
-          </span>
-        </div>
-
-        <div className="space-y-3">
-          {habits.map((habit) => (
-            <div
-              key={habit.id}
-              className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:bg-muted/10"
-            >
-              {/* Delete button (hover only) */}
-              <button
-                onClick={() => onDeleteHabit(habit.id)}
-                className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-[#ef4444] group-hover:opacity-100 focus:opacity-100"
-                aria-label="Delete habit"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-
-              <div className="space-y-3 pr-6">
-                {/* Title input with badge */}
-                <div className="flex items-start justify-between gap-3">
-                  <AutoResizingTextarea
-                    value={habit.title}
-                    onChange={(e) =>
-                      onUpdateHabit(habit.id, { title: e.target.value })
-                    }
-                    placeholder="Habit title"
-                    className="w-full bg-transparent border border-transparent hover:border-border/40 focus:border-primary focus:bg-background/20 px-2 py-1 rounded text-foreground font-medium text-base transition-all focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder-muted-foreground/50 shadow-none resize-none overflow-hidden outline-none"
-                  />
-                  {renderBadge(getHabitSource(habit))}
-                </div>
-
-                {/* Custom Segmented Control for Frequency */}
-                <div className="flex border border-border bg-background/50 rounded-lg p-0.5 max-w-sm w-full select-none justify-between text-xs">
-                  {freqOptions.map((opt) => {
-                    const isSelected = habit.frequency === opt.value
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => onUpdateHabit(habit.id, { frequency: opt.value })}
-                        className={`flex-1 text-center py-1.5 rounded-md font-medium transition-all ${
-                          isSelected
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    )
-                  })}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {habits.length < MAX_HABITS && (
-          <button
-            onClick={onAddHabit}
-            className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-primary hover:text-primary/80 transition-colors uppercase pt-1"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add a habit
-          </button>
-        )}
-      </section>
+          {tasks.length < MAX_TASKS && (
+            <button
+              onClick={onAddTask}
+              className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-primary hover:text-primary/80 transition-colors uppercase pt-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add a task
+            </button>
+          )}
+        </section>
+
+        {/* Habits Section */}
+        <section className={`space-y-4 ${activeTab === 'habits' ? 'block' : 'hidden md:block'}`}>
+          <div className="flex items-center justify-between border-b border-border/30 pb-2">
+            <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">Habits</h2>
+            <span className="text-xs text-muted-foreground/60 tabular-nums">
+              {habits.length}/{MAX_HABITS}
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {habits.map((habit) => (
+              <div
+                key={habit.id}
+                className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:bg-muted/10"
+              >
+                {/* Delete button (hover only) */}
+                <button
+                  onClick={() => onDeleteHabit(habit.id)}
+                  className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-[#ef4444] group-hover:opacity-100 focus:opacity-100"
+                  aria-label="Delete habit"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+
+                <div className="space-y-3 pr-6">
+                  {/* Title input with badge */}
+                  <div className="flex items-start justify-between gap-3">
+                    <AutoResizingTextarea
+                      value={habit.title}
+                      onChange={(e) =>
+                        onUpdateHabit(habit.id, { title: e.target.value })
+                      }
+                      placeholder="Habit title"
+                      className="w-full bg-transparent border border-transparent hover:border-border/40 focus:border-primary focus:bg-background/20 px-2 py-1 rounded text-foreground font-medium text-base transition-all focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder-muted-foreground/50 shadow-none resize-none overflow-hidden outline-none"
+                    />
+                    {renderBadge(getHabitSource(habit))}
+                  </div>
+
+                  {/* Custom Segmented Control for Frequency */}
+                  <div className="flex border border-border bg-background/50 rounded-lg p-0.5 max-w-sm w-full select-none justify-between text-xs">
+                    {freqOptions.map((opt) => {
+                      const isSelected = habit.frequency === opt.value
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => onUpdateHabit(habit.id, { frequency: opt.value })}
+                          className={`flex-1 text-center py-1.5 rounded-md font-medium transition-all ${
+                            isSelected
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {habits.length < MAX_HABITS && (
+            <button
+              onClick={onAddHabit}
+              className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-primary hover:text-primary/80 transition-colors uppercase pt-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add a habit
+            </button>
+          )}
+        </section>
+      </div>
 
       {/* Regenerate Section */}
-      <div className="pt-2 space-y-3">
+      <div className="pt-2 space-y-3 pb-20 sm:pb-0">
         <Button
           variant="outline"
           onClick={onRegenerate}
@@ -314,7 +358,7 @@ export function EditStep({
       </div>
 
       {/* CTA Button */}
-      <div className="pt-4">
+      <div className="pt-4 max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:bg-background/85 max-sm:backdrop-blur-md max-sm:p-4 max-sm:border-t max-sm:border-border/50 max-sm:z-50">
         <Button
           onClick={onContinue}
           className="h-14 w-full rounded-lg text-base font-semibold transition-all bg-primary text-primary-foreground hover:bg-primary/95 focus-visible:ring-offset-0 focus-visible:ring-primary flex items-center justify-center gap-2"
