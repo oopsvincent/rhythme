@@ -48,7 +48,7 @@ export default function GlobalError({
     const body = encodeURIComponent(
       `Hi Rhythmé team,\n\nI encountered an error in the app:\n\nMessage: ${error?.message ?? "n/a"}\n\nStack:\n${error?.stack ?? "n/a"}\n\nURL: ${typeof window !== "undefined" ? window.location.href : "server"}\n\nSteps to reproduce (please add):\n1.\n2.\n3.\n\nThanks.`
     );
-    return `mailto:support@rhythme.example?subject=${subject}&body=${body}`;
+    return `mailto:support@amplecen.com?subject=${subject}&body=${body}`;
   })();
 
   return (
