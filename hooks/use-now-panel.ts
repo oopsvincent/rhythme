@@ -1,38 +1,20 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
 import { useTasks } from "@/hooks/use-tasks";
 import { useHabits } from "@/hooks/use-habits";
 import { useMoodLogs } from "@/hooks/use-mood-logs";
 import { getLocalDateString } from "@/lib/timezone";
-import type { Task, HabitWithStats } from "@/types/database";
+import { getFocusSessionsHistory } from "@/app/actions/focusSessions";
 
-// Custom hook to query focus sessions over the last 14 days
+// Custom hook to query focus sessions over the last 14 days using server action
 export function useFocusSessionsHistory(days = 14) {
   return useQuery({
     queryKey: ["focus-sessions-history", days],
     queryFn: async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError || !user) return [];
-
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - days);
-
-      const { data, error } = await supabase
-        .from("focus_sessions")
-        .select("started_at, actual_duration, planned_duration")
-        .eq("user_id", user.id)
-        .eq("is_active", false)
-        .gte("started_at", cutoffDate.toISOString());
-
-      if (error) throw error;
-      return data || [];
+      const result = await getFocusSessionsHistory(days);
+      if (result.error) throw new Error(result.error);
+      return result.data || [];
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
@@ -54,6 +36,12 @@ export function useNowPanel() {
   const { data: habits = [], isLoading: habitsLoading, error: habitsError } = useHabits();
   const { data: moodLogs = [], isLoading: moodLoading, error: moodError } = useMoodLogs(14);
   const { data: focusSessions = [], isLoading: focusLoading, error: focusError } = useFocusSessionsHistory(14);
+
+  // Debugging logs to verify error sources
+  if (tasksError) console.error("[NowPanel Debug] tasksError:", tasksError);
+  if (habitsError) console.error("[NowPanel Debug] habitsError:", habitsError);
+  if (moodError) console.error("[NowPanel Debug] moodError:", moodError);
+  if (focusError) console.error("[NowPanel Debug] focusError:", focusError);
 
   const todayStr = getLocalDateString();
 
