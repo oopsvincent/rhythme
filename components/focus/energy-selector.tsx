@@ -59,7 +59,7 @@ export function EnergySelector({ value, onChange, disabled, size = 'md' }: Energ
   )
 }
 
-export function EnergyBadge({ value, size = 'sm' }: { value: number; size?: 'sm' | 'md' }) {
+export function EnergyBadge({ value, size = 'sm', iconOnly = false }: { value: number; size?: 'sm' | 'md'; iconOnly?: boolean }) {
   const level = ENERGY_LEVELS.find((l) => l.value === value)
   if (!level) return null
 
@@ -69,7 +69,7 @@ export function EnergyBadge({ value, size = 'sm' }: { value: number; size?: 'sm'
   return (
     <span className={cn('inline-flex items-center gap-1 text-xs', level.color)}>
       <Icon className={iconSize} />
-      <span className="text-muted-foreground">{level.label}</span>
+      {!iconOnly && <span className="text-muted-foreground">{level.label}</span>}
     </span>
   )
 }

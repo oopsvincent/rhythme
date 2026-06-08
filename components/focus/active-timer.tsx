@@ -22,6 +22,8 @@ import {
   Minimize2,
   Volume2,
   VolumeX,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
@@ -52,6 +54,7 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
     const startedAt = new Date(session.started_at).getTime()
     return Date.now() - startedAt < 10000
   })
+  const [isMinimized, setIsMinimized] = useState(false)
 
   const { resolvedTheme } = useTheme()
   const currentMode = (resolvedTheme === 'dark' ? 'dark' : 'light') as BackgroundMode
@@ -180,7 +183,7 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
               Active Session
             </p>
-            <h1 className={cn("font-bold tracking-tight", isImmersiveMode ? "mt-4 text-3xl sm:text-4xl text-center" : "mt-2 text-2xl")}>{taskLabel}</h1>
+            <h1 className={cn("font-bold tracking-tight", isImmersiveMode ? "font-primary mt-4 text-3xl sm:text-4xl text-center" : "mt-2 text-2xl")}>{taskLabel}</h1>
           </div>
           {!isImmersiveMode && (
             <Link
@@ -221,16 +224,27 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
 
         <div className={cn(
           isImmersiveMode 
-            ? `rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 md:p-12 border border-border/60 shadow-sm bg-card/40 ${activeBg.cardClass}`
+            ? isMinimized
+              ? "w-full max-w-2xl mx-auto flex flex-col items-center justify-center transition-all duration-500"
+              : `rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 md:p-12 border border-border/60 shadow-sm bg-card/40 transition-all duration-500 ${activeBg.cardClass}`
             : "w-full pt-4"
         )}>
           <div className={cn(
             isImmersiveMode 
-              ? "grid gap-6 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center"
+              ? isMinimized
+                ? "flex flex-col items-center justify-center w-full"
+                : "grid gap-6 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center"
               : "grid gap-8 lg:gap-16 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
           )}>
-            <div className="flex flex-col items-center justify-center">
-              <div className={cn("relative flex aspect-square w-full items-center justify-center mx-auto", isImmersiveMode ? "max-w-[260px] sm:max-w-[320px]" : "max-w-[280px] sm:max-w-[320px]")}>
+            <div className={cn("flex flex-col items-center justify-center", isImmersiveMode && isMinimized && "w-full")}>
+              <div className={cn(
+                "relative flex aspect-square w-full items-center justify-center mx-auto transition-all duration-500 ease-in-out",
+                isImmersiveMode 
+                  ? isMinimized 
+                    ? "max-w-[340px] sm:max-w-[420px] md:max-w-[480px]" 
+                    : "max-w-[300px] sm:max-w-[360px] md:max-w-[400px]" 
+                  : "max-w-[280px] sm:max-w-[320px]"
+              )}>
                 <svg
                   className="-rotate-90 absolute inset-0 h-full w-full"
                   viewBox={`0 0 ${size} ${size}`}
@@ -244,7 +258,7 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={strokeWidth}
-                    className={isImmersiveMode ? "text-zinc-800" : "text-muted/20"}
+                    className={isImmersiveMode ? "text-zinc-800/80" : "text-muted/20"}
                   />
                   <circle
                     cx={size / 2}
@@ -260,8 +274,15 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
                   />
                 </svg>
 
-                <div className="flex flex-col items-center justify-center text-center">
-                  <span className={cn("font-bold tracking-tight text-foreground tabular-nums", isImmersiveMode ? "text-5xl sm:text-6xl md:text-7xl" : "text-5xl sm:text-6xl")}>
+                <div className="flex flex-col items-center justify-center text-center px-4">
+                  <span className={cn(
+                    "font-primary font-bold tracking-tight text-foreground tabular-nums transition-all duration-300",
+                    isImmersiveMode 
+                      ? isMinimized 
+                        ? "text-6xl sm:text-7xl md:text-8xl lg:text-9xl" 
+                        : "text-5xl sm:text-6xl md:text-7xl" 
+                      : "text-5xl sm:text-6xl"
+                  )}>
                     {formatTime(remainingSeconds)}
                   </span>
                   <span className="mt-1 sm:mt-2 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -270,67 +291,97 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-                <span>Elapsed: {formatTime(elapsedSeconds)}</span>
-                {interruptions.length > 0 && (
-                  <span className="flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {interruptions.length} interruption{interruptions.length !== 1 ? 's' : ''}
-                  </span>
-                )}
-                {session.energy_start && <EnergyBadge value={session.energy_start} size="sm" />}
-              </div>
+              {isImmersiveMode && isMinimized ? (
+                <div className="mt-8 flex items-center justify-center gap-4 animate-in fade-in zoom-in-95 duration-300">
+                  {session.energy_start && (
+                    <div className="flex items-center justify-center w-9 h-9 rounded-full bg-black/20 backdrop-blur-md border border-white/10" title="Energy level">
+                      <EnergyBadge value={session.energy_start} size="sm" iconOnly={true} />
+                    </div>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    title="Add Interruption"
+                    className="h-9 w-9 rounded-full bg-black/20 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:text-white text-white/80 transition-all duration-200"
+                    onClick={() => setShowInterruptionModal(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    title="End Session"
+                    className="h-9 w-9 rounded-full shadow-md transition-all duration-200 hover:scale-105 active:scale-95 bg-destructive hover:bg-destructive/90"
+                    disabled={isEnding}
+                    onClick={() => setShowEndConfirm(true)}
+                  >
+                    <Square className="h-3.5 w-3.5 fill-current" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+                  <span>Elapsed: {formatTime(elapsedSeconds)}</span>
+                  {interruptions.length > 0 && (
+                    <span className="flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {interruptions.length} interruption{interruptions.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {session.energy_start && <EnergyBadge value={session.energy_start} size="sm" />}
+                </div>
+              )}
             </div>
 
-            <div className="space-y-6 w-full">
-              <div className={cn(
-                "rounded-2xl border p-4",
-                isImmersiveMode ? "border-border/50 bg-background/60" : "border-border/40 bg-card/30"
-              )}>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                  Session Status
-                </p>
-                <div className={cn("mt-3 h-1.5 overflow-hidden rounded-full", isImmersiveMode ? "bg-zinc-800" : "bg-muted/50")}>
-                  <div
-                    className={cn("h-full rounded-full transition-[width] duration-500 ease-out", isImmersiveMode ? "bg-zinc-300" : "bg-primary")}
-                    style={{
-                      width: `${Math.max(0, Math.min(100, progress * 100))}%`,
-                    }}
-                  />
+            {(!isImmersiveMode || !isMinimized) && (
+              <div className="space-y-6 w-full">
+                <div className={cn(
+                  "rounded-2xl border p-4",
+                  isImmersiveMode ? "border-border/50 bg-background/60" : "border-border/40 bg-card/30"
+                )}>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                    Session Status
+                  </p>
+                  <div className={cn("mt-3 h-1.5 overflow-hidden rounded-full", isImmersiveMode ? "bg-zinc-800" : "bg-muted/50")}>
+                    <div
+                      className={cn("h-full rounded-full transition-[width] duration-500 ease-out", isImmersiveMode ? "bg-zinc-300" : "bg-primary")}
+                      style={{
+                        width: `${Math.max(0, Math.min(100, progress * 100))}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Planned</span>
+                    <span className="font-medium text-foreground">{formatTime(plannedDuration)}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Remaining</span>
+                    <span className="font-medium text-foreground">{formatTime(remainingSeconds)}</span>
+                  </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Planned</span>
-                  <span className="font-medium text-foreground">{formatTime(plannedDuration)}</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Remaining</span>
-                  <span className="font-medium text-foreground">{formatTime(remainingSeconds)}</span>
+
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 sm:gap-3">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12 rounded-xl text-sm w-full transition-all duration-300 hover:bg-muted"
+                    onClick={() => setShowInterruptionModal(true)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Interruption
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="destructive"
+                    className="h-12 rounded-xl text-sm w-full shadow-lg shadow-destructive/15 transition-all duration-300 hover:shadow-destructive/25"
+                    disabled={isEnding}
+                    onClick={() => setShowEndConfirm(true)}
+                  >
+                    <Square className="mr-2 h-4 w-4" />
+                    End Session
+                  </Button>
                 </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 sm:gap-3">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 rounded-xl text-sm w-full transition-all duration-300 hover:bg-muted"
-                  onClick={() => setShowInterruptionModal(true)}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Interruption
-                </Button>
-                <Button
-                  size="lg"
-                  variant="destructive"
-                  className="h-12 rounded-xl text-sm w-full shadow-lg shadow-destructive/15 transition-all duration-300 hover:shadow-destructive/25"
-                  disabled={isEnding}
-                  onClick={() => setShowEndConfirm(true)}
-                >
-                  <Square className="mr-2 h-4 w-4" />
-                  End Session
-                </Button>
-              </div>
-
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -366,7 +417,26 @@ export function ActiveTimer({ session }: ActiveTimerProps) {
           <Button
             variant="outline"
             size="sm"
-            className={cn("rounded-full shadow-sm font-medium transition-colors", activeBg.btnClass)}
+            className={cn("rounded-full shadow-sm font-medium transition-colors gap-1.5 sm:gap-2 px-3 sm:px-4 h-9", activeBg.btnClass)}
+            onClick={() => setIsMinimized(!isMinimized)}
+            title={isMinimized ? "Show all controls" : "Minimize controls"}
+          >
+            {isMinimized ? (
+              <>
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Show Controls</span>
+              </>
+            ) : (
+              <>
+                <EyeOff className="h-4 w-4" />
+                <span className="hidden sm:inline">Minimize</span>
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn("rounded-full shadow-sm font-medium transition-colors h-9", activeBg.btnClass)}
             onClick={toggleImmersiveMode}
           >
             <Minimize2 className="mr-2 h-4 w-4" />
