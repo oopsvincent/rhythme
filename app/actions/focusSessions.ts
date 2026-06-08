@@ -260,3 +260,28 @@ export async function clearFocusSessions(): Promise<ActionResponse<{ success: bo
     return { error: error instanceof Error ? error.message : 'Failed to delete focus sessions' }
   }
 }
+
+export async function getFocusSessionsHistory(days = 14): Promise<ActionResponse<Pick<FocusSession, 'started_at' | 'actual_duration' | 'planned_duration'>[]>> {
+  try {
+    const { user, supabase } = await getAuthenticatedUser()
+
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - days)
+
+    const { data, error } = await supabase
+      .from('focus_sessions')
+      .select('started_at, actual_duration, planned_duration')
+      .eq('user_id', user.id)
+      .eq('is_active', false)
+      .gte('started_at', cutoffDate.toISOString())
+      .order('started_at', { ascending: false })
+
+    if (error) throw error
+
+    return { data: data as Pick<FocusSession, 'started_at' | 'actual_duration' | 'planned_duration'>[] }
+  } catch (error) {
+    console.error('getFocusSessionsHistory error:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to fetch focus sessions history' }
+  }
+}
+

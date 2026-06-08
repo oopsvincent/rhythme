@@ -135,25 +135,27 @@ export async function getHabits(localToday?: string): Promise<ActionResponse<Hab
       // Period-based progress
       const { start, end } = getPeriodBounds(freq, localToday);
       const periodLogs = habitLogs.filter(
-        (log: HabitLog) => log.completed_at >= start && log.completed_at <= end,
+        (log: HabitLog) => log.completed_at && log.completed_at >= start && log.completed_at <= end,
       );
       const periodCompletions = periodLogs.length;
       const isCompletedForPeriod = periodCompletions >= targetCount;
 
       // Legacy compat fields
       const completedToday = habitLogs.some(
-        (log: HabitLog) => log.completed_at.split("T")[0] === today,
+        (log: HabitLog) => log.completed_at && log.completed_at.split("T")[0] === today,
       );
       const completedThisWeek = (() => {
         const weekBounds = getPeriodBounds(1, localToday);
         return habitLogs.some(
           (log: HabitLog) =>
-            log.completed_at >= weekBounds.start && log.completed_at <= weekBounds.end,
+            log.completed_at && log.completed_at >= weekBounds.start && log.completed_at <= weekBounds.end,
         );
       })();
 
       // Streak
-      const completionDates = habitLogs.map((log: HabitLog) => log.completed_at);
+      const completionDates = habitLogs
+        .map((log: HabitLog) => log.completed_at)
+        .filter((d): d is string => !!d);
       const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates, localToday);
 
       const daysOld = daysSince(new Date(habit.created_at));
@@ -222,23 +224,25 @@ export async function getHabit(
     // Period-based progress
     const { start, end } = getPeriodBounds(freq, localToday);
     const periodLogs = (logs || []).filter(
-      (log: HabitLog) => log.completed_at >= start && log.completed_at <= end,
+      (log: HabitLog) => log.completed_at && log.completed_at >= start && log.completed_at <= end,
     );
     const periodCompletions = periodLogs.length;
     const isCompletedForPeriod = periodCompletions >= targetCount;
 
     // Legacy compat
     const completedToday = (logs || []).some(
-      (log: HabitLog) => log.completed_at.split("T")[0] === today,
+      (log: HabitLog) => log.completed_at && log.completed_at.split("T")[0] === today,
     );
     const weekBounds = getPeriodBounds(1, localToday);
     const completedThisWeek = (logs || []).some(
       (log: HabitLog) =>
-        log.completed_at >= weekBounds.start && log.completed_at <= weekBounds.end,
+        log.completed_at && log.completed_at >= weekBounds.start && log.completed_at <= weekBounds.end,
     );
 
     // Streak
-    const completionDates = (logs || []).map((log: HabitLog) => log.completed_at);
+    const completionDates = (logs || [])
+      .map((log: HabitLog) => log.completed_at)
+      .filter((d): d is string => !!d);
     const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates, localToday);
 
     const daysOld = daysSince(new Date(habit.created_at));
@@ -435,7 +439,9 @@ export async function logHabitCompletion(
       .eq("user_id", user.id)
       .order("completed_at", { ascending: false });
 
-    const completionDates = (allLogs || []).map((l) => l.completed_at);
+    const completionDates = (allLogs || [])
+      .map((l) => l.completed_at)
+      .filter((d): d is string => !!d);
     const newStreak = computeUnifiedStreak(freq, targetCount, completionDates, localToday);
 
     // Update streak_count in habits table
@@ -495,7 +501,9 @@ export async function removeHabitCompletion(
       .eq("user_id", user.id)
       .order("completed_at", { ascending: false });
 
-    const completionDates = (remainingLogs || []).map((l) => l.completed_at);
+    const completionDates = (remainingLogs || [])
+      .map((l) => l.completed_at)
+      .filter((d): d is string => !!d);
     const newStreak = computeUnifiedStreak(freq as HabitFrequency, targetCount, completionDates, localToday);
 
     // Update streak_count in habits table
@@ -568,10 +576,10 @@ export async function getHabitStats(
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const logs7d = (logs || []).filter(
-      (log: HabitLog) => new Date(log.completed_at) >= sevenDaysAgo,
+      (log: HabitLog) => log.completed_at && new Date(log.completed_at) >= sevenDaysAgo,
     );
     const logs30d = (logs || []).filter(
-      (log: HabitLog) => new Date(log.completed_at) >= thirtyDaysAgo,
+      (log: HabitLog) => log.completed_at && new Date(log.completed_at) >= thirtyDaysAgo,
     );
 
     // Calculate expected completions based on frequency and target_count
@@ -599,7 +607,9 @@ export async function getHabitStats(
     );
 
     // Unified streak
-    const completionDates = (logs || []).map((log: HabitLog) => log.completed_at);
+    const completionDates = (logs || [])
+      .map((log: HabitLog) => log.completed_at)
+      .filter((d): d is string => !!d);
     const currentStreak = computeUnifiedStreak(freq, targetCount, completionDates, localToday);
 
     // Rule-based prediction

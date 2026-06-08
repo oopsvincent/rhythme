@@ -310,7 +310,7 @@ export function computeUnifiedStreak(
   if (completionDates.length === 0) return 0;
 
   // Extract just the date part and sort descending
-  const dateStrs = completionDates.map((d) => d.split("T")[0]);
+  const dateStrs = completionDates.filter(Boolean).map((d) => d.split("T")[0]);
   const sortedDesc = [...dateStrs].sort((a, b) => b.localeCompare(a));
 
   switch (freq) {
