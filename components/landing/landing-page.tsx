@@ -470,8 +470,12 @@ const RhythmeLanding: React.FC<RhythmeLandingProps> = ({ user }) => {
                   </div>
                 ))}
               </div>
-              <div className="text-sm text-muted-foreground">
-                Join <span className="font-semibold text-foreground">14,200+</span> creators & builders finding their daily focus.
+              <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-1.5 leading-relaxed">
+                <span>Rhythmé is in active early validation.</span>
+                <Link href="/beta" className="text-primary hover:text-accent font-semibold inline-flex items-center gap-1 transition-colors duration-200">
+                  Join the Beta program
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
             </motion.div>
           </div>

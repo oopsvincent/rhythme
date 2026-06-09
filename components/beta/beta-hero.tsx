@@ -56,7 +56,7 @@ const BetaHero: React.FC = () => {
 
         {/* Subtitle */}
         <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 sm:mb-10 leading-relaxed max-w-xl mx-auto">
-          We are currently recruiting participants for our early product validation phase. Apply for our 15-minute feedback interview and secure <span className="text-foreground font-semibold">free lifetime access to Rhythmé Pro</span>.
+          We are currently recruiting participants for our early product validation phase. Apply for our 15-minute feedback interview and secure <span className="text-foreground font-semibold">one month of free Rhythmé Premium</span>.
         </p>
 
         {/* Process Pills */}
@@ -86,8 +86,8 @@ const BetaHero: React.FC = () => {
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-foreground">3. Lifetime Pro</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">Get free lifetime access to Rhythmé Pro.</p>
+              <h4 className="text-sm font-bold text-foreground">3. Free Premium</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">Get one month of free Rhythmé Premium.</p>
             </div>
           </div>
         </div>
