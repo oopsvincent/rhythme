@@ -1,12 +1,12 @@
 import RhythmeLanding from "@/components/landing/landing-page";
 import { getUser } from "@/app/actions/auth";
-import { redirect } from "next/navigation";
+import { RedirectToDashboard } from "@/components/auth/redirect-to-dashboard";
 
 export default async function Home() {
   const user = await getUser();
 
   if (user) {
-    redirect("/dashboard");
+    return <RedirectToDashboard />;
   }
 
   return <RhythmeLanding user={user} />;

@@ -80,7 +80,7 @@ const Footer: React.FC = () => {
       <div className="absolute top-0 left-1/4 w-64 h-64 bg-primary/3 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-accent/3 rounded-full blur-3xl"></div>
 
-      <div className="max-w-6xl mx-auto px-6 py-16 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 py-16 relative z-10">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-12">
           {/* Brand Column */}
@@ -125,6 +125,8 @@ const Footer: React.FC = () => {
                 <a
                   key={social.label}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label}
                   className="backdrop-blur-sm bg-muted/50 border border-border rounded-lg p-2.5 text-muted-foreground hover:text-primary hover:border-primary/50 transition-all duration-300 hover:bg-primary/5"
                 >
@@ -135,7 +137,7 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Link Columns */}
-          <div className="lg:col-span-7 grid grid-cols-3 gap-8">
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-8">
             {footerSections.map((section) => (
               <div key={section.title}>
                 <h4 className="text-sm font-semibold mb-4 text-foreground">

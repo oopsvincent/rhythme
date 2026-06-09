@@ -63,8 +63,9 @@ export default function LoginPage() {
           <motion.div
             initial={{ x: 150, opacity: 0, rotate: 5 }}
             animate={{ x: 0, opacity: 1, rotate: -3 }}
+            whileHover={{ rotate: 0 }}
             transition={{ type: "spring", stiffness: 60, damping: 15, delay: 0.3 }}
-            className="backdrop-blur-md bg-white/10 border border-white/20 p-5 rounded-2xl shadow-xl shadow-black/10 transform -rotate-3 hover:rotate-0 transition-transform duration-300 pointer-events-auto"
+            className="backdrop-blur-md bg-white/10 border border-white/20 p-5 rounded-2xl shadow-xl shadow-black/10 pointer-events-auto"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-white/95 tracking-wide flex items-center gap-1.5 font-primary">
@@ -93,8 +94,9 @@ export default function LoginPage() {
           <motion.div
             initial={{ x: 180, opacity: 0, rotate: -5 }}
             animate={{ x: 0, opacity: 1, rotate: 2 }}
+            whileHover={{ rotate: 0 }}
             transition={{ type: "spring", stiffness: 60, damping: 15, delay: 0.4 }}
-            className="backdrop-blur-md bg-white/10 border border-white/20 p-5 rounded-2xl shadow-xl shadow-black/10 transform rotate-2 hover:rotate-0 transition-transform duration-300 pointer-events-auto"
+            className="backdrop-blur-md bg-white/10 border border-white/20 p-5 rounded-2xl shadow-xl shadow-black/10 pointer-events-auto"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-white/95 tracking-wide flex items-center gap-1.5 font-primary">
@@ -123,8 +125,9 @@ export default function LoginPage() {
           <motion.div
             initial={{ x: 150, opacity: 0, rotate: 10 }}
             animate={{ x: 0, opacity: 1, rotate: -1 }}
+            whileHover={{ rotate: 0 }}
             transition={{ type: "spring", stiffness: 60, damping: 15, delay: 0.5 }}
-            className="backdrop-blur-md bg-white/10 border border-white/20 p-5 rounded-2xl shadow-xl shadow-black/10 transform -rotate-1 hover:rotate-0 transition-transform duration-300 pointer-events-auto"
+            className="backdrop-blur-md bg-white/10 border border-white/20 p-5 rounded-2xl shadow-xl shadow-black/10 pointer-events-auto"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-white/95 tracking-wide flex items-center gap-1.5 font-primary">

@@ -13,6 +13,7 @@ import { NotificationsStep } from './_components/NotificationsStep'
 import { GeneratingStep } from './_components/GeneratingStep'
 import { EditStep } from './_components/EditStep'
 import { CommitmentStep } from './_components/CommitmentStep'
+import { RhythmeLogo } from '@/components/rhythme-logo'
 
 const lora = Lora({
   subsets: ['latin'],
@@ -81,7 +82,7 @@ export default function OnboardingPage() {
 
   return (
     <div
-      className={`${lora.variable} ${outfit.variable} min-h-[100dvh] bg-background text-foreground font-sans-display relative overflow-hidden flex flex-col justify-center py-10 max-sm:pb-28`}
+      className={`${lora.variable} ${outfit.variable} min-h-[100dvh] bg-background text-foreground font-sans-display relative overflow-hidden flex flex-col justify-start py-6 max-sm:pb-28`}
       style={{
         fontFamily: 'var(--font-outfit), sans-serif',
       }}
@@ -105,54 +106,59 @@ export default function OnboardingPage() {
       {/* Subtle background glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/3 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Non-blocking logout button */}
-      <div className="absolute top-4 right-6 z-50">
+      {/* Top Header Bar */}
+      <header className={`w-full mx-auto px-6 flex items-center justify-between z-50 mb-6 transition-all duration-300 ${
+        currentStep === 'edit' ? 'max-w-5xl' : 'max-w-[480px]'
+      }`}>
+        <RhythmeLogo size="sm" showText={true} />
         <button
           onClick={() => logout()}
-          className="text-xs font-semibold tracking-wider text-muted-foreground hover:text-primary transition-colors uppercase py-2 px-3 hover:bg-muted/10 rounded-md"
+          className="text-xs font-semibold tracking-wider text-muted-foreground hover:text-primary transition-colors uppercase py-1.5 px-3 hover:bg-muted/10 rounded-md border border-border/30 backdrop-blur-sm"
         >
           Log Out
         </button>
-      </div>
+      </header>
 
-      {/* Step Indicator */}
-      {showProgress && (
-        <div className="w-full max-w-[480px] mx-auto px-6 mb-8 select-none">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
-              Step {currentStepIndex + 1} of 4
-            </span>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
-              {currentStep === 'goal' && 'Goal'}
-              {currentStep === 'profile-name' && 'Name'}
-              {currentStep === 'profile-avatar' && 'Avatar'}
-              {currentStep === 'notifications' && 'Notifications'}
-            </span>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col justify-center w-full">
+        {/* Step Indicator */}
+        {showProgress && (
+          <div className="w-full max-w-[480px] mx-auto px-6 mb-8 select-none">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                Step {currentStepIndex + 1} of 4
+              </span>
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+                {currentStep === 'goal' && 'Goal'}
+                {currentStep === 'profile-name' && 'Name'}
+                {currentStep === 'profile-avatar' && 'Avatar'}
+                {currentStep === 'notifications' && 'Notifications'}
+              </span>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex gap-1">
+              {stepsList.map((step, idx) => {
+                const isActive = idx === currentStepIndex
+                const isCompleted = idx < currentStepIndex
+                return (
+                  <div
+                    key={step}
+                    className={`h-full flex-1 rounded-full transition-all duration-500 ${
+                      isCompleted
+                        ? 'bg-primary'
+                        : isActive
+                        ? 'bg-primary'
+                        : 'bg-muted-foreground/20'
+                    }`}
+                  />
+                )
+              })}
+            </div>
           </div>
-          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex gap-1">
-            {stepsList.map((step, idx) => {
-              const isActive = idx === currentStepIndex
-              const isCompleted = idx < currentStepIndex
-              return (
-                <div
-                  key={step}
-                  className={`h-full flex-1 rounded-full transition-all duration-500 ${
-                    isCompleted
-                      ? 'bg-primary'
-                      : isActive
-                      ? 'bg-primary'
-                      : 'bg-muted-foreground/20'
-                  }`}
-                />
-              )
-            })}
-          </div>
-        </div>
-      )}
+        )}
 
-      <div className={`w-full mx-auto px-6 relative z-10 flex-1 flex flex-col justify-center transition-all duration-300 ${
-        currentStep === 'edit' ? 'max-w-5xl' : 'max-w-[480px]'
-      }`}>
+        <div className={`w-full mx-auto px-6 relative z-10 flex-1 flex flex-col justify-center transition-all duration-300 ${
+          currentStep === 'edit' ? 'max-w-5xl' : 'max-w-[480px]'
+        }`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -248,6 +254,7 @@ export default function OnboardingPage() {
             )}
           </motion.div>
         </AnimatePresence>
+      </div>
       </div>
     </div>
   )
