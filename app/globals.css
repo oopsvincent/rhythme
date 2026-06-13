@@ -128,7 +128,7 @@ body {
   --chart-5: #D98C6E;
 
   /* Sidebar */
-  --sidebar: rgba(248, 244, 240, 0.97);
+  --sidebar: #EDEAE5;
   --sidebar-foreground: #1F2A38;
   --sidebar-primary: #E07A5F;
   --sidebar-primary-foreground: #FFFFFF;
@@ -179,7 +179,7 @@ body {
   --chart-5: #D98C6E;
 
   /* Sidebar */
-  --sidebar: rgba(15, 23, 36, 0.95);
+  --sidebar: #0A0B0E;
   --sidebar-foreground: #F1EDE6;
   --sidebar-primary: #E07A5F;
   --sidebar-primary-foreground: #0F1724;
@@ -585,9 +585,23 @@ body {
     animation: liquid-flow-reverse 12s linear infinite;
   }
 
+  @keyframes pulse-fast {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.25;
+    }
+  }
+
+  .animate-pulse-fast {
+    animation: pulse-fast 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-liquid-1,
-    .animate-liquid-2 {
+    .animate-liquid-2,
+    .animate-pulse-fast {
       animation: none !important;
       background-image: none !important;
     }

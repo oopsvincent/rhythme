@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -172,8 +173,8 @@ export function MoodChart({ journals }: MoodChartProps) {
   // Query 7 days of mood logs for Chart 1
   const { data: logs = [], isLoading: isLogsLoading } = useMoodLogs(7);
   
-  const checkInDays = getLast7DaysCheckIns(logs);
-  const journalDays = getLast7DaysJournalMoods(journals);
+  const checkInDays = useMemo(() => getLast7DaysCheckIns(logs), [logs]);
+  const journalDays = useMemo(() => getLast7DaysJournalMoods(journals), [journals]);
 
   const hasAnyCheckIn = checkInDays.some((d) => d.score !== null);
   const hasAnyJournalMood = journalDays.some((d) => d.mood !== null);

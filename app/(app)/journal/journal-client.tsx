@@ -38,6 +38,7 @@ import {
 import { Journal, MoodTags } from "@/types/database";
 import { decryptJournal } from "@/lib/crypto";
 import { useJournalEncryptionStore } from "@/store/useJournalEncryptionStore";
+import { moodColors } from "@/components/journal/emotional-aura";
 
 // Normalized entry type for component use
 interface NormalizedEntry {
@@ -251,9 +252,28 @@ export default function JournalPageClient({
   }).length;
 
   return (
-    <>
-      <SiteHeader />
-      
+    <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-y-auto overflow-x-hidden">
+      {/* Background paper texture & glow system */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {/* Soft floating mood radial gradients */}
+        <div 
+          className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full opacity-[0.06] dark:opacity-[0.03] blur-[130px] transition-all duration-1000"
+          style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }}
+        />
+        <div 
+          className="absolute bottom-1/4 left-1/10 w-[500px] h-[500px] rounded-full opacity-[0.05] dark:opacity-[0.02] blur-[110px] transition-all duration-1000"
+          style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
+        />
+        {/* Dotted notebook/bullet journal grid paper style */}
+        <div 
+          className="absolute inset-0 opacity-[0.02] dark:opacity-[0.015] pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle, var(--foreground) 1px, transparent 1px)`,
+            backgroundSize: "24px 24px",
+          }}
+        />
+      </div>
+
       {/* Unlock Modal - only shown when user has encryption setup */}
       {encryptionToken && (
         <JournalUnlockModal
@@ -275,237 +295,368 @@ export default function JournalPageClient({
         }}
       />
       
-      <div className="flex flex-1 flex-col overflow-hidden overflow-y-auto">
-        <div className="flex flex-1 flex-col px-4 md:px-8 lg:px-10 py-6 md:py-8 relative">
-          
-          {/* Background Effects */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div 
-              className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-10 blur-[120px]"
-              style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }}
-            />
-            <div 
-              className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full opacity-10 blur-[100px]"
-              style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
-            />
+      {/* Blended Header */}
+      <SiteHeader className="bg-transparent relative z-20" />
+      
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 py-6 md:py-8 max-w-6xl mx-auto w-full relative z-10 space-y-8 pb-20">
+        
+        {/* Serene Date Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border/15"
+        >
+          <div className="flex flex-col gap-2 max-w-xl text-center md:text-left">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary/80">
+              {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })}
+            </span>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-primary tracking-tight text-foreground/90 leading-none">
+              {new Date().toLocaleDateString("en-US", { weekday: "long" })}
+            </h1>
+            <p className="text-sm text-muted-foreground/80 mt-1.5 leading-relaxed">
+              Welcome to your quiet space for reflection. Capture your thoughts and trace your emotional journey in security and peace.
+            </p>
           </div>
 
-          <div className="relative z-10 max-w-6xl mx-auto w-full space-y-8">
+          <div className="flex flex-col sm:flex-row items-center gap-4 self-center md:self-auto shrink-0">
+            <HeaderIllustration />
             
-            {/* Header Section */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col md:flex-row md:items-end justify-between gap-6"
-            >
+            {/* New Entry Button */}
+            <Link href="/journal/new">
+              <Button
+                size="lg"
+                className="h-14 px-6 rounded-2xl gap-2 bg-gradient-to-r from-primary to-secondary hover:shadow-md hover:shadow-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer"
+              >
+                <PenLine className="w-4 h-4" />
+                <span className="font-semibold text-sm">New Entry</span>
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
+
+        {/* Memo-style Stats Row */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        >
+          {/* Streak Memo */}
+          <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(var(--primary),0.05)] transition-all duration-300 hover:shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Flame className="w-5 h-5 text-primary" />
+              </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold font-primary tracking-tight mb-2">
-                  Your Journal
-                </h1>
-                <p className="text-muted-foreground">
-                  Capture your thoughts, track your emotions
-                </p>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/85">Day streak</p>
+                <p className="text-lg font-bold font-primary text-foreground/90 mt-0.5">{streak} days</p>
               </div>
+            </div>
+          </div>
 
-              {/* New Entry Button */}
-              <Link href="/journal/new">
-                <Button
-                  size="lg"
-                  className="gap-2 bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:scale-105"
+          {/* Total Entries Memo */}
+          <div className="relative overflow-hidden rounded-2xl border border-accent/20 bg-accent/5 p-4 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(var(--accent),0.05)] transition-all duration-300 hover:shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/85">Pages filled</p>
+                <p className="text-lg font-bold font-primary text-foreground/90 mt-0.5">{totalEntries} entries</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Weekly Memo */}
+          <div className="relative overflow-hidden rounded-2xl border border-[#8FAFC9]/25 bg-[#8FAFC9]/8 p-4 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(143,175,201,0.05)] transition-all duration-300 hover:shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#8FAFC9]/15 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-[#7CA0BD] dark:text-[#8FAFC9]" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/85">This week</p>
+                <p className="text-lg font-bold font-primary text-foreground/90 mt-0.5">{thisWeekEntries} written</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Search & Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-4"
+        >
+          {/* Search Bar */}
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search your journals..."
+                className="w-full h-12 pl-11 pr-4 rounded-2xl bg-card/65 dark:bg-card/30 border border-border/40 focus:border-primary focus:ring-4 focus:ring-primary/8 outline-none transition-all placeholder:text-muted-foreground/60 text-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <PenLine className="w-4 h-4" />
-                  New Entry
-                </Button>
-              </Link>
-            </motion.div>
-
-            {/* Stats Row */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="grid grid-cols-3 gap-4"
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className={cn(
+                "h-12 w-12 rounded-2xl border-border/40 transition-all duration-300 cursor-pointer active:scale-95",
+                showFilters && "bg-primary/10 border-primary text-primary"
+              )}
+              onClick={() => setShowFilters(!showFilters)}
             >
-              {/* Streak */}
-              <div className="glass-card rounded-2xl p-4 md:p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center">
-                  <Flame className="w-6 h-6 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-2xl md:text-3xl font-bold font-primary">{streak}</p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Day streak</p>
-                </div>
-              </div>
+              <Filter className="w-4.5 h-4.5" />
+            </Button>
+          </div>
 
-              {/* Total Entries */}
-              <div className="glass-card rounded-2xl p-4 md:p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl md:text-3xl font-bold font-primary">{totalEntries}</p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Total entries</p>
-                </div>
-              </div>
-
-              {/* This Week */}
-              <div className="glass-card rounded-2xl p-4 md:p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-2xl md:text-3xl font-bold font-primary">{thisWeekEntries}</p>
-                  <p className="text-xs md:text-sm text-muted-foreground">This week</p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Search & Filters */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-4"
-            >
-              {/* Search Bar */}
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search your journals..."
-                    className="w-full h-12 pl-11 pr-4 rounded-xl bg-card/60 border border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/60"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    "h-12 w-12 rounded-xl",
-                    showFilters && "bg-primary/10 border-primary text-primary"
-                  )}
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <Filter className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* Mood Filters */}
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="flex flex-wrap gap-2 py-2">
-                      {moodFilters.map((filter) => (
-                        <button
-                          key={filter.type}
-                          onClick={() => setMoodFilter(filter.type)}
-                          className={cn(
-                            "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
-                            moodFilter === filter.type
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          )}
-                        >
-                          {filter.type !== "all" && (() => {
-                            const Icon = moodIcons[filter.type as MoodType];
-                            return <Icon className="w-4 h-4 mr-1" />;
-                          })()}
-                          {filter.label}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            {/* Journal Grid */}
-            {filteredEntries.length > 0 ? (
+          {/* Mood Filters */}
+          <AnimatePresence>
+            {showFilters && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
-                {filteredEntries.map((entry, index) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + index * 0.05 }}
-                  >
-                    <JournalCard
-                      entry={entry}
-                      variant={index === 0 && filteredEntries.length > 3 ? "featured" : "default"}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
-            ) : entries.length === 0 ? (
-              /* Empty State - No entries at all */
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="glass-card rounded-3xl p-12 text-center"
-              >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                  <Sparkles className="w-10 h-10 text-primary" />
+                <div className="flex flex-wrap gap-2.5 py-2.5">
+                  {moodFilters.map((filter) => {
+                    const isSelected = moodFilter === filter.type;
+                    const colors = filter.type !== "all" ? moodColors[filter.type] : null;
+                    
+                    return (
+                      <motion.button
+                        key={filter.type}
+                        onClick={() => setMoodFilter(filter.type)}
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        className={cn(
+                          "relative px-4 py-2 rounded-full text-xs font-semibold tracking-wide border cursor-pointer select-none transition-all duration-300 flex items-center gap-1.5",
+                          isSelected
+                            ? "shadow-sm"
+                            : "bg-card/50 hover:bg-card/80 border-border/30 text-muted-foreground hover:text-foreground"
+                        )}
+                        style={isSelected ? {
+                          backgroundColor: colors ? `${colors.primary}18` : "var(--primary)",
+                          borderColor: colors ? colors.primary : "var(--primary)",
+                          color: colors ? colors.primary : "var(--primary-foreground)",
+                          boxShadow: colors ? `0 0 12px ${colors.primary}18` : undefined,
+                        } : undefined}
+                      >
+                        {filter.type !== "all" && (() => {
+                          const Icon = moodIcons[filter.type as MoodType];
+                          return <Icon className="w-3.5 h-3.5" />;
+                        })()}
+                        {filter.label}
+                      </motion.button>
+                    );
+                  })}
                 </div>
-                <h3 className="text-2xl font-bold font-primary mb-3">
-                  Start Your Journaling Journey
-                </h3>
-                <p className="text-muted-foreground max-w-md mx-auto mb-8">
-                  Capture your thoughts, track your emotions, and discover insights about yourself 
-                  through the power of reflective writing.
-                </p>
-                <Link href="/journal/new">
-                  <Button size="lg" className="gap-2">
-                    <PenLine className="w-4 h-4" />
-                    Write Your First Entry
-                  </Button>
-                </Link>
-              </motion.div>
-            ) : (
-              /* No results for filter */
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="glass-card rounded-2xl p-8 text-center"
-              >
-                <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                <h3 className="text-lg font-bold font-primary mb-2">No Matches Found</h3>
-                <p className="text-muted-foreground mb-4">
-                  Try adjusting your search or filters
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setMoodFilter("all");
-                  }}
-                >
-                  Clear Filters
-                </Button>
               </motion.div>
             )}
-          </div>
-        </div>
-      </div>
-    </>
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Spacious, Clean Journal Grid */}
+        {filteredEntries.length > 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+          >
+            {filteredEntries.map((entry, index) => (
+              <motion.div
+                key={entry.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 + (index % 6) * 0.05 }}
+              >
+                <JournalCard
+                  entry={entry}
+                  variant="default"
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : entries.length === 0 ? (
+          /* Empty State - No entries at all */
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative overflow-hidden rounded-[32px] border border-border/30 bg-card/40 dark:bg-card/20 backdrop-blur-sm p-12 text-center max-w-xl mx-auto mt-6"
+          >
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold font-primary mb-2 text-foreground/90">
+              Start Your Journaling Journey
+            </h3>
+            <p className="text-sm text-muted-foreground/80 max-w-sm mx-auto mb-8 leading-relaxed">
+              Capture your thoughts, track your emotions, and discover insights about yourself 
+              through the power of reflective writing.
+            </p>
+            <Link href="/journal/new">
+              <Button size="lg" className="gap-2 rounded-xl cursor-pointer">
+                <PenLine className="w-4 h-4" />
+                Write Your First Entry
+              </Button>
+            </Link>
+          </motion.div>
+        ) : (
+          /* No results for filter */
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="rounded-[24px] border border-border/30 bg-card/30 dark:bg-card/15 p-10 text-center max-w-md mx-auto"
+          >
+            <Search className="w-10 h-10 mx-auto mb-4 text-muted-foreground/45" />
+            <h3 className="text-base font-bold font-primary mb-2 text-foreground/90">No Matches Found</h3>
+            <p className="text-sm text-muted-foreground/80 mb-5">
+              Try adjusting your search query or mood filters
+            </p>
+            <Button
+              variant="outline"
+              className="rounded-xl cursor-pointer"
+              onClick={() => {
+                setSearchQuery("");
+                setMoodFilter("all");
+              }}
+            >
+              Clear Filters
+            </Button>
+          </motion.div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+/* 
+ * =============================================================================
+ * HEADER ILLUSTRATION COMPONENT
+ * =============================================================================
+ */
+function HeaderIllustration() {
+  const [hour, setHour] = useState(12);
+
+  useEffect(() => {
+    setHour(new Date().getHours());
+  }, []);
+
+  const isMorning = hour >= 5 && hour < 12;
+  const isAfternoon = hour >= 12 && hour < 17;
+  const isEvening = hour >= 17 && hour < 22;
+  const isNight = hour >= 22 || hour < 5;
+
+  let cx = 55;
+  let cy = 28;
+  if (isMorning) {
+    cx = 30;
+    cy = 38;
+  } else if (isAfternoon) {
+    cx = 55;
+    cy = 22;
+  } else if (isEvening) {
+    cx = 80;
+    cy = 38;
+  } else if (isNight) {
+    cx = 55;
+    cy = 22;
+  }
+
+  return (
+    <div className="relative flex items-center justify-center p-3 bg-card/45 dark:bg-card/20 border border-border/30 rounded-[22px] shadow-sm backdrop-blur-md group hover:border-primary/20 transition-all duration-300 shrink-0 select-none pointer-events-none">
+      <div className={cn(
+        "absolute -right-6 -bottom-6 w-20 h-20 rounded-full blur-2xl opacity-15 pointer-events-none transition-all duration-500",
+        isMorning && "bg-amber-400",
+        isAfternoon && "bg-sky-400",
+        isEvening && "bg-orange-500",
+        isNight && "bg-indigo-400"
+      )} />
+
+      <svg width="110" height="70" viewBox="0 0 110 70" className="overflow-visible select-none pointer-events-none z-10">
+        <defs>
+          <radialGradient id="bannerSun" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FFD066" />
+            <stop offset="70%" stopColor="#E07A5F" />
+            <stop offset="100%" stopColor="#C26B55" />
+          </radialGradient>
+          <linearGradient id="bannerMoon" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F8F4F0" />
+            <stop offset="60%" stopColor="#D2C3B4" />
+            <stop offset="100%" stopColor="#8FAFC9" />
+          </linearGradient>
+          <filter id="bannerGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+          </filter>
+        </defs>
+
+        {/* Orbit Arc */}
+        <path
+          d="M 15,58 Q 55,18 95,58"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeDasharray="3,3"
+          className="text-muted-foreground/25"
+        />
+
+        {/* Sun/Moon Body & Glow */}
+        {!isNight ? (
+          <>
+            <circle
+              cx={cx}
+              cy={cy}
+              r="12"
+              fill="url(#bannerSun)"
+              opacity="0.3"
+              filter="url(#bannerGlow)"
+            />
+            <circle cx={cx} cy={cy} r="7.5" fill="url(#bannerSun)" />
+          </>
+        ) : (
+          <>
+            <g filter="url(#bannerGlow)" opacity="0.35">
+              <path
+                d={`M ${cx - 5},${cy - 5} A 9,9 0 1,0 ${cx + 5},${cy + 5} A 6.5,6.5 0 1,1 ${cx - 5},${cy - 5} Z`}
+                fill="url(#bannerMoon)"
+              />
+            </g>
+            <path
+              d={`M ${cx - 5},${cy - 5} A 9,9 0 1,0 ${cx + 5},${cy + 5} A 6.5,6.5 0 1,1 ${cx - 5},${cy - 5} Z`}
+              fill="url(#bannerMoon)"
+            />
+            <circle cx="20" cy="20" r="0.8" fill="#F8F4F0" opacity="0.6" />
+            <circle cx="88" cy="25" r="0.6" fill="#F8F4F0" opacity="0.8" />
+            <circle cx="38" cy="35" r="0.8" fill="#F8F4F0" opacity="0.5" />
+          </>
+        )}
+
+        {/* Cloud Illustrations */}
+        <path
+          d="M 18,55 A 5,5 0 0,1 23,50 H 42 A 5,5 0 0,1 47,55 A 5,5 0 0,1 42,60 H 23 A 5,5 0 0,1 18,55 Z"
+          fill="currentColor"
+          className="text-card/85 dark:text-muted/15"
+        />
+        <path
+          d="M 34,58 A 6.5,6.5 0 0,1 40.5,51.5 H 74 A 6.5,6.5 0 0,1 80.5,58 A 6.5,6.5 0 0,1 74,64.5 H 40.5 A 6.5,6.5 0 0,1 34,58 Z"
+          fill="currentColor"
+          className="text-muted/80 dark:text-muted/30"
+        />
+      </svg>
+    </div>
   );
 }
