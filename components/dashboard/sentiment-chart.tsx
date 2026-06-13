@@ -132,7 +132,7 @@ export function SentimentChart({ journals }: SentimentChartProps) {
     localStorage.setItem(CHART_LAYOUT_KEY, type);
   };
 
-  const days = getLast7DaysScores(journals);
+  const days = React.useMemo(() => getLast7DaysScores(journals), [journals]);
   const hasData = days.some((d) => d.score !== null);
 
   // For recharts, null values cause gaps — replace with 0 for display

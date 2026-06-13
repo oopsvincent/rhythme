@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -162,12 +163,15 @@ export function AppSidebarClient({
       className="border-r border-sidebar-border bg-sidebar"
       {...props}
     >
-      <SidebarHeader className="px-2 pt-4 pb-2">
+      <SidebarHeader className={cn(
+        "pt-4 pb-2 transition-all duration-200",
+        isCollapsed ? "p-0 px-0" : "px-4"
+      )}>
         {isCollapsed ? (
-          <div className="flex justify-center py-1">
+          <div className="flex items-center justify-center py-1 w-full">
             <Popover>
               <PopoverTrigger asChild>
-                <button className="flex items-center justify-center rounded-full size-8 bg-primary/10 border border-primary/25 shadow-sm cursor-pointer hover:border-primary/50 transition-all duration-300 focus:outline-none shrink-0">
+                <button className="flex items-center justify-center rounded-full size-8 bg-transparent hover:bg-sidebar-accent/30 cursor-pointer transition-all duration-300 focus:outline-none shrink-0">
                   <Image src="/Rhythme.svg" alt="R" width={16} height={16} className="opacity-90" />
                 </button>
               </PopoverTrigger>
@@ -194,8 +198,8 @@ export function AppSidebarClient({
         ) : (
           <Popover>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-sidebar-border/85 hover:border-primary/30 hover:bg-sidebar-primary/5 transition-all duration-300 cursor-pointer select-none text-left w-full focus:outline-none bg-sidebar-primary/5">
-                <div className="flex items-center justify-center rounded-full size-6.5 bg-primary/15 border border-primary/25 shadow-sm shrink-0">
+              <button className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl transition-all duration-300 cursor-pointer select-none text-left w-full focus:outline-none bg-transparent hover:bg-sidebar-accent/30">
+                <div className="flex items-center justify-center rounded-full size-7 bg-primary/10 border border-primary/20 shadow-sm shrink-0">
                   <Image src="/Rhythme.svg" alt="R" width={13} height={13} className="opacity-90" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -249,7 +253,10 @@ export function AppSidebarClient({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-2">
+      <SidebarFooter className={cn(
+        "border-t border-sidebar-border transition-all duration-200",
+        isCollapsed ? "p-0 py-2" : "p-2"
+      )}>
         {user ? (
           <NavUser user={user} />
         ) : (

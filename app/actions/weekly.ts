@@ -575,6 +575,10 @@ export async function getWeeklyHistory(
 
     const sortedWeeks = Array.from(weekSet).sort().reverse().slice(0, limit);
 
+    if (sortedWeeks.length === 0) {
+      return { data: [] };
+    }
+
     // Build plan/review maps
     const planMap = new Map<string, WeeklyPlanRow>();
     for (const p of plans || []) {
@@ -585,7 +589,49 @@ export async function getWeeklyHistory(
       reviewMap.set(r.week_start_date, r as WeeklyReviewRow);
     }
 
-    // For each week, compute lightweight stats
+    // Overhaul: Fetch data in bulk rather than inside the week loop
+    const minWeekStart = sortedWeeks[sortedWeeks.length - 1];
+    const maxWeekStart = sortedWeeks[0];
+    const maxWeekEnd = (() => {
+      const d = new Date(maxWeekStart + "T00:00:00");
+      d.setDate(d.getDate() + 6);
+      return fmtLocalDate(d);
+    })();
+
+    const rangeStartISO = `${minWeekStart}T00:00:00`;
+    const rangeEndISO = `${maxWeekEnd}T23:59:59`;
+
+    const [tasksResult, habitLogsResult, activeHabitsResult, journalsResult] = await Promise.all([
+      supabase
+        .from("tasks")
+        .select("status, created_at, completed_at")
+        .eq("user_id", user.id)
+        .gte("created_at", rangeStartISO)
+        .lte("created_at", rangeEndISO),
+      supabase
+        .from("habit_logs")
+        .select("completed_at")
+        .eq("user_id", user.id)
+        .gte("completed_at", rangeStartISO)
+        .lte("completed_at", rangeEndISO),
+      supabase
+        .from("habits")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_active", true),
+      supabase
+        .from("journals")
+        .select("mood_tags, created_at")
+        .eq("user_id", user.id)
+        .gte("created_at", rangeStartISO)
+        .lte("created_at", rangeEndISO),
+    ]);
+
+    const allTasks = tasksResult.data || [];
+    const allHabitLogs = habitLogsResult.data || [];
+    const activeHabits = activeHabitsResult.count || 0;
+    const allJournals = journalsResult.data || [];
+
     const history: WeeklyHistoryItem[] = [];
 
     for (const ws of sortedWeeks) {
@@ -598,46 +644,21 @@ export async function getWeeklyHistory(
       const startISO = `${ws}T00:00:00`;
       const endISO = `${we}T23:59:59`;
 
-      // Lightweight task stats
-      const { count: totalTasks } = await supabase
-        .from("tasks")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", startISO)
-        .lte("created_at", endISO);
+      const weekTasks = allTasks.filter(
+        (t) => t.created_at >= startISO && t.created_at <= endISO
+      );
+      const totalTasks = weekTasks.length;
+      const completedTasks = weekTasks.filter((t) => t.status === "completed").length;
 
-      const { count: completedTasks } = await supabase
-        .from("tasks")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("status", "completed")
-        .gte("created_at", startISO)
-        .lte("created_at", endISO);
+      const habitLogsCount = allHabitLogs.filter(
+        (l) => l.completed_at && l.completed_at >= startISO && l.completed_at <= endISO
+      ).length;
 
-      // Lightweight habit stats
-      const { count: habitLogs } = await supabase
-        .from("habit_logs")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("completed_at", startISO)
-        .lte("completed_at", endISO);
-
-      const { count: activeHabits } = await supabase
-        .from("habits")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_active", true);
-
-      // Journal count and avg mood
-      const { data: weekJournals } = await supabase
-        .from("journals")
-        .select("mood_tags")
-        .eq("user_id", user.id)
-        .gte("created_at", startISO)
-        .lte("created_at", endISO);
-
-      const jCount = weekJournals?.length || 0;
-      const moodVals = (weekJournals || [])
+      const weekJournals = allJournals.filter(
+        (j) => j.created_at >= startISO && j.created_at <= endISO
+      );
+      const jCount = weekJournals.length;
+      const moodVals = weekJournals
         .map((j) => {
           const m =
             (j.mood_tags as Record<string, string> | null)?.mood || "neutral";
@@ -651,10 +672,10 @@ export async function getWeeklyHistory(
             ) / 10
           : 0;
 
-      const maxExpected = (activeHabits || 0) * 7;
+      const maxExpected = activeHabits * 7;
       const habitPct =
         maxExpected > 0
-          ? Math.round(((habitLogs || 0) / maxExpected) * 100)
+          ? Math.round((habitLogsCount / maxExpected) * 100)
           : 0;
 
       const fmtDate = (d: string) => {
@@ -675,10 +696,8 @@ export async function getWeeklyHistory(
         review: reviewMap.get(ws) || null,
         stats: {
           tasksCompletionPct:
-            (totalTasks || 0) > 0
-              ? Math.round(
-                  ((completedTasks || 0) / (totalTasks || 1)) * 100
-                )
+            totalTasks > 0
+              ? Math.round((completedTasks / totalTasks) * 100)
               : 0,
           habitCompletionPct: habitPct,
           journalCount: jCount,

@@ -13,8 +13,6 @@ import OnboardingCheck from "@/components/OnboardingCheck";
 import AppSidebarWrapper from "@/components/providers/appSidebarWrapper";
 import { BrowserNotificationPrompt } from "@/components/notifications/browser-notification-prompt";
 
-// Layout is synchronous — no server-side data fetching.
-// Auth gating is handled by middleware.ts (via lib/supabase/proxy.ts).
 export default function DashboardLayout({
   children,
 }: {
@@ -31,28 +29,17 @@ export default function DashboardLayout({
             } as React.CSSProperties
           }
         >
-          <AppSidebarWrapper variant="inset" />
+          {/* Change from variant="inset" to variant="sidebar" for a docked, seamless sidebar */}
+          <AppSidebarWrapper variant="sidebar" />
           <SidebarInset>
             <ContextMenu>
               <ContextMenuTrigger asChild>
-                
-<OnboardingCheck>
-  <div className="flex flex-1 bg-muted/30 dark:bg-background">
-    <main className="@container/main flex flex-1 p-0 pb-20 md:p-4 md:pb-4 lg:p-6 lg:pb-6">
-      <div
-        className="
-          w-full
-          bg-card
-          p-4
-          md:rounded-xl md:border md:border-border md:shadow-sm md:p-4
-          lg:rounded-2xl lg:p-6
-        "
-      >
-        {children}
-      </div>
-    </main>
-  </div>
-</OnboardingCheck>
+                <OnboardingCheck>
+                  {/* Clean, borderless container matching the workspace dimensions */}
+                  <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-x-hidden">
+                    {children}
+                  </div>
+                </OnboardingCheck>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 <ContextMenuItem>Copy</ContextMenuItem>

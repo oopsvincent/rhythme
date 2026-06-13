@@ -277,8 +277,10 @@ export default function InsightsClient({
   // Loading / decrypting state
   if (decryptedBody === null && !error) {
     return (
-      <>
-        <SiteHeader />
+      <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-y-auto overflow-x-hidden">
+        {/* Blended Header */}
+        <SiteHeader className="border-b-0 bg-transparent relative z-20" />
+        
         {encryptionToken && (
           <JournalUnlockModal
             open={showUnlockModal}
@@ -287,8 +289,9 @@ export default function InsightsClient({
             validationToken={encryptionToken}
           />
         )}
-        <div className="flex flex-1 items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
+        
+        <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+          <div className="flex flex-col items-center gap-4 p-8 bg-card/65 dark:bg-card/30 border border-border/20 rounded-2xl backdrop-blur-sm max-w-sm text-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             <p className="text-sm text-muted-foreground">
               {showUnlockModal
@@ -299,13 +302,34 @@ export default function InsightsClient({
             </p>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <SiteHeader />
+    <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-y-auto overflow-x-hidden">
+      {/* Background paper texture & glow system */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {/* Soft floating mood radial gradients */}
+        <div 
+          className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full opacity-[0.06] dark:opacity-[0.03] blur-[130px] transition-all duration-1000"
+          style={{ background: `radial-gradient(circle, ${colors.primary} 0%, transparent 70%)` }}
+        />
+        <div 
+          className="absolute bottom-1/4 left-1/10 w-[500px] h-[500px] rounded-full opacity-[0.05] dark:opacity-[0.02] blur-[110px] transition-all duration-1000"
+          style={{ background: `radial-gradient(circle, var(--accent) 0%, transparent 70%)` }}
+        />
+        {/* Dotted notebook/bullet journal grid paper style */}
+        <div 
+          className="absolute inset-0 opacity-[0.02] dark:opacity-[0.015] pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle, var(--foreground) 1px, transparent 1px)`,
+            backgroundSize: "24px 24px",
+          }}
+        />
+      </div>
+
+      {/* Unlock Modal - only shown when user has encryption setup */}
       {encryptionToken && (
         <JournalUnlockModal
           open={showUnlockModal}
@@ -314,389 +338,368 @@ export default function InsightsClient({
           validationToken={encryptionToken}
         />
       )}
-      <div className="flex flex-1 flex-col overflow-hidden overflow-y-auto">
-        <div className="flex flex-1 flex-col px-4 md:px-8 py-6 md:py-8 relative">
-          {/* Background */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div
-              className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-15 blur-[120px]"
-              style={{
-                background: `radial-gradient(circle, ${colors.primary} 0%, transparent 70%)`,
-              }}
-            />
+      
+      {/* Blended Header */}
+      <SiteHeader className="bg-transparent relative z-20" />
+      
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-4xl mx-auto w-full relative z-10 space-y-6 pb-20">
+        
+        {/* Navigation Toolbar */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between gap-4 pb-4 border-b border-border/15"
+        >
+          <div className="flex items-center gap-3">
+            <Link href={`/journal/${journalId}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 cursor-pointer text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Entry</span>
+              </Button>
+            </Link>
+            
+            <div className="h-4 w-[1px] bg-border/40 hidden sm:block" />
+            
+            <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+              <Brain className="w-3.5 h-3.5 text-primary" />
+              <span className="font-semibold tracking-wide uppercase">AI Insights</span>
+            </div>
           </div>
 
-          <div className="relative z-10 max-w-4xl mx-auto w-full space-y-8">
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-4">
-                <Link href={`/journal/${journalId}`}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-xl"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Brain className="w-5 h-5 text-primary" />
-                    <h1 className="text-xl md:text-2xl font-primary font-bold">
-                      AI Insights
-                    </h1>
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-1">
-                    {decryptedTitle || initialJournal.title}
-                  </p>
-                </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={regenerateAnalysis}
+            disabled={isAnalyzing}
+            className="gap-2 rounded-xl cursor-pointer"
+          >
+            <RefreshCw
+              className={cn("w-3.5 h-3.5", isAnalyzing && "animate-spin")}
+            />
+            <span>{analysis ? "Re-analyze" : "Analyze"}</span>
+          </Button>
+        </motion.div>
+
+        {/* Error State */}
+        {error && !isAnalyzing && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-foreground/90">{error}</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  The machine learning analysis engine might be warming up. Try again in a moment.
+                </p>
               </div>
+            </div>
+          </motion.div>
+        )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={regenerateAnalysis}
-                disabled={isAnalyzing}
-                className="gap-2"
-              >
-                <RefreshCw
-                  className={cn("w-4 h-4", isAnalyzing && "animate-spin")}
-                />
-                {analysis ? "Re-analyze" : "Analyze"}
-              </Button>
-            </motion.div>
+        {isAnalyzing ? (
+          /* Analyzing State */
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-[28px] border border-border/30 bg-card/65 dark:bg-card/30 backdrop-blur-md p-12 text-center"
+          >
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center shadow-inner">
+              <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+            </div>
+            <h3 className="text-xl font-bold font-primary mb-2 text-foreground/90 animate-pulse">
+              Analyzing Your Entry
+            </h3>
+            <p className="text-sm text-muted-foreground/80 max-w-xs mx-auto">
+              Rhythmé is running Cadence sentiment engines to decipher emotional undertones...
+            </p>
+          </motion.div>
+        ) : analysis ? (
+          <>
+            {/* Main Insights Sheet */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative rounded-[28px] border border-border/30 bg-card/75 dark:bg-card/35 backdrop-blur-md shadow-sm p-6 sm:p-8 md:p-10 space-y-8"
+            >
+              {/* Score & Sentiment */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8 pb-6 border-b border-border/15">
+                
+                {/* Sentiment descriptor */}
+                <div className="flex-1 space-y-4 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-4">
+                    <EmotionalAura mood={mood} intensity={3} size="sm">
+                      {(() => {
+                        const MoodIcon = moodIcons[mood];
+                        return (
+                          <MoodIcon
+                            className="w-5 h-5"
+                            style={{ color: colors.primary }}
+                          />
+                        );
+                      })()}
+                    </EmotionalAura>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/75">
+                        Selected Mood
+                      </p>
+                      <p className="text-lg font-bold font-primary capitalize text-foreground/90 leading-none mt-1">
+                        {moodLabels[mood]}
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Error State */}
-            {error && !isAnalyzing && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass-card rounded-2xl p-6 border-destructive/30"
-              >
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">{error}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      The ML service might be warming up. Try again in a
-                      moment.
+                  <div className="pt-2">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/75">
+                      Sentiment Analysis
+                    </p>
+                    <div className="flex items-center justify-center md:justify-start gap-2.5 mt-1.5">
+                      <span className="text-xl font-bold font-primary capitalize text-foreground/90">
+                        {analysis.sentiment}
+                      </span>
+                      <Badge
+                        className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 border-0 rounded-md select-none",
+                          sentimentColors[analysis.sentiment]?.bg || "bg-muted",
+                          sentimentColors[analysis.sentiment]?.text || "text-foreground"
+                        )}
+                      >
+                        {(analysis.confidence * 100).toFixed(0)}% Match
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Score Ring Widget */}
+                <div className="relative flex items-center justify-center">
+                  <svg className="w-32 h-32 transform -rotate-90">
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="54"
+                      stroke="currentColor"
+                      strokeWidth="6"
+                      fill="none"
+                      className="text-muted/15"
+                    />
+                    <motion.circle
+                      cx="64"
+                      cy="64"
+                      r="54"
+                      stroke="url(#scoreGradient)"
+                      strokeWidth="6"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeDasharray={340}
+                      initial={{ strokeDashoffset: 340 }}
+                      animate={{
+                        strokeDashoffset:
+                          340 - (analysis.sentimentScore / 100) * 340,
+                      }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                    />
+                    <defs>
+                      <linearGradient
+                        id="scoreGradient"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="0%"
+                      >
+                        <stop offset="0%" stopColor={colors.primary} />
+                        <stop offset="100%" stopColor={colors.secondary || colors.primary} />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute flex flex-col items-center">
+                    <span className="text-2xl font-bold font-primary text-foreground/90">
+                      {analysis.sentimentScore}
+                    </span>
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground/60 leading-none mt-0.5">
+                      Intensity
+                    </span>
+                  </div>
+                </div>
+
+                {/* Simple Stats Memo */}
+                <div className="grid grid-cols-2 gap-3 w-full md:w-auto shrink-0 md:min-w-[200px]">
+                  <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/10">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/75 mb-1">
+                      Word Count
+                    </p>
+                    <p className="text-base font-bold font-primary text-foreground/90">
+                      {analysis.wordCount} words
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/10">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/75 mb-1">
+                      Log Length
+                    </p>
+                    <p className="text-base font-bold font-primary text-foreground/90">
+                      {analysis.wordCount > 100 ? "Expressive" : "Reflective"}
                     </p>
                   </div>
                 </div>
-              </motion.div>
-            )}
 
-            {isAnalyzing ? (
-              /* Analyzing State */
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="glass-card rounded-3xl p-12 text-center"
-              >
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                  <Sparkles className="w-10 h-10 text-primary animate-pulse" />
-                </div>
-                <h3 className="text-xl font-primary font-bold mb-2">
-                  Analyzing Your Entry
-                </h3>
-                <p className="text-muted-foreground">
-                  Rhythmé is analyzing your emotions...
-                </p>
-              </motion.div>
-            ) : analysis ? (
-              <>
-                {/* Score Card */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="glass-card rounded-3xl p-8"
-                >
-                  <div className="flex flex-col md:flex-row items-center gap-8">
-                    {/* Score Ring */}
-                    <div className="relative flex items-center justify-center">
-                      <svg className="w-40 h-40 transform -rotate-90">
-                        <circle
-                          cx="80"
-                          cy="80"
-                          r="70"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="none"
-                          className="text-muted/30"
-                        />
-                        <motion.circle
-                          cx="80"
-                          cy="80"
-                          r="70"
-                          stroke="url(#scoreGradient)"
-                          strokeWidth="8"
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeDasharray={440}
-                          initial={{ strokeDashoffset: 440 }}
-                          animate={{
-                            strokeDashoffset:
-                              440 - (analysis.sentimentScore / 100) * 440,
-                          }}
-                          transition={{ duration: 1.5, ease: "easeOut" }}
-                        />
-                        <defs>
-                          <linearGradient
-                            id="scoreGradient"
-                            x1="0%"
-                            y1="0%"
-                            x2="100%"
-                            y2="0%"
-                          >
-                            <stop offset="0%" stopColor={colors.primary} />
-                            <stop offset="100%" stopColor={colors.secondary} />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <div className="absolute flex flex-col items-center">
-                        <motion.span
-                          className="text-4xl font-bold font-primary"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.5 }}
-                        >
-                          {analysis.sentimentScore}
-                        </motion.span>
-                        <span className="text-xs text-muted-foreground">
-                          Confidence
-                        </span>
-                      </div>
-                    </div>
+              </div>
 
-                    {/* Sentiment & Stats */}
-                    <div className="flex-1 space-y-4">
-                      <div className="flex items-center gap-4">
-                        <EmotionalAura mood={mood} intensity={3} size="md">
-                          {(() => {
-                            const MoodIcon = moodIcons[mood];
-                            return (
-                              <MoodIcon
-                                className="w-6 h-6"
-                                style={{ color: colors.primary }}
-                              />
-                            );
-                          })()}
-                        </EmotionalAura>
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            Sentiment
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <p className="text-xl font-bold font-primary capitalize">
-                              {analysis.sentiment}
-                            </p>
-                            <Badge
-                              className={cn(
-                                "text-xs",
-                                sentimentColors[analysis.sentiment]?.bg ||
-                                  "bg-muted",
-                                sentimentColors[analysis.sentiment]?.text ||
-                                  "text-foreground"
-                              )}
-                            >
-                              {(analysis.confidence * 100).toFixed(1)}%
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-xl bg-muted/30">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Word Count
-                          </p>
-                          <p className="text-lg font-bold">
-                            {analysis.wordCount}
-                          </p>
-                        </div>
-                        <div className="p-4 rounded-xl bg-muted/30">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Mood
-                          </p>
-                          <p className="text-lg font-bold capitalize">
-                            {moodLabels[mood]}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Emotions Detected */}
-                {analysis.emotions.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="glass-card rounded-2xl p-6"
-                  >
-                    <div className="flex items-center gap-2 mb-6">
-                      <Heart className="w-5 h-5 text-primary" />
-                      <h3 className="font-bold font-primary">
-                        Emotions Detected
-                      </h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {analysis.emotions.map((emotion, index) => (
-                        <motion.div
-                          key={emotion}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.2 + index * 0.1 }}
-                        >
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "px-4 py-2 text-sm capitalize border-0",
-                              emotionColors[index % emotionColors.length].bg,
-                              emotionColors[index % emotionColors.length].text
-                            )}
-                          >
-                            {emotion}
-                          </Badge>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Insights */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="glass-card rounded-2xl p-6"
-                >
-                  <div className="flex items-center gap-2 mb-6">
-                    <Lightbulb className="w-5 h-5 text-accent" />
-                    <h3 className="font-bold font-primary">Key Insights</h3>
-                  </div>
-                  <ul className="space-y-4">
-                    <motion.li
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="flex items-start gap-3"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-xs font-bold text-accent">1</span>
-                      </div>
-                      <p className="text-muted-foreground">
-                        Your journal conveys a <strong className="text-foreground">{analysis.sentiment}</strong> sentiment
-                        with <strong className="text-foreground">{analysis.sentimentScore}%</strong> confidence,
-                        {analysis.wordCount > 100
-                          ? " expressed through detailed, thoughtful writing."
-                          : " written in a concise and focused manner."}
-                      </p>
-                    </motion.li>
-                    <motion.li
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="flex items-start gap-3"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-xs font-bold text-accent">2</span>
-                      </div>
-                      <p className="text-muted-foreground">
-                        The primary emotions detected are{" "}
-                        <strong className="text-foreground">{analysis.emotions.join(", ")}</strong>,
-                        which aligns with your selected mood of <strong className="text-foreground">{moodLabels[mood]}</strong>.
-                      </p>
-                    </motion.li>
-                    <motion.li
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 }}
-                      className="flex items-start gap-3"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-xs font-bold text-accent">3</span>
-                      </div>
-                      <p className="text-muted-foreground">
-                        Consider reflecting on what triggered these feelings for deeper self-awareness
-                        and emotional growth.
-                      </p>
-                    </motion.li>
-                  </ul>
-                </motion.div>
-
-                {/* Suggestions */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="space-y-4"
-                >
+              {/* Emotions Detected */}
+              {analysis.emotions.length > 0 && (
+                <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    <h3 className="font-bold font-primary">
-                      Suggestions for You
+                    <Heart className="w-4.5 h-4.5 text-primary" />
+                    <h3 className="font-bold font-primary text-foreground/90 text-sm tracking-wide">
+                      Emotions Detected
                     </h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {getSuggestions(analysis.sentiment, analysis.emotions).map(
-                      (suggestion, index) => {
-                        const Icon = suggestion.icon;
-                        return (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.4 + index * 0.1 }}
-                            className="glass-card rounded-xl p-5 hover:shadow-lg transition-shadow"
-                          >
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-3">
-                              <Icon className="w-5 h-5 text-primary" />
-                            </div>
-                            <h4 className="font-bold text-sm mb-1">
-                              {suggestion.title}
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                              {suggestion.description}
-                            </p>
-                          </motion.div>
-                        );
-                      }
-                    )}
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.emotions.map((emotion, index) => (
+                      <motion.div
+                        key={emotion}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 + index * 0.05 }}
+                      >
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border-0 rounded-xl select-none",
+                            emotionColors[index % emotionColors.length].bg,
+                            emotionColors[index % emotionColors.length].text
+                          )}
+                        >
+                          {emotion}
+                        </Badge>
+                      </motion.div>
+                    ))}
                   </div>
-                </motion.div>
+                </div>
+              )}
 
-                {/* Model info + Disclaimer */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="text-center space-y-1"
-                >
-                  <p className="text-xs text-muted-foreground">
-                    <Sparkles className="w-3 h-3 inline mr-1" />
-                    Analyzed by <span className="font-medium">Rhythmé {getModelDisplayName(analysis.model_used)}</span>
-                    {analysis.analyzed_at && (
-                      <>
-                        {" · "}
-                        {toLocalDateTimeString(analysis.analyzed_at)}
-                      </>
-                    )}
-                  </p>
-                  <p className="text-xs text-muted-foreground/60">
-                    AI-generated insights are for self-reflection purposes only
-                  </p>
-                </motion.div>
-              </>
-            ) : null}
-          </div>
-        </div>
-      </div>
-    </>
+              {/* Key Insights List */}
+              <div className="space-y-4 pt-4 border-t border-border/15">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="w-4.5 h-4.5 text-accent" />
+                  <h3 className="font-bold font-primary text-foreground/90 text-sm tracking-wide">Key Insights</h3>
+                </div>
+                <ul className="space-y-3.5">
+                  <motion.li
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="w-5.5 h-5.5 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 mt-0.5 border border-accent/20">
+                      <span className="text-[10px] font-bold text-accent">1</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground/85 leading-relaxed">
+                      Your journal conveys a <strong className="text-foreground">{analysis.sentiment}</strong> sentiment
+                      with <strong className="text-foreground">{analysis.sentimentScore}%</strong> intensity,
+                      {analysis.wordCount > 100
+                        ? " expressed through a detailed and reflective writing style."
+                        : " written as a brief, direct check-in."}
+                    </p>
+                  </motion.li>
+                  
+                  <motion.li
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="w-5.5 h-5.5 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 mt-0.5 border border-accent/20">
+                      <span className="text-[10px] font-bold text-accent">2</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground/85 leading-relaxed">
+                      The core emotions of <strong className="text-foreground">{analysis.emotions.join(", ")}</strong> provide a deeper look behind the log, aligning with the feeling of <strong className="text-foreground">{moodLabels[mood]}</strong>.
+                    </p>
+                  </motion.li>
+                  
+                  <motion.li
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="w-5.5 h-5.5 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 mt-0.5 border border-accent/20">
+                      <span className="text-[10px] font-bold text-accent">3</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground/85 leading-relaxed">
+                      Tracing these emotional tags regularly will help you identify what specific activities or environments are triggering these states.
+                    </p>
+                  </motion.li>
+                </ul>
+              </div>
+
+            </motion.div>
+
+            {/* Suggestions Memos */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pl-1">
+                <TrendingUp className="w-4.5 h-4.5 text-primary" />
+                <h3 className="font-bold font-primary text-foreground/90 text-sm tracking-wide">
+                  Reflection Suggestions
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {getSuggestions(analysis.sentiment, analysis.emotions).map(
+                  (suggestion, index) => {
+                    const Icon = suggestion.icon;
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2 + index * 0.05 }}
+                        className="rounded-2xl border border-border/30 bg-card/65 dark:bg-card/30 backdrop-blur-md p-5 hover:shadow-sm transition-all duration-300 group hover:border-primary/20"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-inner">
+                          <Icon className="w-4.5 h-4.5 text-primary" />
+                        </div>
+                        <h4 className="font-bold font-primary text-sm text-foreground/90 mb-1 leading-tight">
+                          {suggestion.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground/85 leading-relaxed">
+                          {suggestion.description}
+                        </p>
+                      </motion.div>
+                    );
+                  }
+                )}
+              </div>
+            </div>
+
+            {/* Model Info Banner */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-center space-y-1.5"
+            >
+              <p className="text-xs text-muted-foreground/60 flex items-center justify-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+                <span>Analyzed by <span className="font-medium">Rhythmé {getModelDisplayName(analysis.model_used)}</span></span>
+                {analysis.analyzed_at && (
+                  <>
+                    <span>·</span>
+                    <span>{toLocalDateTimeString(analysis.analyzed_at)}</span>
+                  </>
+                )}
+              </p>
+              <p className="text-[10px] text-muted-foreground/45 max-w-xs mx-auto leading-normal">
+                AI reflection analysis is an assistive tool and does not constitute medical advice.
+              </p>
+            </motion.div>
+          </>
+        ) : null}
+      </main>
+    </div>
   );
 }

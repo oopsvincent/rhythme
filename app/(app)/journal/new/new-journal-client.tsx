@@ -17,9 +17,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { SiteHeader } from "@/components/site-header";
-import { MoodSelector, MoodType } from "@/components/journal/mood-selector";
+import { MoodSelector, MoodType, moodIcons } from "@/components/journal/mood-selector";
 import { JournalEditor } from "@/components/journal/journal-editor";
-import { moodColors } from "@/components/journal/emotional-aura";
+import { EmotionalAura, moodColors } from "@/components/journal/emotional-aura";
 import { JournalPassphraseSetup } from "@/components/journal/journal-passphrase-setup";
 import { JournalUnlockModal } from "@/components/journal/journal-unlock-modal";
 import { Button } from "@/components/ui/button";
@@ -209,10 +209,31 @@ export default function NewJournalClient({
     return `${diffMin}m ago`;
   };
 
+  const colors = mood ? moodColors[mood] : moodColors.neutral;
+
   return (
-    <>
-      <SiteHeader />
-      
+    <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-y-auto overflow-x-hidden">
+      {/* Background paper texture & glow system */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {/* Soft floating mood radial gradients */}
+        <div 
+          className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full opacity-[0.06] dark:opacity-[0.03] blur-[130px] transition-all duration-1000"
+          style={{ background: `radial-gradient(circle, ${colors.primary} 0%, transparent 70%)` }}
+        />
+        <div 
+          className="absolute bottom-1/4 left-1/10 w-[500px] h-[500px] rounded-full opacity-[0.05] dark:opacity-[0.02] blur-[110px] transition-all duration-1000"
+          style={{ background: `radial-gradient(circle, ${colors.secondary || colors.primary} 0%, transparent 70%)` }}
+        />
+        {/* Dotted notebook/bullet journal grid paper style */}
+        <div 
+          className="absolute inset-0 opacity-[0.02] dark:opacity-[0.015] pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle, var(--foreground) 1px, transparent 1px)`,
+            backgroundSize: "24px 24px",
+          }}
+        />
+      </div>
+
       {/* Passphrase Setup Modal - for users without encryption */}
       <JournalPassphraseSetup
         open={showPassphraseSetup}
@@ -241,179 +262,168 @@ export default function NewJournalClient({
         onOpenChange={setShowPremiumGate}
         reason="journal"
       />
+      
+      {/* Blended Header */}
+      <SiteHeader className="bg-transparent relative z-20" />
+      
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-4xl mx-auto w-full relative z-10 space-y-6 pb-20">
+        
+        {/* Navigation Toolbar */}
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/journal">
+            <Button variant="ghost" size="sm" className="gap-2 cursor-pointer text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </Button>
+          </Link>
 
-      <div className="flex flex-1 flex-col overflow-hidden overflow-y-auto relative">
-        {/* Ambient Background based on mood */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none transition-all duration-1000"
-          animate={{
-            background: ambientColor
-              ? `radial-gradient(ellipse at top, ${ambientColor.primary}10 0%, transparent 50%)`
-              : "transparent",
-          }}
-        />
-
-        <div className="relative flex flex-1 flex-col px-4 md:px-8 py-4 md:py-8">
-          <div className="max-w-3xl mx-auto w-full space-y-4 md:space-y-6">
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3">
-                <Link href="/journal">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 md:h-10 md:w-10 rounded-xl"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <div>
-                  <h1 className="text-lg md:text-2xl font-primary tracking-tight">
-                    New Entry
-                  </h1>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    {new Date().toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleSave}
-                disabled={!canSave || isSaving}
-                size="sm"
-                className={cn(
-                  "gap-2 transition-all duration-300",
-                  canSave && !isSaving && "shadow-lg hover:shadow-primary/25",
-                )}
-              >
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isSaved ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                <span className="hidden sm:inline">
-                  {isSaving ? "Saving..." : isSaved ? "Saved!" : "Save Entry"}
-                </span>
-              </Button>
-            </motion.div>
-
-            {/* Encryption Status Notice */}
-            {needsEncryptionSetup && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-orange-500/10 border border-orange-500/20"
-              >
-                <Shield className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                    Set up journal encryption
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Create a passphrase to encrypt your journals. You&apos;ll be prompted when you save.
-                  </p>
-                </div>
-              </motion.div>
+          <Button
+            onClick={handleSave}
+            disabled={!canSave || isSaving}
+            size="sm"
+            className={cn(
+              "gap-2 transition-all duration-300 rounded-xl cursor-pointer",
+              canSave && !isSaving && "shadow-lg hover:shadow-primary/25",
             )}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isSaved ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            <span>
+              {isSaving ? "Saving..." : isSaved ? "Saved!" : "Save Entry"}
+            </span>
+          </Button>
+        </div>
 
-            {/* Auto-save Notice - Mobile friendly */}
-            <motion.div
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/30"
+        {/* Notebook Page Sheet */}
+        <motion.article
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative rounded-[28px] border border-border/30 bg-card/75 dark:bg-card/35 backdrop-blur-md shadow-sm overflow-hidden p-6 sm:p-8 md:p-10 pl-16 sm:pl-20 md:pl-24 py-8 sm:py-10 md:py-12"
+        >
+          {/* Vertical notebook line */}
+          <div className="absolute top-0 bottom-0 left-[3.25rem] sm:left-[4.25rem] md:left-[5.25rem] w-[1px] bg-red-400/20 dark:bg-red-500/15 pointer-events-none" />
+
+          {/* Left margin info (Mood Aura indicator) */}
+          <div className="absolute left-3.5 sm:left-6 md:left-8 top-8 sm:top-10 md:top-12 z-10 flex flex-col items-center gap-4">
+            <EmotionalAura
+              mood={mood || "neutral"}
+              intensity={3}
+              size="sm"
+              className="w-10 h-10 shadow-sm border border-border/10"
             >
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <HardDrive className="w-3.5 h-3.5 text-primary" />
-                <span>
-                  <span className="font-medium text-foreground">
-                    Auto-saved locally
-                  </span>
-                  {lastSaved && <span> · {formatLastSaved()}</span>}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <CloudOff className="w-3 h-3" />
-                <span className="hidden sm:inline">Cloud sync after saving the entry</span>
-              </div>
-            </motion.div>
+              {(() => {
+                const MoodIcon = moodIcons[mood || "neutral"];
+                return <MoodIcon className="w-5 h-5" style={{ color: colors.primary }} />;
+              })()}
+            </EmotionalAura>
+          </div>
 
-            {/* Editor - Embedded feel (no glass-card on mobile) */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="space-y-4 md:space-y-0 md:glass-card md:rounded-2xl md:border-border/30 md:overflow-hidden"
-            >
-              {/* Title Input */}
-              <div className="md:px-6 md:pt-6">
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Untitled"
-                  className="w-full text-2xl md:text-4xl font-primary font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/40"
-                />
+          {/* Right margin info (Content sheet) */}
+          <div className="space-y-6">
+            {/* Meta header */}
+            <div className="text-xs text-muted-foreground/75 uppercase tracking-wide">
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric"
+              })}
+            </div>
+
+            {/* Title Input */}
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Untitled Entry"
+              className="w-full text-2xl sm:text-3xl md:text-4xl font-bold font-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-muted-foreground/30 text-foreground/90 leading-tight"
+            />
+
+            <div className="border-t border-border/15 pt-6 space-y-6">
+              
+              {/* Encryption Status Notice */}
+              {needsEncryptionSetup && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/5 border border-orange-500/20">
+                  <Shield className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-orange-600 dark:text-orange-400">
+                      Setup Journal Encryption
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Create a passphrase to encrypt your journals. You&apos;ll be prompted when saving.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Auto-save Notice */}
+              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border/20 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <HardDrive className="w-3.5 h-3.5 text-primary" />
+                  <span>Draft saved locally {lastSaved && <span>· {formatLastSaved()}</span>}</span>
+                </div>
+                <span className="opacity-75 hidden sm:inline">Sync on save</span>
               </div>
 
-              {/* Mood Selector */}
-              <div className="py-4 md:px-6 md:py-6 md:border-b md:border-border/30">
+              {/* Mood Selector inside card */}
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border/10">
                 <MoodSelector value={mood} onChange={setMood} />
               </div>
 
-              {/* Body Editor */}
-              <div className="md:px-6 md:py-6">
+              {/* Ruled text editor */}
+              <div 
+                className="relative p-2 rounded-xl journal-editor-lined"
+              >
+                <style jsx global>{`
+                  .journal-editor-lined textarea {
+                    background-image: linear-gradient(var(--border) 1px, transparent 1px) !important;
+                    background-size: 100% 1.625rem !important;
+                    background-position: 0 0.25rem !important;
+                    background-attachment: local !important;
+                    line-height: 1.625rem !important;
+                  }
+                `}</style>
                 <JournalEditor
                   value={body}
                   onChange={setBody}
                   placeholder="Start writing your thoughts..."
+                  className="text-base md:text-lg text-foreground/95"
                 />
               </div>
 
               {/* Stats Footer */}
-              <div className="py-3 px-0 md:px-6 md:py-4 border-t border-border/30 md:bg-muted/20">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="pt-4 border-t border-border/15">
+                <div className="flex items-center justify-between text-xs text-muted-foreground/60">
                   <div className="flex items-center gap-4">
-                    <span className="flex items-center gap-1.5">
-                      <Type className="w-3.5 h-3.5" />
-                      {wordCount} words
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" />
-                      {readingTime} min read
-                    </span>
+                    <span>{wordCount} words</span>
+                    <span>·</span>
+                    <span>{readingTime} min read</span>
                   </div>
                 </div>
               </div>
-            </motion.div>
 
-            {/* Helper Text */}
-            {!canSave && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center text-sm text-muted-foreground"
-              >
-                {!title.trim() && mood === null
-                  ? "Add a title and select your mood to save"
-                  : !title.trim()
-                    ? "Add a title to save"
-                    : "Select your mood to save"}
-              </motion.p>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
-    </>
+        </motion.article>
+
+        {/* Helper text */}
+        {!canSave && (
+          <p className="text-center text-xs text-muted-foreground/60">
+            {!title.trim() && mood === null
+              ? "Add a title and select your mood to save"
+              : !title.trim()
+                ? "Add a title to save"
+                : "Select your mood to save"}
+          </p>
+        )}
+
+      </main>
+    </div>
   );
 }

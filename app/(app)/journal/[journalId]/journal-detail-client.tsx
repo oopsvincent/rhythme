@@ -313,9 +313,39 @@ export default function JournalDetailClient({
   const readingTime = calculateReadingTime(journal.body);
 
   return (
-    <>
-      <SiteHeader />
-      
+    <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-y-auto overflow-x-hidden">
+      {/* Background paper texture & glow system */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {/* Soft floating mood radial gradients */}
+        <div 
+          className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full opacity-[0.06] dark:opacity-[0.03] blur-[130px] transition-all duration-1000"
+          style={{ background: `radial-gradient(circle, ${colors.primary} 0%, transparent 70%)` }}
+        />
+        <div 
+          className="absolute bottom-1/4 left-1/10 w-[500px] h-[500px] rounded-full opacity-[0.05] dark:opacity-[0.02] blur-[110px] transition-all duration-1000"
+          style={{ background: `radial-gradient(circle, ${colors.secondary || colors.primary} 0%, transparent 70%)` }}
+        />
+        {/* Dotted notebook/bullet journal grid paper style */}
+        <div 
+          className="absolute inset-0 opacity-[0.02] dark:opacity-[0.015] pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle, var(--foreground) 1px, transparent 1px)`,
+            backgroundSize: "24px 24px",
+          }}
+        />
+      </div>
+
+      {/* Reading Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 z-50">
+        <motion.div
+          className="h-full"
+          style={{
+            width: `${scrollProgress}%`,
+            background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary || colors.primary})`,
+          }}
+        />
+      </div>
+
       {/* Unlock Modal - only shown when user has encryption setup */}
       {encryptionToken && (
         <JournalUnlockModal
@@ -325,126 +355,122 @@ export default function JournalDetailClient({
           validationToken={encryptionToken}
         />
       )}
+      
+      {/* Blended Header */}
+      <SiteHeader className="bg-transparent relative z-20" />
+      
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-4xl mx-auto w-full relative z-10 space-y-6 pb-20">
+        
+        {/* Navigation Toolbar */}
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/journal">
+            <Button variant="ghost" size="sm" className="gap-2 cursor-pointer text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </Button>
+          </Link>
 
-      {/* Reading Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 z-50">
-        <motion.div
-          className="h-full"
-          style={{
-            width: `${scrollProgress}%`,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})`,
-          }}
-        />
-      </div>
-
-      <div className="flex flex-1 flex-col overflow-hidden overflow-y-auto">
-        {/* Hero Section with Mood Gradient */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="relative pt-8 pb-16 px-4 md:px-8"
-          style={{
-            background: `linear-gradient(180deg, ${colors.primary}15 0%, transparent 100%)`,
-          }}
-        >
-          <div className="max-w-3xl mx-auto">
-            {/* Back Button & Actions */}
-            <div className="flex items-center justify-between mb-8">
-              <Link href="/journal">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
+          <div className="flex items-center gap-2">
+            {!isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                  className="gap-2 rounded-xl cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Edit
                 </Button>
-              </Link>
+                <Link href={`/journal/${journal.id}/insights`}>
+                  <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
+                    <Brain className="w-4 h-4 text-primary" />
+                    AI Insights
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="cursor-pointer">
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving || !editTitle.trim() || !editMood}
+                  className="gap-2 rounded-xl cursor-pointer"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : isSaved ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {isSaving ? "Saving..." : isSaved ? "Saved!" : "Save"}
+                </Button>
+              </>
+            )}
 
-              <div className="flex items-center gap-2">
-                {!isEditing ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(true)}
-                      className="gap-2"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      Edit
-                    </Button>
-                    <Link href={`/journal/${journal.id}/insights`}>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Brain className="w-4 h-4" />
-                        AI Insights
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
-                      <X className="w-4 h-4 mr-1" />
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleSave}
-                      disabled={isSaving || !editTitle.trim() || !editMood}
-                      className="gap-2"
-                    >
-                      {isSaving ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : isSaved ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <Save className="w-4 h-4" />
-                      )}
-                      {isSaving ? "Saving..." : isSaved ? "Saved!" : "Save"}
-                    </Button>
-                  </>
-                )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg cursor-pointer">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="border-border/30">
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Entry
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => setShowDeleteDialog(true)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Entry
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+        {/* Notebook Page Sheet */}
+        <motion.article
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative rounded-[28px] border border-border/30 bg-card/75 dark:bg-card/35 backdrop-blur-md shadow-sm overflow-hidden p-6 sm:p-8 md:p-10 pl-16 sm:pl-20 md:pl-24 py-8 sm:py-10 md:py-12"
+        >
+          {/* Vertical notebook line */}
+          <div className="absolute top-0 bottom-0 left-[3.25rem] sm:left-[4.25rem] md:left-[5.25rem] w-[1px] bg-red-400/20 dark:bg-red-500/15 pointer-events-none" />
 
-            {/* Mood & Date */}
-            <div className="flex items-center gap-4 mb-6">
-              <EmotionalAura
-                mood={journal.mood}
-                intensity={journal.moodIntensity || 3}
-                size="lg"
-              >
-                {(() => {
-                const MoodIcon = getMoodIcon(journal.mood);
-                return <MoodIcon className="w-8 h-8" style={{ color: colors.primary }} />;
+          {/* Left margin info (Mood Aura indicator) */}
+          <div className="absolute left-3.5 sm:left-6 md:left-8 top-8 sm:top-10 md:top-12 z-10 flex flex-col items-center gap-4">
+            <EmotionalAura
+              mood={isEditing && editMood ? editMood : journal.mood}
+              intensity={3}
+              size="sm"
+              className="w-10 h-10 shadow-sm border border-border/10"
+            >
+              {(() => {
+                const MoodIcon = getMoodIcon(isEditing && editMood ? editMood : journal.mood);
+                return <MoodIcon className="w-5 h-5" style={{ color: colors.primary }} />;
               })()}
-              </EmotionalAura>
-              <div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                  <Calendar className="w-4 h-4" />
-                  {formatDate(journal.createdAt)}
-                </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {formatTime(journal.createdAt)}
-                  </span>
-                  <span>·</span>
-                  <span>{readingTime} min read</span>
-                </div>
-              </div>
+            </EmotionalAura>
+          </div>
+
+          {/* Right margin info (Content sheet) */}
+          <div className="space-y-6">
+            {/* Meta headers */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground/75 uppercase tracking-wide">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {formatDate(journal.createdAt)}
+              </span>
+              <span className="hidden sm:inline">·</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                {formatTime(journal.createdAt)}
+              </span>
+              <span className="hidden sm:inline">·</span>
+              <span>{readingTime} min read</span>
             </div>
 
             {/* Title */}
@@ -453,118 +479,127 @@ export default function JournalDetailClient({
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full text-3xl md:text-4xl font-bold font-primary bg-transparent border-none outline-none placeholder:text-muted-foreground/40"
-                placeholder="Untitled"
+                className="w-full text-2xl sm:text-3xl md:text-4xl font-bold font-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-muted-foreground/30 text-foreground/90 leading-tight"
+                placeholder="Untitled Entry"
               />
             ) : (
-              <h1 className="text-3xl md:text-4xl font-bold font-primary">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-primary text-foreground/90 leading-tight">
                 {journal.title}
               </h1>
             )}
-          </div>
-        </motion.div>
 
-        {/* Content */}
-        <div className="flex-1 px-4 md:px-8 pb-16">
-          <div className="max-w-3xl mx-auto">
-            {isEditing ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-4"
-              >
-                {/* Auto-save Notice */}
-                <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/30">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <HardDrive className="w-3.5 h-3.5 text-primary" />
-                    <span>
-                      <span className="font-medium text-foreground">Saved to cloud</span>
-                      <span> · Changes auto-save</span>
-                    </span>
+            <div className="border-t border-border/15 pt-6">
+              {isEditing ? (
+                <div className="space-y-6">
+                  {/* Cloud save notice */}
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border/20 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <HardDrive className="w-3.5 h-3.5 text-primary" />
+                      <span>Changes autosave to cloud</span>
+                    </div>
+                    <span className="opacity-75">Sync active</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <CloudOff className="w-3 h-3" />
-                    <span className="hidden sm:inline">Syncing...</span>
-                  </div>
-                </div>
 
-                {/* Editor - Embedded feel on mobile */}
-                <div className="md:glass-card md:rounded-2xl md:p-6 space-y-4 md:space-y-6">
-                  <MoodSelector value={editMood} onChange={setEditMood} />
-                  <div className="md:border-t md:border-border/30 md:pt-6">
+                  {/* Mood Selector inside card */}
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/10">
+                    <MoodSelector value={editMood} onChange={setEditMood} />
+                  </div>
+
+                  {/* Ruled text editor */}
+                  <div 
+                    className="relative p-2 rounded-xl journal-editor-lined"
+                  >
+                    <style jsx global>{`
+                      .journal-editor-lined textarea {
+                        background-image: linear-gradient(var(--border) 1px, transparent 1px) !important;
+                        background-size: 100% 1.625rem !important;
+                        background-position: 0 0.25rem !important;
+                        background-attachment: local !important;
+                        line-height: 1.625rem !important;
+                      }
+                    `}</style>
                     <JournalEditor
                       value={editBody}
                       onChange={setEditBody}
                       placeholder="Start writing your thoughts..."
+                      className="text-base md:text-lg text-foreground/95"
                     />
                   </div>
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="prose prose-neutral dark:prose-invert max-w-none"
-              >
-                {/* Mood Badge */}
-                <div className="mb-8 flex items-center gap-2">
-                  <span
-                    className="px-3 py-1 rounded-full text-sm font-medium"
+              ) : (
+                <div className="space-y-8">
+                  {/* Mood Badge */}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide border flex items-center gap-1.5"
+                      style={{
+                        backgroundColor: `${colors.primary}18`,
+                        borderColor: `${colors.primary}35`,
+                        color: colors.primary,
+                        boxShadow: `0 2px 10px ${colors.primary}10`,
+                      }}
+                    >
+                      {(() => {
+                        const MoodIcon = getMoodIcon(journal.mood);
+                        return <MoodIcon className="w-3.5 h-3.5" />;
+                      })()}
+                      Feeling {journal.mood}
+                    </span>
+                  </div>
+
+                  {/* Lined body text */}
+                  <div 
+                    className="text-base md:text-lg text-foreground/85 leading-7 whitespace-pre-wrap font-sans"
                     style={{
-                      backgroundColor: `${colors.primary}20`,
-                      color: colors.primary,
+                      backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px)`,
+                      backgroundSize: "100% 1.75rem",
+                      backgroundPosition: "0 0.4rem",
                     }}
                   >
-                    {(() => {
-                      const MoodIcon = getMoodIcon(journal.mood);
-                      return <MoodIcon className="w-4 h-4 inline mr-1" />;
-                    })()}
-                    Feeling {journal.mood}
-                  </span>
-                </div>
+                    {journal.body.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ")}
+                  </div>
 
-                {/* Body Content */}
-                <div className="text-lg leading-relaxed whitespace-pre-wrap">
-                  {journal.body.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ")}
-                </div>
-
-                {/* AI Insights CTA */}
-                <div className="mt-12 pt-8 border-t border-border/30">
-                  <Link href={`/journal/${journal.id}/insights`}>
-                    <div className="glass-card rounded-2xl p-6 hover:shadow-lg transition-all cursor-pointer group">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <Sparkles className="w-6 h-6 text-primary" />
+                  {/* Cozy AI Insights CTA */}
+                  <div className="pt-6 border-t border-border/15">
+                    <Link href={`/journal/${journal.id}/insights`}>
+                      <div className="rounded-2xl border border-border/30 bg-muted/40 hover:bg-muted/75 p-5 hover:shadow-sm transition-all duration-300 cursor-pointer group">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/25 to-accent/25 flex items-center justify-center group-hover:scale-105 transition-transform shadow-inner">
+                              <Sparkles className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold font-primary text-foreground/90">
+                                Get AI Insights
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                Discover emotional patterns and reflective advice
+                              </p>
+                            </div>
+                          </div>
+                          <ArrowLeft className="w-5 h-5 text-muted-foreground rotate-180 group-hover:translate-x-1.5 transition-transform" />
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold font-primary">
-                            Get AI Insights
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Discover emotional patterns and suggestions
-                          </p>
-                        </div>
-                        <ArrowLeft className="w-5 h-5 text-muted-foreground rotate-180 group-hover:translate-x-1 transition-transform" />
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  </div>
                 </div>
-              </motion.div>
-            )}
-
-            {/* Last Updated */}
-            {journal.updatedAt !== journal.createdAt && (
-              <p className="text-center text-xs text-muted-foreground mt-8">
-                Last updated {formatDate(journal.updatedAt)}
-              </p>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        </motion.article>
+
+        {/* Last Updated */}
+        {journal.updatedAt !== journal.createdAt && (
+          <p className="text-center text-xs text-muted-foreground/60">
+            Last updated {formatDate(journal.updatedAt)} at {formatTime(journal.updatedAt)}
+          </p>
+        )}
+
+      </main>
 
       {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-md border-border/10">
+        <DialogContent className="sm:max-w-md border-border/30 rounded-2xl">
           <DialogHeader>
             <DialogTitle className="font-primary text-xl">Delete Entry</DialogTitle>
             <DialogDescription>
@@ -572,14 +607,15 @@ export default function JournalDetailClient({
               cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="rounded-xl cursor-pointer">
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={isDeleting}
+              className="rounded-xl cursor-pointer"
             >
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Delete
@@ -587,6 +623,6 @@ export default function JournalDetailClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

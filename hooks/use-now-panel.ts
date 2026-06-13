@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTasks } from "@/hooks/use-tasks";
 import { useHabits } from "@/hooks/use-habits";
@@ -57,7 +58,7 @@ export function useNowPanel() {
   //               No Due Date = 0.0 points
   //   - Goal Linkage: Has goal_id = +1.5 points
   // - Sort descending. High scores represent immediate priority tasks.
-  const recommendedTask = (() => {
+  const recommendedTask = useMemo(() => {
     const pendingTasks = tasks.filter((t) => t.status !== "completed");
     if (pendingTasks.length === 0) return null;
 
@@ -104,7 +105,7 @@ export function useNowPanel() {
     });
 
     return scoredTasks.sort((a, b) => b.smartScore - a.smartScore)[0];
-  })();
+  }, [tasks, todayStr]);
 
   // ==========================================
   // 2. ACTIVE HABIT PRIORITIZATION
@@ -115,7 +116,7 @@ export function useNowPanel() {
   //   then Multiple Times/Week (frequency_num = 3, weight 2.0),
   //   Weekly (frequency_num = 1, weight 1.0), and Monthly (frequency_num = 2, weight 0.0).
   // - Add a streak weight modifier (current_streak * 0.1) to favor preserving high streaks (streak protection).
-  const activeHabit = (() => {
+  const activeHabit = useMemo(() => {
     const pendingHabits = habits.filter(
       (h) => h.is_active && !h.isCompletedForPeriod
     );
@@ -138,7 +139,7 @@ export function useNowPanel() {
     });
 
     return scoredHabits.sort((a, b) => b.smartScore - a.smartScore)[0];
-  })();
+  }, [habits]);
 
   // ==========================================
   // 3. REALISTIC CAPACITY HEURISTIC
@@ -151,7 +152,7 @@ export function useNowPanel() {
   //   - High mood (>= 4 or happy/excited in localStorage): multiplier = 1.2
   //   - Low mood (<= 2 or sad/frustrated/anxious in localStorage): multiplier = 0.8
   //   - Neutral (else): multiplier = 1.0
-  const capacity: CapacityData = (() => {
+  const capacity: CapacityData = useMemo(() => {
     const fallbackCapacity: CapacityData = {
       minTasks: 2,
       maxTasks: 4,
@@ -315,7 +316,7 @@ export function useNowPanel() {
       energyLevel,
       moodType,
     };
-  })();
+  }, [tasks, focusSessions, moodLogs, todayStr]);
 
   const isLoading = tasksLoading || habitsLoading || moodLoading || focusLoading;
   const isError = Boolean(tasksError || habitsError || moodError || focusError);

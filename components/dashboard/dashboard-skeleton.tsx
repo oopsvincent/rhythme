@@ -82,11 +82,31 @@ export function ChartSkeleton() {
 
 export function MoodInputSkeleton() {
   return (
-    <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-border/50">
-      <Skeleton className="h-4 w-40 mb-3" />
-      <div className="flex flex-wrap gap-2">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-9 w-20 rounded-full" />
+    <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-border/50 space-y-4">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between">
+        <div className="h-4 w-36 bg-muted/60 animate-pulse-fast rounded-md" />
+      </div>
+      
+      {/* Centerpiece Preview Skeleton */}
+      <div className="hidden sm:flex items-center gap-3.5 p-4 rounded-2xl bg-muted/20 border border-border/10 animate-pulse-fast">
+        <div className="w-10 h-10 rounded-xl bg-muted/40 shrink-0" />
+        <div className="space-y-2 flex-1">
+          <div className="h-4 w-1/4 bg-muted/50 rounded" />
+          <div className="h-3 w-3/4 bg-muted/30 rounded" />
+        </div>
+      </div>
+
+      {/* Grid of capsules */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+        {[...Array(9)].map((_, i) => (
+          <div
+            key={i}
+            className="h-14 bg-muted/30 animate-pulse-fast rounded-xl flex flex-col items-center justify-center gap-1.5 p-2 border border-border/10"
+          >
+            <div className="w-5 h-5 rounded-full bg-muted/40" />
+            <div className="h-2 w-8 bg-muted/30 rounded" />
+          </div>
         ))}
       </div>
     </div>
