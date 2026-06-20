@@ -30,7 +30,20 @@ export default function GlobalError({
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (error) {
+      const msg = (error.message || "").toLowerCase();
+      const stack = (error.stack || "").toLowerCase();
+      if (
+        msg.indexOf("failed to load chunk") !== -1 ||
+        msg.indexOf("loading chunk") !== -1 ||
+        stack.indexOf("failed to load chunk") !== -1 ||
+        stack.indexOf("loading chunk") !== -1
+      ) {
+        console.warn("Global error boundary caught chunk error. Reloading page...");
+        window.location.reload();
+      }
+    }
+  }, [error]);
 
   const onCopy = useCallback(async () => {
     const payload = `Error: ${error?.message ?? "Unknown error"}\n\nStack:\n${error?.stack ?? "No stack available"}`;

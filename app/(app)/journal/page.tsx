@@ -15,6 +15,7 @@ import { getUser } from '@/app/actions/auth'
 import { getEncryptionToken } from '@/app/actions/encryption'
 import JournalPageClient from './journal-client'
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 
 const JournalPage = async () => {
     const [journals, user, encryptionToken] = await Promise.all([
@@ -28,12 +29,14 @@ const JournalPage = async () => {
     }
     
   return (
-    <JournalPageClient 
-      journals={journals} 
-      userEmail={user.email} 
-      userId={user.id}
-      encryptionToken={encryptionToken}
-    />
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-screen bg-background text-muted-foreground">Loading journal...</div>}>
+      <JournalPageClient 
+        journals={journals} 
+        userEmail={user.email} 
+        userId={user.id}
+        encryptionToken={encryptionToken}
+      />
+    </Suspense>
   )
 }
 

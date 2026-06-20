@@ -23,6 +23,7 @@ import { JournalPassphraseSetup } from "@/components/journal/journal-passphrase-
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   PenLine,
   Search,
@@ -34,6 +35,7 @@ import {
   X,
   Lock,
   Shield,
+  Bell,
 } from "lucide-react";
 import { Journal, MoodTags } from "@/types/database";
 import { decryptJournal } from "@/lib/crypto";
@@ -51,20 +53,36 @@ interface NormalizedEntry {
   updatedAt: string;
   isEncrypted: boolean;
   decryptionFailed?: boolean;
+  imageUrl?: string;
 }
 
 // Convert Journal from DB to normalized entry (without decryption)
 function normalizeJournal(journal: Journal): NormalizedEntry {
   const isEncrypted = !!journal.iv;
+  let body = isEncrypted ? "[Encrypted]" : journal.content;
+  let imageUrl = undefined;
+
+  if (!isEncrypted && journal.content) {
+    try {
+      const parsed = JSON.parse(journal.content);
+      if (parsed && typeof parsed === "object") {
+        body = parsed.body || body;
+        imageUrl = parsed.imageUrl;
+      }
+    } catch {
+      // Not JSON
+    }
+  }
+
   return {
     id: journal.journal_id,
     title: journal.title,
-    // For encrypted journals, show placeholder until decrypted
-    body: isEncrypted ? "[Encrypted]" : journal.content,
+    body,
     mood: journal.mood_tags?.mood || "neutral",
     createdAt: journal.created_at,
     updatedAt: journal.updated_at,
     isEncrypted,
+    imageUrl,
   };
 }
 
@@ -125,6 +143,10 @@ export default function JournalPageClient({
   userId,
   encryptionToken 
 }: JournalPageClientProps) {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams ? searchParams.get("tab") : null;
+  const activeTab = tabParam === "entries" ? "entries" : "home";
+
   // Encryption state
   const { key: encryptionKey, isReady: isKeyReady } = useJournalEncryptionStore();
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -181,13 +203,15 @@ export default function JournalPageClient({
               journal.iv
             );
             
-            // Parse JSON payload which contains both title and body
+            // Parse JSON payload which contains both title, body, and optional imageUrl
             let title: string;
             let body: string;
+            let imageUrl: string | undefined = undefined;
             try {
               const parsed = JSON.parse(decryptedPayload);
               title = parsed.title || journal.title;
               body = parsed.body || decryptedPayload;
+              imageUrl = parsed.imageUrl;
             } catch {
               // Legacy format: only body was encrypted, title is plaintext
               title = journal.title;
@@ -202,6 +226,7 @@ export default function JournalPageClient({
               createdAt: journal.created_at,
               updatedAt: journal.updated_at,
               isEncrypted: true,
+              imageUrl,
             });
           } catch (err) {
             console.error(`Failed to decrypt journal ${journal.journal_id}:`, err);
@@ -305,16 +330,20 @@ export default function JournalPageClient({
         <motion.div
           initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border/15"
+          className={cn(
+            "flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border/15",
+            activeTab !== "home" && "hidden md:flex"
+          )}
         >
           <div className="flex flex-col gap-2 max-w-xl text-center md:text-left">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary/80">
-              {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })}
-            </span>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-primary tracking-tight text-foreground/90 leading-none">
-              {new Date().toLocaleDateString("en-US", { weekday: "long" })}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-primary tracking-tight text-foreground/90 leading-none flex items-center justify-center md:justify-start gap-3">
+              <span>Journal</span>
+              <Bell className="w-6 h-6 text-muted-foreground/60 hover:text-primary transition-colors cursor-pointer" />
             </h1>
-            <p className="text-sm text-muted-foreground/80 mt-1.5 leading-relaxed">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary/80 mt-1">
+              {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" }).toUpperCase()} • {new Date().toLocaleDateString("en-US", { weekday: "long" })}
+            </span>
+            <p className="text-sm text-muted-foreground/80 mt-1 leading-relaxed">
               Welcome to your quiet space for reflection. Capture your thoughts and trace your emotional journey in security and peace.
             </p>
           </div>
@@ -326,7 +355,7 @@ export default function JournalPageClient({
             <Link href="/journal/new">
               <Button
                 size="lg"
-                className="h-14 px-6 rounded-2xl gap-2 bg-gradient-to-r from-primary to-secondary hover:shadow-md hover:shadow-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer"
+                className="h-14 px-6 rounded-2xl gap-2 bg-gradient-to-r from-primary to-secondary hover:shadow-md hover:shadow-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer shadow-lg shadow-primary/10"
               >
                 <PenLine className="w-4 h-4" />
                 <span className="font-semibold text-sm">New Entry</span>
@@ -340,7 +369,10 @@ export default function JournalPageClient({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+          className={cn(
+            "grid grid-cols-1 sm:grid-cols-3 gap-4",
+            activeTab !== "home" && "hidden md:grid"
+          )}
         >
           {/* Streak Memo */}
           <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(var(--primary),0.05)] transition-all duration-300 hover:shadow-sm">
@@ -382,12 +414,120 @@ export default function JournalPageClient({
           </div>
         </motion.div>
 
+        {/* Today's Entry Teaser / "My Day" Prompt */}
+        {(() => {
+          const todayEntry = entries.find((e) => {
+            const entryDate = new Date(e.createdAt);
+            const today = new Date();
+            return entryDate.getDate() === today.getDate() &&
+                   entryDate.getMonth() === today.getMonth() &&
+                   entryDate.getFullYear() === today.getFullYear();
+          });
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+              className={cn(
+                "relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/20 backdrop-blur-md p-6 sm:p-8",
+                activeTab !== "home" && "hidden md:block"
+              )}
+            >
+              {todayEntry && (
+                <div 
+                  className="absolute -right-20 -bottom-20 w-80 h-80 rounded-full opacity-[0.06] blur-[60px] pointer-events-none"
+                  style={{ background: `radial-gradient(circle, ${moodColors[todayEntry.mood]?.primary || "var(--primary)"} 0%, transparent 70%)` }}
+                />
+              )}
+
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10 w-full">
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-xl sm:text-2xl font-bold font-primary tracking-tight text-foreground/90">
+                      My Day
+                    </h2>
+                    {todayEntry && (
+                      <span
+                        className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1"
+                        style={{
+                          backgroundColor: `${moodColors[todayEntry.mood]?.primary || "var(--primary)"}18`,
+                          borderColor: `${moodColors[todayEntry.mood]?.primary || "var(--primary)"}35`,
+                          color: moodColors[todayEntry.mood]?.primary || "var(--primary)",
+                        }}
+                      >
+                        {(() => {
+                          const Icon = moodIcons[todayEntry.mood] || Smile;
+                          return <Icon className="w-3 h-3" />;
+                        })()}
+                        Feeling {todayEntry.mood}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground/80 leading-relaxed max-w-2xl line-clamp-3">
+                    {todayEntry 
+                      ? todayEntry.body.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ")
+                      : "You haven't recorded today's thoughts yet. Taking a few minutes to write can help clear your mind and track your mood."
+                    }
+                  </p>
+
+                  <div className="pt-1.5">
+                    {todayEntry ? (
+                      <Link href={`/journal/${todayEntry.id}`}>
+                        <Button variant="link" className="p-0 h-auto text-primary font-semibold hover:text-[#E8855A] hover:no-underline gap-1.5 cursor-pointer">
+                          <BookOpen className="w-4 h-4" />
+                          <span>Read entry</span>
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link href="/journal/new">
+                        <Button
+                          size="sm"
+                          className="rounded-xl bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer font-semibold shadow-md"
+                        >
+                          <PenLine className="w-4 h-4 mr-2" />
+                          Write Today&apos;s Entry
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                {/* Polaroid Thumbnail on the right */}
+                {todayEntry && todayEntry.imageUrl && (
+                  <div 
+                    className="w-20 h-20 sm:w-24 sm:h-24 bg-[#FAF8F5] p-1 pb-3.5 shadow-md border border-black/5 rotate-2 shrink-0 select-none pointer-events-none rounded-xs"
+                    style={{
+                      boxShadow: "0 4px 8px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    <div className="w-full h-full relative overflow-hidden bg-muted border border-black/5">
+                      <img
+                        src={todayEntry.imageUrl}
+                        alt="Today's memory"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })()}
+
         {/* Search & Filters */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="space-y-4"
+          className={cn(
+            "space-y-4",
+            activeTab !== "entries" && "hidden md:block"
+          )}
         >
           {/* Search Bar */}
           <div className="flex gap-3">
@@ -475,7 +615,10 @@ export default function JournalPageClient({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+            className={cn(
+              "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8",
+              activeTab !== "entries" && "hidden md:grid"
+            )}
           >
             {filteredEntries.map((entry, index) => (
               <motion.div
@@ -496,7 +639,10 @@ export default function JournalPageClient({
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative overflow-hidden rounded-[32px] border border-border/30 bg-card/40 dark:bg-card/20 backdrop-blur-sm p-12 text-center max-w-xl mx-auto mt-6"
+            className={cn(
+              "relative overflow-hidden rounded-[32px] border border-border/30 bg-card/40 dark:bg-card/20 backdrop-blur-sm p-12 text-center max-w-xl mx-auto mt-6",
+              activeTab !== "entries" && "hidden md:block"
+            )}
           >
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-primary" />
@@ -520,7 +666,10 @@ export default function JournalPageClient({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="rounded-[24px] border border-border/30 bg-card/30 dark:bg-card/15 p-10 text-center max-w-md mx-auto"
+            className={cn(
+              "rounded-[24px] border border-border/30 bg-card/30 dark:bg-card/15 p-10 text-center max-w-md mx-auto",
+              activeTab !== "entries" && "hidden md:block"
+            )}
           >
             <Search className="w-10 h-10 mx-auto mb-4 text-muted-foreground/45" />
             <h3 className="text-base font-bold font-primary mb-2 text-foreground/90">No Matches Found</h3>
