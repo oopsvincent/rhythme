@@ -67,11 +67,8 @@ import {
 } from "@/lib/habit-helpers";
 import { canCreateHabit } from "@/app/actions/usage-limits";
 import { PremiumGateModal } from "@/components/premium-gate-modal";
+import { cn } from "@/lib/utils";
 
-/**
- * Generate SEO-friendly slug from habit name + id
- * Example: "Morning Exercise" + 123 => "morning-exercise-123"
- */
 function generateHabitSlug(name: string, id: number): string {
   const slug = name
     .toLowerCase()
@@ -91,13 +88,25 @@ const FREQUENCY_OPTIONS: { value: HabitFrequency; label: string }[] = [
   { value: 3, label: "Multiple times per week" },
 ];
 
+const MOTIVATIONAL_QUOTES = [
+  { text: "Discipline is choosing between what you want now and what you want most." },
+  { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
+  { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+  { text: "It is easier to prevent bad habits than to break them.", author: "Benjamin Franklin" },
+  { text: "Your habits will determine your future.", author: "Jack Canfield" },
+  { text: "An ounce of prevention is worth a pound of cure.", author: "Benjamin Franklin" },
+  { text: "Motivation is what gets you started. Habit is what keeps you going.", author: "Jim Ryun" },
+  { text: "Atomic habits yield massive results over time." },
+  { text: "Great things are done by a series of small things brought together.", author: "Vincent Van Gogh" }
+];
+
 export default function HabitsPage() {
   const router = useRouter();
 
   // React Query hooks for data fetching
   const { data: habits = [], isLoading, error } = useHabits();
 
-  // Realtime subscription (invalidates cache when DB changes)
+  // Realtime subscription
   useHabitsRealtime();
 
   // Mutations
@@ -117,13 +126,15 @@ export default function HabitsPage() {
     target_count: 1,
   });
   const [showPremiumGate, setShowPremiumGate] = useState(false);
+  
+  // Mobile Tab State
+  const [currentTab, setCurrentTab] = useState<'today' | 'all' | 'insights'>('today');
 
   const isPending =
     createMutation.isPending || deleteMutation.isPending || logMutation.isPending;
 
   const openCompleteDialog = (habit: HabitWithStats) => {
     if (habit.isCompletedForPeriod) {
-      // Already completed - navigate to detail page to undo
       return;
     }
     setCompleteDialogHabit(habit);
@@ -149,7 +160,6 @@ export default function HabitsPage() {
   const handleAddHabit = async () => {
     if (!newHabit.name.trim()) return;
 
-    // Check usage limit before creating
     const { allowed } = await canCreateHabit();
     if (!allowed) {
       setIsAddDialogOpen(false);
@@ -202,8 +212,8 @@ export default function HabitsPage() {
     return (
       <>
         <SiteHeader />
-        <div className="flex flex-1 items-center justify-center">
-          <Card className="w-full max-w-md">
+        <div className="flex flex-1 items-center justify-center p-4">
+          <Card className="w-full max-w-md border-border bg-card/60 backdrop-blur-md rounded-2xl">
             <CardHeader>
               <CardTitle>Error Loading Habits</CardTitle>
               <CardDescription>
@@ -216,215 +226,603 @@ export default function HabitsPage() {
     );
   }
 
+  // Common Dialog Form Layout (Create Habit)
+  const renderCreateHabitForm = () => {
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleAddHabit();
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle className="font-primary text-xl font-bold text-foreground">
+            Create New Habit
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Start building a positive habit today
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/65 select-none">
+              Habit Name
+            </Label>
+            <Input
+              placeholder="e.g., Morning Exercise"
+              value={newHabit.name}
+              onChange={(e) =>
+                setNewHabit({ ...newHabit, name: e.target.value })
+              }
+              className="bg-card/45 dark:bg-card/25 border border-border/30 rounded-xl px-3 h-11 text-sm font-semibold focus-visible:ring-primary/20"
+              autoFocus
+              required
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/65 select-none">
+              Description <span className="text-[9px] font-normal lowercase opacity-80">(optional)</span>
+            </Label>
+            <Input
+              placeholder="Brief description"
+              value={newHabit.description}
+              onChange={(e) =>
+                setNewHabit({ ...newHabit, description: e.target.value })
+              }
+              className="bg-card/45 dark:bg-card/25 border border-border/30 rounded-xl px-3 h-11 text-sm font-semibold focus-visible:ring-primary/20"
+            />
+          </div>
+          {/* Frequency Option Grid */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/65 select-none">
+              Frequency
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {FREQUENCY_OPTIONS.map((opt) => (
+                <button
+                  type="button"
+                  key={opt.value}
+                  onClick={() =>
+                    setNewHabit({
+                      ...newHabit,
+                      frequency: opt.value,
+                      target_count: opt.value === 0 ? 1 : newHabit.target_count,
+                    })
+                  }
+                  className={cn(
+                    "flex items-center justify-center rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 border cursor-pointer select-none",
+                    newHabit.frequency === opt.value
+                      ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                      : "bg-muted/30 text-foreground border-border/40 hover:bg-muted/50 hover:border-border/80"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Dynamic Target Count selector */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/65 select-none">
+              {getTargetLabel(newHabit.frequency ?? 0)}
+            </Label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setNewHabit({
+                    ...newHabit,
+                    target_count: Math.max(1, newHabit.target_count - 1),
+                  })
+                }
+                disabled={newHabit.target_count <= 1}
+                className="shrink-0 h-10 w-10 rounded-xl border border-border/40 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={newHabit.target_count}
+                onChange={(e) =>
+                  setNewHabit({
+                    ...newHabit,
+                    target_count: Math.max(1, parseInt(e.target.value) || 1),
+                  })
+                }
+                className="text-center h-10 bg-card/45 dark:bg-card/25 border border-border/30 rounded-xl [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none font-semibold text-sm"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setNewHabit({
+                    ...newHabit,
+                    target_count: Math.min(100, newHabit.target_count + 1),
+                  })
+                }
+                disabled={newHabit.target_count >= 100}
+                className="shrink-0 h-10 w-10 rounded-xl border border-border/40 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <button
+            type="button"
+            onClick={() => setIsAddDialogOpen(false)}
+            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none font-semibold"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isPending || !newHabit.name.trim()}
+            className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer select-none"
+          >
+            {isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            Create Habit
+          </button>
+        </DialogFooter>
+      </form>
+    );
+  };
+
+  // Render Stats Grid (Reusable)
+  const renderStatsGrid = () => {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Today's Progress */}
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 p-5 bg-gradient-to-br from-primary/10 via-primary/[0.03] to-transparent dark:bg-card/20 backdrop-blur-md shadow-xs flex flex-col justify-between min-h-[140px] hover:scale-[1.005] transition-all duration-300">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-primary/80">Today's Progress</span>
+              <div className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-lg bg-primary/10 text-primary">
+                <Target className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-2xl font-bold font-primary tracking-tight">
+                {completedToday} / {totalDaily}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">daily habits</span>
+            </div>
+          </div>
+          <ProgressBar value={completedToday} max={totalDaily} className="mt-4" color="primary" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-10 bg-primary" />
+        </div>
+
+        {/* Total Streak */}
+        <div className="relative overflow-hidden rounded-3xl border border-accent/20 p-5 bg-gradient-to-br from-accent/10 via-accent/[0.03] to-transparent dark:bg-card/20 backdrop-blur-md shadow-xs flex flex-col justify-between min-h-[140px] hover:scale-[1.005] transition-all duration-300">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-accent/80">Total Streak</span>
+              <div className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-lg bg-accent/10 text-accent">
+                <Flame className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-2xl font-bold font-primary tracking-tight">
+                {totalStreak}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">days active</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-4 font-semibold uppercase tracking-wider">Across all tracked habits</p>
+          <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-10 bg-accent" />
+        </div>
+
+        {/* Longest Streak */}
+        <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 p-5 bg-gradient-to-br from-emerald-500/10 via-emerald-500/[0.03] to-transparent dark:bg-card/20 backdrop-blur-md shadow-xs flex flex-col justify-between min-h-[140px] hover:scale-[1.005] transition-all duration-300">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-500/80">Longest Streak</span>
+              <div className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-lg bg-emerald-500/10 text-emerald-500">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-2xl font-bold font-primary tracking-tight">
+                {longestStreak}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">days streak</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-4 font-semibold uppercase tracking-wider">Your personal best record</p>
+          <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-10 bg-emerald-500" />
+        </div>
+      </div>
+    );
+  };
+
+  const renderEmptyState = () => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center justify-center py-16 px-4 rounded-3xl border border-border/30 bg-card/20 text-center"
+      >
+        <Target className="h-12 w-12 text-muted-foreground/40 mb-3" />
+        <h3 className="text-lg font-primary font-bold mb-1.5">No habits added yet</h3>
+        <p className="text-xs text-muted-foreground/80 max-w-sm mb-6">
+          Start your journey by creating your first habit. Small consistency checks lead to identity-level shifts.
+        </p>
+        <button
+          onClick={() => setIsAddDialogOpen(true)}
+          className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-primary/25 cursor-pointer"
+        >
+          <Plus className="mr-1.5 h-4 w-4" />
+          Create First Habit
+        </button>
+      </motion.div>
+    );
+  };
+
   return (
     <>
       <SiteHeader />
       <div className="flex flex-1 flex-col px-4 md:px-10 pb-8 select-none">
-        <div className="@container/main flex flex-1 flex-col gap-2 max-w-5xl mx-auto w-full">
-          <div className="flex flex-col gap-6 py-6">
-            {/* Header */}
-            <motion.div
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div>
-                <h1 className="text-2xl md:text-3xl font-primary tracking-tight">
-                  Habits
-                </h1>
-                <p className="text-muted-foreground text-sm md:text-base">
-                  Build consistency, shape your identity
-                </p>
+        <div className="@container/main flex flex-1 flex-col max-w-5xl mx-auto w-full">
+          <div className="flex flex-col py-4 md:py-6">
+            
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin text-[#E07A5F]" />
+                <span className="text-xs font-semibold">Loading your habits...</span>
               </div>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <button
-                    className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-primary/25"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Habit
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="border-border sm:max-w-md">
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleAddHabit();
-                    }}
-                  >
-                    <DialogHeader>
-                      <DialogTitle className="font-primary text-xl">
-                        Create New Habit
-                      </DialogTitle>
-                      <DialogDescription>
-                        Start building a positive habit today
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Habit Name</Label>
-                        <Input
-                          placeholder="e.g., Morning Exercise"
-                          value={newHabit.name}
-                          onChange={(e) =>
-                            setNewHabit({ ...newHabit, name: e.target.value })
-                          }
-                          autoFocus
-                          required
-                        />
+            ) : habits.length === 0 ? (
+              <div className="space-y-6 pt-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2 py-0.5 rounded">
+                      Habits Hub
+                    </span>
+                    <h1 className="text-2xl font-bold font-primary tracking-tight text-foreground/95 mt-1">
+                      Habits Sanctuary
+                    </h1>
+                  </div>
+                </div>
+                {renderEmptyState()}
+              </div>
+            ) : (
+              <>
+                {/* ========================================================================= */}
+                {/* MOBILE ONLY LAYOUT (centered, narrow mockup layout with Appbar)          */}
+                {/* ========================================================================= */}
+                <div className="block md:hidden w-full relative pb-28 space-y-5 animate-in fade-in duration-300">
+                  {/* Tab Conditional Rendering */}
+                  {currentTab === "today" && (
+                    <div className="space-y-5">
+                      <div>
+                        <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2 py-0.5 rounded">
+                          Daily Focus
+                        </span>
+                        <h1 className="text-2xl font-bold font-primary tracking-tight text-foreground/95 mt-1">
+                          Today's Checklist
+                        </h1>
+                        <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                          Check off your daily habits to build streak consistency.
+                        </p>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">
-                          Description{" "}
-                          <span className="text-muted-foreground">(optional)</span>
-                        </Label>
-                        <Input
-                          placeholder="Brief description"
-                          value={newHabit.description}
-                          onChange={(e) =>
-                            setNewHabit({ ...newHabit, description: e.target.value })
-                          }
-                        />
-                      </div>
-                      {/* Frequency Radio Buttons */}
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Frequency</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {FREQUENCY_OPTIONS.map((opt) => (
-                            <button
-                              type="button"
-                              key={opt.value}
-                              onClick={() =>
-                                setNewHabit({
-                                  ...newHabit,
-                                  frequency: opt.value,
-                                  target_count: opt.value === 0 ? 1 : newHabit.target_count,
-                                })
-                              }
-                              className={`flex items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 border ${
-                                newHabit.frequency === opt.value
-                                  ? "bg-primary text-primary-foreground border-primary shadow-md"
-                                  : "bg-muted/30 text-foreground border-border hover:bg-muted/50 hover:border-border/80"
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
+
+                      {dailyHabits.length > 0 ? (
+                        <div className="space-y-3">
+                          {dailyHabits.map((habit, index) => (
+                            <HabitItem
+                              key={habit.habit_id}
+                              habit={habit}
+                              onComplete={() => openCompleteDialog(habit)}
+                              onDelete={() => handleDeleteHabit(habit.habit_id)}
+                              onNavigate={() => navigateToHabit(habit)}
+                              isPending={isPending}
+                              index={index}
+                            />
                           ))}
                         </div>
-                      </div>
-                      {/* Dynamic Target Count */}
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">
-                          {getTargetLabel(newHabit.frequency ?? 0)}
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setNewHabit({
-                                ...newHabit,
-                                target_count: Math.max(1, newHabit.target_count - 1),
-                              })
-                            }
-                            disabled={newHabit.target_count <= 1}
-                            className="shrink-0 h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={100}
-                            value={newHabit.target_count}
-                            onChange={(e) =>
-                              setNewHabit({
-                                ...newHabit,
-                                target_count: Math.max(1, parseInt(e.target.value) || 1),
-                              })
-                            }
-                            className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setNewHabit({
-                                ...newHabit,
-                                target_count: Math.min(100, newHabit.target_count + 1),
-                              })
-                            }
-                            disabled={newHabit.target_count >= 100}
-                            className="shrink-0 h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
+                      ) : (
+                        <div className="rounded-2xl border border-border/30 bg-card/20 p-8 text-center">
+                          <p className="text-xs text-muted-foreground italic">No daily habits scheduled. Go to All Habits to configure.</p>
                         </div>
+                      )}
+                    </div>
+                  )}
+
+                  {currentTab === "all" && (
+                    <div className="space-y-5">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2 py-0.5 rounded">
+                            Habits Hub
+                          </span>
+                          <h1 className="text-2xl font-bold font-primary tracking-tight text-foreground/95 mt-1">
+                            Manage Habits
+                          </h1>
+                          <p className="text-xs text-muted-foreground/85">
+                            Check and manage all configured cycles.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setIsAddDialogOpen(true)}
+                          className="shrink-0 inline-flex items-center justify-center rounded-xl bg-primary px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-primary/20 cursor-pointer"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add
+                        </button>
+                      </div>
+
+                      <div className="space-y-6">
+                        {dailyHabits.length > 0 && (
+                          <HabitSection
+                            title="Daily Habits"
+                            habits={dailyHabits}
+                            onComplete={openCompleteDialog}
+                            onDelete={handleDeleteHabit}
+                            onNavigate={navigateToHabit}
+                            isPending={isPending}
+                            delay={0.1}
+                          />
+                        )}
+
+                        {weeklyHabits.length > 0 && (
+                          <HabitSection
+                            title="Weekly Habits"
+                            habits={weeklyHabits}
+                            onComplete={openCompleteDialog}
+                            onDelete={handleDeleteHabit}
+                            onNavigate={navigateToHabit}
+                            isPending={isPending}
+                            delay={0.2}
+                          />
+                        )}
+
+                        {monthlyHabits.length > 0 && (
+                          <HabitSection
+                            title="Monthly Habits"
+                            habits={monthlyHabits}
+                            onComplete={openCompleteDialog}
+                            onDelete={handleDeleteHabit}
+                            onNavigate={navigateToHabit}
+                            isPending={isPending}
+                            delay={0.3}
+                          />
+                        )}
+
+                        {multiplePerWeekHabits.length > 0 && (
+                          <HabitSection
+                            title="Multiple Per Week"
+                            habits={multiplePerWeekHabits}
+                            onComplete={openCompleteDialog}
+                            onDelete={handleDeleteHabit}
+                            onNavigate={navigateToHabit}
+                            isPending={isPending}
+                            delay={0.4}
+                          />
+                        )}
                       </div>
                     </div>
-                    <DialogFooter>
-                      <button
-                        type="button"
-                        onClick={() => setIsAddDialogOpen(false)}
-                        className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isPending || !newHabit.name.trim()}
-                        className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isPending && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+
+                  {currentTab === "insights" && (
+                    <div className="space-y-5">
+                      <div>
+                        <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2 py-0.5 rounded">
+                          Habits Stats
+                        </span>
+                        <h1 className="text-2xl font-bold font-primary tracking-tight text-foreground/95 mt-1">
+                          Insights & Analytics
+                        </h1>
+                        <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                          Streak progressions and combined stats.
+                        </p>
+                      </div>
+
+                      {renderStatsGrid()}
+
+                      <Card className="glass border-border/25 flex flex-col justify-center items-center py-10 px-6 text-center select-none min-h-[180px]">
+                        <span className="text-4xl font-serif text-primary/60 leading-none mb-1">“</span>
+                        <p className="text-xs sm:text-sm text-foreground/90 font-medium leading-relaxed italic max-w-xs">
+                          {MOTIVATIONAL_QUOTES[habits.length % MOTIVATIONAL_QUOTES.length].text}
+                        </p>
+                        {MOTIVATIONAL_QUOTES[habits.length % MOTIVATIONAL_QUOTES.length].author && (
+                          <span className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-wider mt-3">
+                            — {MOTIVATIONAL_QUOTES[habits.length % MOTIVATIONAL_QUOTES.length].author}
+                          </span>
                         )}
-                        Create Habit
-                      </button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                      </Card>
+                    </div>
+                  )}
 
-              {/* Premium Gate Modal */}
-              <PremiumGateModal
-                open={showPremiumGate}
-                onOpenChange={setShowPremiumGate}
-                reason="habit"
-              />
-            </motion.div>
+                  {/* Fixed Bottom Appbar Navigation on Mobile */}
+                  <div className="fixed bottom-0 left-0 right-0 z-50 w-full flex items-center bg-[#12141A]/90 dark:bg-[#12141A]/95 backdrop-blur-xl border-t border-[#1F2A38]/15 dark:border-border/10 p-2 pb-safe-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.35)] rounded-t-2xl">
+                    {(
+                      [
+                        { id: "today", label: "Today", icon: CheckCircle2 },
+                        { id: "all", label: "All Habits", icon: Target },
+                        { id: "insights", label: "Insights", icon: TrendingUp },
+                      ] as const
+                    ).map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = currentTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setCurrentTab(tab.id)}
+                          className={cn(
+                            "flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 relative cursor-pointer select-none",
+                            isActive ? "text-[#E07A5F]" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="habits-appbar-tab-mobile"
+                              className="absolute inset-0 bg-background dark:bg-[#12141A]/50 border border-border/40 shadow-xs rounded-xl"
+                              transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                            />
+                          )}
+                          <Icon className="w-5 h-5 relative z-10" />
+                          <span className="relative z-10">{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-            {/* Complete Dialog */}
+                {/* ========================================================================= */}
+                {/* PC/DESKTOP ONLY LAYOUT (Spacious dashboard design with columns)            */}
+                {/* ========================================================================= */}
+                <div className="hidden md:flex flex-col w-full pb-12 space-y-8 animate-in fade-in duration-300">
+                  
+                  {/* Desktop Title Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border/10">
+                    <div className="space-y-1">
+                      <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2.5 py-0.5 rounded">
+                        Habits Hub
+                      </span>
+                      <h1 className="text-2xl sm:text-3xl font-bold font-primary tracking-tight text-foreground/95 mt-0.5">
+                        Habits Sanctuary
+                      </h1>
+                      <p className="text-xs sm:text-sm text-muted-foreground/80 leading-relaxed max-w-xl">
+                        Build consistency, track progress, and shape your identity over time.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsAddDialogOpen(true)}
+                      className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-primary/20 cursor-pointer"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Habit
+                    </button>
+                  </div>
+
+                  {/* Desktop Stats Row */}
+                  {renderStatsGrid()}
+
+                  {/* Desktop 2-Column Grid */}
+                  <div className="grid grid-cols-[1fr_320px] gap-8 items-start w-full">
+                    {/* Left Column (Main Habit lists) */}
+                    <div className="space-y-6">
+                      {dailyHabits.length > 0 && (
+                        <HabitSection
+                          title="Daily Habits"
+                          habits={dailyHabits}
+                          onComplete={openCompleteDialog}
+                          onDelete={handleDeleteHabit}
+                          onNavigate={navigateToHabit}
+                          isPending={isPending}
+                          delay={0.1}
+                        />
+                      )}
+
+                      {multiplePerWeekHabits.length > 0 && (
+                        <HabitSection
+                          title="Multiple Per Week"
+                          habits={multiplePerWeekHabits}
+                          onComplete={openCompleteDialog}
+                          onDelete={handleDeleteHabit}
+                          onNavigate={navigateToHabit}
+                          isPending={isPending}
+                          delay={0.2}
+                        />
+                      )}
+                    </div>
+
+                    {/* Right Column (Secondary lists and quote) */}
+                    <div className="sticky top-6 space-y-6">
+                      {weeklyHabits.length > 0 && (
+                        <HabitSection
+                          title="Weekly Habits"
+                          habits={weeklyHabits}
+                          onComplete={openCompleteDialog}
+                          onDelete={handleDeleteHabit}
+                          onNavigate={navigateToHabit}
+                          isPending={isPending}
+                          delay={0.1}
+                        />
+                      )}
+
+                      {monthlyHabits.length > 0 && (
+                        <HabitSection
+                          title="Monthly Habits"
+                          habits={monthlyHabits}
+                          onComplete={openCompleteDialog}
+                          onDelete={handleDeleteHabit}
+                          onNavigate={navigateToHabit}
+                          isPending={isPending}
+                          delay={0.2}
+                        />
+                      )}
+
+                      <Card className="glass border-border/25 flex flex-col justify-center items-center py-10 px-6 text-center select-none min-h-[200px]">
+                        <span className="text-4xl font-serif text-primary/60 leading-none mb-2">“</span>
+                        <p className="text-xs sm:text-sm text-foreground/90 font-medium leading-relaxed italic max-w-xs">
+                          {MOTIVATIONAL_QUOTES[habits.length % MOTIVATIONAL_QUOTES.length].text}
+                        </p>
+                        {MOTIVATIONAL_QUOTES[habits.length % MOTIVATIONAL_QUOTES.length].author && (
+                          <span className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-wider mt-3">
+                            — {MOTIVATIONAL_QUOTES[habits.length % MOTIVATIONAL_QUOTES.length].author}
+                          </span>
+                        )}
+                      </Card>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Create Dialog Wrapper */}
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogContent className="border-border/30 bg-card/95 backdrop-blur-xl sm:max-w-md rounded-2xl shadow-xl">
+                {renderCreateHabitForm()}
+              </DialogContent>
+            </Dialog>
+
+            {/* Premium Gate Modal */}
+            <PremiumGateModal
+              open={showPremiumGate}
+              onOpenChange={setShowPremiumGate}
+              reason="habit"
+            />
+
+            {/* Complete Dialog Note Modal */}
             <Dialog
               open={!!completeDialogHabit}
               onOpenChange={(open) => !open && setCompleteDialogHabit(null)}
             >
-              <DialogContent className="border-border sm:max-w-md">
+              <DialogContent className="border-border/30 bg-card/95 backdrop-blur-xl sm:max-w-md rounded-2xl shadow-xl">
                 <DialogHeader>
-                  <DialogTitle className="font-primary">
+                  <DialogTitle className="font-primary font-bold text-lg text-foreground">
                     Complete {completeDialogHabit?.name}
                   </DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription className="text-xs text-muted-foreground">
                     Add an optional note about this completion
                   </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
+                <div className="py-2.5">
                   <Textarea
                     placeholder="How did it go? (optional)"
                     value={completionNote}
                     onChange={(e) => setCompletionNote(e.target.value)}
                     rows={3}
+                    className="bg-card/45 dark:bg-card/25 border border-border/30 rounded-xl px-3 text-sm"
                   />
                 </div>
-                <DialogFooter>
+                <DialogFooter className="gap-2">
                   <button
                     type="button"
                     onClick={() => setCompleteDialogHabit(null)}
-                    className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none font-semibold"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCompleteWithNote}
                     disabled={isPending}
-                    className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                    className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer select-none"
                   >
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Mark Complete
@@ -432,139 +830,6 @@ export default function HabitsPage() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : habits.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-16 px-4"
-              >
-                <Target className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                <h3 className="text-xl font-primary mb-2">No habits yet</h3>
-                <p className="text-muted-foreground text-center max-w-md mb-6">
-                  Start your journey by creating your first habit. Small steps lead
-                  to big changes.
-                </p>
-                <button
-                  onClick={() => setIsAddDialogOpen(true)}
-                  className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-primary/25"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Habit
-                </button>
-              </motion.div>
-            ) : (
-              <>
-                {/* Overview Stats */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-4"
-                >
-                  {/* Today's Progress */}
-                  <div className="relative overflow-hidden rounded-xl border border-primary/20 p-5 bg-gradient-to-br from-primary/15 to-primary/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
-                    <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-primary/10 text-primary">
-                      <Target className="h-5 w-5" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium truncate">Today&apos;s Progress</p>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-2xl font-bold font-primary tracking-tight">
-                        {completedToday} / {totalDaily}
-                      </span>
-                    </div>
-                    <ProgressBar value={completedToday} max={totalDaily} className="mt-3" color="primary" />
-                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-primary" />
-                  </div>
-
-                  {/* Total Streak */}
-                  <div className="relative overflow-hidden rounded-xl border border-accent/20 p-5 bg-gradient-to-br from-accent/15 to-accent/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
-                    <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-accent/10 text-accent">
-                      <Flame className="h-5 w-5" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium truncate">Total Streak</p>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-2xl font-bold font-primary tracking-tight">
-                        {totalStreak}
-                      </span>
-                      <span className="text-xs text-muted-foreground font-normal">days active</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-2">Combined streaks across all habits</p>
-                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-accent" />
-                  </div>
-
-                  {/* Longest Streak */}
-                  <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 p-5 bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 dark:bg-card/30 backdrop-blur-xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group">
-                    <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-3 bg-emerald-500/10 text-emerald-500">
-                      <TrendingUp className="h-5 w-5" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium truncate">Longest Streak</p>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-2xl font-bold font-primary tracking-tight">
-                        {longestStreak}
-                      </span>
-                      <span className="text-xs text-muted-foreground font-normal">days</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-2">Your personal best streak</p>
-                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-20 bg-emerald-500" />
-                  </div>
-                </motion.div>
-
-                {/* Habit Lists by Frequency */}
-                <div className="space-y-8">
-                  {dailyHabits.length > 0 && (
-                    <HabitSection
-                      title="Daily Habits"
-                      habits={dailyHabits}
-                      onComplete={openCompleteDialog}
-                      onDelete={handleDeleteHabit}
-                      onNavigate={navigateToHabit}
-                      isPending={isPending}
-                      delay={0.2}
-                    />
-                  )}
-
-                  {weeklyHabits.length > 0 && (
-                    <HabitSection
-                      title="Weekly Habits"
-                      habits={weeklyHabits}
-                      onComplete={openCompleteDialog}
-                      onDelete={handleDeleteHabit}
-                      onNavigate={navigateToHabit}
-                      isPending={isPending}
-                      delay={0.3}
-                    />
-                  )}
-
-                  {monthlyHabits.length > 0 && (
-                    <HabitSection
-                      title="Monthly Habits"
-                      habits={monthlyHabits}
-                      onComplete={openCompleteDialog}
-                      onDelete={handleDeleteHabit}
-                      onNavigate={navigateToHabit}
-                      isPending={isPending}
-                      delay={0.4}
-                    />
-                  )}
-
-                  {multiplePerWeekHabits.length > 0 && (
-                    <HabitSection
-                      title="Multiple Per Week"
-                      habits={multiplePerWeekHabits}
-                      onComplete={openCompleteDialog}
-                      onDelete={handleDeleteHabit}
-                      onNavigate={navigateToHabit}
-                      isPending={isPending}
-                      delay={0.5}
-                    />
-                  )}
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -592,18 +857,18 @@ function HabitSection({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
       className="space-y-3"
     >
-      <div className="flex items-center gap-2">
-        <h2 className="text-lg font-primary">{title}</h2>
-        <Badge variant="secondary" className="text-xs">
+      <div className="flex items-center gap-2 select-none">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground/80">{title}</h2>
+        <Badge variant="secondary" className="text-xs bg-muted/40 font-semibold px-2 py-0.5 rounded-md border border-border/20">
           {habits.length}
         </Badge>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <AnimatePresence mode="popLayout">
           {habits.map((habit, index) => (
             <HabitItem
@@ -638,7 +903,6 @@ function HabitItem({
   isPending: boolean;
   index: number;
 }) {
-  // Load prediction independently - doesn't block rendering
   const { data: prediction, isLoading: isPredictionLoading } = useHabitPrediction(
     habit.canPredict ? habit : undefined
   );
@@ -654,261 +918,126 @@ function HabitItem({
       transition={{ duration: 0.2, delay: index * 0.03 }}
     >
       <div
-        className={`glass rounded-xl p-4 sm:p-5 transition-all duration-200 group border ${
+        className={cn(
+          "rounded-2xl border p-4 sm:p-5 transition-all duration-300 relative overflow-hidden group",
           habit.isCompletedForPeriod
-            ? "border-primary/20 bg-gradient-to-r from-primary/5 to-transparent shadow-sm shadow-primary/5"
-            : "border-border/30 hover:border-border/50"
-        }`}
+            ? "border-primary/20 bg-gradient-to-r from-primary/[0.03] via-transparent to-transparent bg-card/65 shadow-xs"
+            : "border-border/30 bg-card/45 dark:bg-card/25 hover:border-border/60 hover:bg-card/70 dark:hover:bg-card/35 backdrop-blur-md shadow-xs"
+        )}
       >
-        {/* Mobile Layout: Stacked. Desktop Layout: Single Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-          
-          {/* Desktop-only Complete Button (hidden on mobile) */}
+        <div className="flex items-center gap-3.5 w-full">
+          {/* Circular Complete Checkbox (Unified for Mobile & Desktop) */}
           <button
             onClick={onComplete}
             disabled={isPending || habit.isCompletedForPeriod}
-            className={`hidden sm:flex shrink-0 h-11 w-11 rounded-xl items-center justify-center transition-all duration-300 ${
+            className={cn(
+              "shrink-0 h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-350 cursor-pointer select-none",
               habit.isCompletedForPeriod
-                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 cursor-default"
-                : "border-2 border-dashed border-border hover:border-primary hover:bg-primary/5"
-            }`}
+                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-100"
+                : "border-2 border-dashed border-border/60 hover:border-primary/50 hover:bg-primary/5 active:scale-95 text-muted-foreground/30 hover:text-primary/70"
+            )}
           >
             {isPending ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-4.5 w-4.5 animate-spin" />
             ) : habit.isCompletedForPeriod ? (
-              <CheckCircle2 className="h-5 w-5" />
+              <CheckCircle2 className="h-4.5 w-4.5 fill-current" />
             ) : (
-              <Plus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <Plus className="h-4 w-4" />
             )}
           </button>
 
-          {/* Header Row on Mobile: Title on left, Three-dots on right.
-              On desktop, this merges into the single row flow. */}
-          <div className="flex items-start justify-between sm:contents">
-            {/* Content (Title, Description, completions details) */}
-            <div className="flex-1 min-w-0 cursor-pointer" onClick={onNavigate}>
-              <div className="flex items-center gap-1.5">
-                <h3
-                  className={`font-medium text-base sm:text-base transition-colors ${
-                    habit.isCompletedForPeriod ? "text-muted-foreground line-through" : "text-foreground"
-                  }`}
-                >
-                  {habit.name}
-                </h3>
-                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-1 sm:mt-0.5">
-                {habit.description && (
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate max-w-[280px]">
-                    {habit.description}
-                  </p>
+          {/* Core Content */}
+          <div className="flex-1 min-w-0 cursor-pointer" onClick={onNavigate}>
+            <div className="flex items-center gap-1.5">
+              <h3
+                className={cn(
+                  "font-semibold text-sm sm:text-base transition-colors leading-tight",
+                  habit.isCompletedForPeriod ? "text-muted-foreground/70 line-through" : "text-foreground"
                 )}
-                {habit.description && <span className="hidden sm:inline text-muted-foreground/30">•</span>}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
-                  </span>
-                  {habit.periodTarget > 1 && (
-                    <div className="w-16 h-1 bg-muted/60 dark:bg-muted/30 rounded-full overflow-hidden shrink-0">
-                      <div
-                        className="bg-primary h-full transition-all duration-500 rounded-full"
-                        style={{
-                          width: `${Math.min(100, (habit.periodCompletions / habit.periodTarget) * 100)}%`,
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+              >
+                {habit.name}
+              </h3>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
             </div>
-
-            {/* Desktop Actions and Mobile Top-Right Actions */}
-            <div className="flex items-center gap-2 sm:contents">
-              {/* Desktop-only Badges */}
-              <div className="hidden sm:flex items-center gap-2">
-                {renderSourceBadge(habit.source)}
-
-                {habit.current_streak > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-primary/10 text-primary border-0"
-                  >
-                    <Flame className="mr-1 h-3 w-3" />
-                    {habit.current_streak}{streakUnit.charAt(0)}
-                  </Badge>
+            
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+              {habit.description && (
+                <p className="text-xs text-muted-foreground/80 truncate max-w-[240px]">
+                  {habit.description}
+                </p>
+              )}
+              {habit.description && <span className="text-muted-foreground/30 text-xs">•</span>}
+              
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground font-medium">
+                  {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
+                </span>
+                {habit.periodTarget > 1 && (
+                  <div className="w-12 h-1 bg-muted/60 dark:bg-muted/30 rounded-full overflow-hidden shrink-0">
+                    <div
+                      className="bg-primary h-full transition-all duration-500 rounded-full"
+                      style={{
+                        width: `${Math.min(100, (habit.periodCompletions / habit.periodTarget) * 100)}%`,
+                      }}
+                    />
+                  </div>
                 )}
-
-                {habit.canPredict &&
-                  (isPredictionLoading ? (
-                    <Badge variant="outline" className="bg-accent/5 text-accent/60 border-accent/20 animate-pulse">
-                      <Brain className="mr-1 h-3 w-3" />
-                      <span className="inline-block w-6 h-3 bg-accent/20 rounded"></span>
-                    </Badge>
-                  ) : prediction ? (
-                    <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
-                      <Brain className="mr-1 h-3 w-3 text-accent" />
-                      {prediction.probability_percent}
-                    </Badge>
-                  ) : null)}
-
-                {habit.daysUntilPrediction !== undefined &&
-                  habit.daysUntilPrediction > 0 && (
-                    <Badge variant="outline" className="border-accent/30 text-muted-foreground flex items-center gap-1.5 px-2 py-0.5 select-none h-6">
-                      <Sparkles className="h-3 w-3 text-accent shrink-0" />
-                      <span className="text-[10px] leading-none shrink-0">AI in {habit.daysUntilPrediction}d</span>
-                      <ProgressBar
-                        value={Math.max(0, 7 - habit.daysUntilPrediction)}
-                        max={7}
-                        className="w-10 mt-0!"
-                        size="sm"
-                        color="accent"
-                      />
-                    </Badge>
-                  )}
               </div>
-
-              {/* Three-dots actions menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center transition-opacity hover:bg-muted">
-                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem onClick={onNavigate}>
-                    <Calendar className="mr-2 h-4 w-4" />
-                    View Details
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={onDelete}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
+
+          {/* Badges and Dropdown Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Streak & Prediction (Inline Badges for both Mobile and PC, compact) */}
+            <div className="flex items-center gap-1.5">
+              {habit.current_streak > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary border-0 text-[10px] py-0.5 px-2 font-bold select-none flex items-center gap-0.5"
+                >
+                  <Flame className="h-3 w-3 fill-primary text-primary" />
+                  {habit.current_streak}{streakUnit.charAt(0)}
+                </Badge>
+              )}
+
+              {habit.canPredict &&
+                (isPredictionLoading ? (
+                  <Badge variant="outline" className="bg-accent/5 text-accent/60 border-accent/20 text-[10px] py-0.5 px-2 animate-pulse">
+                    <Brain className="mr-1 h-3 w-3" />
+                    <span className="inline-block w-4 h-2 bg-accent/20 rounded"></span>
+                  </Badge>
+                ) : prediction ? (
+                  <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-[10px] py-0.5 px-2 font-bold">
+                    <Brain className="mr-1 h-3 w-3 text-accent" />
+                    {prediction.probability_percent}
+                  </Badge>
+                ) : null)}
+            </div>
+
+            {/* Three-dots actions menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center transition-all hover:bg-muted/80 text-muted-foreground/70 hover:text-foreground cursor-pointer">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36 rounded-xl border-border/30 bg-card/95 backdrop-blur-xl">
+                <DropdownMenuItem onClick={onNavigate} className="cursor-pointer text-xs font-semibold">
+                  <Calendar className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={onDelete}
+                  className="text-destructive focus:text-destructive cursor-pointer text-xs font-semibold"
+                >
+                  <Trash2 className="mr-2 h-3.5 w-3.5" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-
-        {/* Mobile Badges (Source, Streak, Prediction) */}
-        <div className="flex sm:hidden flex-wrap items-center gap-2 mt-3 pt-2 border-t border-border/5">
-          {renderSourceBadge(habit.source)}
-
-          {habit.current_streak > 0 && (
-            <Badge
-              variant="secondary"
-              className="bg-primary/10 text-primary border-0 text-[10px] py-0.5 px-2 font-medium"
-            >
-              <Flame className="mr-1 h-3 w-3 text-primary" />
-              {habit.current_streak}{streakUnit.charAt(0)} streak
-            </Badge>
-          )}
-
-          {/* Mobile Prediction Badge */}
-          {habit.canPredict &&
-            (isPredictionLoading ? (
-              <Badge
-                variant="outline"
-                className="bg-accent/5 text-accent/60 border-accent/20 text-[10px] py-0.5 px-2 animate-pulse"
-              >
-                <Brain className="mr-1 h-3 w-3 animate-pulse text-accent" />
-                <span className="inline-block w-6 h-2 bg-accent/20 rounded"></span>
-              </Badge>
-            ) : prediction ? (
-              <Badge
-                variant="outline"
-                className="bg-accent/10 text-accent border-accent/20 text-[10px] py-0.5 px-2 font-medium"
-              >
-                <Brain className="mr-1 h-3 w-3 text-accent" />
-                {prediction.probability_percent}
-              </Badge>
-            ) : null)}
-
-          {habit.daysUntilPrediction !== undefined &&
-            habit.daysUntilPrediction > 0 && (
-              <Badge
-                variant="outline"
-                className="border-accent/30 text-muted-foreground text-[10px] py-0.5 px-2"
-              >
-                <Sparkles className="mr-1 h-3 w-3 text-accent" />
-                AI in {habit.daysUntilPrediction}d
-              </Badge>
-            )}
-        </div>
-
-        {/* Mobile Complete Button: Centered, Full Width */}
-        <div className="flex sm:hidden w-full mt-3.5">
-          <button
-            onClick={onComplete}
-            disabled={isPending || habit.isCompletedForPeriod}
-            className={`w-full h-9.5 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wide transition-all duration-300 ${
-              habit.isCompletedForPeriod
-                ? "bg-primary/10 text-primary border border-primary/20 cursor-default"
-                : "bg-primary text-primary-foreground hover:bg-primary/95 shadow-md shadow-primary/10 active:scale-[0.98]"
-            }`}
-          >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : habit.isCompletedForPeriod ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                <span>Completed</span>
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4" />
-                <span>Mark Complete</span>
-              </>
-            )}
-          </button>
-        </div>
-
       </div>
     </motion.div>
-  );
-}
-
-// === Helper to Render Habit Source Badge ===
-function renderSourceBadge(source?: string) {
-  const badgeBaseClass = "text-[9px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded border flex items-center gap-1 w-fit select-none font-sans";
-  
-  if (source === "ai_generated") {
-    return (
-      <Badge
-        variant="outline"
-        className={`${badgeBaseClass} bg-primary/10 text-primary border-primary/20`}
-      >
-        <Sparkles className="h-2.5 w-2.5 text-primary" />
-        Generated by Rhythmé
-      </Badge>
-    );
-  }
-  
-  if (source === "user_edited") {
-    return (
-      <Badge
-        variant="outline"
-        className={`${badgeBaseClass} bg-primary/10 text-primary border-primary/20`}
-      >
-        <Sparkles className="h-2.5 w-2.5 text-primary" />
-        Generated by Rhythmé
-        <span className="inline-flex items-center text-[8px] text-muted-foreground/80 ml-0.5 gap-0.5">
-          <Pencil className="h-2 w-2 text-muted-foreground/75" />
-          (Edited)
-        </span>
-      </Badge>
-    );
-  }
-  
-  return (
-    <Badge
-      variant="outline"
-      className={`${badgeBaseClass} bg-muted/30 text-muted-foreground border-border/50`}
-    >
-      <User className="h-2.5 w-2.5 text-muted-foreground" />
-      Manual
-    </Badge>
   );
 }

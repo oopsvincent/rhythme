@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { format } from "date-fns"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -14,10 +13,15 @@ import {
   CheckCircle2,
   Sparkles,
   RefreshCw,
-  Lock
+  Lock,
+  TrendingUp,
+  Calendar,
+  PenTool,
+  Award,
+  AlertOctagon,
+  Loader2
 } from "lucide-react"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProgressBar } from "@/components/ui/progress-bar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -33,6 +37,7 @@ import { fetchInsightsAction } from "@/app/actions/ml"
 import { getUserTimezone, getLocalDateString } from "@/lib/timezone"
 import { getLastWeekPlan } from "@/app/actions/weekly"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 interface WeeklyPageClientProps {
   activeHabits: { habit_id: number; name: string }[];
@@ -231,29 +236,49 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
   const isCurrentWeek = weekStart === currentRealWeekStart
 
   return (
-    <div className="flex flex-col flex-1 px-4 py-6 md:px-8 max-w-5xl mx-auto w-full gap-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Weekly</h1>
-          <p className="text-muted-foreground mt-1">Your simple, calm weekly rhythm.</p>
+    <div className="flex flex-col flex-1 px-4 py-8 md:px-8 max-w-5xl mx-auto w-full gap-8 relative pb-32 md:pb-12">
+      {/* Background gradients */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div 
+          className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-[0.03] blur-[120px]"
+          style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }}
+        />
+        <div 
+          className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] rounded-full opacity-[0.02] blur-[100px]"
+          style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
+        />
+      </div>
+
+      {/* Overhauled Title Block */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-border/15 relative z-10">
+        <div className="space-y-1.5 flex-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2.5 py-1 rounded-md">
+            RHYTHM
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-bold font-primary tracking-tight text-foreground/90 mt-1">
+            Weekly Alignment
+          </h1>
+          <p className="text-sm text-muted-foreground/80 leading-relaxed max-w-xl">
+            Reflect on the past week&apos;s output, protect key habits, and lock in your primary objectives for the week ahead.
+          </p>
         </div>
         
-        <div className="flex items-center gap-4 bg-card/60 p-1.5 rounded-2xl border border-border/50 shadow-sm">
-          <Button variant="ghost" size="icon" onClick={prevWeek} className="rounded-xl h-9 w-9">
+        {/* Navigation block */}
+        <div className="flex items-center gap-3 bg-card/60 dark:bg-card/25 p-1.5 rounded-2xl border border-border/40 shadow-inner shrink-0 mx-auto md:mx-0">
+          <Button variant="ghost" size="icon" onClick={prevWeek} className="rounded-xl h-9 w-9 text-muted-foreground hover:text-foreground">
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <span className="text-sm font-semibold tracking-wide min-w-[140px] text-center">
+          <span className="text-xs font-bold tracking-wider uppercase min-w-[150px] text-center text-foreground/85">
             {headerDateRange}
           </span>
-          <Button variant="ghost" size="icon" onClick={nextWeek} className="rounded-xl h-9 w-9">
+          <Button variant="ghost" size="icon" onClick={nextWeek} className="rounded-xl h-9 w-9 text-muted-foreground hover:text-foreground">
             <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
       </div>
 
       {/* Week Progress Bar */}
-      <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-sm p-4">
+      <div className="rounded-2xl border border-border/30 bg-card/30 dark:bg-card/15 backdrop-blur-md p-5 relative z-10">
         <ProgressBar
           value={weekProgressDays}
           max={7}
@@ -263,246 +288,329 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
               ? "Week completed" 
               : weekProgressDays === 0 
                 ? "Week hasn't started" 
-                : `Day ${weekProgressDays} of the week`
+                : `Day ${weekProgressDays} of the weekly cycle`
           }
-          color="accent"
+          color="primary"
+          size="sm"
         />
       </div>
 
+      {/* Switch Warning */}
       {isEarlyInWeek && isCurrentWeek && activeTab === "review" && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/10 border border-primary/20 text-primary p-4 rounded-2xl text-sm flex items-center gap-3">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/10 border border-primary/20 text-primary p-4 rounded-2xl text-sm flex items-center gap-3 relative z-10">
           <Sparkles className="w-5 h-5 shrink-0" />
-          <p>It's early in the week! Consider starting with the <strong>Plan</strong> tab to set your focus.</p>
-          <Button variant="outline" size="sm" className="ml-auto bg-transparent border-primary/30 hover:bg-primary/20 text-primary hover:text-primary" onClick={() => setActiveTab("plan")}>
+          <p className="flex-1 text-xs sm:text-sm">It&apos;s early in the week! Consider using the <strong>Plan</strong> view to organize your core targets.</p>
+          <Button variant="outline" size="sm" className="bg-transparent border-primary/30 hover:bg-primary/25 text-primary" onClick={() => setActiveTab("plan")}>
             Switch to Plan
           </Button>
         </motion.div>
       )}
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-        <TabsList className="grid w-full max-w-sm grid-cols-2 p-1 bg-muted/60 rounded-2xl h-12 mb-6">
-          <TabsTrigger value="plan" className="rounded-xl h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">Plan</TabsTrigger>
-          <TabsTrigger value="review" className="rounded-xl h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">Review</TabsTrigger>
-        </TabsList>
-
-        {/* ======================= PLAN TAB ======================= */}
-        <TabsContent value="plan" className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500 outline-none">
+      {/* Overhauled Tab Section: Custom Premium App Bar */}
+      <div className="relative z-10 w-full">
+        {/* Mobile: Bottom appbar | Desktop: Centered top nav */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:relative w-full flex items-center bg-[#12141A]/90 dark:bg-[#12141A]/95 backdrop-blur-xl md:backdrop-blur-md border-t border-[#1F2A38]/15 dark:border-border/10 md:border md:border-border/20 p-2 md:p-1.5 pb-safe-bottom md:pb-1.5 shadow-[0_-8px_30px_rgba(0,0,0,0.35)] md:shadow-sm max-w-none md:max-w-md mx-auto rounded-t-2xl md:rounded-2xl mb-0 md:mb-8">
+          <button
+            onClick={() => setActiveTab("plan")}
+            className={cn(
+              "flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2.5 py-1.5 md:py-3 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all duration-300 relative cursor-pointer select-none",
+              activeTab === "plan" ? "text-[#E07A5F]" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {activeTab === "plan" && (
+              <motion.div
+                layoutId="weekly-appbar-tab"
+                className="absolute inset-0 bg-background dark:bg-[#12141A]/50 border border-border/40 shadow-sm rounded-xl"
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+              />
+            )}
+            <Target className="w-5 h-5 md:w-4 md:h-4 relative z-10" />
+            <span className="relative z-10">Weekly Plan</span>
+          </button>
           
-          <div className="grid md:grid-cols-2 gap-6">
-            
-            {/* Focus Section */}
-            <Card className="rounded-[28px] border-border/60 shadow-sm bg-card/40 backdrop-blur-sm">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Target className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Weekly Focus</CardTitle>
-                    <CardDescription>Set 1-3 main priorities.</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {focusList.map((focus, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground shrink-0 mt-2">
-                      {idx + 1}
-                    </span>
-                    <Textarea 
-                      placeholder={`Focus area ${idx + 1}...`}
-                      value={focus}
-                      onChange={(e) => {
-                        const next = [...focusList]
-                        next[idx] = e.target.value
-                        setFocusList(next)
-                      }}
-                      className="resize-none rounded-xl border-border/60 bg-background/50 h-20"
-                    />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+          <button
+            onClick={() => setActiveTab("review")}
+            className={cn(
+              "flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2.5 py-1.5 md:py-3 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all duration-300 relative cursor-pointer select-none",
+              activeTab === "review" ? "text-[#E07A5F]" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {activeTab === "review" && (
+              <motion.div
+                layoutId="weekly-appbar-tab"
+                className="absolute inset-0 bg-background dark:bg-[#12141A]/50 border border-border/40 shadow-sm rounded-xl"
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+              />
+            )}
+            <TrendingUp className="w-5 h-5 md:w-4 md:h-4 relative z-10" />
+            <span className="relative z-10">Weekly Review</span>
+          </button>
+        </div>
 
-            {/* Habits Section */}
-            <Card className="rounded-[28px] border-border/60 shadow-sm bg-card/40 backdrop-blur-sm flex flex-col">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
-                    <Flame className="w-5 h-5 text-orange-500" />
-                  </div>
-                  <div>
-                    <CardTitle>Key Habits</CardTitle>
-                    <CardDescription>Protect up to 5 habits this week.</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1">
-                {activeHabits.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground text-sm">
-                    No active habits found. <br /> Create some on your dashboard first!
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {activeHabits.map((habit) => {
-                      const idStr = habit.habit_id.toString()
-                      const isChecked = selectedHabits.includes(idStr)
-                      return (
-                        <div 
-                          key={habit.habit_id} 
-                          className={`flex items-center space-x-3 p-3 rounded-xl border transition-colors cursor-pointer ${isChecked ? 'bg-orange-500/5 border-orange-500/30' : 'bg-background/50 border-border/50 hover:bg-muted/50'}`}
-                          onClick={() => toggleHabit(idStr)}
-                        >
-                          <Checkbox 
-                            id={`habit-${idStr}`} 
-                            checked={isChecked}
-                            className="rounded-md data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
-                          />
-                          <label 
-                            htmlFor={`habit-${idStr}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 cursor-pointer"
-                          >
-                            {habit.name}
-                          </label>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/50">
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground w-full sm:w-auto" onClick={handleCarryOver}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Carry over from last week
-            </Button>
-            <Button 
-              className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground"
-              size="lg"
-              onClick={handleSavePlan}
-              disabled={savePlanMutation.isPending || isLoadingPlan}
+        {/* Tab Contents */}
+        <AnimatePresence mode="wait">
+          {activeTab === "plan" ? (
+            <motion.div
+              key="plan-content"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-8 outline-none"
             >
-              <Save className="w-4 h-4 mr-2" />
-              {savePlanMutation.isPending ? "Saving..." : "Save Plan"}
-            </Button>
-          </div>
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Focus Card */}
+                <Card className="rounded-[32px] border-border/30 bg-card/65 dark:bg-card/25 backdrop-blur-md p-6 shadow-sm flex flex-col space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Target className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold font-primary text-foreground/90">Weekly Focus</h2>
+                      <p className="text-xs text-muted-foreground">List your three top priorities for this week cycle.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 flex-1">
+                    {focusList.map((focus, idx) => (
+                      <div key={idx} className="flex items-start gap-3">
+                        <span className="w-7 h-7 rounded-lg bg-[#E07A5F]/10 flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-1">
+                          {idx + 1}
+                        </span>
+                        <Textarea 
+                          placeholder={`Specify focus priority area ${idx + 1}...`}
+                          value={focus}
+                          onChange={(e) => {
+                            const next = [...focusList]
+                            next[idx] = e.target.value
+                            setFocusList(next)
+                          }}
+                          className="resize-none rounded-xl border-border/40 bg-background/50 h-20 text-sm focus:border-primary focus:ring-1 focus:ring-primary/40"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Card>
 
-        </TabsContent>
+                {/* Key Habits Card */}
+                <Card className="rounded-[32px] border-border/30 bg-card/65 dark:bg-card/25 backdrop-blur-md p-6 shadow-sm flex flex-col space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
+                      <Flame className="w-5 h-5 text-orange-500 animate-none" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold font-primary text-foreground/90">Key Habits</h2>
+                      <p className="text-xs text-muted-foreground">Toggle and commit to up to 5 core habits to track.</p>
+                    </div>
+                  </div>
 
-        {/* ======================= REVIEW TAB ======================= */}
-        <TabsContent value="review" className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500 outline-none">
-          
-          {/* Stats Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="rounded-[24px] border-border/60 bg-background/60 shadow-sm flex flex-col items-center justify-center p-6 text-center">
-              <CheckCircle2 className="w-6 h-6 text-emerald-500 mb-2 opacity-80" />
-              <div className="text-2xl font-bold">{statsData?.tasksCompletionPct ?? 0}%</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 mb-3 font-medium">Task Completion</div>
-              <ProgressBar
-                value={statsData?.tasksCompletionPct ?? 0}
-                max={100}
-                color="emerald"
-                size="sm"
-              />
-            </Card>
-            <Card className="rounded-[24px] border-border/60 bg-background/60 shadow-sm flex flex-col items-center justify-center p-6 text-center">
-              <Flame className="w-6 h-6 text-orange-500 mb-2 opacity-80" />
-              <div className="text-2xl font-bold">{statsData?.habitCompletionPct ?? 0}%</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 mb-3 font-medium">Habit Completion</div>
-              <ProgressBar
-                value={statsData?.habitCompletionPct ?? 0}
-                max={100}
-                color="primary"
-                size="sm"
-              />
-            </Card>
-            <Card className="rounded-[24px] border-border/60 bg-background/60 shadow-sm flex flex-col items-center justify-center p-6 text-center">
-              <Heart className="w-6 h-6 text-rose-500 mb-3 opacity-80" />
-              <div className="text-2xl font-bold">{statsData?.avgMood ?? 0}<span className="text-lg text-muted-foreground">/5</span></div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 font-medium">Average Mood</div>
-            </Card>
-            <Card className="rounded-[24px] border-border/60 bg-background/60 shadow-sm flex flex-col items-center justify-center p-6 text-center">
-              <Clock className="w-6 h-6 text-indigo-500 mb-3 opacity-80" />
-              <div className="text-2xl font-bold">{statsData?.focusMinutes ?? 0} <span className="text-sm font-normal text-muted-foreground">min</span></div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 font-medium">Total Focus</div>
-            </Card>
-          </div>
+                  <div className="flex-1 overflow-y-auto max-h-[268px] pr-1.5">
+                    {activeHabits.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center py-10 text-muted-foreground text-sm space-y-2">
+                        <Flame className="w-8 h-8 opacity-25 text-muted-foreground" />
+                        <p>No active habits to show.<br />Add a habit on the dashboard first.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2.5">
+                        {activeHabits.map((habit) => {
+                          const idStr = habit.habit_id.toString()
+                          const isChecked = selectedHabits.includes(idStr)
+                          return (
+                            <div 
+                              key={habit.habit_id} 
+                              onClick={() => toggleHabit(idStr)}
+                              className={cn(
+                                "flex items-center space-x-3.5 p-3 rounded-xl border cursor-pointer select-none transition-all duration-300",
+                                isChecked 
+                                  ? "bg-orange-500/10 border-orange-500/35 text-foreground" 
+                                  : "bg-background/40 border-border/10 hover:bg-background/80 text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <Checkbox 
+                                id={`habit-${idStr}`} 
+                                checked={isChecked}
+                                onCheckedChange={() => {}} // toggled via parent div click
+                                className="rounded-md data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 border-border/40"
+                              />
+                              <span className="text-xs sm:text-sm font-semibold truncate leading-none">
+                                {habit.name}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
 
-          {/* AI Insight */}
-          <Card className="rounded-[28px] border-border/60 shadow-sm bg-gradient-to-br from-indigo-500/5 to-purple-500/5 relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                <Sparkles className="w-32 h-32" />
-             </div>
-             <CardHeader>
-                <CardTitle className="text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" /> Behavioral Insight
-                  {!isPremium && <Lock className="w-4 h-4 ml-auto text-muted-foreground opacity-50" />}
-                </CardTitle>
-             </CardHeader>
-             <CardContent>
-               {insight ? (
-                 <p className="text-lg font-medium leading-relaxed max-w-3xl relative z-10">{insight}</p>
-               ) : (
-                 <div className="text-muted-foreground text-sm flex flex-col sm:flex-row items-start sm:items-center gap-4 relative z-10">
-                    <span>Generate an AI-driven insight based on this week's logs.</span>
-                    <Button variant="secondary" size="sm" onClick={loadInsight} disabled={isLoadingInsight} className="rounded-full">
-                      {isLoadingInsight ? "Analyzing..." : "Generate Insight"}
-                    </Button>
+              {/* Bottom toolbar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/15">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground w-full sm:w-auto text-xs font-semibold uppercase tracking-wider" onClick={handleCarryOver}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Carry over from last week plan
+                </Button>
+                <Button 
+                  className="w-full sm:w-auto rounded-xl bg-primary text-primary-foreground hover:bg-primary/95 shadow-md shadow-primary/10 font-semibold text-xs uppercase tracking-wider py-5 px-6"
+                  onClick={handleSavePlan}
+                  disabled={savePlanMutation.isPending || isLoadingPlan}
+                >
+                  {savePlanMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  {savePlanMutation.isPending ? "Saving Plan..." : "Save Weekly Plan"}
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="review-content"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-8 outline-none"
+            >
+              {/* Dynamic Stats Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="rounded-2xl border-border/30 bg-card/65 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center shadow-sm">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 mb-1.5 opacity-90" />
+                  <div className="text-xl sm:text-2xl font-bold font-primary">{statsData?.tasksCompletionPct ?? 0}%</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1 mb-2.5 font-bold">Tasks</div>
+                  <ProgressBar
+                    value={statsData?.tasksCompletionPct ?? 0}
+                    max={100}
+                    color="emerald"
+                    size="sm"
+                  />
+                </Card>
+                
+                <Card className="rounded-2xl border-border/30 bg-card/65 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center shadow-sm">
+                  <Flame className="w-5 h-5 text-orange-500 mb-1.5 opacity-90" />
+                  <div className="text-xl sm:text-2xl font-bold font-primary">{statsData?.habitCompletionPct ?? 0}%</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1 mb-2.5 font-bold">Habits</div>
+                  <ProgressBar
+                    value={statsData?.habitCompletionPct ?? 0}
+                    max={100}
+                    color="primary"
+                    size="sm"
+                  />
+                </Card>
+                
+                <Card className="rounded-2xl border-border/30 bg-card/65 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center shadow-sm">
+                  <Heart className="w-5 h-5 text-rose-500 mb-2 opacity-90" />
+                  <div className="text-xl sm:text-2xl font-bold font-primary">
+                    {statsData?.avgMood ?? 0}
+                    <span className="text-sm font-normal text-muted-foreground/60"> / 5</span>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1 font-bold">Average Mood</div>
+                </Card>
+                
+                <Card className="rounded-2xl border-border/30 bg-card/65 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center shadow-sm">
+                  <Clock className="w-5 h-5 text-indigo-500 mb-2 opacity-90" />
+                  <div className="text-xl sm:text-2xl font-bold font-primary">
+                    {statsData?.focusMinutes ?? 0} 
+                    <span className="text-xs font-bold text-muted-foreground/60"> MIN</span>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1 font-bold">Focus Hours</div>
+                </Card>
+              </div>
+
+              {/* AI Insight Section */}
+              <Card className="rounded-3xl border-border/30 bg-gradient-to-br from-[#8FAFC9]/5 to-primary/5 p-6 relative overflow-hidden shadow-sm">
+                 <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                    <Sparkles className="w-24 h-24 text-primary" />
                  </div>
-               )}
-             </CardContent>
-          </Card>
+                 <CardHeader className="p-0 mb-3">
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-[#E07A5F] flex items-center gap-2 leading-none">
+                      <Sparkles className="w-4 h-4" /> AI Rhythm Analysis
+                      {!isPremium && <Lock className="w-3.5 h-3.5 ml-auto text-muted-foreground opacity-60" />}
+                    </CardTitle>
+                 </CardHeader>
+                 <CardContent className="p-0">
+                   {insight ? (
+                     <p className="text-base font-semibold leading-relaxed text-foreground/80 pr-6 relative z-10">{insight}</p>
+                   ) : (
+                     <div className="text-muted-foreground text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+                        <span>Generate an intelligent weekly rhythm review derived from your focus logs and habits.</span>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={loadInsight} 
+                          disabled={isLoadingInsight} 
+                          className="rounded-xl border-[#E07A5F]/20 text-[#E07A5F] hover:bg-[#E07A5F]/5 font-semibold text-xs uppercase tracking-wider px-4 py-2 cursor-pointer shrink-0"
+                        >
+                          {isLoadingInsight ? "Analyzing Activity..." : "Generate Analysis"}
+                        </Button>
+                     </div>
+                   )}
+                 </CardContent>
+              </Card>
 
-          {/* Reflection */}
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-               <label className="text-sm font-semibold px-1">Biggest Win</label>
-               <Textarea 
-                 value={wins}
-                 onChange={(e) => setWins(e.target.value)}
-                 placeholder="What went well?" 
-                 className="resize-none h-32 rounded-2xl bg-background/50 border-border/60"
-               />
-            </div>
-            <div className="space-y-2">
-               <label className="text-sm font-semibold px-1">Biggest Challenge</label>
-               <Textarea 
-                 value={challenges}
-                 onChange={(e) => setChallenges(e.target.value)}
-                 placeholder="What held you back?" 
-                 className="resize-none h-32 rounded-2xl bg-background/50 border-border/60"
-               />
-            </div>
-            <div className="space-y-2">
-               <label className="text-sm font-semibold px-1">Improvement</label>
-               <Textarea 
-                 value={improve}
-                 onChange={(e) => setImprove(e.target.value)}
-                 placeholder="One thing for next week..." 
-                 className="resize-none h-32 rounded-2xl bg-background/50 border-border/60"
-               />
-            </div>
-          </div>
+              {/* Reflection Areas */}
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-2 flex flex-col">
+                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 px-1">
+                     <Award className="w-3.5 h-3.5 text-yellow-500" />
+                     Biggest Win
+                   </label>
+                   <Textarea 
+                     value={wins}
+                     onChange={(e) => setWins(e.target.value)}
+                     placeholder="What went well this week?" 
+                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                   />
+                </div>
+                
+                <div className="space-y-2 flex flex-col">
+                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 px-1">
+                     <AlertOctagon className="w-3.5 h-3.5 text-red-400" />
+                     Primary Obstacle
+                   </label>
+                   <Textarea 
+                     value={challenges}
+                     onChange={(e) => setChallenges(e.target.value)}
+                     placeholder="What held you back or slowed output?" 
+                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                   />
+                </div>
+                
+                <div className="space-y-2 flex flex-col">
+                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 px-1">
+                     <Sparkles className="w-3.5 h-3.5 text-primary" />
+                     Core Improvement
+                   </label>
+                   <Textarea 
+                     value={improve}
+                     onChange={(e) => setImprove(e.target.value)}
+                     placeholder="One core improvement for next week..." 
+                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                   />
+                </div>
+              </div>
 
-          <div className="flex items-center justify-end pt-4 border-t border-border/50">
-            <Button 
-              className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70 text-accent-foreground"
-              size="lg"
-              onClick={handleSaveReview}
-              disabled={saveReviewMutation.isPending || isLoadingReview}
-            >
-              {!isPremium && <Lock className="w-4 h-4 mr-2 opacity-70" />}
-              <Save className="w-4 h-4 mr-2" />
-              {saveReviewMutation.isPending ? "Saving..." : "Save Review"}
-            </Button>
-          </div>
-
-        </TabsContent>
-      </Tabs>
+              {/* Save Button */}
+              <div className="flex items-center justify-end pt-6 border-t border-border/15">
+                <Button 
+                  className="w-full sm:w-auto rounded-xl bg-accent text-accent-foreground hover:bg-accent/95 shadow-md shadow-accent/10 font-semibold text-xs uppercase tracking-wider py-5 px-6"
+                  onClick={handleSaveReview}
+                  disabled={saveReviewMutation.isPending || isLoadingReview}
+                >
+                  {!isPremium && <Lock className="w-3.5 h-3.5 mr-1.5 opacity-70" />}
+                  {saveReviewMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  {saveReviewMutation.isPending ? "Saving Review..." : "Save Review"}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <PremiumGateModal 
         open={isGateOpen} 

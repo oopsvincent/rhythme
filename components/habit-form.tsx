@@ -110,58 +110,59 @@ export default function HabitForm({ children }: { children?: React.ReactNode }) 
     <Dialog open={showForm} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {children || (
-          <Button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
+          <Button className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/95 transition-all shadow-sm cursor-pointer select-none">
             <Plus className="h-4 w-4" />
             Add Habit
           </Button>
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto rounded-3xl border-border/10">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Create New Habit</DialogTitle>
+            <DialogTitle className="text-lg font-bold font-primary">Create New Habit</DialogTitle>
             <DialogDescription className="sr-only">
               Add a new habit to track
             </DialogDescription>
           </DialogHeader>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-semibold">
               {error}
             </div>
           )}
 
-          <div className="mt-4 space-y-4">
+          <div className="mt-5 space-y-4">
             {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="habit-name" className="sr-only">
+            <div className="space-y-1.5">
+              <label htmlFor="habit-name" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/65 select-none">
                 Habit Name <span className="text-red-500">*</span>
-              </Label>
+              </label>
                 <Input
                   id="habit-name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full text-lg shadow-none font-medium h-12"
+                  className="w-full bg-card/45 dark:bg-card/25 hover:bg-card/75 dark:hover:bg-card/40 border border-border/30 focus:border-[#E07A5F]/50 focus:bg-card/85 dark:focus:bg-card/45 px-4 h-12 rounded-xl text-sm font-semibold tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#E07A5F]/20 placeholder:text-muted-foreground/35 placeholder:text-xs placeholder:font-light"
                   placeholder="What habit do you want to build?"
                   disabled={isPending}
                   autoFocus
+                  required
                 />
               </div>
 
             {showAdvanced ? (
               <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                 {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="habit-description" className="text-sm font-medium text-muted-foreground">
+                <div className="space-y-1.5">
+                  <label htmlFor="habit-description" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/65 select-none">
                     Description
-                  </Label>
+                  </label>
                   <Textarea
                     id="habit-description"
                     value={formData.description || ''}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full min-h-[80px] resize-none"
+                    className="w-full bg-card/45 dark:bg-card/25 hover:bg-card/75 dark:hover:bg-card/40 border border-border/30 focus:border-[#E07A5F]/50 focus:bg-card/85 dark:focus:bg-card/45 p-3 rounded-xl text-sm font-semibold tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#E07A5F]/20 placeholder:text-muted-foreground/35 placeholder:text-xs placeholder:font-light min-h-[80px] resize-none"
                     placeholder="Why is this habit important to you?"
                     disabled={isPending}
                   />
@@ -169,21 +170,21 @@ export default function HabitForm({ children }: { children?: React.ReactNode }) 
 
                 {/* Frequency & Target */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="habit-frequency" className="text-sm font-medium text-muted-foreground">
+                  <div className="space-y-1.5">
+                    <label htmlFor="habit-frequency" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/65 select-none">
                       Frequency
-                    </Label>
+                    </label>
                     <Select
                       value={String(formData.frequency ?? 0)}
                       onValueChange={(value) => setFormData({ ...formData, frequency: parseInt(value) as HabitFrequency })}
                       disabled={isPending}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full bg-card/45 dark:bg-card/25 hover:bg-card/75 dark:hover:bg-card/40 border border-border/30 focus:border-[#E07A5F]/50 h-12 rounded-xl text-sm font-semibold tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#E07A5F]/20">
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="border-border/10 rounded-xl bg-card">
                         {frequencyOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
+                          <SelectItem key={option.value} value={option.value} className="rounded-lg text-xs font-semibold cursor-pointer">
                             {option.label}
                           </SelectItem>
                         ))}
@@ -191,16 +192,16 @@ export default function HabitForm({ children }: { children?: React.ReactNode }) 
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="habit-target" className="text-sm font-medium text-muted-foreground">
+                  <div className="space-y-1.5">
+                    <label htmlFor="habit-target" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/65 select-none">
                       Target Count
-                    </Label>
+                    </label>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, target_count: Math.max(1, (formData.target_count ?? 1) - 1) })}
                         disabled={isPending || (formData.target_count ?? 1) <= 1}
-                        className="shrink-0 h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="shrink-0 h-10 w-10 rounded-lg border border-border/30 flex items-center justify-center bg-card/30 hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
@@ -212,13 +213,13 @@ export default function HabitForm({ children }: { children?: React.ReactNode }) 
                         value={formData.target_count ?? 1}
                         onChange={(e) => setFormData({ ...formData, target_count: parseInt(e.target.value) || 1 })}
                         disabled={isPending}
-                        className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="text-center bg-card/45 dark:bg-card/25 hover:bg-card/75 dark:hover:bg-card/40 border border-border/30 focus:border-[#E07A5F]/50 focus:bg-card/85 dark:focus:bg-card/45 h-10 rounded-lg text-sm font-semibold tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#E07A5F]/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, target_count: Math.min(20, (formData.target_count ?? 1) + 1) })}
                         disabled={isPending || (formData.target_count ?? 1) >= 20}
-                        className="shrink-0 h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="shrink-0 h-10 w-10 rounded-lg border border-border/30 flex items-center justify-center bg-card/30 hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <Plus className="h-4 w-4" />
                       </button>
@@ -231,7 +232,7 @@ export default function HabitForm({ children }: { children?: React.ReactNode }) 
                 type="button"
                 variant="ghost"
                 onClick={() => setShowAdvanced(true)}
-                className="text-xs text-muted-foreground hover:text-foreground h-8 px-2 -ml-2"
+                className="text-xs text-muted-foreground hover:text-foreground h-8 px-2 -ml-2 cursor-pointer font-semibold"
               >
                 + Advanced Options
               </Button>
@@ -239,7 +240,7 @@ export default function HabitForm({ children }: { children?: React.ReactNode }) 
           </div>
 
           <DialogFooter className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
-            <div className="hidden sm:flex items-center text-xs text-muted-foreground">
+            <div className="hidden sm:flex items-center text-xs text-muted-foreground select-none">
               <Kbd>Enter</Kbd>
               <span className="ml-1.5">to save</span>
             </div>
@@ -249,7 +250,7 @@ export default function HabitForm({ children }: { children?: React.ReactNode }) 
                   type="button"
                   variant="outline"
                   disabled={isPending}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto rounded-xl border border-border/30 hover:bg-muted text-xs font-semibold px-4 h-10 cursor-pointer"
                 >
                   Cancel
                 </Button>
@@ -257,7 +258,7 @@ export default function HabitForm({ children }: { children?: React.ReactNode }) 
               <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto rounded-xl bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-semibold px-4 h-10 cursor-pointer"
               >
                 {isPending ? (
                   <>

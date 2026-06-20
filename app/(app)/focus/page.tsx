@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { FocusHubClient } from "@/components/focus/focus-hub-client";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Focus – Rhythmé",
@@ -14,7 +15,20 @@ export default function FocusPage() {
       <div className="flex flex-1 flex-col px-4 md:px-10">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <FocusHubClient />
+            <Suspense fallback={
+              <div className="w-full max-w-2xl mx-auto space-y-8 py-8">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+                    <div className="h-4 w-48 bg-muted animate-pulse rounded" />
+                  </div>
+                  <div className="h-10 w-24 bg-muted animate-pulse rounded-lg" />
+                </div>
+                <div className="h-[200px] w-full bg-muted animate-pulse rounded-2xl" />
+              </div>
+            }>
+              <FocusHubClient />
+            </Suspense>
           </div>
         </div>
       </div>

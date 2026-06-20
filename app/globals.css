@@ -22,6 +22,19 @@ body {
   .glass {
     @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-lg;
   }
+
+  @keyframes nav-loader {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-nav-loader {
+    animation: nav-loader 1.5s infinite linear;
+  }
 }
 
 /* --- THEME TOKENS --- */
@@ -601,7 +614,8 @@ body {
   @media (prefers-reduced-motion: reduce) {
     .animate-liquid-1,
     .animate-liquid-2,
-    .animate-pulse-fast {
+    .animate-pulse-fast,
+    .animate-nav-loader {
       animation: none !important;
       background-image: none !important;
     }

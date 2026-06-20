@@ -40,6 +40,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
+  TrendingUp,
 } from "lucide-react";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { motion } from "framer-motion";
@@ -393,78 +394,66 @@ function HabitDetailClientContent({
       {/* ========================================================================= */}
       {/* MOBILE ONLY LAYOUT (centered, narrow mockup layout)                       */}
       {/* ========================================================================= */}
-      <div className="block md:hidden flex flex-1 flex-col px-4 pb-8">
+      <div className="flex md:hidden flex-col px-4 pb-8 w-full max-w-md mx-auto space-y-4 relative pb-28">
+        {/* Mobile Header Bar */}
+        <div className="w-full flex items-center justify-between select-none pt-2 pb-1">
+          <button
+            onClick={() => router.push("/habits")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card/60 dark:bg-card/25 border border-border/30 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            <span>Habits</span>
+          </button>
+          
+          <button
+            onClick={() => {
+              setEditName(habit.name);
+              setEditDescription(habit.description || "");
+              setEditFrequency(freq);
+              setEditTargetCount(habit.target_count ?? 1);
+              setIsEditDialogOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card/60 dark:bg-card/25 border border-border/30 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <span>Edit</span>
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Title Block */}
+        <div className="w-full select-none space-y-1 pb-1 pt-1">
+          <div className="flex flex-col items-start text-left">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#E07A5F] bg-[#E07A5F]/10 px-2.5 py-1 rounded-md mb-1.5 select-none">
+              Habit Summary
+            </span>
+            <h1 className="text-xl font-bold font-primary tracking-tight text-foreground leading-tight">
+              {habit.name}
+            </h1>
+            {habit.description && (
+              <p className="text-xs text-muted-foreground mt-1 font-medium leading-relaxed">
+                {habit.description}
+              </p>
+            )}
+            <div className="flex items-center gap-2 flex-wrap text-[10px] mt-2.5">
+              <Badge variant="secondary" className="px-2 py-0.5 rounded-md font-semibold bg-muted/60 text-muted-foreground border-none">{getFrequencyLabel(freq)}</Badge>
+              <Badge variant="outline" className="px-2 py-0.5 rounded-md bg-card/45 border-border/30 text-muted-foreground font-medium">
+                <Target className="mr-1 h-3 w-3 text-muted-foreground/80 inline" />
+                {habit.periodTarget}x {habit.periodLabel}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="px-2 py-0.5 rounded-md bg-[#E07A5F]/10 text-[#E07A5F] border-[#E07A5F]/20 font-semibold"
+              >
+                <Flame className="mr-1 h-3 w-3 text-[#E07A5F] inline" />
+                {habit.current_streak} {streakUnit} streak
+              </Badge>
+              {renderSourceBadge(habit.source)}
+            </div>
+          </div>
+        </div>
+
         <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="w-full max-w-md mx-auto py-6 flex flex-col">
-            
-            {/* Centered Header Bar */}
-            <div className="w-full flex items-center justify-between mb-8 select-none">
-              <button
-                onClick={() => router.push("/habits")}
-                className="p-2 rounded-xl hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                title="Back to Habits"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              
-              <div className="flex flex-col items-center text-center">
-                <h1 className="text-base font-bold font-primary tracking-wide text-foreground">
-                  {habit.name}
-                </h1>
-                {habit.description && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5 max-w-[200px] truncate">
-                    {habit.description}
-                  </p>
-                )}
-              </div>
-
-              <button
-                onClick={() => {
-                  setEditName(habit.name);
-                  setEditDescription(habit.description || "");
-                  setEditFrequency(freq);
-                  setEditTargetCount(habit.target_count ?? 1);
-                  setIsEditDialogOpen(true);
-                }}
-                className="p-2 rounded-xl hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                title="Edit Habit"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Premium Sliding Segmented Control */}
-            <div className="flex bg-muted/40 dark:bg-zinc-900/60 p-1 rounded-full border border-border/40 dark:border-zinc-800/50 w-full mb-8 relative">
-              {(
-                [
-                  { id: "heatmap", label: "Heatmap" },
-                  { id: "calendar", label: "Calendar" },
-                  { id: "stats", label: "Stats" },
-                ] as const
-              ).map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 py-1.5 text-xs font-semibold rounded-full relative transition-colors duration-200 select-none z-10 cursor-pointer ${
-                      isActive
-                        ? "text-foreground font-bold"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeTabIndicatorMobile"
-                        className="absolute inset-0 bg-[#27272a]/80 dark:bg-zinc-850/80 rounded-full -z-10 shadow-xs border border-white/5 dark:border-zinc-700/30"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="w-full max-w-md mx-auto flex flex-col pt-1">
 
             {/* TAB VIEWS */}
             {activeTab === "heatmap" && (
@@ -590,47 +579,51 @@ function HabitDetailClientContent({
                 </div>
 
                 {/* 3-Column Stats Container */}
-                <div className="bg-card/25 border border-border/30 dark:border-zinc-800/40 rounded-2xl p-4 w-full grid grid-cols-3 divide-x divide-border/20 dark:divide-zinc-800/40 mb-8 shadow-xs select-none">
-                  <div className="flex flex-col items-center justify-center text-center">
+                <div className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/25 backdrop-blur-md p-5 w-full grid grid-cols-3 divide-x divide-border/20 dark:divide-zinc-800/40 mb-8 shadow-sm select-none">
+                  {/* Ambient Glow Accent */}
+                  <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/8 rounded-full blur-2xl pointer-events-none" />
+                  <div className="flex flex-col items-center justify-center text-center relative z-10">
                     <span className="text-lg font-bold font-primary">{stats?.total_completions || 0}</span>
                     <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-0.5">Days</span>
                   </div>
-                  <div className="flex flex-col items-center justify-center text-center">
+                  <div className="flex flex-col items-center justify-center text-center relative z-10">
                     <span className="text-lg font-bold font-primary">
                       {stats ? Math.round(stats.completion_rate_30d * 100) : 0}%
                     </span>
                     <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-0.5">Consistency</span>
                   </div>
-                  <div className="flex flex-col items-center justify-center text-center">
+                  <div className="flex flex-col items-center justify-center text-center relative z-10">
                     <span className="text-lg font-bold font-primary">{habit.current_streak}</span>
                     <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-0.5">Current Streak</span>
                   </div>
                 </div>
 
                 {/* Quotes Section */}
-                <div className="flex flex-col items-center justify-center text-center max-w-xs mx-auto mt-4 px-4 select-none">
-                  <span className="text-3xl font-serif text-primary/60 leading-none mb-1">“</span>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed italic">
+                <Card className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/25 backdrop-blur-md p-6 text-center select-none shadow-sm w-full mb-4">
+                  <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-primary/8 rounded-full blur-2xl pointer-events-none" />
+                  <span className="text-3xl font-serif text-primary/60 leading-none mb-1 relative z-10">“</span>
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed italic relative z-10">
                     {MOTIVATIONAL_QUOTES[habit.habit_id % MOTIVATIONAL_QUOTES.length].text}
                   </p>
                   {MOTIVATIONAL_QUOTES[habit.habit_id % MOTIVATIONAL_QUOTES.length].author && (
-                    <span className="text-[9px] text-muted-foreground/50 font-semibold mt-1">
+                    <span className="text-[9px] text-muted-foreground/50 font-semibold mt-2 block relative z-10">
                       — {MOTIVATIONAL_QUOTES[habit.habit_id % MOTIVATIONAL_QUOTES.length].author}
                     </span>
                   )}
-                </div>
+                </Card>
               </div>
             )}
 
             {activeTab === "calendar" && (
               <div className="flex flex-col gap-6 animate-in fade-in-50 duration-200">
                 {/* Full month picker */}
-                <div className="glass border-border/25 rounded-2xl p-4 flex flex-col items-center">
+                <div className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md p-5 flex flex-col items-center shadow-sm">
+                  <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/8 rounded-full blur-2xl pointer-events-none" />
                   <UiCalendar
                     mode="single"
                     selected={selectedCalendarDate}
                     onSelect={(date) => date && setSelectedCalendarDate(date)}
-                    className="w-full max-w-xs mx-auto"
+                    className="w-full max-w-xs mx-auto relative z-10"
                     modifiers={{
                       completed: completedDates,
                     }}
@@ -641,8 +634,9 @@ function HabitDetailClientContent({
                 </div>
 
                 {/* Day Logs Detail */}
-                <Card className="glass border-border/25">
-                  <CardHeader className="pb-3">
+                <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md shadow-sm">
+                  <div className="absolute -top-10 -left-10 w-24 h-24 bg-primary/8 rounded-full blur-2xl pointer-events-none" />
+                  <CardHeader className="pb-3 relative z-10">
                     <CardTitle className="text-sm font-bold font-primary">
                       Logs for {selectedCalendarDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </CardTitle>
@@ -650,7 +644,7 @@ function HabitDetailClientContent({
                       {logsForSelectedDate.length} completion{logsForSelectedDate.length === 1 ? "" : "s"} logged
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="relative z-10">
                     {logsForSelectedDate.length === 0 ? (
                       <div className="text-center py-6 text-xs text-muted-foreground select-none">
                         <Calendar className="h-8 w-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
@@ -688,14 +682,15 @@ function HabitDetailClientContent({
                 </Card>
 
                 {/* History list */}
-                <Card className="glass border-border/25">
-                  <CardHeader>
+                <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md shadow-sm">
+                  <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-primary/8 rounded-full blur-2xl pointer-events-none" />
+                  <CardHeader className="relative z-10">
                     <CardTitle className="text-sm font-bold font-primary flex items-center gap-1.5">
                       <Clock className="h-4 w-4 text-primary" />
                       Recent Completions
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="max-h-60 overflow-y-auto pr-1">
+                  <CardContent className="max-h-60 overflow-y-auto pr-1 relative z-10">
                     {habit.completionLogs.length === 0 ? (
                       <div className="text-center py-6 text-xs text-muted-foreground select-none">
                         <p>No completions yet. Start building your streak!</p>
@@ -738,99 +733,54 @@ function HabitDetailClientContent({
 
             {activeTab === "stats" && (
               <div className="flex flex-col gap-6 animate-in fade-in-50 duration-200">
-                {/* Info & Badges */}
-                <Card className="glass border-border/25">
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-2 flex-wrap text-xs">
-                        <Badge variant="secondary">{getFrequencyLabel(freq)}</Badge>
-                        <Badge variant="outline" className="bg-muted/40">
-                          <Target className="mr-1 h-3 w-3" />
-                          {habit.periodTarget}x {habit.periodLabel}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className="bg-primary/10 text-primary border-primary/20"
-                        >
-                          <Flame className="mr-1 h-3 w-3" />
-                          {habit.current_streak} {streakUnit} streak
-                        </Badge>
-                        {renderSourceBadge(habit.source)}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
                 {/* Progress cards */}
                 <div className="grid grid-cols-2 gap-4">
-                  <Card className="glass border-border/25">
-                    <CardHeader className="pb-2">
-                      <CardDescription className="text-[10px] font-semibold text-muted-foreground">
-                        7-Day Rate
-                      </CardDescription>
-                      <CardTitle className="text-xl font-bold font-primary mt-1">
-                        {stats ? Math.round(stats.completion_rate_7d * 100) : 0}%
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-1">
-                      <ProgressBar
-                        value={stats ? Math.round(stats.completion_rate_7d * 100) : 0}
-                        max={100}
-                        color="primary"
-                      />
-                    </CardContent>
+                  <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center shadow-sm">
+                    <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-primary/6 rounded-full blur-2xl pointer-events-none" />
+                    <TrendingUp className="w-5 h-5 text-primary mb-1.5 opacity-90 relative z-10" />
+                    <div className="text-xl font-bold font-primary relative z-10">{stats ? Math.round(stats.completion_rate_7d * 100) : 0}%</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1 mb-2 relative z-10 font-bold">7-Day Rate</div>
+                    <ProgressBar
+                      value={stats ? Math.round(stats.completion_rate_7d * 100) : 0}
+                      max={100}
+                      color="primary"
+                      size="sm"
+                    />
                   </Card>
 
-                  <Card className="glass border-border/25">
-                    <CardHeader className="pb-2">
-                      <CardDescription className="text-[10px] font-semibold text-muted-foreground">
-                        30-Day Rate
-                      </CardDescription>
-                      <CardTitle className="text-xl font-bold font-primary mt-1">
-                        {stats ? Math.round(stats.completion_rate_30d * 100) : 0}%
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-1">
-                      <ProgressBar
-                        value={stats ? Math.round(stats.completion_rate_30d * 100) : 0}
-                        max={100}
-                        color="primary"
-                      />
-                    </CardContent>
+                  <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center shadow-sm">
+                    <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-primary/6 rounded-full blur-2xl pointer-events-none" />
+                    <Target className="w-5 h-5 text-primary mb-1.5 opacity-90 relative z-10" />
+                    <div className="text-xl font-bold font-primary relative z-10">{stats ? Math.round(stats.completion_rate_30d * 100) : 0}%</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1 mb-2 relative z-10 font-bold">30-Day Rate</div>
+                    <ProgressBar
+                      value={stats ? Math.round(stats.completion_rate_30d * 100) : 0}
+                      max={100}
+                      color="primary"
+                      size="sm"
+                    />
                   </Card>
 
-                  <Card className="glass border-border/25">
-                    <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                      <div>
-                        <CardDescription className="text-[10px] font-semibold text-muted-foreground">
-                          Days Active
-                        </CardDescription>
-                        <CardTitle className="text-xl font-bold font-primary mt-1">
-                          {stats?.days_since_start || 0}
-                        </CardTitle>
-                      </div>
-                      <Calendar className="h-4 w-4 text-accent/80 shrink-0" />
-                    </CardHeader>
+                  <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center shadow-sm">
+                    <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-accent/6 rounded-full blur-2xl pointer-events-none" />
+                    <Calendar className="w-5 h-5 text-accent mb-1.5 opacity-90 relative z-10" />
+                    <div className="text-xl font-bold font-primary relative z-10">{stats?.days_since_start || 0}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1 relative z-10 font-bold">Days Active</div>
                   </Card>
 
-                  <Card className="glass border-border/25">
-                    <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                      <div>
-                        <CardDescription className="text-[10px] font-semibold text-muted-foreground">
-                          Total Logged
-                        </CardDescription>
-                        <CardTitle className="text-xl font-bold font-primary mt-1">
-                          {stats?.total_completions || 0}
-                        </CardTitle>
-                      </div>
-                      <Target className="h-4 w-4 text-primary/80 shrink-0" />
-                    </CardHeader>
+                  <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center shadow-sm">
+                    <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-primary/6 rounded-full blur-2xl pointer-events-none" />
+                    <CheckCircle2 className="w-5 h-5 text-[#E07A5F] mb-1.5 opacity-90 relative z-10" />
+                    <div className="text-xl font-bold font-primary relative z-10">{stats?.total_completions || 0}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1 relative z-10 font-bold">Total Logged</div>
                   </Card>
                 </div>
 
                 {/* AI Prediction */}
-                <Card className="glass border-border/25">
-                  <CardHeader>
+                <Card className="relative overflow-hidden rounded-3xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/[0.02] to-transparent dark:bg-card/25 backdrop-blur-md shadow-sm">
+                  {/* Ambient accent/terracotta glow */}
+                  <div className="absolute -top-10 -right-10 w-28 h-28 bg-accent/15 rounded-full blur-2xl pointer-events-none" />
+                  <CardHeader className="relative z-10">
                     <div className="flex items-center gap-2">
                       <Brain className="h-4 w-4 text-accent" />
                       <CardTitle className="text-sm font-bold font-primary">
@@ -838,7 +788,7 @@ function HabitDetailClientContent({
                       </CardTitle>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="relative z-10">
                     {daysUntilPrediction > 0 ? (
                       <div className="space-y-3 w-full">
                         <div className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -904,6 +854,40 @@ function HabitDetailClientContent({
             )}
           </div>
         </div>
+
+        {/* Fixed Bottom Appbar Navigation on Mobile */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 w-full flex items-center bg-[#12141A]/90 dark:bg-[#12141A]/95 backdrop-blur-xl border-t border-[#1F2A38]/15 dark:border-border/10 p-2 pb-safe-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.35)] rounded-t-2xl">
+          {(
+            [
+              { id: "heatmap", label: "Heatmap", icon: Flame },
+              { id: "calendar", label: "Calendar", icon: Calendar },
+              { id: "stats", label: "Stats & AI", icon: Brain },
+            ] as const
+          ).map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 relative cursor-pointer select-none",
+                  isActive ? "text-[#E07A5F]" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="habit-detail-appbar-tab-mobile"
+                    className="absolute inset-0 bg-background dark:bg-[#12141A]/50 border border-border/40 shadow-xs rounded-xl"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <Icon className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ========================================================================= */}
@@ -933,6 +917,21 @@ function HabitDetailClientContent({
                     {habit.description}
                   </p>
                 )}
+                <div className="flex items-center gap-2 flex-wrap text-[10px] justify-center mt-2.5">
+                  <Badge variant="secondary" className="px-2 py-0.5 rounded-md font-semibold bg-muted/60 text-muted-foreground border-none">{getFrequencyLabel(freq)}</Badge>
+                  <Badge variant="outline" className="px-2 py-0.5 rounded-md bg-card/45 border-border/30 text-muted-foreground font-medium">
+                    <Target className="mr-1 h-3 w-3 text-muted-foreground/80 inline" />
+                    {habit.periodTarget}x {habit.periodLabel}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="px-2 py-0.5 rounded-md bg-[#E07A5F]/10 text-[#E07A5F] border-[#E07A5F]/20 font-semibold"
+                  >
+                    <Flame className="mr-1 h-3 w-3 text-[#E07A5F] inline" />
+                    {habit.current_streak} {streakUnit} streak
+                  </Badge>
+                  {renderSourceBadge(habit.source)}
+                </div>
               </div>
 
               <button
@@ -988,13 +987,14 @@ function HabitDetailClientContent({
             {activeTab === "heatmap" && (
               <div className="grid grid-cols-[1fr_380px] gap-8 items-start animate-in fade-in-50 duration-200">
                 {/* Left Side: Month navigation and Calendar-style heatmap */}
-                <div className="glass border-border/25 rounded-2xl p-6 flex flex-col">
-                  <h2 className="text-base font-bold font-primary text-foreground mb-6 flex items-center gap-2">
+                <div className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/25 backdrop-blur-md p-6 flex flex-col shadow-sm">
+                  <div className="absolute -top-20 -right-20 w-44 h-44 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
+                  <h2 className="text-base font-bold font-primary text-foreground mb-6 flex items-center gap-2 relative z-10">
                     <Flame className="h-4 w-4 text-primary" />
                     Month Consistency View
                   </h2>
                   
-                  <div className="flex items-center justify-between w-full max-w-xs mx-auto mb-8 px-2">
+                  <div className="flex items-center justify-between w-full max-w-xs mx-auto mb-8 px-2 relative z-10">
                     <button
                       onClick={() => setHeatmapMonth(new Date(heatmapMonth.getFullYear(), heatmapMonth.getMonth() - 1, 1))}
                       className="p-1.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer"
@@ -1015,7 +1015,7 @@ function HabitDetailClientContent({
                   </div>
 
                   {/* Expanded Heatmap calendar grid */}
-                  <div className="grid grid-cols-[70px_1fr] gap-x-3 gap-y-4 w-full mb-6 items-center">
+                  <div className="grid grid-cols-[70px_1fr] gap-x-3 gap-y-4 w-full mb-6 items-center relative z-10">
                     <div />
                     <div className="grid grid-cols-7 gap-1.5 text-center">
                       {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, idx) => (
@@ -1071,7 +1071,7 @@ function HabitDetailClientContent({
                   </div>
 
                   {/* Intensity Legend */}
-                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/65 mb-8 select-none">
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/65 mb-8 select-none relative z-10">
                     <span>Less</span>
                     <div className="w-3.5 h-3.5 rounded-[3px] bg-muted/15 border border-border/20 dark:bg-zinc-900/40 dark:border-zinc-800/60" />
                     <div className="w-3.5 h-3.5 rounded-[3px] bg-primary/25 border border-primary/20" />
@@ -1083,7 +1083,7 @@ function HabitDetailClientContent({
                   </div>
 
                   {/* Completion button below heatmap grid */}
-                  <div className="w-full max-w-sm mx-auto">
+                  <div className="w-full max-w-sm mx-auto relative z-10">
                     {!habit.isCompletedForPeriod ? (
                       <button
                         onClick={() => setIsCompleteDialogOpen(true)}
@@ -1116,9 +1116,10 @@ function HabitDetailClientContent({
 
                 {/* Right Side: stats card and quotes */}
                 <div className="flex flex-col gap-6">
-                  <div className="bg-card/25 border border-border/30 dark:border-zinc-800/40 rounded-2xl p-6 w-full shadow-xs select-none flex flex-col gap-6">
-                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Metrics Overview</h3>
-                    <div className="grid grid-cols-3 divide-x divide-border/20 dark:divide-zinc-800/40">
+                  <div className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/25 backdrop-blur-md p-6 w-full shadow-sm select-none flex flex-col gap-6">
+                    <div className="absolute -bottom-20 -left-20 w-44 h-44 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
+                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider relative z-10">Metrics Overview</h3>
+                    <div className="grid grid-cols-3 divide-x divide-border/20 dark:divide-zinc-800/40 relative z-10">
                       <div className="flex flex-col items-center justify-center text-center">
                         <span className="text-2xl font-bold font-primary">{stats?.total_completions || 0}</span>
                         <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mt-1">Days</span>
@@ -1136,13 +1137,14 @@ function HabitDetailClientContent({
                     </div>
                   </div>
 
-                  <Card className="glass border-border/25 flex flex-col justify-center items-center py-10 px-6 text-center select-none min-h-[200px]">
-                    <span className="text-4xl font-serif text-primary/60 leading-none mb-2">“</span>
-                    <p className="text-sm text-foreground font-medium leading-relaxed italic max-w-xs">
+                  <Card className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col justify-center items-center py-10 px-6 text-center select-none min-h-[200px] shadow-sm">
+                    <div className="absolute -top-20 -right-20 w-44 h-44 bg-primary/6 rounded-full blur-3xl pointer-events-none" />
+                    <span className="text-4xl font-serif text-primary/60 leading-none mb-2 relative z-10">“</span>
+                    <p className="text-sm text-foreground font-medium leading-relaxed italic max-w-xs relative z-10">
                       {MOTIVATIONAL_QUOTES[habit.habit_id % MOTIVATIONAL_QUOTES.length].text}
                     </p>
                     {MOTIVATIONAL_QUOTES[habit.habit_id % MOTIVATIONAL_QUOTES.length].author && (
-                      <span className="text-xs text-muted-foreground/50 font-semibold mt-3">
+                      <span className="text-xs text-muted-foreground/50 font-semibold mt-3 relative z-10">
                         — {MOTIVATIONAL_QUOTES[habit.habit_id % MOTIVATIONAL_QUOTES.length].author}
                       </span>
                     )}
@@ -1154,29 +1156,33 @@ function HabitDetailClientContent({
             {activeTab === "calendar" && (
               <div className="grid grid-cols-[1fr_380px] gap-8 items-start animate-in fade-in-50 duration-200">
                 {/* Left Column: Full Month Interactive Picker */}
-                <div className="glass border-border/25 rounded-2xl p-6 flex flex-col items-center">
-                  <h2 className="text-base font-bold font-primary text-foreground mb-6 self-start flex items-center gap-2">
+                <div className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/25 backdrop-blur-md p-6 flex flex-col items-center shadow-sm">
+                  <div className="absolute -top-20 -right-20 w-44 h-44 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
+                  <h2 className="text-base font-bold font-primary text-foreground mb-6 self-start flex items-center gap-2 relative z-10">
                     <Calendar className="h-4 w-4 text-primary" />
                     Interactive Calendar Log
                   </h2>
-                  <UiCalendar
-                    mode="single"
-                    selected={selectedCalendarDate}
-                    onSelect={(date) => date && setSelectedCalendarDate(date)}
-                    className="w-full scale-110 origin-center py-4"
-                    modifiers={{
-                      completed: completedDates,
-                    }}
-                    modifiersClassNames={{
-                      completed: "bg-primary/20 text-primary font-bold hover:bg-primary/30",
-                    }}
-                  />
+                  <div className="relative z-10 scale-110 origin-center py-4">
+                    <UiCalendar
+                      mode="single"
+                      selected={selectedCalendarDate}
+                      onSelect={(date) => date && setSelectedCalendarDate(date)}
+                      className="w-full"
+                      modifiers={{
+                        completed: completedDates,
+                      }}
+                      modifiersClassNames={{
+                        completed: "bg-primary/20 text-primary font-bold hover:bg-primary/30",
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Right Column: Logs for date and history */}
                 <div className="flex flex-col gap-6">
-                  <Card className="glass border-border/25">
-                    <CardHeader className="pb-3">
+                  <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md shadow-sm">
+                    <div className="absolute -top-20 -left-20 w-44 h-44 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
+                    <CardHeader className="pb-3 relative z-10">
                       <CardTitle className="text-sm font-bold font-primary">
                         Logs for {selectedCalendarDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </CardTitle>
@@ -1184,7 +1190,7 @@ function HabitDetailClientContent({
                         {logsForSelectedDate.length} completion{logsForSelectedDate.length === 1 ? "" : "s"} logged
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="relative z-10">
                       {logsForSelectedDate.length === 0 ? (
                         <div className="text-center py-8 text-xs text-muted-foreground select-none">
                           <Calendar className="h-8 w-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
@@ -1221,14 +1227,15 @@ function HabitDetailClientContent({
                     </CardContent>
                   </Card>
 
-                  <Card className="glass border-border/25">
-                    <CardHeader>
+                  <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md shadow-sm">
+                    <div className="absolute -bottom-20 -right-20 w-44 h-44 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
+                    <CardHeader className="relative z-10">
                       <CardTitle className="text-sm font-bold font-primary flex items-center gap-1.5">
                         <Clock className="h-4 w-4 text-primary" />
                         Recent Completions
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="max-h-[300px] overflow-y-auto pr-1">
+                    <CardContent className="max-h-[300px] overflow-y-auto pr-1 relative z-10">
                       {habit.completionLogs.length === 0 ? (
                         <div className="text-center py-6 text-xs text-muted-foreground select-none">
                           <p>No completions yet. Start building your streak!</p>
@@ -1274,96 +1281,53 @@ function HabitDetailClientContent({
               <div className="grid grid-cols-[1fr_380px] gap-8 items-start animate-in fade-in-50 duration-200">
                 {/* Left Column: Stats Progress Cards */}
                 <div className="flex flex-col gap-6">
-                  {/* Info / Badge Card */}
-                  <Card className="glass border-border/25">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold font-primary">Habit Parameters</h3>
-                        <div className="flex items-center gap-2 flex-wrap text-xs">
-                          <Badge variant="secondary">{getFrequencyLabel(freq)}</Badge>
-                          <Badge variant="outline" className="bg-muted/40">
-                            <Target className="mr-1 h-3 w-3" />
-                            {habit.periodTarget}x {habit.periodLabel}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="bg-primary/10 text-primary border-primary/20"
-                          >
-                            <Flame className="mr-1 h-3 w-3" />
-                            {habit.current_streak} {streakUnit} streak
-                          </Badge>
-                          {renderSourceBadge(habit.source)}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
                   <div className="grid grid-cols-2 gap-6">
-                    <Card className="glass border-border/25 p-4">
-                      <CardHeader className="pb-2">
-                        <CardDescription className="text-xs font-semibold text-muted-foreground">
-                          7-Day Completion Rate
-                        </CardDescription>
-                        <CardTitle className="text-2xl font-bold font-primary mt-1">
-                          {stats ? Math.round(stats.completion_rate_7d * 100) : 0}%
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-2">
-                        <ProgressBar
-                          value={stats ? Math.round(stats.completion_rate_7d * 100) : 0}
-                          max={100}
-                          color="primary"
-                        />
-                      </CardContent>
+                    <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center shadow-sm">
+                      <div className="absolute -bottom-20 -right-20 w-36 h-36 bg-primary/6 rounded-full blur-3xl pointer-events-none" />
+                      <TrendingUp className="w-5 h-5 text-primary mb-2 opacity-90 relative z-10" />
+                      <div className="text-2xl font-bold font-primary relative z-10">{stats ? Math.round(stats.completion_rate_7d * 100) : 0}%</div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 mb-3 relative z-10 font-bold">7-Day Rate</div>
+                      <ProgressBar
+                        value={stats ? Math.round(stats.completion_rate_7d * 100) : 0}
+                        max={100}
+                        color="primary"
+                        size="sm"
+                      />
                     </Card>
 
-                    <Card className="glass border-border/25 p-4">
-                      <CardHeader className="pb-2">
-                        <CardDescription className="text-xs font-semibold text-muted-foreground">
-                          30-Day Completion Rate
-                        </CardDescription>
-                        <CardTitle className="text-2xl font-bold font-primary mt-1">
-                          {stats ? Math.round(stats.completion_rate_30d * 100) : 0}%
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-2">
-                        <ProgressBar
-                          value={stats ? Math.round(stats.completion_rate_30d * 100) : 0}
-                          max={100}
-                          color="primary"
-                        />
-                      </CardContent>
+                    <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center shadow-sm">
+                      <div className="absolute -bottom-20 -right-20 w-36 h-36 bg-primary/6 rounded-full blur-3xl pointer-events-none" />
+                      <Target className="w-5 h-5 text-primary mb-2 opacity-90 relative z-10" />
+                      <div className="text-2xl font-bold font-primary relative z-10">{stats ? Math.round(stats.completion_rate_30d * 100) : 0}%</div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 mb-3 relative z-10 font-bold">30-Day Rate</div>
+                      <ProgressBar
+                        value={stats ? Math.round(stats.completion_rate_30d * 100) : 0}
+                        max={100}
+                        color="primary"
+                        size="sm"
+                      />
                     </Card>
 
-                    <Card className="glass border-border/25 p-4 flex flex-row items-center justify-between">
-                      <div>
-                        <CardDescription className="text-xs font-semibold text-muted-foreground">
-                          Days Active Since Start
-                        </CardDescription>
-                        <CardTitle className="text-2xl font-bold font-primary mt-1">
-                          {stats?.days_since_start || 0}
-                        </CardTitle>
-                      </div>
-                      <Calendar className="h-6 w-6 text-accent/80 shrink-0" />
+                    <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center shadow-sm">
+                      <div className="absolute -bottom-20 -right-20 w-36 h-36 bg-accent/6 rounded-full blur-3xl pointer-events-none" />
+                      <Calendar className="w-5 h-5 text-accent mb-2 opacity-90 relative z-10" />
+                      <div className="text-2xl font-bold font-primary relative z-10">{stats?.days_since_start || 0}</div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 relative z-10 font-bold">Days Active</div>
                     </Card>
 
-                    <Card className="glass border-border/25 p-4 flex flex-row items-center justify-between">
-                      <div>
-                        <CardDescription className="text-xs font-semibold text-muted-foreground">
-                          Total Logged Completions
-                        </CardDescription>
-                        <CardTitle className="text-2xl font-bold font-primary mt-1">
-                          {stats?.total_completions || 0}
-                        </CardTitle>
-                      </div>
-                      <Target className="h-6 w-6 text-primary/80 shrink-0" />
+                    <Card className="relative overflow-hidden rounded-3xl border border-border/35 bg-card/45 dark:bg-card/25 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center shadow-sm">
+                      <div className="absolute -bottom-20 -right-20 w-36 h-36 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
+                      <CheckCircle2 className="w-5 h-5 text-[#E07A5F] mb-2 opacity-90 relative z-10" />
+                      <div className="text-2xl font-bold font-primary relative z-10">{stats?.total_completions || 0}</div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1 relative z-10 font-bold">Total Logged</div>
                     </Card>
                   </div>
                 </div>
 
                 {/* Right Column: AI Prediction */}
-                <Card className="glass border-border/25 p-2">
-                  <CardHeader>
+                <Card className="relative overflow-hidden rounded-3xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/[0.02] to-transparent dark:bg-card/25 backdrop-blur-md shadow-sm">
+                  <div className="absolute -top-20 -right-20 w-48 h-48 bg-accent/15 rounded-full blur-3xl pointer-events-none" />
+                  <CardHeader className="relative z-10">
                     <div className="flex items-center gap-2">
                       <Brain className="h-5 w-5 text-accent" />
                       <CardTitle className="text-sm font-bold font-primary">
@@ -1371,7 +1335,7 @@ function HabitDetailClientContent({
                       </CardTitle>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="relative z-10">
                     {daysUntilPrediction > 0 ? (
                       <div className="space-y-4 w-full">
                         <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
@@ -1634,7 +1598,7 @@ export function HabitDetailClient(props: HabitDetailClientProps) {
 
 // === Helper to Render Habit Source Badge ===
 function renderSourceBadge(source?: string) {
-  const badgeBaseClass = "text-[9px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded border flex items-center gap-1 w-fit select-none font-sans";
+  const badgeBaseClass = "text-[9px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 w-fit select-none font-sans";
   
   if (source === "ai_generated") {
     return (

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Home, BookOpen, Sparkles, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigationTransition } from "@/components/providers/navigation-transition-provider";
 
 interface JournalLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ interface JournalLayoutProps {
 function JournalBottomBar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { navigate } = useNavigationTransition();
   const tab = searchParams ? searchParams.get("tab") : null;
 
   const isHomeActive = pathname === "/journal" && (tab === null || tab === "home");
@@ -56,6 +58,10 @@ function JournalBottomBar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate(item.href);
+              }}
               className={cn(
                 "flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-300 relative group active:scale-95",
                 item.isActive

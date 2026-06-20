@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { 
   Brain, 
-  ArrowLeft, 
   Search, 
   X, 
   Sparkles, 
@@ -212,26 +211,19 @@ export default function InsightsListClient({
 
       <SiteHeader className="bg-transparent relative z-20" />
 
-      <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-4xl mx-auto w-full relative z-10 space-y-6 pb-20">
+      <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 py-8 md:py-12 max-w-5xl mx-auto w-full relative z-10 space-y-8 pb-20">
         
-        {/* Navigation & Header */}
-        <div className="flex flex-col gap-4">
-          <Link href="/journal">
-            <Button variant="ghost" size="sm" className="gap-2 self-start cursor-pointer text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back</span>
-            </Button>
-          </Link>
-
-          <div className="flex items-center gap-4 border-b border-border/15 pb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 flex items-center justify-center">
-              <Brain className="w-6 h-6 text-primary shadow-[0_0_10px_rgba(224,122,95,0.2)]" />
+        {/* Header */}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-5 border-b border-border/15 pb-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 flex items-center justify-center shrink-0 shadow-sm">
+              <Brain className="w-7 h-7 text-primary shadow-[0_0_12px_rgba(224,122,95,0.2)]" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-primary tracking-tight text-foreground/90">
+              <h1 className="text-2xl sm:text-3xl font-bold font-primary tracking-tight text-foreground/90 leading-tight">
                 Journal Insights
               </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground/80 mt-0.5">
+              <p className="text-sm text-muted-foreground/80 mt-1 leading-relaxed">
                 Select an entry below to explore its emotional trends, patterns, and AI reflections.
               </p>
             </div>
@@ -247,7 +239,7 @@ export default function InsightsListClient({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search journals by title or content..."
-              className="w-full h-12 pl-11 pr-4 rounded-xl bg-card/45 dark:bg-card/20 border border-border/40 focus:border-primary focus:ring-4 focus:ring-primary/8 outline-none transition-all placeholder:text-muted-foreground/60 text-sm"
+              className="w-full h-14 pl-12 pr-4 rounded-2xl bg-card/65 dark:bg-card/25 border border-border/40 focus:border-primary focus:ring-4 focus:ring-primary/8 outline-none transition-all placeholder:text-muted-foreground/60 text-sm"
             />
             {searchQuery && (
               <button
@@ -261,7 +253,7 @@ export default function InsightsListClient({
         )}
 
         {/* List of Journals */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredEntries.length > 0 ? (
             filteredEntries.map((entry) => {
               const colors = moodColors[entry.mood] || moodColors.neutral;
@@ -270,30 +262,49 @@ export default function InsightsListClient({
               return (
                 <Link key={entry.id} href={`/journal/${entry.id}/insights`}>
                   <motion.div
-                    whileHover={{ x: 3 }}
-                    className="group flex items-center justify-between p-4 rounded-xl border border-border/30 bg-card/50 hover:bg-card/85 transition-all duration-300 cursor-pointer shadow-sm relative overflow-hidden"
+                    whileHover={{ x: 4, scale: 1.005 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="group flex items-center justify-between p-5 sm:p-6 rounded-2xl border border-border/30 bg-card/60 dark:bg-card/30 hover:bg-card/85 dark:hover:bg-card/45 transition-all duration-300 cursor-pointer shadow-sm relative overflow-hidden"
                   >
-                    {/* Hover Glow */}
+                    {/* Hover Side-indicator Glow */}
                     <div 
                       className="absolute inset-y-0 left-0 w-[4px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                       style={{ backgroundColor: colors.primary }}
                     />
 
-                    <div className="flex items-center gap-4 flex-1 min-w-0 pl-1">
+                    <div className="flex items-center gap-5 flex-1 min-w-0 pl-1">
                       {/* Mood Indicator */}
                       <div 
-                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-border/10 shadow-inner"
+                        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border border-border/10 shadow-inner"
                         style={{ backgroundColor: `${colors.primary}18` }}
                       >
-                        <MoodIcon className="w-4 h-4" style={{ color: colors.primary }} />
+                        <MoodIcon className="w-5 h-5" style={{ color: colors.primary }} />
                       </div>
                       
-                      <div className="flex-1 min-w-0 space-y-0.5">
-                        <h3 className="font-bold text-sm sm:text-base text-foreground/90 truncate group-hover:text-primary transition-colors">
-                          {entry.title || "Untitled Entry"}
-                        </h3>
-                        <p className="text-[11px] text-muted-foreground/80 flex items-center gap-1.5 uppercase font-semibold tracking-wider">
-                          <Calendar className="w-3 h-3" />
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
+                          <h3 className="font-bold font-primary text-base sm:text-lg text-foreground/90 truncate group-hover:text-primary transition-colors leading-tight">
+                            {entry.title || "Untitled Entry"}
+                          </h3>
+                          <span 
+                            className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border"
+                            style={{
+                              backgroundColor: `${colors.primary}12`,
+                              borderColor: `${colors.primary}25`,
+                              color: colors.primary,
+                            }}
+                          >
+                            Feeling {entry.mood}
+                          </span>
+                        </div>
+                        
+                        {/* 1-Line Body Teaser to fill out the row and make it look premium */}
+                        <p className="text-xs sm:text-sm text-muted-foreground/65 line-clamp-1 font-sans pr-4 leading-normal">
+                          {entry.body.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ")}
+                        </p>
+
+                        <p className="text-[10px] text-muted-foreground/75 flex items-center gap-1.5 uppercase font-bold tracking-wider pt-0.5">
+                          <Calendar className="w-3.5 h-3.5 text-muted-foreground/60" />
                           {new Date(entry.createdAt).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
@@ -303,9 +314,9 @@ export default function InsightsListClient({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0">
-                      <span className="hidden sm:inline text-xs font-semibold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
-                        View AI Insights
+                    <div className="flex items-center gap-2 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0 pl-2">
+                      <span className="hidden md:inline text-xs font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        Analyze
                       </span>
                       <ChevronRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-0.5" />
                     </div>
@@ -315,22 +326,22 @@ export default function InsightsListClient({
             })
           ) : journals.length === 0 ? (
             /* Empty State */
-            <div className="text-center p-12 border border-border/20 rounded-2xl bg-card/25 backdrop-blur-sm space-y-4 max-w-md mx-auto mt-8">
-              <Sparkles className="w-10 h-10 text-muted-foreground/50 mx-auto" />
-              <h3 className="text-base font-bold font-primary text-foreground/90">No Journal Entries</h3>
-              <p className="text-xs text-muted-foreground/80">
+            <div className="text-center p-12 border border-border/20 rounded-[32px] bg-card/25 backdrop-blur-sm space-y-4 max-w-md mx-auto mt-8">
+              <Sparkles className="w-10 h-10 text-muted-foreground/50 mx-auto animate-pulse" />
+              <h3 className="text-lg font-bold font-primary text-foreground/90">No Journal Entries</h3>
+              <p className="text-sm text-muted-foreground/80 leading-relaxed">
                 You must write a journal entry first before you can analyze it and view AI Insights.
               </p>
               <Link href="/journal/new">
-                <Button size="sm" className="rounded-xl cursor-pointer">
+                <Button size="lg" className="rounded-xl cursor-pointer">
                   Write Your First Entry
                 </Button>
               </Link>
             </div>
           ) : (
             /* No Results Found */
-            <div className="text-center p-8 text-muted-foreground">
-              <p className="text-sm">No entries matched your search.</p>
+            <div className="text-center p-12 border border-border/10 rounded-2xl bg-card/10 text-muted-foreground max-w-md mx-auto">
+              <p className="text-sm">No entries matched your search query.</p>
             </div>
           )}
         </div>

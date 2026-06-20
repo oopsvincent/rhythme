@@ -42,6 +42,12 @@ const navigationItems = [
     section: "overview",
   },
   {
+    title: "Habits",
+    url: "/habits",
+    icon: CalendarSync,
+    section: "habits",
+  },
+  {
     title: "Tasks",
     url: "/tasks",
     icon: ListCheck,
@@ -84,6 +90,13 @@ const navigationItems = [
     ],
   },
   {
+    title: "Journal",
+    url: "/journal",
+    icon: NotebookPen,
+    section: "journal",
+  },
+  { title: "Weekly", url: "/weekly", icon: BookText, section: "week" },
+  {
     title: "Activity",
     url: "/activity",
     icon: Activity,
@@ -106,19 +119,6 @@ const navigationItems = [
       },
     ],
   },
-  {
-    title: "Journal",
-    url: "/journal",
-    icon: NotebookPen,
-    section: "journal",
-  },
-  {
-    title: "Habits",
-    url: "/habits",
-    icon: CalendarSync,
-    section: "habits",
-  },
-    { title: "Weekly", url: "/weekly", icon: BookText, section: "week" },
 ];
 
 const secondaryNavItems = [
