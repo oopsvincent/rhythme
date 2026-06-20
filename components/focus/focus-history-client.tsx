@@ -20,6 +20,12 @@ export function FocusHistoryClient() {
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
   const [isLoading, setIsLoading] = useState(true)
 
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      router.replace("/focus?tab=history")
+    }
+  }, [router])
+
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const loadSessions = useCallback(async () => {
@@ -119,27 +125,25 @@ export function FocusHistoryClient() {
       {/* ========================================================================= */}
       {/* MOBILE ONLY LAYOUT (centered, narrow mockup layout)                       */}
       {/* ========================================================================= */}
-      <div className="block md:hidden flex flex-col px-4 pb-8 w-full max-w-md mx-auto space-y-6">
-        {/* Centered Mobile Header Bar */}
-        <div className="w-full flex items-center justify-between py-4 select-none border-b border-border/10">
+      <div className="flex md:hidden flex-col px-4 pb-8 w-full max-w-md mx-auto space-y-5">
+        {/* Mobile Header Bar */}
+        <div className="w-full flex items-center justify-between select-none pt-2 pb-1">
           <button
             onClick={() => router.push("/focus")}
-            className="p-2 rounded-xl hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            title="Back to Focus Hub"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card/60 dark:bg-card/25 border border-border/30 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
+            <span>Focus Hub</span>
           </button>
           
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-base font-bold font-primary tracking-wide text-foreground">
+          <div className="flex flex-col items-end text-right">
+            <h1 className="text-xs font-bold font-primary tracking-wide text-foreground">
               Focus History
             </h1>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
+            <p className="text-[9px] text-muted-foreground font-medium">
               {total} sessions captured
             </p>
           </div>
-
-          <div className="w-8 h-8" /> {/* Spacer to balance header */}
         </div>
 
         {/* Calendar Heatmap card */}

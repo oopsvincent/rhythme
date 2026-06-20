@@ -40,6 +40,7 @@ import {
   AlertTriangle,
   Star,
   AlertCircle,
+  Camera,
 } from "lucide-react";
 import { createJournal } from "@/app/actions/journals";
 import { canCreateJournal } from "@/app/actions/usage-limits";
@@ -88,6 +89,7 @@ export default function NewJournalClient({
   const [body, setBody] = useState("");
   const [mood, setMood] = useState<MoodTags | null>(null);
   const [imageUrl, setImageUrl] = useState("");
+  const [showImageInput, setShowImageInput] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -136,7 +138,10 @@ export default function NewJournalClient({
         if (savedTitle) setTitle(savedTitle);
         if (savedBody) setBody(savedBody);
         if (savedMood) setMood(savedMood);
-        if (savedImageUrl) setImageUrl(savedImageUrl);
+        if (savedImageUrl) {
+          setImageUrl(savedImageUrl);
+          setShowImageInput(true);
+        }
       } catch {
         // Ignore malformed draft
       }
@@ -396,6 +401,144 @@ export default function NewJournalClient({
                 <span className="opacity-75 hidden sm:inline text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">Sync on save</span>
               </div>
 
+              {/* Cover Polaroid Section */}
+              {!showImageInput ? (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3.5 sm:p-4 rounded-2xl bg-muted/20 border border-border/10 flex items-center justify-between gap-4 transition-all duration-300 hover:bg-muted/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-[#E07A5F]/10 text-[#E07A5F] dark:bg-[#E07A5F]/20">
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-semibold text-foreground/80">Add a cover polaroid?</h4>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Pin a beautiful photo memory to this journal entry</p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowImageInput(true)}
+                    className="text-[10px] sm:text-xs rounded-xl cursor-pointer bg-background hover:bg-muted border-border/30 font-medium px-3 py-1.5 h-auto"
+                  >
+                    Add Cover
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-[#E07A5F]" />
+                      Pinned Polaroid Image
+                    </label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setImageUrl("");
+                        setShowImageInput(false);
+                      }}
+                      className="text-xs h-7 px-2 hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-lg cursor-pointer font-medium"
+                    >
+                      Remove Cover
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
+                      className="flex-1 px-3 py-2 text-sm bg-background border border-border/40 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary/40 text-foreground/90 placeholder:text-muted-foreground/45"
+                    />
+                    {imageUrl && (
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setImageUrl("")}
+                        className="px-2 text-xs hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-lg"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Live Preview with Polaroid/tape style + Badge above it */}
+                  {imageUrl && (
+                    <div className="pt-3 flex flex-col items-center">
+                      
+                      {/* "Feeling happy" badge above the image area */}
+                      {mood && (
+                        <div className="mb-4">
+                          <span
+                            className="px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide border flex items-center gap-1.5"
+                            style={{
+                              backgroundColor: `${colors.primary}18`,
+                              borderColor: `${colors.primary}35`,
+                              color: colors.primary,
+                              boxShadow: `0 2px 10px ${colors.primary}10`,
+                            }}
+                          >
+                            {(() => {
+                              const opt = moodOptions.find(o => o.type === mood);
+                              const MoodIcon = opt ? opt.icon : Smile;
+                              return <MoodIcon className="w-3.5 h-3.5" />;
+                            })()}
+                            Feeling {mood}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="relative bg-[#fcfbf9] dark:bg-[#1a1917] p-2.5 pb-6 rounded shadow-md border border-border/20 w-44 rotate-[-1.5deg]">
+                        {/* Washi Tape Preview */}
+                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-20 h-4 bg-primary/20 backdrop-blur-[1px] rotate-[1deg] opacity-75 z-10" />
+                        
+                        <div className="relative aspect-square overflow-hidden bg-muted rounded-sm border border-border/10 flex items-center justify-center">
+                          {/* Loading State Skeleton */}
+                          {imageState === 'loading' && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+                              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                            </div>
+                          )}
+
+                          {/* Error Fallback State */}
+                          {imageState === 'error' && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/5 text-destructive p-3 text-center">
+                              <CloudOff className="w-5 h-5 mb-1" />
+                              <span className="text-[9px] font-bold uppercase tracking-wider">Failed to load image</span>
+                            </div>
+                          )}
+
+                          {/* The Image Preview */}
+                          <img
+                            src={imageUrl}
+                            alt="Live preview"
+                            className={cn(
+                              "object-cover w-full h-full transition-opacity duration-300",
+                              imageState === 'loaded' ? "opacity-100" : "opacity-0 absolute"
+                            )}
+                            onLoad={() => setImageState('loaded')}
+                            onError={() => setImageState('error')}
+                          />
+                        </div>
+                        <div className="mt-2.5 text-center font-primary text-[10px] text-muted-foreground/60 tracking-wider">
+                          {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
               {/* Rebuilt Mood Selector: 2-Row Grid of large buttons */}
               <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-3">
                 <label className="text-sm font-semibold tracking-wide text-muted-foreground">
@@ -425,98 +568,6 @@ export default function NewJournalClient({
                     );
                   })}
                 </div>
-              </div>
-
-              {/* Pinned Polaroid Image Section */}
-              <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-3">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Pinned Polaroid Image
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
-                    className="flex-1 px-3 py-2 text-sm bg-background border border-border/40 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary/40 text-foreground/90 placeholder:text-muted-foreground/45"
-                  />
-                  {imageUrl && (
-                    <Button 
-                      type="button"
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setImageUrl("")}
-                      className="px-2 text-xs hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-lg"
-                    >
-                      Clear
-                    </Button>
-                  )}
-                </div>
-
-                {/* Live Preview with Polaroid/tape style + Badge above it */}
-                {imageUrl && (
-                  <div className="pt-3 flex flex-col items-center">
-                    
-                    {/* "Feeling happy" badge above the image area */}
-                    {mood && (
-                      <div className="mb-4">
-                        <span
-                          className="px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide border flex items-center gap-1.5"
-                          style={{
-                            backgroundColor: `${colors.primary}18`,
-                            borderColor: `${colors.primary}35`,
-                            color: colors.primary,
-                            boxShadow: `0 2px 10px ${colors.primary}10`,
-                          }}
-                        >
-                          {(() => {
-                            const opt = moodOptions.find(o => o.type === mood);
-                            const MoodIcon = opt ? opt.icon : Smile;
-                            return <MoodIcon className="w-3.5 h-3.5" />;
-                          })()}
-                          Feeling {mood}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="relative bg-[#fcfbf9] dark:bg-[#1a1917] p-2.5 pb-6 rounded shadow-md border border-border/20 w-44 rotate-[-1.5deg]">
-                      {/* Washi Tape Preview */}
-                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-20 h-4 bg-primary/20 backdrop-blur-[1px] rotate-[1deg] opacity-75 z-10" />
-                      
-                      <div className="relative aspect-square overflow-hidden bg-muted rounded-sm border border-border/10 flex items-center justify-center">
-                        {/* Loading State Skeleton */}
-                        {imageState === 'loading' && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
-                            <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-                          </div>
-                        )}
-
-                        {/* Error Fallback State */}
-                        {imageState === 'error' && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/5 text-destructive p-3 text-center">
-                            <CloudOff className="w-5 h-5 mb-1" />
-                            <span className="text-[9px] font-bold uppercase tracking-wider">Failed to load image</span>
-                          </div>
-                        )}
-
-                        {/* The Image Preview */}
-                        <img
-                          src={imageUrl}
-                          alt="Live preview"
-                          className={cn(
-                            "object-cover w-full h-full transition-opacity duration-300",
-                            imageState === 'loaded' ? "opacity-100" : "opacity-0 absolute"
-                          )}
-                          onLoad={() => setImageState('loaded')}
-                          onError={() => setImageState('error')}
-                        />
-                      </div>
-                      <div className="mt-2.5 text-center font-primary text-[10px] text-muted-foreground/60 tracking-wider">
-                        {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Ruled text editor */}

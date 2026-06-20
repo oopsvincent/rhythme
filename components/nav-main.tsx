@@ -17,6 +17,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import { useNavigationTransition } from "@/components/providers/navigation-transition-provider"
 
 export function NavMain({
   items,
@@ -39,10 +41,11 @@ export function NavMain({
   const searchParams = useSearchParams()
   const { setOpenMobile } = useSidebar()
   const { state } = useSidebar()
-const isCollapsed = state === "collapsed"
+  const isCollapsed = state === "collapsed"
+  const { navigate } = useNavigationTransition()
 
   const handleNavigation = (url: string) => {
-    router.push(url)
+    navigate(url)
     setOpenMobile(false)
   }
 
@@ -65,8 +68,8 @@ const isCollapsed = state === "collapsed"
             <Collapsible key={item.title} asChild defaultOpen={isActive} className="group/collapsible">
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  asChild
                   tooltip={item.title}
-                  onClick={() => handleNavigation(item.url)}
                   isActive={isActive}
                   className={`
                     group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5
@@ -77,19 +80,28 @@ const isCollapsed = state === "collapsed"
                     }
                   `}
                 >
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
-                  )}
-                  {item.icon && (
-  <item.icon
-    className={`h-4 w-4 shrink-0 transition-colors ${
-      isActive
-        ? "text-primary"
-        : "text-foreground/80 dark:text-foreground/70 group-hover:text-foreground"
-    }`}
-  />
-)}
-                  <span className="truncate">{item.title}</span>
+                  <Link
+                    href={item.url}
+                    prefetch={true}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavigation(item.url);
+                    }}
+                  >
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+                    )}
+                    {item.icon && (
+                      <item.icon
+                        className={`h-4 w-4 shrink-0 transition-colors ${
+                          isActive
+                            ? "text-primary"
+                            : "text-foreground/80 dark:text-foreground/70 group-hover:text-foreground"
+                        }`}
+                      />
+                    )}
+                    <span className="truncate">{item.title}</span>
+                  </Link>
                 </SidebarMenuButton>
                 
                 <CollapsibleTrigger asChild>
@@ -134,21 +146,29 @@ const isCollapsed = state === "collapsed"
                           <SidebarMenuSubButton
                             asChild
                             isActive={isChildActive}
-                            onClick={() => handleNavigation(subItem.url)}
                             className={`cursor-pointer rounded-md ${isChildActive ? 'text-primary font-medium bg-primary/5' : 'text-muted-foreground hover:bg-sidebar-accent'}`}
                           >
-                            <div className="flex items-center">
-                                {subItem.icon && (
-  <subItem.icon
-    className={`h-3.5 w-3.5 mr-2 transition-colors ${
-      isChildActive
-        ? "text-primary"
-        : "text-foreground/70 dark:text-foreground/70 group-hover:text-foreground"
-    }`}
-  />
-)}
-                                <span>{subItem.title}</span>
-                            </div>
+                            <Link
+                              href={subItem.url}
+                              prefetch={true}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleNavigation(subItem.url);
+                              }}
+                            >
+                              <div className="flex items-center">
+                                  {subItem.icon && (
+                                    <subItem.icon
+                                      className={`h-3.5 w-3.5 mr-2 transition-colors ${
+                                        isChildActive
+                                          ? "text-primary"
+                                          : "text-foreground/70 dark:text-foreground/70 group-hover:text-foreground"
+                                      }`}
+                                    />
+                                  )}
+                                  <span>{subItem.title}</span>
+                              </div>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       )
@@ -163,8 +183,8 @@ const isCollapsed = state === "collapsed"
         return (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
+              asChild
               tooltip={item.title}
-              onClick={() => handleNavigation(item.url)}
               isActive={isActive}
               className={`
                 group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5
@@ -175,17 +195,26 @@ const isCollapsed = state === "collapsed"
                 }
               `}
             >
-              {isActive && (
-                <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
-              )}
-              {item.icon && (
-                <item.icon 
-                  className={`h-4 w-4 shrink-0 transition-colors ${
-                    isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
-                  }`} 
-                />
-              )}
-              <span className="truncate">{item.title}</span>
+              <Link
+                href={item.url}
+                prefetch={true}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation(item.url);
+                }}
+              >
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+                )}
+                {item.icon && (
+                  <item.icon 
+                    className={`h-4 w-4 shrink-0 transition-colors ${
+                      isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                    }`} 
+                  />
+                )}
+                <span className="truncate">{item.title}</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         )
