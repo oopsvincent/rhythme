@@ -87,6 +87,7 @@ export const createJournal = async (input: JournalInput) => {
   const { supabase, user } = await getAuthenticatedUser();
 
   try {
+    // TODO: Migrate to dedicated columns `mood`, `image_url`, and `sentiment_metadata` once they are added to the Supabase journals table schema.
     const insertData: Record<string, unknown> = {
       user_id: user.id,
       title: input.title,
@@ -135,6 +136,7 @@ export const updateJournal = async (
   const { supabase, user } = await getAuthenticatedUser();
 
   try {
+    // TODO: Migrate to dedicated columns `mood`, `image_url`, and `sentiment_metadata` once they are added to the Supabase journals table schema.
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };

@@ -75,19 +75,36 @@ interface NormalizedEntry {
   createdAt: string;
   updatedAt: string;
   isEncrypted: boolean;
+  imageUrl?: string;
 }
 
 // Convert Journal from DB to normalized entry (placeholder for encrypted)
 function normalizeJournal(journal: Journal): NormalizedEntry {
   const isEncrypted = !!journal.iv;
+  let body = isEncrypted ? "[Encrypted]" : journal.content;
+  let imageUrl = undefined;
+
+  if (!isEncrypted && journal.content) {
+    try {
+      const parsed = JSON.parse(journal.content);
+      if (parsed && typeof parsed === "object") {
+        body = parsed.body || body;
+        imageUrl = parsed.imageUrl;
+      }
+    } catch {
+      // Not JSON
+    }
+  }
+
   return {
     id: journal.journal_id,
     title: journal.title,
-    body: isEncrypted ? "[Encrypted]" : journal.content,
+    body,
     mood: journal.mood_tags?.mood || "neutral",
     createdAt: journal.created_at,
     updatedAt: journal.updated_at,
     isEncrypted,
+    imageUrl,
   };
 }
 
@@ -145,11 +162,31 @@ export default function JournalDetailClient({
   const [editTitle, setEditTitle] = useState(journal.title);
   const [editBody, setEditBody] = useState(journal.body);
   const [editMood, setEditMood] = useState<MoodType | null>(journal.mood);
+  const [editImageUrl, setEditImageUrl] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Polaroid image state for editing
+  const [editImageState, setEditImageState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle');
+  // Polaroid image state for viewing
+  const [viewImageState, setViewImageState] = useState<'loading' | 'loaded' | 'error'>('loading');
+
+  useEffect(() => {
+    if (editImageUrl) {
+      setEditImageState('loading');
+    } else {
+      setEditImageState('idle');
+    }
+  }, [editImageUrl]);
+
+  useEffect(() => {
+    if (journal.imageUrl) {
+      setViewImageState('loading');
+    }
+  }, [journal.imageUrl]);
 
   // Decrypt journal on load if encrypted (iv presence = encrypted)
   useEffect(() => {
@@ -159,6 +196,7 @@ export default function JournalDetailClient({
         const normalized = normalizeJournal(initialJournal);
         setJournal(normalized);
         setEditBody(normalized.body);
+        setEditImageUrl(normalized.imageUrl || "");
         return;
       }
 
@@ -176,13 +214,15 @@ export default function JournalDetailClient({
           initialJournal.iv
         );
         
-        // Parse JSON payload which contains both title and body
+        // Parse JSON payload which contains both title, body, and optional imageUrl
         let title: string;
         let body: string;
+        let imageUrl: string | undefined = undefined;
         try {
           const parsed = JSON.parse(decryptedPayload);
           title = parsed.title || initialJournal.title;
           body = parsed.body || decryptedPayload;
+          imageUrl = parsed.imageUrl;
         } catch {
           // Legacy format: only body was encrypted, title is plaintext
           title = initialJournal.title;
@@ -197,11 +237,13 @@ export default function JournalDetailClient({
           createdAt: initialJournal.created_at,
           updatedAt: initialJournal.updated_at,
           isEncrypted: true,
+          imageUrl,
         };
         
         setJournal(decrypted);
         setEditTitle(title);
         setEditBody(body);
+        setEditImageUrl(imageUrl || "");
         setShowUnlockModal(false);
       } catch (err) {
         console.error("Failed to decrypt journal:", err);
@@ -233,22 +275,33 @@ export default function JournalDetailClient({
     setIsSaving(true);
 
     try {
+      // TODO: Migrate to dedicated columns `mood`, `image_url`, and `sentiment_metadata` once they are added to the Supabase journals table schema.
       // Encrypt content if we have a key
       let updateInput: Parameters<typeof updateJournal>[1];
       
       if (encryptionKey && isCryptoAvailable()) {
-        const { encrypted, iv } = await encryptJournal(encryptionKey, editBody);
-        updateInput = {
+        const payload = JSON.stringify({
           title: editTitle.trim(),
-          content: encrypted, // Encrypted base64 goes in content
+          body: editBody,
+          imageUrl: editImageUrl.trim() || undefined,
+        });
+        const { encrypted, iv } = await encryptJournal(encryptionKey, payload);
+        updateInput = {
+          title: "[Encrypted]",
+          content: encrypted, // Encrypted JSON payload goes in content
           iv: iv,
           mood_tags: editMood,
         };
       } else {
-        // Fallback to plaintext (shouldn't happen normally)
+        // Fallback to plaintext JSON payload
+        const payload = JSON.stringify({
+          title: editTitle.trim(),
+          body: editBody,
+          imageUrl: editImageUrl.trim() || undefined,
+        });
         updateInput = {
           title: editTitle.trim(),
-          content: editBody,
+          content: payload,
           mood_tags: editMood,
         };
       }
@@ -267,6 +320,7 @@ export default function JournalDetailClient({
         title: editTitle.trim(),
         body: editBody,
         mood: editMood,
+        imageUrl: editImageUrl.trim() || undefined,
         updatedAt: new Date().toISOString(),
       });
 
@@ -305,6 +359,7 @@ export default function JournalDetailClient({
       setEditTitle(journal.title);
       setEditBody(journal.body);
       setEditMood(journal.mood);
+      setEditImageUrl(journal.imageUrl || "");
     }
     setIsEditing(false);
   };
@@ -436,13 +491,19 @@ export default function JournalDetailClient({
         <motion.article
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative rounded-[28px] border border-border/30 bg-card/75 dark:bg-card/35 backdrop-blur-md shadow-sm overflow-hidden p-6 sm:p-8 md:p-10 pl-16 sm:pl-20 md:pl-24 py-8 sm:py-10 md:py-12"
+          className={cn(
+            "relative overflow-hidden transition-all duration-300",
+            // Desktop/Tablet styles
+            "sm:rounded-[28px] sm:border sm:border-border/30 sm:bg-card/75 sm:dark:bg-card/35 sm:backdrop-blur-md sm:shadow-sm sm:p-8 sm:pl-20 sm:py-10 md:p-10 md:pl-24 md:py-12",
+            // Mobile styles (flattened)
+            "rounded-none border-0 bg-transparent backdrop-blur-none shadow-none p-0 pl-0 py-4"
+          )}
         >
           {/* Vertical notebook line */}
-          <div className="absolute top-0 bottom-0 left-[3.25rem] sm:left-[4.25rem] md:left-[5.25rem] w-[1px] bg-red-400/20 dark:bg-red-500/15 pointer-events-none" />
+          <div className="hidden sm:block absolute top-0 bottom-0 left-[4.25rem] md:left-[5.25rem] w-[1px] bg-red-400/20 dark:bg-red-500/15 pointer-events-none" />
 
           {/* Left margin info (Mood Aura indicator) */}
-          <div className="absolute left-3.5 sm:left-6 md:left-8 top-8 sm:top-10 md:top-12 z-10 flex flex-col items-center gap-4">
+          <div className="hidden sm:flex absolute left-6 md:left-8 top-10 md:top-12 z-10 flex-col items-center gap-4">
             <EmotionalAura
               mood={isEditing && editMood ? editMood : journal.mood}
               intensity={3}
@@ -501,19 +562,82 @@ export default function JournalDetailClient({
                   </div>
 
                   {/* Mood Selector inside card */}
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/10">
+                  <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10">
                     <MoodSelector value={editMood} onChange={setEditMood} />
+                  </div>
+
+                  {/* Polaroid Image Link Input */}
+                  <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-3">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Pinned Polaroid Image
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={editImageUrl}
+                        onChange={(e) => setEditImageUrl(e.target.value)}
+                        placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
+                        className="flex-1 px-3 py-2 text-sm bg-background border border-border/40 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary/40 text-foreground/90 placeholder:text-muted-foreground/45"
+                      />
+                      {editImageUrl && (
+                        <Button 
+                          type="button"
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setEditImageUrl("")}
+                          className="px-2 text-xs hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-lg"
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    {/* Live Preview inside editor */}
+                    {editImageUrl && (
+                      <div className="pt-2 flex justify-center">
+                        <div className="relative bg-[#fcfbf9] dark:bg-[#1a1917] p-2.5 pb-6 rounded shadow-sm border border-border/20 w-44 rotate-[-1deg]">
+                          {/* Washi Tape Preview */}
+                          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-20 h-4 bg-primary/20 backdrop-blur-[1px] rotate-[1deg] opacity-75 z-10" />
+                          <div className="relative aspect-square overflow-hidden bg-muted rounded-sm border border-border/10 flex items-center justify-center">
+                            {/* Loading State Skeleton */}
+                            {editImageState === 'loading' && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                              </div>
+                            )}
+
+                            {/* Error Fallback State */}
+                            {editImageState === 'error' && (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/5 text-destructive p-2 text-center">
+                                <CloudOff className="w-4 h-4 mb-1" />
+                                <span className="text-[8px] font-bold uppercase tracking-wider">Invalid Image</span>
+                              </div>
+                            )}
+
+                            <img
+                              src={editImageUrl}
+                              alt="Live preview"
+                              className={cn(
+                                "object-cover w-full h-full transition-opacity duration-300",
+                                editImageState === 'loaded' ? "opacity-100" : "opacity-0 absolute"
+                              )}
+                              onLoad={() => setEditImageState('loaded')}
+                              onError={() => setEditImageState('error')}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Ruled text editor */}
                   <div 
-                    className="relative p-2 rounded-xl journal-editor-lined"
+                    className="relative p-1 sm:p-2 rounded-xl journal-editor-lined"
                   >
                     <style jsx global>{`
                       .journal-editor-lined textarea {
                         background-image: linear-gradient(var(--border) 1px, transparent 1px) !important;
                         background-size: 100% 1.625rem !important;
-                        background-position: 0 0.25rem !important;
+                        background-position: 0 1.45rem !important;
                         background-attachment: local !important;
                         line-height: 1.625rem !important;
                       }
@@ -547,13 +671,56 @@ export default function JournalDetailClient({
                     </span>
                   </div>
 
+                  {/* Polaroid Image Display with Washi Tape */}
+                  {journal.imageUrl && (
+                    <div className="relative flex justify-center my-8 z-10 select-none">
+                      {/* Washi Tape */}
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-28 h-6 bg-primary/20 backdrop-blur-[2px] border border-primary/10 rotate-[-2deg] opacity-80 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.05)] flex items-center justify-center">
+                        <div className="w-[94%] h-[2px] border-t border-dashed border-primary/20" />
+                      </div>
+                      {/* Polaroid Frame */}
+                      <div className="bg-[#fcfbf9] dark:bg-[#1a1917] p-3 pb-8 rounded shadow-md border border-border/20 max-w-[280px] sm:max-w-[320px] rotate-[1.5deg] transform transition-transform duration-300 hover:rotate-0">
+                        <div className="relative aspect-square overflow-hidden bg-muted rounded-sm border border-border/10 flex items-center justify-center min-w-[200px] min-h-[200px]">
+                          {/* Loading State Skeleton */}
+                          {viewImageState === 'loading' && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+                              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                            </div>
+                          )}
+
+                          {/* Error Fallback State */}
+                          {viewImageState === 'error' && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/5 text-destructive p-4 text-center">
+                              <CloudOff className="w-6 h-6 mb-2" />
+                              <span className="text-[10px] font-bold uppercase tracking-wider">Failed to load image</span>
+                            </div>
+                          )}
+
+                          <img
+                            src={journal.imageUrl}
+                            alt="Pinned memory"
+                            className={cn(
+                              "object-cover w-full h-full transition-opacity duration-300",
+                              viewImageState === 'loaded' ? "opacity-100" : "opacity-0 absolute"
+                            )}
+                            onLoad={() => setViewImageState('loaded')}
+                            onError={() => setViewImageState('error')}
+                          />
+                        </div>
+                        <div className="mt-3 text-center font-primary text-xs text-muted-foreground/80 tracking-wide">
+                          {formatDate(journal.createdAt)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Lined body text */}
                   <div 
                     className="text-base md:text-lg text-foreground/85 leading-7 whitespace-pre-wrap font-sans"
                     style={{
                       backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px)`,
                       backgroundSize: "100% 1.75rem",
-                      backgroundPosition: "0 0.4rem",
+                      backgroundPosition: "0 1.6rem",
                     }}
                   >
                     {journal.body.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ")}

@@ -15,6 +15,7 @@ interface JournalEntry {
   moodIntensity?: number;
   createdAt: string;
   updatedAt: string;
+  imageUrl?: string;
 }
 
 interface JournalCardProps {
@@ -144,18 +145,40 @@ export function JournalCard({ entry, variant = "default", className }: JournalCa
             {entry.title}
           </h3>
 
-          {/* Excerpt with lined paper background */}
-          <div className="relative flex-1">
-            <p 
-              className="text-sm text-muted-foreground/85 leading-6 line-clamp-3 font-sans"
-              style={{
-                backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px)`,
-                backgroundSize: "100% 1.5rem",
-                backgroundPosition: "0 0.25rem",
-              }}
-            >
-              {excerpt}
-            </p>
+          {/* Excerpt with lined paper background and optional polaroid thumbnail */}
+          <div className="relative flex-1 flex gap-3.5 items-start">
+            <div className="flex-1 min-w-0">
+              <p 
+                className="text-sm text-muted-foreground/85 leading-6 line-clamp-3 font-sans"
+                style={{
+                  backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px)`,
+                  backgroundSize: "100% 1.5rem",
+                  backgroundPosition: "0 1.35rem",
+                }}
+              >
+                {excerpt}
+              </p>
+            </div>
+            {entry.imageUrl && (
+              <div 
+                className="w-14 h-14 sm:w-18 sm:h-18 bg-[#FAF8F5] p-0.5 pb-2.5 shadow-md border border-black/5 rotate-2 shrink-0 select-none pointer-events-none mt-0.5 rounded-xs"
+                style={{
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.08)",
+                }}
+              >
+                <div className="w-full h-full relative overflow-hidden bg-muted border border-black/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={entry.imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Read more footer hint */}

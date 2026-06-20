@@ -427,7 +427,13 @@ export default function InsightsClient({
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative rounded-[28px] border border-border/30 bg-card/75 dark:bg-card/35 backdrop-blur-md shadow-sm p-6 sm:p-8 md:p-10 space-y-8"
+              className={cn(
+                "relative overflow-hidden transition-all duration-300 space-y-8",
+                // Desktop/Tablet styles
+                "sm:rounded-[28px] sm:border sm:border-border/30 sm:bg-card/75 sm:dark:bg-card/35 sm:backdrop-blur-md sm:shadow-sm sm:p-8 md:p-10",
+                // Mobile styles (flattened)
+                "rounded-none border-0 bg-transparent backdrop-blur-none shadow-none p-0 py-4"
+              )}
             >
               {/* Score & Sentiment */}
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 pb-6 border-b border-border/15">
@@ -658,7 +664,7 @@ export default function InsightsClient({
                         initial={{ opacity: 0, scale: 0.96 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2 + index * 0.05 }}
-                        className="rounded-2xl border border-border/30 bg-card/65 dark:bg-card/30 backdrop-blur-md p-5 hover:shadow-sm transition-all duration-300 group hover:border-primary/20"
+                        className="rounded-2xl border border-border/30 bg-card/65 dark:bg-card/30 backdrop-blur-md p-4 sm:p-5 hover:shadow-sm transition-all duration-300 group hover:border-primary/20"
                       >
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-inner">
                           <Icon className="w-4.5 h-4.5 text-primary" />

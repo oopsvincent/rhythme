@@ -314,6 +314,39 @@ export default function RootLayout({
       <head>
         <AppleSplashScreens />
         <JsonLd />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var handleChunkError = function(e) {
+                  var isChunkError = e && e.message && (
+                    e.message.indexOf('Failed to load chunk') !== -1 ||
+                    e.message.indexOf('loading chunk') !== -1 ||
+                    e.message.indexOf('chunk') !== -1
+                  );
+                  var isScriptError = e && e.target && e.target.tagName === 'SCRIPT' && e.target.src && (
+                    e.target.src.indexOf('/_next/static/chunks/') !== -1
+                  );
+                  if (isChunkError || isScriptError) {
+                    console.warn('Next.js chunk load error detected. Reloading page...');
+                    window.location.reload();
+                  }
+                };
+                window.addEventListener('error', handleChunkError, true);
+                window.addEventListener('unhandledrejection', function(e) {
+                  if (e && e.reason && e.reason.message && (
+                    e.reason.message.indexOf('Failed to load chunk') !== -1 ||
+                    e.reason.message.indexOf('loading chunk') !== -1 ||
+                    e.reason.message.indexOf('chunk') !== -1
+                  )) {
+                    console.warn('Unhandled Next.js chunk rejection detected. Reloading page...');
+                    window.location.reload();
+                  }
+                });
+              })();
+            `
+          }}
+        />
       </head>
       <body
         className={`${spaceGrotesk.variable} ${playfairDisplay.variable} ${inter.variable} ${clashDisplay.variable} ${fraunces.variable} antialiased selection:bg-accent/50 selection:text-accent-foreground`}

@@ -180,6 +180,11 @@ export interface Journal {
   sentiment_score?: number; // 0-100, derived from ML confidence
   mood_tags?: JournalMoodTags;
   iv?: string | null; // Base64 IV - if present, content is encrypted
+  
+  // TODO: Once the Supabase schema migration is applied, these will map directly to dedicated database columns.
+  mood?: string;
+  image_url?: string;
+  sentiment_metadata?: Record<string, unknown> | null;
 }
 
 // ML Sentiment Analysis response from /o1/journal endpoint
