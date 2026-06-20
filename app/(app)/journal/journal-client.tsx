@@ -36,6 +36,7 @@ import {
   Lock,
   Shield,
   Bell,
+  Smile,
 } from "lucide-react";
 import { Journal, MoodTags } from "@/types/database";
 import { decryptJournal } from "@/lib/crypto";
