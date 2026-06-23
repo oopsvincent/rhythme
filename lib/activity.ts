@@ -229,7 +229,8 @@ export function buildActivityDays(params: {
     const day = days.get(dateKey)
     if (!day) continue
 
-    const minutes = session.actual_duration ?? session.planned_duration
+    const durationSeconds = session.actual_duration ?? session.planned_duration
+    const minutes = Math.round(durationSeconds / 60)
     day.focusMinutes += minutes
     day.focusSessions.push({
       sessionId: session.session_id,

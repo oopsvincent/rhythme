@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import {
   Card,
   CardContent,
@@ -102,6 +103,7 @@ const MOTIVATIONAL_QUOTES = [
 
 export default function HabitsPage() {
   const router = useRouter();
+  const isVisible = useScrollDirection();
 
   // React Query hooks for data fetching
   const { data: habits = [], isLoading, error } = useHabits();
@@ -128,7 +130,7 @@ export default function HabitsPage() {
   const [showPremiumGate, setShowPremiumGate] = useState(false);
   
   // Mobile Tab State
-  const [currentTab, setCurrentTab] = useState<'today' | 'all' | 'insights'>('today');
+  const [currentTab, setCurrentTab] = useState<'hub' | 'insights'>('hub');
 
   const isPending =
     createMutation.isPending || deleteMutation.isPending || logMutation.isPending;
@@ -496,54 +498,18 @@ export default function HabitsPage() {
                 {/* ========================================================================= */}
                 <div className="block md:hidden w-full relative pb-28 space-y-5 animate-in fade-in duration-300">
                   {/* Tab Conditional Rendering */}
-                  {currentTab === "today" && (
-                    <div className="space-y-5">
-                      <div>
-                        <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2 py-0.5 rounded">
-                          Daily Focus
-                        </span>
-                        <h1 className="text-2xl font-bold font-primary tracking-tight text-foreground/95 mt-1">
-                          Today's Checklist
-                        </h1>
-                        <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                          Check off your daily habits to build streak consistency.
-                        </p>
-                      </div>
-
-                      {dailyHabits.length > 0 ? (
-                        <div className="space-y-3">
-                          {dailyHabits.map((habit, index) => (
-                            <HabitItem
-                              key={habit.habit_id}
-                              habit={habit}
-                              onComplete={() => openCompleteDialog(habit)}
-                              onDelete={() => handleDeleteHabit(habit.habit_id)}
-                              onNavigate={() => navigateToHabit(habit)}
-                              isPending={isPending}
-                              index={index}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="rounded-2xl border border-border/30 bg-card/20 p-8 text-center">
-                          <p className="text-xs text-muted-foreground italic">No daily habits scheduled. Go to All Habits to configure.</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {currentTab === "all" && (
-                    <div className="space-y-5">
+                  {currentTab === "hub" && (
+                    <div className="space-y-6">
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2 py-0.5 rounded">
                             Habits Hub
                           </span>
                           <h1 className="text-2xl font-bold font-primary tracking-tight text-foreground/95 mt-1">
-                            Manage Habits
+                            Habits Sanctuary
                           </h1>
                           <p className="text-xs text-muted-foreground/85">
-                            Check and manage all configured cycles.
+                            Track today's checklist and manage configured cycles.
                           </p>
                         </div>
                         <button
@@ -555,54 +521,81 @@ export default function HabitsPage() {
                         </button>
                       </div>
 
-                      <div className="space-y-6">
-                        {dailyHabits.length > 0 && (
-                          <HabitSection
-                            title="Daily Habits"
-                            habits={dailyHabits}
-                            onComplete={openCompleteDialog}
-                            onDelete={handleDeleteHabit}
-                            onNavigate={navigateToHabit}
-                            isPending={isPending}
-                            delay={0.1}
-                          />
+                      {/* Today's Daily Checklist */}
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground pl-1">
+                          Today's Checklist
+                        </h3>
+                        {dailyHabits.length > 0 ? (
+                          <div className="space-y-3">
+                            {dailyHabits.map((habit, index) => (
+                              <HabitItem
+                                key={habit.habit_id}
+                                habit={habit}
+                                onComplete={() => openCompleteDialog(habit)}
+                                onDelete={() => handleDeleteHabit(habit.habit_id)}
+                                onNavigate={() => navigateToHabit(habit)}
+                                isPending={isPending}
+                                index={index}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl border border-border/30 bg-card/20 p-6 text-center">
+                            <p className="text-xs text-muted-foreground italic">No daily habits scheduled for today.</p>
+                          </div>
                         )}
+                      </div>
 
-                        {weeklyHabits.length > 0 && (
-                          <HabitSection
-                            title="Weekly Habits"
-                            habits={weeklyHabits}
-                            onComplete={openCompleteDialog}
-                            onDelete={handleDeleteHabit}
-                            onNavigate={navigateToHabit}
-                            isPending={isPending}
-                            delay={0.2}
-                          />
-                        )}
+                      {/* Other Cycles Section */}
+                      <div className="space-y-5">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground pl-1">
+                          All Cycles &amp; Habits
+                        </h3>
+                        
+                        <div className="space-y-6">
+                          {weeklyHabits.length > 0 && (
+                            <HabitSection
+                              title="Weekly Habits"
+                              habits={weeklyHabits}
+                              onComplete={openCompleteDialog}
+                              onDelete={handleDeleteHabit}
+                              onNavigate={navigateToHabit}
+                              isPending={isPending}
+                              delay={0.1}
+                            />
+                          )}
 
-                        {monthlyHabits.length > 0 && (
-                          <HabitSection
-                            title="Monthly Habits"
-                            habits={monthlyHabits}
-                            onComplete={openCompleteDialog}
-                            onDelete={handleDeleteHabit}
-                            onNavigate={navigateToHabit}
-                            isPending={isPending}
-                            delay={0.3}
-                          />
-                        )}
+                          {monthlyHabits.length > 0 && (
+                            <HabitSection
+                              title="Monthly Habits"
+                              habits={monthlyHabits}
+                              onComplete={openCompleteDialog}
+                              onDelete={handleDeleteHabit}
+                              onNavigate={navigateToHabit}
+                              isPending={isPending}
+                              delay={0.2}
+                            />
+                          )}
 
-                        {multiplePerWeekHabits.length > 0 && (
-                          <HabitSection
-                            title="Multiple Per Week"
-                            habits={multiplePerWeekHabits}
-                            onComplete={openCompleteDialog}
-                            onDelete={handleDeleteHabit}
-                            onNavigate={navigateToHabit}
-                            isPending={isPending}
-                            delay={0.4}
-                          />
-                        )}
+                          {multiplePerWeekHabits.length > 0 && (
+                            <HabitSection
+                              title="Multiple Per Week"
+                              habits={multiplePerWeekHabits}
+                              onComplete={openCompleteDialog}
+                              onDelete={handleDeleteHabit}
+                              onNavigate={navigateToHabit}
+                              isPending={isPending}
+                              delay={0.3}
+                            />
+                          )}
+
+                          {weeklyHabits.length === 0 && monthlyHabits.length === 0 && multiplePerWeekHabits.length === 0 && (
+                            <div className="rounded-2xl border border-border/30 bg-card/20 p-6 text-center">
+                              <p className="text-xs text-muted-foreground italic">No weekly, monthly, or periodic habits configured.</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -611,19 +604,39 @@ export default function HabitsPage() {
                     <div className="space-y-5">
                       <div>
                         <span className="inline-block text-[9px] font-bold uppercase tracking-widest text-[#E07A5F] bg-[#E07A5F]/10 px-2 py-0.5 rounded">
-                          Habits Stats
+                          AI Insights
                         </span>
                         <h1 className="text-2xl font-bold font-primary tracking-tight text-foreground/95 mt-1">
-                          Insights & Analytics
+                          Insights &amp; Analytics
                         </h1>
                         <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                          Streak progressions and combined stats.
+                          Streak progressions, combined stats, and AI projections.
                         </p>
                       </div>
 
+                      {/* 1. Stats Grid */}
                       {renderStatsGrid()}
 
-                      <Card className="glass border-border/25 flex flex-col justify-center items-center py-10 px-6 text-center select-none min-h-[180px]">
+                      {/* 2. Consistency Predictions Card */}
+                      <Card className="glass border-border/25 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground pl-1">
+                          Consistency Predictions
+                        </h3>
+                        {habits.length > 0 ? (
+                          <div className="divide-y divide-border/10">
+                            {habits.map((habit) => (
+                              <HabitPredictionRow key={habit.habit_id} habit={habit} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 text-xs text-muted-foreground italic">
+                            No habits available to analyze.
+                          </div>
+                        )}
+                      </Card>
+
+                      {/* 3. Motivational Quote Card */}
+                      <Card className="glass border-border/25 flex flex-col justify-center items-center py-8 px-6 text-center select-none min-h-[140px]">
                         <span className="text-4xl font-serif text-primary/60 leading-none mb-1">“</span>
                         <p className="text-xs sm:text-sm text-foreground/90 font-medium leading-relaxed italic max-w-xs">
                           {MOTIVATIONAL_QUOTES[habits.length % MOTIVATIONAL_QUOTES.length].text}
@@ -638,11 +651,13 @@ export default function HabitsPage() {
                   )}
 
                   {/* Fixed Bottom Appbar Navigation on Mobile */}
-                  <div className="fixed bottom-0 left-0 right-0 z-50 w-full flex items-center bg-[#12141A]/90 dark:bg-[#12141A]/95 backdrop-blur-xl border-t border-[#1F2A38]/15 dark:border-border/10 p-2 pb-safe-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.35)] rounded-t-2xl">
+                  <div className={cn(
+                    "fixed bottom-0 left-0 right-0 z-50 w-full flex items-center bg-background/80 dark:bg-[#12141A]/90 backdrop-blur-xl border-t border-border/30 dark:border-border/10 p-2 pb-safe-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.45)] rounded-t-2xl transition-all duration-300 ease-in-out",
+                    isVisible ? "translate-y-0" : "translate-y-full opacity-0 pointer-events-none"
+                  )}>
                     {(
                       [
-                        { id: "today", label: "Today", icon: CheckCircle2 },
-                        { id: "all", label: "All Habits", icon: Target },
+                        { id: "hub", label: "Hub", icon: Target },
                         { id: "insights", label: "Insights", icon: TrendingUp },
                       ] as const
                     ).map((tab) => {
@@ -660,7 +675,7 @@ export default function HabitsPage() {
                           {isActive && (
                             <motion.div
                               layoutId="habits-appbar-tab-mobile"
-                              className="absolute inset-0 bg-background dark:bg-[#12141A]/50 border border-border/40 shadow-xs rounded-xl"
+                              className="absolute inset-0 bg-neutral-100 dark:bg-[#1C202C] border border-black/5 dark:border-white/5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)] rounded-xl"
                               transition={{ type: "spring", stiffness: 350, damping: 30 }}
                             />
                           )}
@@ -729,10 +744,7 @@ export default function HabitsPage() {
                           delay={0.2}
                         />
                       )}
-                    </div>
 
-                    {/* Right Column (Secondary lists and quote) */}
-                    <div className="sticky top-6 space-y-6">
                       {weeklyHabits.length > 0 && (
                         <HabitSection
                           title="Weekly Habits"
@@ -741,7 +753,7 @@ export default function HabitsPage() {
                           onDelete={handleDeleteHabit}
                           onNavigate={navigateToHabit}
                           isPending={isPending}
-                          delay={0.1}
+                          delay={0.3}
                         />
                       )}
 
@@ -753,10 +765,13 @@ export default function HabitsPage() {
                           onDelete={handleDeleteHabit}
                           onNavigate={navigateToHabit}
                           isPending={isPending}
-                          delay={0.2}
+                          delay={0.4}
                         />
                       )}
+                    </div>
 
+                    {/* Right Column (Motivational quote and stats widgets) */}
+                    <div className="sticky top-6 space-y-6">
                       <Card className="glass border-border/25 flex flex-col justify-center items-center py-10 px-6 text-center select-none min-h-[200px]">
                         <span className="text-4xl font-serif text-primary/60 leading-none mb-2">“</span>
                         <p className="text-xs sm:text-sm text-foreground/90 font-medium leading-relaxed italic max-w-xs">
@@ -888,6 +903,51 @@ function HabitSection({
 }
 
 // === Habit Item Component ===
+function HabitPredictionRow({ habit }: { habit: HabitWithStats & { canPredict?: boolean } }) {
+  const { data: prediction, isLoading } = useHabitPrediction(
+    habit.canPredict ? habit : undefined
+  );
+
+  return (
+    <div className="flex items-center justify-between py-3 gap-4">
+      <div className="min-w-0">
+        <span className="text-sm font-semibold text-foreground/90 truncate block">
+          {habit.name}
+        </span>
+        {habit.description && (
+          <span className="text-[11px] text-muted-foreground/75 truncate block mt-0.5">
+            {habit.description}
+          </span>
+        )}
+      </div>
+
+      <div className="shrink-0">
+        {habit.canPredict ? (
+          isLoading ? (
+            <Badge variant="outline" className="bg-accent/5 text-accent/60 border-accent/20 text-[10px] py-0.5 px-2.5 animate-pulse flex items-center">
+              <Brain className="mr-1 h-3 w-3 animate-pulse" />
+              <span>Analyzing...</span>
+            </Badge>
+          ) : prediction ? (
+            <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-[10px] py-0.5 px-2.5 font-bold flex items-center gap-1 rounded-lg">
+              <Brain className="h-3 w-3 text-accent" />
+              <span>{prediction.probability_percent}</span>
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-border/20 text-[10px] py-0.5 px-2.5">
+              Calculating...
+            </Badge>
+          )
+        ) : (
+          <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-border/20 text-[10px] py-0.5 px-2.5">
+            No Data
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function HabitItem({
   habit,
   onComplete,
@@ -925,13 +985,13 @@ function HabitItem({
             : "border-border/30 bg-card/45 dark:bg-card/25 hover:border-border/60 hover:bg-card/70 dark:hover:bg-card/35 backdrop-blur-md shadow-xs"
         )}
       >
-        <div className="flex items-center gap-3.5 w-full">
-          {/* Circular Complete Checkbox (Unified for Mobile & Desktop) */}
+        <div className="flex items-start gap-3.5 w-full">
+          {/* Checkbox button on the left (top aligned on mobile/desktop) */}
           <button
             onClick={onComplete}
             disabled={isPending || habit.isCompletedForPeriod}
             className={cn(
-              "shrink-0 h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-350 cursor-pointer select-none",
+              "shrink-0 h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-350 cursor-pointer select-none mt-0.5",
               habit.isCompletedForPeriod
                 ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-100"
                 : "border-2 border-dashed border-border/60 hover:border-primary/50 hover:bg-primary/5 active:scale-95 text-muted-foreground/30 hover:text-primary/70"
@@ -946,95 +1006,100 @@ function HabitItem({
             )}
           </button>
 
-          {/* Core Content */}
-          <div className="flex-1 min-w-0 cursor-pointer" onClick={onNavigate}>
-            <div className="flex items-center gap-1.5">
-              <h3
-                className={cn(
-                  "font-semibold text-sm sm:text-base transition-colors leading-tight",
-                  habit.isCompletedForPeriod ? "text-muted-foreground/70 line-through" : "text-foreground"
-                )}
-              >
-                {habit.name}
-              </h3>
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+          {/* Main Column */}
+          <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+            {/* Header row: Title + Dropdown Actions on right */}
+            <div className="flex items-start justify-between gap-2 w-full">
+              <div className="flex items-center gap-1.5 min-w-0 cursor-pointer" onClick={onNavigate}>
+                <h3
+                  className={cn(
+                    "font-semibold text-sm sm:text-base transition-colors leading-tight truncate sm:whitespace-normal",
+                    habit.isCompletedForPeriod ? "text-muted-foreground/70 line-through" : "text-foreground"
+                  )}
+                >
+                  {habit.name}
+                </h3>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block shrink-0" />
+              </div>
+
+              {/* Three-dots action menu (on right) */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center transition-all hover:bg-muted/80 text-muted-foreground/70 hover:text-foreground cursor-pointer -mt-1">
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36 rounded-xl border-border/30 bg-card/95 backdrop-blur-xl">
+                  <DropdownMenuItem onClick={onNavigate} className="cursor-pointer text-xs font-semibold">
+                    <Calendar className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                    View Details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onDelete}
+                    className="text-destructive focus:text-destructive cursor-pointer text-xs font-semibold"
+                  >
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-              {habit.description && (
-                <p className="text-xs text-muted-foreground/80 truncate max-w-[240px]">
-                  {habit.description}
-                </p>
-              )}
-              {habit.description && <span className="text-muted-foreground/30 text-xs">•</span>}
+
+            {/* Description (if exists) */}
+            {habit.description && (
+              <p className="text-xs text-muted-foreground/80 leading-normal" onClick={onNavigate}>
+                {habit.description}
+              </p>
+            )}
+
+            {/* Sub-row: Progress counter, Streak and AI Prediction Badges */}
+            <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+              <span className="text-[11px] font-medium shrink-0" onClick={onNavigate}>
+                {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
+              </span>
               
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-muted-foreground font-medium">
-                  {habit.periodCompletions} / {habit.periodTarget} {habit.periodLabel}
-                </span>
-                {habit.periodTarget > 1 && (
-                  <div className="w-12 h-1 bg-muted/60 dark:bg-muted/30 rounded-full overflow-hidden shrink-0">
-                    <div
-                      className="bg-primary h-full transition-all duration-500 rounded-full"
-                      style={{
-                        width: `${Math.min(100, (habit.periodCompletions / habit.periodTarget) * 100)}%`,
-                      }}
-                    />
-                  </div>
+              {habit.periodTarget > 1 && (
+                <div className="w-12 h-1 bg-muted/60 dark:bg-muted/30 rounded-full overflow-hidden shrink-0" onClick={onNavigate}>
+                  <div
+                    className="bg-primary h-full transition-all duration-500 rounded-full"
+                    style={{
+                      width: `${Math.min(100, (habit.periodCompletions / habit.periodTarget) * 100)}%`,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Dot separator if we have badges */}
+              {(habit.current_streak > 0 || (habit.canPredict && (isPredictionLoading || prediction))) && (
+                <span className="text-muted-foreground/30">•</span>
+              )}
+
+              {/* Badges container */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {habit.current_streak > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary border-0 text-[10px] py-0 px-1.5 font-bold select-none flex items-center gap-0.5"
+                  >
+                    <Flame className="h-3 w-3 fill-primary text-primary" />
+                    {habit.current_streak}{streakUnit.charAt(0)}
+                  </Badge>
                 )}
+
+                {habit.canPredict &&
+                  (isPredictionLoading ? (
+                    <Badge variant="outline" className="bg-accent/5 text-accent/60 border-accent/20 text-[10px] py-0 px-1.5 animate-pulse flex items-center">
+                      <Brain className="mr-1 h-3 w-3" />
+                      <span className="inline-block w-4 h-2 bg-accent/20 rounded"></span>
+                    </Badge>
+                  ) : prediction ? (
+                    <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-[10px] py-0 px-1.5 font-bold flex items-center">
+                      <Brain className="mr-1 h-3 w-3 text-accent" />
+                      {prediction.probability_percent}
+                    </Badge>
+                  ) : null)}
               </div>
             </div>
-          </div>
-
-          {/* Badges and Dropdown Actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Streak & Prediction (Inline Badges for both Mobile and PC, compact) */}
-            <div className="flex items-center gap-1.5">
-              {habit.current_streak > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="bg-primary/10 text-primary border-0 text-[10px] py-0.5 px-2 font-bold select-none flex items-center gap-0.5"
-                >
-                  <Flame className="h-3 w-3 fill-primary text-primary" />
-                  {habit.current_streak}{streakUnit.charAt(0)}
-                </Badge>
-              )}
-
-              {habit.canPredict &&
-                (isPredictionLoading ? (
-                  <Badge variant="outline" className="bg-accent/5 text-accent/60 border-accent/20 text-[10px] py-0.5 px-2 animate-pulse">
-                    <Brain className="mr-1 h-3 w-3" />
-                    <span className="inline-block w-4 h-2 bg-accent/20 rounded"></span>
-                  </Badge>
-                ) : prediction ? (
-                  <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-[10px] py-0.5 px-2 font-bold">
-                    <Brain className="mr-1 h-3 w-3 text-accent" />
-                    {prediction.probability_percent}
-                  </Badge>
-                ) : null)}
-            </div>
-
-            {/* Three-dots actions menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center transition-all hover:bg-muted/80 text-muted-foreground/70 hover:text-foreground cursor-pointer">
-                  <MoreVertical className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36 rounded-xl border-border/30 bg-card/95 backdrop-blur-xl">
-                <DropdownMenuItem onClick={onNavigate} className="cursor-pointer text-xs font-semibold">
-                  <Calendar className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                  View Details
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={onDelete}
-                  className="text-destructive focus:text-destructive cursor-pointer text-xs font-semibold"
-                >
-                  <Trash2 className="mr-2 h-3.5 w-3.5" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </div>

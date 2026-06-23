@@ -38,7 +38,7 @@ export default function DashboardLayout({
                 <ContextMenuTrigger asChild>
                   <OnboardingCheck>
                     {/* Clean, borderless container matching the workspace dimensions */}
-                    <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-x-hidden">
+                    <div className="flex-1 flex flex-col min-h-screen bg-background relative">
                       {children}
                     </div>
                   </OnboardingCheck>

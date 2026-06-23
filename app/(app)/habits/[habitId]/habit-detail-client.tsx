@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import {
   Card,
   CardContent,
@@ -171,6 +172,7 @@ function HabitDetailClientContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const isVisible = useScrollDirection();
 
   // Local state for optimistic updates
   const [habit, setHabit] = useState<HabitWithStats>(initialHabit);
@@ -856,7 +858,10 @@ function HabitDetailClientContent({
         </div>
 
         {/* Fixed Bottom Appbar Navigation on Mobile */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 w-full flex items-center bg-[#12141A]/90 dark:bg-[#12141A]/95 backdrop-blur-xl border-t border-[#1F2A38]/15 dark:border-border/10 p-2 pb-safe-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.35)] rounded-t-2xl">
+        <div className={cn(
+          "fixed bottom-0 left-0 right-0 z-50 w-full flex items-center bg-background/80 dark:bg-[#12141A]/90 backdrop-blur-xl border-t border-border/30 dark:border-border/10 p-2 pb-safe-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.45)] rounded-t-2xl transition-all duration-300 ease-in-out",
+          isVisible ? "translate-y-0" : "translate-y-full opacity-0 pointer-events-none"
+        )}>
           {(
             [
               { id: "heatmap", label: "Heatmap", icon: Flame },
@@ -878,7 +883,7 @@ function HabitDetailClientContent({
                 {isActive && (
                   <motion.div
                     layoutId="habit-detail-appbar-tab-mobile"
-                    className="absolute inset-0 bg-background dark:bg-[#12141A]/50 border border-border/40 shadow-xs rounded-xl"
+                    className="absolute inset-0 bg-neutral-100 dark:bg-[#1C202C] border border-black/5 dark:border-white/5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)] rounded-xl"
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                   />
                 )}

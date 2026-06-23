@@ -259,7 +259,7 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
             Weekly Alignment
           </h1>
           <p className="text-sm text-muted-foreground/80 leading-relaxed max-w-xl">
-            Reflect on the past week&apos;s output, protect key habits, and lock in your primary objectives for the week ahead.
+            A quiet space to reflect on the past week, recognize your efforts, and gently clarify your focus for the days ahead.
           </p>
         </div>
         
@@ -554,39 +554,39 @@ export function WeeklyPageClient({ activeHabits, isPremium }: WeeklyPageClientPr
                 <div className="space-y-2 flex flex-col">
                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 px-1">
                      <Award className="w-3.5 h-3.5 text-yellow-500" />
-                     Biggest Win
+                     Highlights &amp; Wins
                    </label>
                    <Textarea 
                      value={wins}
                      onChange={(e) => setWins(e.target.value)}
-                     placeholder="What went well this week?" 
-                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                     placeholder="What went well this week? Celebrate every positive step, no matter how small." 
+                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40 text-sm"
                    />
                 </div>
                 
                 <div className="space-y-2 flex flex-col">
                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 px-1">
                      <AlertOctagon className="w-3.5 h-3.5 text-red-400" />
-                     Primary Obstacle
+                     Friction &amp; Obstacles
                    </label>
                    <Textarea 
                      value={challenges}
                      onChange={(e) => setChallenges(e.target.value)}
-                     placeholder="What held you back or slowed output?" 
-                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                     placeholder="What felt a bit heavy or tough this week? Obstacles are just opportunities to learn." 
+                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40 text-sm"
                    />
                 </div>
                 
                 <div className="space-y-2 flex flex-col">
                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 px-1">
                      <Sparkles className="w-3.5 h-3.5 text-primary" />
-                     Core Improvement
+                     Gentle Adjustments
                    </label>
                    <Textarea 
                      value={improve}
                      onChange={(e) => setImprove(e.target.value)}
-                     placeholder="One core improvement for next week..." 
-                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40"
+                     placeholder="What small adjustment would support your rhythm next week?" 
+                     className="resize-none h-36 rounded-2xl bg-background/50 border-border/40 focus:border-accent focus:ring-1 focus:ring-accent/40 text-sm"
                    />
                 </div>
               </div>

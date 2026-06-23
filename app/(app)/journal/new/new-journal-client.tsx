@@ -41,6 +41,7 @@ import {
   Star,
   AlertCircle,
   Camera,
+  Sparkles,
 } from "lucide-react";
 import { createJournal } from "@/app/actions/journals";
 import { canCreateJournal } from "@/app/actions/usage-limits";
@@ -48,6 +49,7 @@ import { JournalInput, MoodTags } from "@/types/database";
 import { encryptJournal, isCryptoAvailable } from "@/lib/crypto";
 import { useJournalEncryptionStore } from "@/store/useJournalEncryptionStore";
 import { PremiumGateModal } from "@/components/premium-gate-modal";
+import { rhythmCopy } from "@/lib/copy";
 
 // Local storage key
 const DRAFT_STORAGE_KEY = "rhythme_journal_draft";
@@ -567,6 +569,29 @@ export default function NewJournalClient({
                       </motion.button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Reflective prompts suggestions */}
+              <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-2">
+                <p className="text-xs font-semibold tracking-wide text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  Need a spark? Choose a prompt to write about:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {rhythmCopy.logging.reflectivePrompts.slice(0, 3).map((promptText, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        if (!title.trim()) setTitle(promptText);
+                        setBody(prev => prev ? prev + "\n\n" + promptText + "\n" : promptText + "\n");
+                      }}
+                      className="text-[11px] text-left px-3 py-1.5 rounded-xl bg-background hover:bg-muted border border-border/20 text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer"
+                    >
+                      {promptText}
+                    </button>
+                  ))}
                 </div>
               </div>
 

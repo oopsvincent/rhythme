@@ -708,8 +708,8 @@ function HeaderIllustration() {
 
   const isMorning = hour >= 5 && hour < 12;
   const isAfternoon = hour >= 12 && hour < 17;
-  const isEvening = hour >= 17 && hour < 22;
-  const isNight = hour >= 22 || hour < 5;
+  const isEvening = hour >= 17 && hour < 19;
+  const isNight = hour >= 19 || hour < 5;
 
   let cx = 55;
   let cy = 28;

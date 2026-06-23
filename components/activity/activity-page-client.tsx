@@ -20,6 +20,8 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
+  History,
+  LineChart,
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -310,7 +312,7 @@ function ActivityPageClientContent({
       {/* ========================================================================= */}
       {/* MOBILE ONLY LAYOUT (Centered, narrow native mobile mockup screen)         */}
       {/* ========================================================================= */}
-      <div className="block md:hidden flex flex-1 flex-col px-4 pb-8 w-full max-w-md mx-auto">
+      <div className="block md:hidden flex flex-1 flex-col px-4 pb-24 w-full max-w-md mx-auto">
         <div className="@container/main flex flex-1 flex-col gap-4 py-6">
           
           {/* Mobile Header */}
@@ -368,42 +370,6 @@ function ActivityPageClientContent({
             </div>
           </div>
 
-          {/* Premium sliding segmented control */}
-          <div className="flex bg-muted/40 dark:bg-zinc-900/60 p-1 rounded-full border border-border/40 dark:border-zinc-800/50 w-full relative my-6">
-            {(
-              [
-                { id: "timeline", label: "Timeline" },
-                { id: "calendar", label: "Calendar" },
-                { id: "insights", label: "Insights" },
-              ] as const
-            ).map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-1.5 text-xs font-semibold rounded-full relative transition-colors duration-200 select-none z-10 cursor-pointer ${
-                    isActive
-                      ? "text-foreground font-bold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeActivityTabIndicatorMobile"
-                      className="absolute inset-0 bg-[#27272a]/80 dark:bg-zinc-850/80 rounded-full -z-10 shadow-xs border border-white/5 dark:border-zinc-700/30"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  {tab.label}
-                  {tab.id === "insights" && !isPremium && (
-                    <Crown className="inline-block h-3 w-3 ml-1 text-primary animate-pulse" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
           {/* Mobile Tab Contents */}
           {activeTab === "timeline" && (
             <div className="animate-in fade-in-50 duration-200">
@@ -436,6 +402,45 @@ function ActivityPageClientContent({
             </div>
           )}
 
+        </div>
+
+        {/* Fixed Bottom Appbar Navigation on Mobile for Activity */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 w-full flex items-center bg-[#12141A]/90 dark:bg-[#12141A]/95 backdrop-blur-xl border-t border-[#1F2A38]/15 dark:border-border/10 p-2 pb-safe-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.35)] rounded-t-2xl">
+          {(
+            [
+              { id: "timeline", label: "Timeline", icon: History },
+              { id: "calendar", label: "Calendar", icon: CalendarDays },
+              { id: "insights", label: "Insights", icon: LineChart },
+            ] as const
+          ).map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 relative cursor-pointer select-none",
+                  isActive ? "text-[#E07A5F]" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activity-appbar-tab-mobile"
+                    className="absolute inset-0 bg-background dark:bg-[#12141A]/50 border border-border/40 shadow-xs rounded-xl"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <Icon className="w-5 h-5 relative z-10" />
+                <span className="relative z-10 flex items-center gap-0.5">
+                  {tab.label}
+                  {tab.id === "insights" && !isPremium && (
+                    <Crown className="h-3 w-3 text-primary animate-pulse" />
+                  )}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

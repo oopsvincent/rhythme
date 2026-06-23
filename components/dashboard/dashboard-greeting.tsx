@@ -26,8 +26,8 @@ interface TimeIllustrationProps {
 function TimeIllustration({ hour }: TimeIllustrationProps) {
   const isMorning = hour >= 5 && hour < 12
   const isAfternoon = hour >= 12 && hour < 17
-  const isEvening = hour >= 17 && hour < 22
-  const isNight = hour >= 22 || hour < 5
+  const isEvening = hour >= 17 && hour < 19
+  const isNight = hour >= 19 || hour < 5
 
   // Orbit position coords
   let cx = 45
@@ -161,8 +161,8 @@ export function DashboardGreeting({ userName }: DashboardGreetingProps) {
   
   const isMorning = hour >= 5 && hour < 12
   const isAfternoon = hour >= 12 && hour < 17
-  const isEvening = hour >= 17 && hour < 22
-  const isNight = hour >= 22 || hour < 5
+  const isEvening = hour >= 17 && hour < 19
+  const isNight = hour >= 19 || hour < 5
 
   const weekdayStr = new Date().toLocaleDateString("en-US", { weekday: "long" })
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })

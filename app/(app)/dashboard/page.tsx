@@ -24,9 +24,10 @@ import {
   ReflectionPromptSkeleton,
   MoodChartSkeleton,
   SentimentChartSkeleton,
-  QuickActionsFab,
   PremiumUpsellBanner,
   NowPanel,
+  MomentumMeter,
+  RhythmStoryCard,
 } from "@/components/dashboard"
 
 export default async function DashboardPage() {
@@ -98,6 +99,9 @@ export default async function DashboardPage() {
                     {/* Recommended Task / Habit capacity indicator */}
                     <NowPanel />
 
+                    {/* Momentum Meter */}
+                    <MomentumMeter />
+
                     {/* Today's Tasks Backlog */}
                     <Suspense fallback={<TodayOverviewSkeleton />}>
                       <TodayOverview />
@@ -127,6 +131,9 @@ export default async function DashboardPage() {
                     <Suspense fallback={<SentimentChartSkeleton />}>
                       <SentimentChart journals={journals} />
                     </Suspense>
+
+                    {/* Rhythm Story Card */}
+                    <RhythmStoryCard />
                   </div>
                 </div>
               </div>
@@ -135,7 +142,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-      <QuickActionsFab />
     </>
   )
 }
