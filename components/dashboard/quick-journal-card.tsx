@@ -28,33 +28,17 @@ import {
   BookOpen
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-// LOCAL_OPS: Keep for future local-first implementation
-// import {
-//   getStoredJournals,
-//   addJournalEntry,
-//   JournalEntry
-// } from "@/lib/journal-storage";
 import { Journal, MoodTags } from "@/types/database";
 import { createJournal } from "@/app/actions/journals";
 import { canCreateJournal } from "@/app/actions/usage-limits";
 import { getLocalDateString, getUserTimezone } from "@/lib/timezone";
 import { PremiumGateModal } from "@/components/premium-gate-modal";
+import { useMoodLogs } from "@/hooks/use-mood-logs";
+import { useJournalEncryptionStore } from "@/store/useJournalEncryptionStore";
+import { decryptJournal } from "@/lib/crypto";
+import { rhythmCopy } from "@/lib/copy";
 
 const QUICK_JOURNAL_KEY = "rhythme_quick_journal_draft";
-
-// Writing prompts for quick journal
-const quickPrompts = [
-  "What's on your mind right now?",
-  "One thing I'm grateful for today...",
-  "How am I feeling in this moment?",
-  "What's my intention for today?",
-  "Something I want to remember...",
-];
-
-function getRandomPrompt(): string {
-  return quickPrompts[Math.floor(Math.random() * quickPrompts.length)];
-}
 
 function getTodayKey(): string {
   return getLocalDateString();
@@ -97,11 +81,59 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
   const today = getTodayKey();
   const todayEntry = entries.find(e => e.createdAt.startsWith(today)) || null;
 
+  const { data: moodLogs = [] } = useMoodLogs(14);
+  const { key: encryptionKey } = useJournalEncryptionStore();
+  const [lastJournalDecrypted, setLastJournalDecrypted] = useState<string | null>(null);
+
+  // Decrypt last journal
   useEffect(() => {
-    // Get random prompt
-    setPrompt(getRandomPrompt());
-    
-    // Check for existing draft
+    async function decryptLast() {
+      if (!encryptionKey || journals.length === 0) return;
+      const lastJournal = journals[0];
+      if (lastJournal && lastJournal.iv) {
+        try {
+          const decrypted = await decryptJournal(encryptionKey, lastJournal.content, lastJournal.iv);
+          let bodyText: string;
+          try {
+            const parsed = JSON.parse(decrypted);
+            bodyText = parsed.body || decrypted;
+          } catch {
+            bodyText = decrypted;
+          }
+          setLastJournalDecrypted(bodyText);
+        } catch (e) {
+          console.error("Failed to decrypt last journal in quick card:", e);
+        }
+      }
+    }
+    decryptLast();
+  }, [encryptionKey, journals]);
+
+  // Set prompt based on today's mood
+  useEffect(() => {
+    const todayLog = moodLogs.find(m => m.logged_at === today);
+    const score = todayLog ? Number(todayLog.mood_score) : null;
+
+    const prompts = rhythmCopy.logging.reflectivePrompts;
+    let selectedPrompt = prompts[0]; // fallback
+
+    if (score !== null) {
+      if (score >= 4) {
+        const highPrompts = [prompts[0], prompts[2], prompts[6]];
+        selectedPrompt = highPrompts[Math.floor(Math.random() * highPrompts.length)];
+      } else if (score <= 2) {
+        const lowPrompts = [prompts[1], prompts[4], prompts[5]];
+        selectedPrompt = lowPrompts[Math.floor(Math.random() * lowPrompts.length)];
+      } else {
+        const neutralPrompts = [prompts[3], prompts[6]];
+        selectedPrompt = neutralPrompts[Math.floor(Math.random() * neutralPrompts.length)];
+      }
+    }
+    setPrompt(selectedPrompt);
+  }, [moodLogs, today]);
+
+  // Check for existing draft
+  useEffect(() => {
     const draft = localStorage.getItem(QUICK_JOURNAL_KEY);
     if (draft) {
       setText(draft);
@@ -282,6 +314,30 @@ export function QuickJournalCard({ journals }: QuickJournalCardProps) {
           </motion.button>
         )}
       </div>
+
+      {/* Suggested memory link / helper text */}
+      {!text.trim() && lastJournalDecrypted && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-2.5 text-[11px] text-muted-foreground leading-normal"
+        >
+          <span>From yesterday: </span>
+          <button
+            onClick={() => {
+              setText(`Following up on yesterday: "${lastJournalDecrypted.slice(0, 40)}..." `);
+            }}
+            className="italic text-primary hover:underline text-left inline focus:outline-none cursor-pointer"
+          >
+            &ldquo;{lastJournalDecrypted.slice(0, 50)}...&rdquo;
+          </button>
+        </motion.div>
+      )}
+
+      {/* Encrypted indicator at bottom */}
+      <p className="text-[10px] text-muted-foreground/50 mt-2 text-right">
+        {rhythmCopy.logging.helperText}
+      </p>
     </motion.div>
     </>
   );

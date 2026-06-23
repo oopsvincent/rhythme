@@ -51,15 +51,19 @@ Users face:
 - Wants structure without complexity  
 - Values privacy and clean design  
 
-### 4. Product Principles (Non-Negotiable)
+### 4. Product Principles (Non-Negotiable) — UPDATED
 
-1. Clarity > Features  
-2. Emotion-aware, not emotion-heavy  
-3. Minimal setup, immediate value  
-4. Privacy-first by design  
-5. Premium feel, not experimental  
+1. **Clarity > Everything** — One clear next action beats ten features.
+2. **Explainable Intelligence First** — Every insight must be traceable to real user data.
+3. **Real Value in <14 Days** — No more cold-start excuses.
+4. **Privacy-First + Calm Premium UX** — Encrypted journals, metadata-only ML, intentional design.
+5. **Flywheel Obsession** — More usage → richer data → better insights → stronger retention.
+6. **Ship Premium MVP Ruthlessly** — No feature creep.
+7. **Thoughtful Mirror, Not Directive Coach** ← NEW  
+   Rhythmé acts as a calm, respectful companion that reflects the user’s own patterns back with warmth and zero judgment. Emotional connection comes from being *seen and understood*, not from the app telling the user what to do. (Added after professor feedback on emotional intelligence.)
 
 If a feature violates any of these → it does NOT go into MVP.
+
 
 ### 5. In-Scope Features (MVP V1)
 

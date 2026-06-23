@@ -431,9 +431,10 @@ export async function getWeeklyStats(
       .lte("started_at", endISO);
 
     const allFocusSessions = focusSessions || [];
-    const focusMinutes = allFocusSessions.reduce((acc, s) => {
+    const focusSeconds = allFocusSessions.reduce((acc, s) => {
       return acc + (s.actual_duration || s.planned_duration || 0);
     }, 0);
+    const focusMinutes = Math.round(focusSeconds / 60);
 
     // Build mood entries by day
     const moodByDay = new Map<string, { values: number[]; moods: string[] }>();

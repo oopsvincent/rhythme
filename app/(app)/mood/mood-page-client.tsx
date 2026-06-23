@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, HeartPulse, History, ChevronDown, ChevronUp } from "lucide-react";
@@ -45,8 +45,35 @@ export default function MoodPageClient() {
   const [noteDirty, setNoteDirty] = useState(false);
   const [showGate, setShowGate] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  const [hoveredMood, setHoveredMood] = useState<number | null>(null);
+  const [hoveredMood, setHoveredMoodState] = useState<number | null>(null);
   const [showPreviewMobile, setShowPreviewMobile] = useState(false);
+
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = (value: number) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setHoveredMoodState(value);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredMoodState(null);
+    }, 150);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   /* Sync UI from today's log whenever it changes */
   useEffect(() => {
@@ -363,8 +390,8 @@ export default function MoodPageClient() {
                       key={option.value}
                       type="button"
                       onClick={() => handleMoodTap(option.value)}
-                      onMouseEnter={() => setHoveredMood(option.value)}
-                      onMouseLeave={() => setHoveredMood(null)}
+                      onMouseEnter={() => handleMouseEnter(option.value)}
+                      onMouseLeave={handleMouseLeave}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       disabled={isSaving}
@@ -380,12 +407,12 @@ export default function MoodPageClient() {
                     >
                       {/* Icon container */}
                       <div className={cn(
-                        "w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 mb-1.5",
+                        "w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 mb-1.5 pointer-events-none",
                         isActive || isHovered
                           ? `${option.softAccent} ${option.border}`
                           : "bg-muted/10 border-transparent"
                       )}>
-                        <option.icon className={cn("w-5.5 h-5.5 transition-colors duration-300", 
+                        <option.icon className={cn("w-5.5 h-5.5 transition-colors duration-300 pointer-events-none", 
                           isActive || isHovered ? option.text : "text-muted-foreground/80"
                         )} />
                       </div>
@@ -393,7 +420,7 @@ export default function MoodPageClient() {
                       {/* Score */}
                       <span
                         className={cn(
-                          "text-sm font-bold tabular-nums leading-none mb-0.5",
+                          "text-sm font-bold tabular-nums leading-none mb-0.5 pointer-events-none",
                           isActive ? option.text : "text-foreground/90"
                         )}
                       >
@@ -403,7 +430,7 @@ export default function MoodPageClient() {
                       {/* Label */}
                       <span
                         className={cn(
-                          "text-[9px] font-medium leading-none truncate w-full text-muted-foreground/85",
+                          "text-[9px] font-medium leading-none truncate w-full text-muted-foreground/85 pointer-events-none",
                           isActive ? option.text : "text-muted-foreground"
                         )}
                       >
@@ -419,7 +446,7 @@ export default function MoodPageClient() {
                             exit={{ scale: 0, opacity: 0 }}
                             transition={{ duration: 0.15, ease: "easeOut" }}
                             className={cn(
-                              "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-sm",
+                              "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-white shadow-sm pointer-events-none",
                               option.accent
                             )}
                           >

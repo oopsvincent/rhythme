@@ -209,7 +209,8 @@ export async function fetchInsightsAction(params: {
       date: key, tasks_done: 0, tasks_created: 0, habits_completed: 0,
       journaled: false, mood: 6, focus_mins: 0, focus_sessions: 0,
     }
-    entry.focus_mins += session.actual_duration ?? session.planned_duration
+    const durationSeconds = session.actual_duration ?? session.planned_duration
+    entry.focus_mins += Math.round(durationSeconds / 60)
     entry.focus_sessions += 1
     dayMap.set(key, entry)
   }

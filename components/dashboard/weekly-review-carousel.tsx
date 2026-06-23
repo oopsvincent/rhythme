@@ -136,11 +136,11 @@ function WinsSlide({
 
   const autoWins = [
     ...(tasksCompleted > 0
-      ? [{ icon: Target, text: `Completed ${tasksCompleted} task${tasksCompleted !== 1 ? "s" : ""} this week` }]
+      ? [{ icon: Target, text: `Completed ${tasksCompleted} task${tasksCompleted !== 1 ? "s" : ""} — great work!` }]
       : []),
     ...topHabits.slice(0, 3).map((h) => ({
       icon: Flame,
-      text: `${h.name}: ${h.completions} completion${h.completions !== 1 ? "s" : ""} this week`,
+      text: `${h.name}: ${h.completions} completion${h.completions !== 1 ? "s" : ""} this week. Real dedication.`,
     })),
   ]
 
@@ -152,7 +152,7 @@ function WinsSlide({
           Wins
         </h2>
         <p className="text-muted-foreground text-base mt-2">
-          Celebrate what worked. Momentum starts here.
+          Celebrate what worked. Every step, no matter how small, counts.
         </p>
       </div>
 
@@ -177,7 +177,7 @@ function WinsSlide({
               ))
             ) : (
               <div className="rounded-2xl p-6 bg-muted/20 text-center text-muted-foreground text-sm">
-                No activity data yet this week. Keep logging!
+                No activity data yet this week. Keep showing up!
               </div>
             )}
           </div>
@@ -191,7 +191,7 @@ function WinsSlide({
           <Textarea
             value={winsText}
             onChange={(e) => setWinsText(e.target.value)}
-            placeholder="What else went well this week?"
+            placeholder="What other victories, big or small, brought you joy this week?"
             className="flex-1 min-h-[200px] lg:h-full resize-none bg-muted/20 border-border/50 rounded-2xl p-5 text-base leading-relaxed focus-visible:ring-primary/20"
           />
         </div>
@@ -220,7 +220,7 @@ function ChallengesSlide({
           Challenges
         </h2>
         <p className="text-muted-foreground text-base mt-2">
-          Acknowledge the tough parts — awareness is growth.
+          Acknowledge the tough parts. Friction is just a signal, never a failure.
         </p>
       </div>
 
@@ -237,7 +237,7 @@ function ChallengesSlide({
                   <Target className="w-5 h-5 text-amber-500" />
                 </div>
                 <p className="text-[15px] font-medium leading-snug">
-                  {tasksPending} task{tasksPending !== 1 ? "s" : ""} still pending from this week
+                  {tasksPending} task{tasksPending !== 1 ? "s are" : " is"} resting for next week — we'll tackle them when you're ready
                 </p>
               </div>
             )}
@@ -247,13 +247,13 @@ function ChallengesSlide({
                   <Flame className="w-5 h-5 text-amber-500" />
                 </div>
                 <p className="text-[15px] font-medium leading-snug">
-                  Habit completion at {habitPct}% — below your usual rhythm
+                  Sticking to habits was a bit tougher at {habitPct}% — a gentle reminder to size down and make them easier
                 </p>
               </div>
             )}
             {tasksPending === 0 && habitPct >= 50 && (
               <div className="rounded-2xl p-6 bg-emerald-500/5 border border-emerald-500/20 text-center text-emerald-600 text-sm font-medium">
-                No major friction this week — well done! 🎉
+                A smooth, steady week with no major friction. Rest up! 🌟
               </div>
             )}
           </div>
@@ -267,7 +267,7 @@ function ChallengesSlide({
           <Textarea
             value={challengeText}
             onChange={(e) => setChallengeText(e.target.value)}
-            placeholder="What challenged you?"
+            placeholder="What felt a bit heavy or tough this week? It is completely safe to note it down."
             className="flex-1 min-h-[200px] lg:h-full resize-none bg-muted/20 border-border/50 rounded-2xl p-5 text-base leading-relaxed focus-visible:ring-primary/20"
           />
         </div>
@@ -283,13 +283,13 @@ function PatternsSlide({ stats }: { stats: WeeklyStats | null }) {
     if (stats.tasksCompletionPct >= 70) {
       patterns.push({
         headline: `Task completion at ${stats.tasksCompletionPct}%`,
-        detail: `You completed ${stats.tasksCompleted} of ${stats.tasksTotal} tasks. Strong execution this week.`,
+        detail: `You completed ${stats.tasksCompleted} of ${stats.tasksTotal} tasks. Your task execution was strong this week.`,
         trend: "up",
       })
     } else if (stats.tasksTotal > 0) {
       patterns.push({
         headline: `Task completion at ${stats.tasksCompletionPct}%`,
-        detail: `${stats.tasksPending} tasks remain incomplete. Consider adjusting your weekly planning scope.`,
+        detail: `Some tasks remain incomplete. It's okay to size down your focus so you have room to breathe next week.`,
         trend: "down",
       })
     }
@@ -297,13 +297,13 @@ function PatternsSlide({ stats }: { stats: WeeklyStats | null }) {
     if (stats.habitCompletionPct >= 60) {
       patterns.push({
         headline: `Habit consistency at ${stats.habitCompletionPct}%`,
-        detail: `${stats.habitLogsThisWeek} habit completions across ${stats.habitsTotal} active habits. Good rhythm.`,
+        detail: `You found a steady consistency with your habits. Protect this space.`,
         trend: "up",
       })
     } else if (stats.habitsTotal > 0) {
       patterns.push({
         headline: `Habit consistency at ${stats.habitCompletionPct}%`,
-        detail: `Room to improve — ${stats.habitLogsThisWeek} completions out of a possible ${stats.habitsTotal * 7}.`,
+        detail: `Habits were a bit quieter this week. Remember, small steps anchor your energy.`,
         trend: "down",
       })
     }
@@ -312,7 +312,7 @@ function PatternsSlide({ stats }: { stats: WeeklyStats | null }) {
       const top = stats.topHabits[0]
       patterns.push({
         headline: `Strongest habit: ${top.name}`,
-        detail: `${top.completions} completions this week — your most consistent habit.`,
+        detail: `You completed ${top.name} ${top.completions} times — a beautiful anchor for your days.`,
         trend: "up",
       })
     }
@@ -320,19 +320,19 @@ function PatternsSlide({ stats }: { stats: WeeklyStats | null }) {
     if (stats.avgMood >= 4) {
       patterns.push({
         headline: `Positive mood trend (${stats.avgMood}/5 avg)`,
-        detail: `Based on ${stats.journalCount} journal entries. Keep doing what's working.`,
+        detail: `Based on your journal reflections. You've cultivated a warm, bright mental space.`,
         trend: "up",
       })
     } else if (stats.avgMood > 0 && stats.avgMood < 3) {
       patterns.push({
         headline: `Lower mood this week (${stats.avgMood}/5 avg)`,
-        detail: `From ${stats.journalCount} journal entries. Be kind to yourself.`,
+        detail: `Mood was a bit lower. A gentle reminder to be kind to yourself and rest.`,
         trend: "down",
       })
     } else if (stats.avgMood > 0) {
       patterns.push({
         headline: `Balanced mood (${stats.avgMood}/5 avg)`,
-        detail: `Based on ${stats.journalCount} journal entries this week.`,
+        detail: `Your emotional week felt steady, balanced, and grounded.`,
         trend: "neutral",
       })
     }

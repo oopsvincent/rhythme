@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { 
@@ -30,8 +30,35 @@ export function MoodInputCard() {
   
   const [showGate, setShowGate] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [hoveredMood, setHoveredMood] = useState<number | null>(null);
+  const [hoveredMood, setHoveredMoodState] = useState<number | null>(null);
   const [showPreviewMobile, setShowPreviewMobile] = useState(false);
+
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = (value: number) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setHoveredMoodState(value);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredMoodState(null);
+    }, 150);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const todayStr = getLocalDateString();
   const todayLog = logs.find((l) => l.logged_at === todayStr) ?? null;
@@ -278,8 +305,8 @@ export function MoodInputCard() {
                         key={option.value}
                         type="button"
                         onClick={() => handleMoodSelect(option.value)}
-                        onMouseEnter={() => setHoveredMood(option.value)}
-                        onMouseLeave={() => setHoveredMood(null)}
+                        onMouseEnter={() => handleMouseEnter(option.value)}
+                        onMouseLeave={handleMouseLeave}
                         disabled={isSaving}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -293,19 +320,19 @@ export function MoodInputCard() {
                         )}
                       >
                         <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 mb-1",
+                          "w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 mb-1 pointer-events-none",
                           isSelected || isHovered
                             ? `${option.softAccent} ${option.border}`
                             : "bg-muted/10 border-transparent"
                         )}>
-                          <Icon className={cn("w-4.5 h-4.5 transition-colors duration-300", 
+                          <Icon className={cn("w-4.5 h-4.5 transition-colors duration-300 pointer-events-none", 
                             isSelected || isHovered ? option.text : "text-muted-foreground/80"
                           )} />
                         </div>
-                        <span className="text-[10px] font-bold tabular-nums leading-none mb-0.5 text-foreground/90">
+                        <span className="text-[10px] font-bold tabular-nums leading-none mb-0.5 text-foreground/90 pointer-events-none">
                           {formatMoodScore(option.value)}
                         </span>
-                        <span className="text-[9px] font-medium leading-none truncate w-full text-muted-foreground/80">
+                        <span className="text-[9px] font-medium leading-none truncate w-full text-muted-foreground/80 pointer-events-none">
                           {option.label}
                         </span>
                       </motion.button>

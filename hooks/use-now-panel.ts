@@ -158,8 +158,8 @@ export function useNowPanel() {
       maxTasks: 4,
       minFocus: 45,
       maxFocus: 90,
-      rangeText: "Aim for 2-4 tasks / 45-90 focus mins",
-      explanation: "Early days — we’ll get smarter as you log more",
+      rangeText: "A comfortable space today: 2-4 tasks / 45-90 mins",
+      explanation: "Early days — we’ll reflect your patterns back as you log more.",
       energyLevel: "Steady Pace",
       moodType: "neutral",
     };
@@ -270,33 +270,33 @@ export function useNowPanel() {
     }
 
     let multiplier = 1.0;
-    let energyLevel = "Steady energy day";
+    let energyLevel = "Steady Pace";
     let moodType: CapacityData["moodType"] = "neutral";
-    let explanation = "Based on your typical productivity patterns over the last 14 days.";
+    let explanation = "Your rhythm feels steady today. A good day to protect your anchors and focus on what feels right.";
 
     if (dbMoodScore !== null) {
       if (dbMoodScore >= 4) {
         multiplier = 1.2;
-        energyLevel = "High energy day";
+        energyLevel = "Bright space";
         moodType = "happy";
-        explanation = "Feeling great today! We boosted your capacity targets slightly.";
+        explanation = "You're in a bright space today. Similar to your stronger days last week, let's channel this energy gently.";
       } else if (dbMoodScore <= 2) {
         multiplier = 0.8;
-        energyLevel = "Low energy day";
+        energyLevel = "Resting space";
         moodType = "sad";
-        explanation = "Take it easy today. We adjusted your targets to match a slower pace.";
+        explanation = "Take it easy today. On days like this, starting with a short reflection has helped you anchor before.";
       }
     } else if (localMoodType !== "none") {
       if (["happy", "excited", "calm"].includes(localMoodType)) {
         multiplier = 1.2;
-        energyLevel = "High energy day";
+        energyLevel = "Bright space";
         moodType = localMoodType === "calm" ? "calm" : "happy";
-        explanation = `Feeling ${localMoodType} today! We boosted your targets accordingly.`;
+        explanation = `Feeling ${localMoodType} today! Similar to your stronger days last week, let's support your focus sessions.`;
       } else if (["sad", "frustrated", "anxious"].includes(localMoodType)) {
         multiplier = 0.8;
-        energyLevel = "Low energy day";
+        energyLevel = "Resting space";
         moodType = localMoodType === "anxious" ? "anxious" : "sad";
-        explanation = `Feeling a bit ${localMoodType} today. Standard pacing recommended.`;
+        explanation = `Feeling a bit ${localMoodType} today. On days like this, starting with a short reflection has helped you before.`;
       }
     }
 
@@ -311,7 +311,7 @@ export function useNowPanel() {
       maxTasks: baseMaxTasks,
       minFocus: baseMinFocus,
       maxFocus: baseMaxFocus,
-      rangeText: `Aim for ${baseMinTasks}-${baseMaxTasks} tasks / ${baseMinFocus}-${baseMaxFocus} focus mins`,
+      rangeText: `A comfortable space: ${baseMinTasks}-${baseMaxTasks} tasks / ${baseMinFocus}-${baseMaxFocus} mins`,
       explanation,
       energyLevel,
       moodType,

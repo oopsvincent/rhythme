@@ -11,7 +11,6 @@ export { ProductivityCharts } from "./productivity-charts"
 export { MoodInputCard } from "./mood-input-card"
 export { HabitsWidget } from "./habits-widget"
 export { QuickJournalCard } from "./quick-journal-card"
-export { QuickActionsFab } from "./quick-actions-fab"
 export { ReflectionPrompt } from "./reflection-prompt"
 export { ProductivitySummary } from "./productivity-summary"
 export { MoodChart } from "./mood-chart"
@@ -19,6 +18,8 @@ export { SentimentChart } from "./sentiment-chart"
 export { WeeklyWidget } from "./weekly-widget"
 export { PremiumUpsellBanner } from "./premium-upsell-banner"
 export { NowPanel } from "./now-panel"
+export { MomentumMeter } from "./momentum-meter"
+export { RhythmStoryCard } from "./rhythm-story-card"
 
 export {
   DashboardStatsSkeleton,
