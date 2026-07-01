@@ -34,6 +34,7 @@ export function useTasks() {
       if (result.error) throw new Error(result.error);
       return result.data || [];
     },
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -49,6 +50,7 @@ export function useTask(taskId: string) {
       return result.data;
     },
     enabled: !!taskId,
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -63,6 +65,7 @@ export function useTaskStats() {
       if (result.error) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 

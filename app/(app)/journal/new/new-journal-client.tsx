@@ -15,7 +15,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { SiteHeader } from "@/components/site-header";
 import { JournalEditor } from "@/components/journal/journal-editor";
 import { EmotionalAura, moodColors } from "@/components/journal/emotional-aura";
@@ -66,13 +66,13 @@ function calculateReadingTime(wordCount: number): number {
 
 // Mood options using requested Lucide icons (no emojis)
 const moodOptions = [
-  { type: 'happy' as MoodTags, icon: Smile, label: 'Happy', color: 'border-yellow-500/20 bg-yellow-500/5 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.05)]' },
-  { type: 'calm' as MoodTags, icon: Sun, label: 'Calm', color: 'border-blue-400 bg-blue-400/5 text-blue-500 shadow-[0_0_10px_rgba(96,165,250,0.05)]' },
-  { type: 'neutral' as MoodTags, icon: Minus, label: 'Neutral', color: 'border-gray-400 bg-gray-400/5 text-gray-500 shadow-[0_0_10px_rgba(156,163,175,0.05)]' },
-  { type: 'sad' as MoodTags, icon: Frown, label: 'Sad', color: 'border-indigo-400 bg-indigo-400/5 text-indigo-500 shadow-[0_0_10px_rgba(129,140,248,0.05)]' },
-  { type: 'frustrated' as MoodTags, icon: AlertTriangle, label: 'Frustrated', color: 'border-red-400 bg-red-400/5 text-red-500 shadow-[0_0_10px_rgba(248,113,113,0.05)]' },
-  { type: 'excited' as MoodTags, icon: Star, label: 'Excited', color: 'border-pink-400 bg-pink-400/5 text-pink-500 shadow-[0_0_10px_rgba(244,114,182,0.05)]' },
-  { type: 'anxious' as MoodTags, icon: AlertCircle, label: 'Anxious', color: 'border-orange-400 bg-orange-400/5 text-orange-500 shadow-[0_0_10px_rgba(251,146,60,0.05)]' },
+  { type: 'happy' as MoodTags, emoji: '😊', icon: Smile, label: 'Happy', color: 'border-yellow-500/20 bg-yellow-500/5 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.05)]' },
+  { type: 'calm' as MoodTags, emoji: '😌', icon: Sun, label: 'Calm', color: 'border-blue-400 bg-blue-400/5 text-blue-500 shadow-[0_0_10px_rgba(96,165,250,0.05)]' },
+  { type: 'neutral' as MoodTags, emoji: '😐', icon: Minus, label: 'Neutral', color: 'border-gray-400 bg-gray-400/5 text-gray-500 shadow-[0_0_10px_rgba(156,163,175,0.05)]' },
+  { type: 'sad' as MoodTags, emoji: '😢', icon: Frown, label: 'Sad', color: 'border-indigo-400 bg-indigo-400/5 text-indigo-500 shadow-[0_0_10px_rgba(129,140,248,0.05)]' },
+  { type: 'frustrated' as MoodTags, emoji: '😤', icon: AlertTriangle, label: 'Frustrated', color: 'border-red-400 bg-red-400/5 text-red-500 shadow-[0_0_10px_rgba(248,113,113,0.05)]' },
+  { type: 'excited' as MoodTags, emoji: '✨', icon: Star, label: 'Excited', color: 'border-pink-400 bg-pink-400/5 text-pink-500 shadow-[0_0_10px_rgba(244,114,182,0.05)]' },
+  { type: 'anxious' as MoodTags, emoji: '😰', icon: AlertCircle, label: 'Anxious', color: 'border-orange-400 bg-orange-400/5 text-orange-500 shadow-[0_0_10px_rgba(251,146,60,0.05)]' },
 ];
 
 interface NewJournalClientProps {
@@ -92,6 +92,7 @@ export default function NewJournalClient({
   const [mood, setMood] = useState<MoodTags | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [showImageInput, setShowImageInput] = useState(false);
+  const [showPrompts, setShowPrompts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -291,8 +292,6 @@ export default function NewJournalClient({
         reason="journal"
       />
       
-      <SiteHeader className="bg-transparent relative z-20" />
-      
       <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-4xl mx-auto w-full relative z-10 space-y-6 pb-20">
         
         {/* Navigation Toolbar */}
@@ -333,33 +332,69 @@ export default function NewJournalClient({
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             "relative overflow-hidden transition-all duration-300",
-            "sm:rounded-[28px] sm:border sm:border-border/30 sm:bg-card/75 sm:dark:bg-card/35 sm:backdrop-blur-md sm:shadow-sm sm:p-8 sm:pl-20 sm:py-10 md:p-10 md:pl-24 md:py-12",
-            "rounded-none border-0 bg-transparent backdrop-blur-none shadow-none p-0 pl-0 py-4"
+            // Desktop/Tablet styles
+            "sm:rounded-2xl sm:border sm:border-border/20 sm:bg-card/30 sm:shadow-sm sm:p-8 sm:py-10 md:p-10 md:py-12",
+            // Mobile styles (flattened/full-screen editor mode)
+            "rounded-none border-0 bg-transparent backdrop-blur-none shadow-none p-0 py-2 flex-1 flex flex-col"
           )}
         >
-          {/* Vertical notebook line */}
-          <div className="hidden sm:block absolute top-0 bottom-0 left-[4.25rem] md:left-[5.25rem] w-[1px] bg-red-400/20 dark:bg-red-500/15 pointer-events-none" />
+          {/* Main info (Content sheet) */}
+          <div className="space-y-4 flex-1 flex flex-col">
+            
+            {/* 1. Subtle, Inline Mood Selector at the very top */}
+            <div className="flex flex-wrap items-center gap-3 select-none">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mr-1.5 shrink-0">
+                  How are you feeling?
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {moodOptions.map((option) => {
+                    const isSelected = mood === option.type;
+                    const Icon = option.icon;
+                    return (
+                      <button
+                        key={option.type}
+                        type="button"
+                        onClick={() => setMood(option.type)}
+                        className={cn(
+                          "w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-90 border",
+                          isSelected
+                            ? "bg-primary/10 border-primary scale-110 shadow-sm text-foreground"
+                            : "bg-muted/30 border-transparent hover:bg-muted/50 text-muted-foreground"
+                        )}
+                        title={option.label}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-          {/* Left margin info (Mood Aura indicator) */}
-          <div className="hidden sm:flex absolute left-6 md:left-8 top-10 md:top-12 z-10 flex-col items-center gap-4">
-            <EmotionalAura
-              mood={mood || "neutral"}
-              intensity={3}
-              size="sm"
-              className="w-10 h-10 shadow-sm border border-border/10"
-            >
-              {(() => {
-                const opt = moodOptions.find(o => o.type === (mood || "neutral"));
-                const MoodIcon = opt ? opt.icon : Smile;
-                return <MoodIcon className="w-5 h-5" style={{ color: colors.primary }} />;
-              })()}
-            </EmotionalAura>
-          </div>
+              {/* Selected Feeling Badge */}
+              <AnimatePresence>
+                {mood && (() => {
+                  const selectedOption = moodOptions.find(o => o.type === mood);
+                  if (!selectedOption) return null;
+                  return (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className={cn(
+                        "inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all duration-300",
+                        selectedOption.color
+                      )}
+                    >
+                      feeling {mood}
+                    </motion.span>
+                  );
+                })()}
+              </AnimatePresence>
+            </div>
 
-          {/* Right margin info (Content sheet) */}
-          <div className="space-y-6">
-            {/* Meta header (Formatted weekday, month, day, year in uppercase) */}
-            <div className="text-xs text-muted-foreground/75 font-semibold uppercase tracking-widest">
+            {/* 2. Date Header */}
+            <div className="text-[10px] sm:text-xs text-muted-foreground/75 font-semibold uppercase tracking-widest select-none">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 month: "long",
@@ -368,98 +403,66 @@ export default function NewJournalClient({
               }).toUpperCase()}
             </div>
 
-            {/* Title Input */}
+            {/* 3. Title Input */}
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Untitled Entry"
-              className="w-full text-2xl sm:text-3xl md:text-4xl font-bold font-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-muted-foreground/30 text-foreground/90 leading-tight"
+              className="w-full text-xl sm:text-2xl md:text-3xl font-bold font-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-muted-foreground/30 text-foreground/90 leading-tight py-1"
             />
 
-            <div className="border-t border-border/15 pt-6 space-y-6">
-              
-              {/* Encryption Status Notice */}
+            {/* 4. Small Toolbar Below Title */}
+            <div className="flex items-center gap-2 select-none py-1.5 border-t border-b border-border/10">
+              {/* Subtle Encryption Warning if needed */}
               {needsEncryptionSetup && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/5 border border-orange-500/20">
-                  <Shield className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold text-orange-600 dark:text-orange-400">
-                      Setup Journal Encryption
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Create a passphrase to encrypt your journals. You&apos;ll be prompted when saving.
-                    </p>
-                  </div>
-                </div>
+                <span className="text-[9px] text-amber-500 font-bold uppercase tracking-wider flex items-center gap-1 mr-1 select-none">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Setup Encryption</span>
+                </span>
               )}
 
-              {/* Auto-save Notice */}
-              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border/20 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <HardDrive className="w-3.5 h-3.5 text-[#E07A5F]" />
-                  <span>Draft saved locally • {formatLastSaved()}</span>
-                </div>
-                <span className="opacity-75 hidden sm:inline text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">Sync on save</span>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowImageInput(prev => !prev)}
+                className={cn(
+                  "p-2 sm:p-1.5 rounded-xl border transition-all duration-200 cursor-pointer active:scale-95",
+                  showImageInput ? "bg-[#E07A5F]/15 border-[#E07A5F]/30 text-[#E07A5F]" : "bg-muted/40 border-transparent text-muted-foreground hover:bg-muted/75"
+                )}
+                title="Add cover polaroid"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPrompts(prev => !prev)}
+                className={cn(
+                  "p-2 sm:p-1.5 rounded-xl border transition-all duration-200 cursor-pointer active:scale-95",
+                  showPrompts ? "bg-primary/15 border-primary/30 text-primary" : "bg-muted/40 border-transparent text-muted-foreground hover:bg-muted/75"
+                )}
+                title="Choose writing prompt"
+              >
+                <Sparkles className="w-4 h-4" />
+              </button>
+            </div>
 
-              {/* Cover Polaroid Section */}
-              {!showImageInput ? (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-3.5 sm:p-4 rounded-2xl bg-muted/20 border border-border/10 flex items-center justify-between gap-4 transition-all duration-300 hover:bg-muted/30"
+            {/* 4. Optional Cover Polaroid Input & Live Preview */}
+            <AnimatePresence>
+              {showImageInput && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden space-y-3 pb-3 border-b border-border/10 animate-in fade-in"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-[#E07A5F]/10 text-[#E07A5F] dark:bg-[#E07A5F]/20">
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-semibold text-foreground/80">Add a cover polaroid?</h4>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">Pin a beautiful photo memory to this journal entry</p>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowImageInput(true)}
-                    className="text-[10px] sm:text-xs rounded-xl cursor-pointer bg-background hover:bg-muted border-border/30 font-medium px-3 py-1.5 h-auto"
-                  >
-                    Add Cover
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                      <Camera className="w-3.5 h-3.5 text-[#E07A5F]" />
-                      Pinned Polaroid Image
-                    </label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setImageUrl("");
-                        setShowImageInput(false);
-                      }}
-                      className="text-xs h-7 px-2 hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-lg cursor-pointer font-medium"
-                    >
-                      Remove Cover
-                    </Button>
-                  </div>
                   <div className="flex gap-2">
                     <input
                       type="url"
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
                       placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
-                      className="flex-1 px-3 py-2 text-sm bg-background border border-border/40 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary/40 text-foreground/90 placeholder:text-muted-foreground/45"
+                      className="flex-1 px-3 py-2 text-xs bg-background border border-border/40 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary/40 text-foreground/90 placeholder:text-muted-foreground/45"
                     />
                     {imageUrl && (
                       <Button 
@@ -473,57 +476,25 @@ export default function NewJournalClient({
                       </Button>
                     )}
                   </div>
-
-                  {/* Live Preview with Polaroid/tape style + Badge above it */}
                   {imageUrl && (
-                    <div className="pt-3 flex flex-col items-center">
-                      
-                      {/* "Feeling happy" badge above the image area */}
-                      {mood && (
-                        <div className="mb-4">
-                          <span
-                            className="px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide border flex items-center gap-1.5"
-                            style={{
-                              backgroundColor: `${colors.primary}18`,
-                              borderColor: `${colors.primary}35`,
-                              color: colors.primary,
-                              boxShadow: `0 2px 10px ${colors.primary}10`,
-                            }}
-                          >
-                            {(() => {
-                              const opt = moodOptions.find(o => o.type === mood);
-                              const MoodIcon = opt ? opt.icon : Smile;
-                              return <MoodIcon className="w-3.5 h-3.5" />;
-                            })()}
-                            Feeling {mood}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="relative bg-[#fcfbf9] dark:bg-[#1a1917] p-2.5 pb-6 rounded shadow-md border border-border/20 w-44 rotate-[-1.5deg]">
-                        {/* Washi Tape Preview */}
-                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-20 h-4 bg-primary/20 backdrop-blur-[1px] rotate-[1deg] opacity-75 z-10" />
-                        
+                    <div className="flex justify-center pt-1">
+                      <div className="relative bg-[#fcfbf9] dark:bg-[#1a1917] p-2 pb-5 rounded shadow-sm border border-border/20 w-36 rotate-[-1deg] select-none">
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-16 h-3 bg-primary/20 backdrop-blur-[1px] rotate-[1deg] opacity-75 z-10" />
                         <div className="relative aspect-square overflow-hidden bg-muted rounded-sm border border-border/10 flex items-center justify-center">
-                          {/* Loading State Skeleton */}
                           {imageState === 'loading' && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
-                              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                              <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
                             </div>
                           )}
-
-                          {/* Error Fallback State */}
                           {imageState === 'error' && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/5 text-destructive p-3 text-center">
-                              <CloudOff className="w-5 h-5 mb-1" />
-                              <span className="text-[9px] font-bold uppercase tracking-wider">Failed to load image</span>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/5 text-destructive p-2 text-center">
+                              <CloudOff className="w-4 h-4 mb-0.5" />
+                              <span className="text-[8px] font-bold uppercase tracking-wider">Error</span>
                             </div>
                           )}
-
-                          {/* The Image Preview */}
                           <img
                             src={imageUrl}
-                            alt="Live preview"
+                            alt="Preview"
                             className={cn(
                               "object-cover w-full h-full transition-opacity duration-300",
                               imageState === 'loaded' ? "opacity-100" : "opacity-0 absolute"
@@ -532,116 +503,83 @@ export default function NewJournalClient({
                             onError={() => setImageState('error')}
                           />
                         </div>
-                        <div className="mt-2.5 text-center font-primary text-[10px] text-muted-foreground/60 tracking-wider">
-                          {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}
-                        </div>
                       </div>
                     </div>
                   )}
                 </motion.div>
               )}
+            </AnimatePresence>
 
-              {/* Rebuilt Mood Selector: 2-Row Grid of large buttons */}
-              <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-3">
-                <label className="text-sm font-semibold tracking-wide text-muted-foreground">
-                  How are you feeling?
-                </label>
-                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5">
-                  {moodOptions.map((option) => {
-                    const isSelected = mood === option.type;
-                    const Icon = option.icon;
-                    return (
-                      <motion.button
-                        key={option.type}
+            {/* 5. Optional Reflective Prompts Block */}
+            <AnimatePresence>
+              {showPrompts && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden space-y-2 pb-3 border-b border-border/10"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground select-none">
+                    Need a spark? Choose a prompt:
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {rhythmCopy.logging.reflectivePrompts.slice(0, 3).map((promptText, idx) => (
+                      <button
+                        key={idx}
                         type="button"
-                        onClick={() => setMood(option.type)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={cn(
-                          "flex flex-col items-center justify-center p-2.5 rounded-xl border-2 transition-all duration-300 cursor-pointer select-none",
-                          isSelected
-                            ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 shadow-[0_0_12px_rgba(250,204,21,0.35)] dark:shadow-[0_0_15px_rgba(250,204,21,0.25)] scale-[1.02]"
-                            : "bg-background/40 border-border/10 text-muted-foreground hover:bg-background/60 hover:border-border/20 hover:text-foreground"
-                        )}
+                        onClick={() => {
+                          if (!title.trim()) setTitle(promptText);
+                          setBody(prev => prev ? prev + "\n\n" + promptText + "\n" : promptText + "\n");
+                        }}
+                        className="text-[11px] text-left px-3.5 py-2 rounded-xl bg-background hover:bg-muted border border-border/20 text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer"
                       >
-                        <Icon className="w-5 h-5 mb-1" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">{option.label}</span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Reflective prompts suggestions */}
-              <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-2">
-                <p className="text-xs font-semibold tracking-wide text-muted-foreground flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  Need a spark? Choose a prompt to write about:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {rhythmCopy.logging.reflectivePrompts.slice(0, 3).map((promptText, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        if (!title.trim()) setTitle(promptText);
-                        setBody(prev => prev ? prev + "\n\n" + promptText + "\n" : promptText + "\n");
-                      }}
-                      className="text-[11px] text-left px-3 py-1.5 rounded-xl bg-background hover:bg-muted border border-border/20 text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer"
-                    >
-                      {promptText}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Ruled text editor */}
-              <div 
-                className="relative p-1 sm:p-2 rounded-xl journal-editor-lined"
-              >
-                <style jsx global>{`
-                  .journal-editor-lined textarea {
-                    background-image: linear-gradient(var(--border) 1px, transparent 1px) !important;
-                    background-size: 100% 1.625rem !important;
-                    background-position: 0 1.45rem !important;
-                    background-attachment: local !important;
-                    line-height: 1.625rem !important;
-                  }
-                `}</style>
-                <JournalEditor
-                  value={body}
-                  onChange={setBody}
-                  placeholder="Start writing your thoughts..."
-                  className="text-base md:text-lg text-foreground/95"
-                />
-              </div>
-
-              {/* Stats Footer */}
-              <div className="pt-4 border-t border-border/15">
-                <div className="flex items-center justify-between text-xs text-muted-foreground/60">
-                  <div className="flex items-center gap-4">
-                    <span>{wordCount} words</span>
-                    <span>·</span>
-                    <span>{readingTime} min read</span>
+                        {promptText}
+                      </button>
+                    ))}
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
+            {/* 6. Ruled Text Editor (flex-1 so it takes all vertical space) */}
+            <div 
+              className="relative p-1 sm:p-2 rounded-xl journal-editor-lined flex-1 flex flex-col"
+            >
+              <style jsx global>{`
+                .journal-editor-lined textarea {
+                  background-image: linear-gradient(var(--border) 1px, transparent 1px) !important;
+                  background-size: 100% 1.625rem !important;
+                  background-position: 0 1.45rem !important;
+                  background-attachment: local !important;
+                  line-height: 1.625rem !important;
+                }
+              `}</style>
+              <JournalEditor
+                value={body}
+                onChange={setBody}
+                placeholder="Start writing your thoughts..."
+                className="text-base md:text-lg text-foreground/95 flex-1 flex flex-col"
+              />
             </div>
+
           </div>
         </motion.article>
 
-        {/* Helper text */}
-        {!canSave && (
-          <p className="text-center text-xs text-muted-foreground/60">
-            {!title.trim() && mood === null
-              ? "Add a title and select your mood to save"
-              : !title.trim()
-                ? "Add a title to save"
-                : "Select your mood to save"}
-          </p>
-        )}
-
+        {/* 7. Floating/Fixed Bottom Bar for Stats & Auto-save */}
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-md border-t border-border/15 py-3 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <HardDrive className="w-3.5 h-3.5 text-[#E07A5F]" />
+              <span>Draft saved locally • {formatLastSaved()}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span>{wordCount} words</span>
+              <span>·</span>
+              <span>{readingTime} min read</span>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

@@ -244,10 +244,12 @@ export function buildActivityDays(params: {
 
   return Array.from(days.values()).map((day) => {
     day.completedTasks.sort((left, right) => {
-      return new Date(right.completed_at ?? right.updated_at).getTime() - new Date(left.completed_at ?? left.updated_at).getTime()
+      const leftDate = left.completed_at ?? left.updated_at
+      const rightDate = right.completed_at ?? right.updated_at
+      return rightDate.localeCompare(leftDate)
     })
-    day.journalEntries.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
-    day.focusSessions.sort((left, right) => new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime())
+    day.journalEntries.sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+    day.focusSessions.sort((left, right) => right.startedAt.localeCompare(left.startedAt))
 
     day.totalEvents =
       day.completedTasks.length +

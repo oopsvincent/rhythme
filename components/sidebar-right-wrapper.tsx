@@ -12,6 +12,5 @@ import { usePathname } from "next/navigation"
 import { SidebarRight } from "@/components/sidebar-right"
 
 export function SidebarRightWrapper() {
-  // Hide right sidebar totally for now
-  return null
+  return <SidebarRight />
 }

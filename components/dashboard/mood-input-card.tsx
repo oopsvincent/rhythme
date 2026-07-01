@@ -63,7 +63,11 @@ export function MoodInputCard() {
   const todayStr = getLocalDateString();
   const todayLog = logs.find((l) => l.logged_at === todayStr) ?? null;
 
+  const [isLogging, setIsLogging] = useState(false);
+
   const handleMoodSelect = async (score: number) => {
+    if (isLogging || isSaving) return;
+    setIsLogging(true);
     try {
       if (todayLog) {
         await updateMut.mutateAsync({
@@ -75,6 +79,7 @@ export function MoodInputCard() {
         const gate = await canCreateMoodLog(todayStr);
         if (!gate.allowed) {
           setShowGate(true);
+          setIsLogging(false);
           return;
         }
         await createMut.mutateAsync({
@@ -91,15 +96,17 @@ export function MoodInputCard() {
       } else {
         toast.error(msg);
       }
+    } finally {
+      setIsLogging(false);
     }
   };
 
-  const isSaving = createMut.isPending || updateMut.isPending;
+  const isSaving = createMut.isPending || updateMut.isPending || isLogging;
   const currentMoodScore = todayLog ? Number(todayLog.mood_score) : null;
   const selectedMoodOption = MOOD_SCALE.find(m => m.value === currentMoodScore);
 
   // Determine active mood value for ambient glow (hover state takes priority)
-  const activeMoodValue = hoveredMood ?? currentMoodScore ?? null;
+  const activeMoodValue = todayLog ? (hoveredMood ?? currentMoodScore ?? null) : null;
 
   // Soft color mapping for radial gradient glows
   const getAmbientGlowColor = (value: number | null) => {
@@ -148,12 +155,12 @@ export function MoodInputCard() {
   const showSelection = !todayLog || isEditing;
 
   // Centerpiece preview helpers
-  const displayMoodValue = hoveredMood ?? currentMoodScore;
+  const displayMoodValue = todayLog ? (hoveredMood ?? currentMoodScore) : null;
   const displayMood = MOOD_SCALE.find(m => m.value === displayMoodValue) ?? null;
   const DisplayIcon = displayMood?.icon;
 
   // Widget preview visibility (always visible on desktop if active, collapsible on mobile)
-  const isPreviewActive = displayMood !== null;
+  const isPreviewActive = todayLog !== null && displayMood !== null;
 
   return (
     <>
@@ -363,13 +370,18 @@ export function MoodInputCard() {
                     )}
                   </div>
                   <div className="text-left">
-                    <p className="text-xs text-muted-foreground">Today you&apos;re feeling</p>
-                    <p className="font-semibold font-primary capitalize flex items-center gap-1.5 text-base text-foreground/90">
+                    <p className="text-xs text-muted-foreground font-sans">Today you&apos;re feeling</p>
+                    <p className="font-semibold font-primary capitalize flex items-center gap-1.5 text-base text-foreground/90 leading-tight">
                       {selectedMoodOption?.label || "Steady"}
                       <span className="text-xs text-muted-foreground font-normal">
                         ({formatMoodScore(currentMoodScore || 3.0)})
                       </span>
                     </p>
+                    {selectedMoodOption?.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5 max-w-xs leading-tight">
+                        {selectedMoodOption.description}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1.5 shrink-0">

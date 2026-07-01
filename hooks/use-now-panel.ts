@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTasks } from "@/hooks/use-tasks";
 import { useHabits } from "@/hooks/use-habits";
 import { useMoodLogs } from "@/hooks/use-mood-logs";
 import { getLocalDateString } from "@/lib/timezone";
 import { getFocusSessionsHistory } from "@/app/actions/focusSessions";
+import { aggregateDailyLogs, calculateMomentumState } from "@/lib/rhythm-analysis";
 
 // Custom hook to query focus sessions over the last 14 days using server action
 export function useFocusSessionsHistory(days = 14) {
@@ -38,6 +39,8 @@ export function useNowPanel() {
   const { data: moodLogs = [], isLoading: moodLoading, error: moodError } = useMoodLogs(14);
   const { data: focusSessions = [], isLoading: focusLoading, error: focusError } = useFocusSessionsHistory(14);
 
+  const [localMood, setLocalMood] = useState<StoredMoodType>("none");
+
   // Debugging logs to verify error sources
   if (tasksError) console.error("[NowPanel Debug] tasksError:", tasksError);
   if (habitsError) console.error("[NowPanel Debug] habitsError:", habitsError);
@@ -45,6 +48,21 @@ export function useNowPanel() {
   if (focusError) console.error("[NowPanel Debug] focusError:", focusError);
 
   const todayStr = getLocalDateString();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("rhythme_daily_mood");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.date === todayStr) {
+          setLocalMood(parsed.mood);
+          return;
+        }
+      } catch {}
+    }
+    setLocalMood("none");
+  }, [todayStr]);
 
   // ==========================================
   // 1. RECOMMENDED TASK PRIORITIZATION
@@ -199,20 +217,6 @@ export function useNowPanel() {
 
     // If less than 7 days of activity, return conservative default
     if (activeDates.size < 7) {
-      // Still attempt to check today's mood from local storage to personalize the energy level
-      let todayMoodType: StoredMoodType = "none";
-      if (typeof window !== "undefined") {
-        const stored = localStorage.getItem("rhythme_daily_mood");
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (parsed.date === todayStr) {
-              todayMoodType = parsed.mood;
-            }
-          } catch {}
-        }
-      }
-
       const todayMoodLog = moodLogs.find((m) => m.logged_at === todayStr);
       const moodScore = todayMoodLog ? todayMoodLog.mood_score : null;
 
@@ -227,13 +231,13 @@ export function useNowPanel() {
           energyLevel = "Low energy day";
           moodType = "sad";
         }
-      } else if (todayMoodType !== "none") {
-        if (["happy", "excited", "calm"].includes(todayMoodType)) {
+      } else if (localMood !== "none") {
+        if (["happy", "excited", "calm"].includes(localMood)) {
           energyLevel = "High energy day";
-          moodType = todayMoodType === "calm" ? "calm" : "happy";
-        } else if (["sad", "frustrated", "anxious"].includes(todayMoodType)) {
+          moodType = localMood === "calm" ? "calm" : "happy";
+        } else if (["sad", "frustrated", "anxious"].includes(localMood)) {
           energyLevel = "Low energy day";
-          moodType = todayMoodType === "anxious" ? "anxious" : "sad";
+          moodType = localMood === "anxious" ? "anxious" : "sad";
         }
       }
 
@@ -256,19 +260,6 @@ export function useNowPanel() {
     const todayMoodLog = moodLogs.find((m) => m.logged_at === todayStr);
     const dbMoodScore = todayMoodLog ? todayMoodLog.mood_score : null;
 
-    let localMoodType: StoredMoodType = "none";
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("rhythme_daily_mood");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.date === todayStr) {
-            localMoodType = parsed.mood;
-          }
-        } catch {}
-      }
-    }
-
     let multiplier = 1.0;
     let energyLevel = "Steady Pace";
     let moodType: CapacityData["moodType"] = "neutral";
@@ -286,17 +277,17 @@ export function useNowPanel() {
         moodType = "sad";
         explanation = "Take it easy today. On days like this, starting with a short reflection has helped you anchor before.";
       }
-    } else if (localMoodType !== "none") {
-      if (["happy", "excited", "calm"].includes(localMoodType)) {
+    } else if (localMood !== "none") {
+      if (["happy", "excited", "calm"].includes(localMood)) {
         multiplier = 1.2;
         energyLevel = "Bright space";
-        moodType = localMoodType === "calm" ? "calm" : "happy";
-        explanation = `Feeling ${localMoodType} today! Similar to your stronger days last week, let's support your focus sessions.`;
-      } else if (["sad", "frustrated", "anxious"].includes(localMoodType)) {
+        moodType = localMood === "calm" ? "calm" : "happy";
+        explanation = `Feeling ${localMood} today! Similar to your stronger days last week, let's support your focus sessions.`;
+      } else if (["sad", "frustrated", "anxious"].includes(localMood)) {
         multiplier = 0.8;
         energyLevel = "Resting space";
-        moodType = localMoodType === "anxious" ? "anxious" : "sad";
-        explanation = `Feeling a bit ${localMoodType} today. On days like this, starting with a short reflection has helped you before.`;
+        moodType = localMood === "anxious" ? "anxious" : "sad";
+        explanation = `Feeling a bit ${localMood} today. On days like this, starting with a short reflection has helped you before.`;
       }
     }
 
@@ -316,15 +307,26 @@ export function useNowPanel() {
       energyLevel,
       moodType,
     };
-  }, [tasks, focusSessions, moodLogs, todayStr]);
+  }, [tasks, focusSessions, moodLogs, todayStr, localMood]);
 
   const isLoading = tasksLoading || habitsLoading || moodLoading || focusLoading;
   const isError = Boolean(tasksError || habitsError || moodError || focusError);
+
+  const logs = useMemo(() => {
+    if (isLoading || isError) return [];
+    return aggregateDailyLogs(tasks, habits, [], moodLogs, focusSessions);
+  }, [tasks, habits, moodLogs, focusSessions, isLoading, isError]);
+
+  const momentum = useMemo(() => {
+    if (logs.length === 0) return { state: "stable", streak: 0, text: "Stable" };
+    return calculateMomentumState(logs);
+  }, [logs]);
 
   return {
     recommendedTask,
     activeHabit,
     capacity,
+    momentum,
     isLoading,
     isError,
   };

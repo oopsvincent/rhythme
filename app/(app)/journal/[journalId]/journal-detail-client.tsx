@@ -43,7 +43,17 @@ import {
   Sparkles,
   HardDrive,
   CloudOff,
+  Camera,
+  Shield,
+  Smile,
+  Sun,
+  Minus,
+  Frown,
+  AlertTriangle,
+  Star,
+  AlertCircle,
 } from "lucide-react";
+import { rhythmCopy } from "@/lib/copy";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,6 +87,16 @@ interface NormalizedEntry {
   isEncrypted: boolean;
   imageUrl?: string;
 }
+
+const moodOptions = [
+  { type: 'happy' as MoodTags, emoji: '😊', icon: Smile, label: 'Happy', color: 'text-yellow-500' },
+  { type: 'calm' as MoodTags, emoji: '😌', icon: Sun, label: 'Calm', color: 'text-blue-500' },
+  { type: 'neutral' as MoodTags, emoji: '😐', icon: Minus, label: 'Neutral', color: 'text-gray-500' },
+  { type: 'sad' as MoodTags, emoji: '😢', icon: Frown, label: 'Sad', color: 'text-indigo-500' },
+  { type: 'frustrated' as MoodTags, emoji: '😤', icon: AlertTriangle, label: 'Frustrated', color: 'text-red-500' },
+  { type: 'excited' as MoodTags, emoji: '✨', icon: Star, label: 'Excited', color: 'text-pink-500' },
+  { type: 'anxious' as MoodTags, emoji: '😰', icon: AlertCircle, label: 'Anxious', color: 'text-orange-500' },
+];
 
 // Convert Journal from DB to normalized entry (placeholder for encrypted)
 function normalizeJournal(journal: Journal): NormalizedEntry {
@@ -163,6 +183,8 @@ export default function JournalDetailClient({
   const [editBody, setEditBody] = useState(journal.body);
   const [editMood, setEditMood] = useState<MoodType | null>(journal.mood);
   const [editImageUrl, setEditImageUrl] = useState<string>("");
+  const [showImageInput, setShowImageInput] = useState(false);
+  const [showPrompts, setShowPrompts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -197,6 +219,7 @@ export default function JournalDetailClient({
         setJournal(normalized);
         setEditBody(normalized.body);
         setEditImageUrl(normalized.imageUrl || "");
+        setShowImageInput(!!normalized.imageUrl);
         return;
       }
 
@@ -244,6 +267,7 @@ export default function JournalDetailClient({
         setEditTitle(title);
         setEditBody(body);
         setEditImageUrl(imageUrl || "");
+        setShowImageInput(!!imageUrl);
         setShowUnlockModal(false);
       } catch (err) {
         console.error("Failed to decrypt journal:", err);
@@ -412,7 +436,7 @@ export default function JournalDetailClient({
       )}
       
       {/* Blended Header */}
-      <SiteHeader className="bg-transparent relative z-20" />
+      {!isEditing && <SiteHeader className="bg-transparent z-40" />}
       
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-4xl mx-auto w-full relative z-10 space-y-6 pb-20">
@@ -494,164 +518,243 @@ export default function JournalDetailClient({
           className={cn(
             "relative overflow-hidden transition-all duration-300",
             // Desktop/Tablet styles
-            "sm:rounded-[28px] sm:border sm:border-border/30 sm:bg-card/75 sm:dark:bg-card/35 sm:backdrop-blur-md sm:shadow-sm sm:p-8 sm:pl-20 sm:py-10 md:p-10 md:pl-24 md:py-12",
-            // Mobile styles (flattened)
-            "rounded-none border-0 bg-transparent backdrop-blur-none shadow-none p-0 pl-0 py-4"
+            "sm:rounded-2xl sm:border sm:border-border/20 sm:bg-card/30 sm:shadow-sm sm:p-8 sm:py-10 md:p-10 md:py-12",
+            // Mobile styles (flattened/full-screen editor mode)
+            isEditing 
+              ? "rounded-none border-0 bg-transparent backdrop-blur-none shadow-none p-0 py-2 flex-1 flex flex-col"
+              : "rounded-none border-0 bg-transparent backdrop-blur-none shadow-none p-0 py-4"
           )}
         >
-          {/* Vertical notebook line */}
-          <div className="hidden sm:block absolute top-0 bottom-0 left-[4.25rem] md:left-[5.25rem] w-[1px] bg-red-400/20 dark:bg-red-500/15 pointer-events-none" />
-
-          {/* Left margin info (Mood Aura indicator) */}
-          <div className="hidden sm:flex absolute left-6 md:left-8 top-10 md:top-12 z-10 flex-col items-center gap-4">
-            <EmotionalAura
-              mood={isEditing && editMood ? editMood : journal.mood}
-              intensity={3}
-              size="sm"
-              className="w-10 h-10 shadow-sm border border-border/10"
-            >
-              {(() => {
-                const MoodIcon = getMoodIcon(isEditing && editMood ? editMood : journal.mood);
-                return <MoodIcon className="w-5 h-5" style={{ color: colors.primary }} />;
-              })()}
-            </EmotionalAura>
-          </div>
-
-          {/* Right margin info (Content sheet) */}
-          <div className="space-y-6">
-            {/* Meta headers */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground/75 uppercase tracking-wide">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                {formatDate(journal.createdAt)}
-              </span>
-              <span className="hidden sm:inline">·</span>
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
-                {formatTime(journal.createdAt)}
-              </span>
-              <span className="hidden sm:inline">·</span>
-              <span>{readingTime} min read</span>
-            </div>
-
-            {/* Title */}
+          {/* Content Sheet */}
+          <div className={cn("space-y-4", isEditing ? "flex-1 flex flex-col" : "")}>
             {isEditing ? (
-              <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full text-2xl sm:text-3xl md:text-4xl font-bold font-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-muted-foreground/30 text-foreground/90 leading-tight"
-                placeholder="Untitled Entry"
-              />
-            ) : (
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-primary text-foreground/90 leading-tight">
-                {journal.title}
-              </h1>
-            )}
-
-            <div className="border-t border-border/15 pt-6">
-              {isEditing ? (
-                <div className="space-y-6">
-                  {/* Cloud save notice */}
-                  <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-muted/40 border border-border/20 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <HardDrive className="w-3.5 h-3.5 text-primary" />
-                      <span>Changes autosave to cloud</span>
-                    </div>
-                    <span className="opacity-75">Sync active</span>
-                  </div>
-
-                  {/* Mood Selector inside card */}
-                  <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10">
-                    <MoodSelector value={editMood} onChange={setEditMood} />
-                  </div>
-
-                  {/* Polaroid Image Link Input */}
-                  <div className="p-3 sm:p-4 rounded-2xl bg-muted/30 border border-border/10 space-y-3">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Pinned Polaroid Image
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        value={editImageUrl}
-                        onChange={(e) => setEditImageUrl(e.target.value)}
-                        placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
-                        className="flex-1 px-3 py-2 text-sm bg-background border border-border/40 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary/40 text-foreground/90 placeholder:text-muted-foreground/45"
-                      />
-                      {editImageUrl && (
-                        <Button 
+              // Editing Layout (Direct-to-editor minimal style)
+              <div className="space-y-4 flex-1 flex flex-col">
+                {/* 1. Subtle, Inline Mood Selector at the very top */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none max-w-full scrollbar-none">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mr-1.5 shrink-0">
+                    How are you feeling?
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {moodOptions.map((option) => {
+                      const isSelected = editMood === option.type;
+                      const Icon = option.icon;
+                      return (
+                        <button
+                          key={option.type}
                           type="button"
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setEditImageUrl("")}
-                          className="px-2 text-xs hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-lg"
+                          onClick={() => setEditMood(option.type)}
+                          className={cn(
+                            "w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-90 border",
+                            isSelected
+                              ? "bg-primary/10 border-primary scale-110 shadow-sm text-foreground"
+                              : "bg-muted/30 border-transparent hover:bg-muted/50 text-muted-foreground"
+                          )}
+                          title={option.label}
                         >
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                    {/* Live Preview inside editor */}
-                    {editImageUrl && (
-                      <div className="pt-2 flex justify-center">
-                        <div className="relative bg-[#fcfbf9] dark:bg-[#1a1917] p-2.5 pb-6 rounded shadow-sm border border-border/20 w-44 rotate-[-1deg]">
-                          {/* Washi Tape Preview */}
-                          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-20 h-4 bg-primary/20 backdrop-blur-[1px] rotate-[1deg] opacity-75 z-10" />
-                          <div className="relative aspect-square overflow-hidden bg-muted rounded-sm border border-border/10 flex items-center justify-center">
-                            {/* Loading State Skeleton */}
-                            {editImageState === 'loading' && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
-                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                              </div>
-                            )}
-
-                            {/* Error Fallback State */}
-                            {editImageState === 'error' && (
-                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/5 text-destructive p-2 text-center">
-                                <CloudOff className="w-4 h-4 mb-1" />
-                                <span className="text-[8px] font-bold uppercase tracking-wider">Invalid Image</span>
-                              </div>
-                            )}
-
-                            <img
-                              src={editImageUrl}
-                              alt="Live preview"
-                              className={cn(
-                                "object-cover w-full h-full transition-opacity duration-300",
-                                editImageState === 'loaded' ? "opacity-100" : "opacity-0 absolute"
-                              )}
-                              onLoad={() => setEditImageState('loaded')}
-                              onError={() => setEditImageState('error')}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Ruled text editor */}
-                  <div 
-                    className="relative p-1 sm:p-2 rounded-xl journal-editor-lined"
-                  >
-                    <style jsx global>{`
-                      .journal-editor-lined textarea {
-                        background-image: linear-gradient(var(--border) 1px, transparent 1px) !important;
-                        background-size: 100% 1.625rem !important;
-                        background-position: 0 1.45rem !important;
-                        background-attachment: local !important;
-                        line-height: 1.625rem !important;
-                      }
-                    `}</style>
-                    <JournalEditor
-                      value={editBody}
-                      onChange={setEditBody}
-                      placeholder="Start writing your thoughts..."
-                      className="text-base md:text-lg text-foreground/95"
-                    />
+                          <Icon className="w-4 h-4" />
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-8">
+
+                {/* 2. Date Header */}
+                <div className="text-[10px] sm:text-xs text-muted-foreground/75 font-semibold uppercase tracking-widest select-none">
+                  {formatDate(journal.createdAt)} at {formatTime(journal.createdAt)}
+                </div>
+
+                {/* 3. Title Input */}
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Untitled Entry"
+                  className="w-full text-xl sm:text-2xl md:text-3xl font-bold font-primary bg-transparent border-none outline-none focus:ring-0 placeholder:text-muted-foreground/30 text-foreground/90 leading-tight py-1"
+                />
+
+                {/* 4. Small Toolbar Below Title */}
+                <div className="flex items-center gap-2 select-none py-1.5 border-t border-b border-border/10">
+                  <button
+                    type="button"
+                    onClick={() => setShowImageInput(prev => !prev)}
+                    className={cn(
+                      "p-2 sm:p-1.5 rounded-xl border transition-all duration-200 cursor-pointer active:scale-95",
+                      showImageInput ? "bg-[#E07A5F]/15 border-[#E07A5F]/30 text-[#E07A5F]" : "bg-muted/40 border-transparent text-muted-foreground hover:bg-muted/75"
+                    )}
+                    title="Add cover polaroid"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPrompts(prev => !prev)}
+                    className={cn(
+                      "p-2 sm:p-1.5 rounded-xl border transition-all duration-200 cursor-pointer active:scale-95",
+                      showPrompts ? "bg-primary/15 border-primary/30 text-primary" : "bg-muted/40 border-transparent text-muted-foreground hover:bg-muted/75"
+                    )}
+                    title="Choose writing prompt"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* 4. Optional Cover Input & Live preview */}
+                <AnimatePresence>
+                  {showImageInput && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden space-y-3 pb-3 border-b border-border/10 animate-in fade-in"
+                    >
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={editImageUrl}
+                          onChange={(e) => setEditImageUrl(e.target.value)}
+                          placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
+                          className="flex-1 px-3 py-2 text-xs bg-background border border-border/40 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary/40 text-foreground/90 placeholder:text-muted-foreground/45"
+                        />
+                        {editImageUrl && (
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setEditImageUrl("")}
+                            className="px-2 text-xs hover:bg-destructive/10 hover:text-destructive text-muted-foreground rounded-lg"
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                      {editImageUrl && (
+                        <div className="flex justify-center pt-1">
+                          <div className="relative bg-[#fcfbf9] dark:bg-[#1a1917] p-2 pb-5 rounded shadow-sm border border-border/20 w-36 rotate-[-1deg] select-none">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-16 h-3 bg-primary/20 backdrop-blur-[1px] rotate-[1deg] opacity-75 z-10" />
+                            <div className="relative aspect-square overflow-hidden bg-muted rounded-sm border border-border/10 flex items-center justify-center">
+                              {editImageState === 'loading' && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                                  <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                                </div>
+                              )}
+                              {editImageState === 'error' && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/5 text-destructive p-2 text-center">
+                                  <CloudOff className="w-4 h-4 mb-0.5" />
+                                  <span className="text-[8px] font-bold uppercase tracking-wider">Error</span>
+                                </div>
+                              )}
+                              <img
+                                src={editImageUrl}
+                                alt="Preview"
+                                className={cn(
+                                  "object-cover w-full h-full transition-opacity duration-300",
+                                  editImageState === 'loaded' ? "opacity-100" : "opacity-0 absolute"
+                                )}
+                                onLoad={() => setEditImageState('loaded')}
+                                onError={() => setEditImageState('error')}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* 5. Optional Reflective Prompts Block */}
+                <AnimatePresence>
+                  {showPrompts && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden space-y-2 pb-3 border-b border-border/10"
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground select-none">
+                        Need a spark? Choose a prompt:
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {rhythmCopy.logging.reflectivePrompts.slice(0, 3).map((promptText, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              if (!editTitle.trim()) setEditTitle(promptText);
+                              setEditBody(prev => prev ? prev + "\n\n" + promptText + "\n" : promptText + "\n");
+                            }}
+                            className="text-[11px] text-left px-3.5 py-2 rounded-xl bg-background hover:bg-muted border border-border/20 text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer"
+                          >
+                            {promptText}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* 6. Ruled Text Editor (flex-1 so it takes all vertical space) */}
+                <div 
+                  className="relative p-1 sm:p-2 rounded-xl journal-editor-lined flex-1 flex flex-col"
+                >
+                  <style jsx global>{`
+                    .journal-editor-lined textarea {
+                      background-image: linear-gradient(var(--border) 1px, transparent 1px) !important;
+                      background-size: 100% 1.625rem !important;
+                      background-position: 0 1.45rem !important;
+                      background-attachment: local !important;
+                      line-height: 1.625rem !important;
+                    }
+                  `}</style>
+                  <JournalEditor
+                    value={editBody}
+                    onChange={setEditBody}
+                    placeholder="Start writing your thoughts..."
+                    className="text-base md:text-lg text-foreground/95 flex-1 flex flex-col"
+                  />
+                </div>
+
+                {/* 7. Floating/Fixed Bottom Bar for Stats & Auto-save when editing */}
+                <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-md border-t border-border/15 py-3 px-4 sm:px-6">
+                  <div className="max-w-4xl mx-auto flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <HardDrive className="w-3.5 h-3.5 text-primary" />
+                      <span>Autosaving changes to cloud...</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span>{editBody.split(/\s+/).filter(Boolean).length} words</span>
+                      <span>·</span>
+                      <span>{Math.max(1, Math.ceil(editBody.split(/\s+/).filter(Boolean).length / 200))} min read</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Viewing Layout
+              <div className="space-y-6">
+                {/* Meta headers */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground/75 uppercase tracking-wide">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {formatDate(journal.createdAt)}
+                  </span>
+                  <span className="hidden sm:inline">·</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {formatTime(journal.createdAt)}
+                  </span>
+                  <span className="hidden sm:inline">·</span>
+                  <span>{readingTime} min read</span>
+                </div>
+
+                {/* Title */}
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-primary text-foreground/90 leading-tight">
+                  {journal.title}
+                </h1>
+
+                <div className="border-t border-border/15 pt-6 space-y-8">
                   {/* Mood Badge */}
                   <div className="flex items-center gap-2">
                     <span
@@ -750,8 +853,8 @@ export default function JournalDetailClient({
                     </Link>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </motion.article>
 
