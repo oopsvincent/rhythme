@@ -65,8 +65,13 @@ export function SiteHeader({ className }: React.HTMLAttributes<HTMLElement>) {
   const pathname = usePathname()
   const breadcrumbs = generateBreadcrumbs(pathname || '/dashboard')
 
+  // Filter out relative/static positioning classes to protect the header's sticky behavior
+  const sanitizedClassName = className
+    ? className.replace(/\brelative\b/g, "").replace(/\bstatic\b/g, "")
+    : ""
+
   return (
-    <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-md flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) ${className || ""}`}>
+    <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-md flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) ${sanitizedClassName}`}>
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator

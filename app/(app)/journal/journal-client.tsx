@@ -278,7 +278,7 @@ export default function JournalPageClient({
   }).length;
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-y-auto overflow-x-hidden">
+    <div className="flex-1 flex flex-col min-h-screen bg-background relative">
       {/* Background paper texture & glow system */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {/* Soft floating mood radial gradients */}
@@ -322,7 +322,7 @@ export default function JournalPageClient({
       />
       
       {/* Blended Header */}
-      <SiteHeader className="bg-transparent relative z-20" />
+      <SiteHeader />
       
       {/* Main Container */}
       <main className="flex-1 flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 py-6 md:py-8 max-w-6xl mx-auto w-full relative z-10 space-y-8 pb-20">
@@ -332,14 +332,12 @@ export default function JournalPageClient({
           initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
           className={cn(
-            "flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border/15",
-            activeTab !== "home" && "hidden md:flex"
+            "flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border/15"
           )}
         >
           <div className="flex flex-col gap-2 max-w-xl text-center md:text-left">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-primary tracking-tight text-foreground/90 leading-none flex items-center justify-center md:justify-start gap-3">
               <span>Journal</span>
-              <Bell className="w-6 h-6 text-muted-foreground/60 hover:text-primary transition-colors cursor-pointer" />
             </h1>
             <span className="text-xs font-bold uppercase tracking-widest text-primary/80 mt-1">
               {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" }).toUpperCase()} • {new Date().toLocaleDateString("en-US", { weekday: "long" })}
@@ -349,19 +347,33 @@ export default function JournalPageClient({
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 self-center md:self-auto shrink-0">
+          <div className="flex flex-col sm:flex-row items-center gap-3 self-center md:self-auto shrink-0">
             <HeaderIllustration />
             
-            {/* New Entry Button */}
-            <Link href="/journal/new">
-              <Button
-                size="lg"
-                className="h-14 px-6 rounded-2xl gap-2 bg-gradient-to-r from-primary to-secondary hover:shadow-md hover:shadow-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer shadow-lg shadow-primary/10"
-              >
-                <PenLine className="w-4 h-4" />
-                <span className="font-semibold text-sm">New Entry</span>
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              {/* Insights Button */}
+              <Link href="/journal/insights">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-14 px-4 sm:px-5 rounded-2xl gap-2 border-border/40 hover:bg-muted cursor-pointer transition-all duration-300 shadow-sm"
+                >
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <span className="font-semibold text-sm">Insights</span>
+                </Button>
+              </Link>
+
+              {/* New Entry Button */}
+              <Link href="/journal/new">
+                <Button
+                  size="lg"
+                  className="h-14 px-4 sm:px-5 rounded-2xl gap-2 bg-gradient-to-r from-primary to-secondary hover:shadow-md hover:shadow-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer shadow-lg shadow-primary/10"
+                >
+                  <PenLine className="w-4 h-4" />
+                  <span className="font-semibold text-sm">New Entry</span>
+                </Button>
+              </Link>
+            </div>
           </div>
         </motion.div>
 
@@ -370,10 +382,7 @@ export default function JournalPageClient({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className={cn(
-            "grid grid-cols-1 sm:grid-cols-3 gap-4",
-            activeTab !== "home" && "hidden md:grid"
-          )}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
         >
           {/* Streak Memo */}
           <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(var(--primary),0.05)] transition-all duration-300 hover:shadow-sm">
@@ -430,10 +439,7 @@ export default function JournalPageClient({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12 }}
-              className={cn(
-                "relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/20 backdrop-blur-md p-6 sm:p-8",
-                activeTab !== "home" && "hidden md:block"
-              )}
+              className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/45 dark:bg-card/20 backdrop-blur-md p-6 sm:p-8"
             >
               {todayEntry && (
                 <div 
@@ -520,95 +526,94 @@ export default function JournalPageClient({
           );
         })()}
 
-        {/* Search & Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className={cn(
-            "space-y-4",
-            activeTab !== "entries" && "hidden md:block"
-          )}
-        >
-          {/* Search Bar */}
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search your journals..."
-                className="w-full h-12 pl-11 pr-4 rounded-2xl bg-card/65 dark:bg-card/30 border border-border/40 focus:border-primary focus:ring-4 focus:ring-primary/8 outline-none transition-all placeholder:text-muted-foreground/60 text-sm"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className={cn(
-                "h-12 w-12 rounded-2xl border-border/40 transition-all duration-300 cursor-pointer active:scale-95",
-                showFilters && "bg-primary/10 border-primary text-primary"
-              )}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="w-4.5 h-4.5" />
-            </Button>
-          </div>
-
-          {/* Mood Filters */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
+        {/* Sticky Search & Filters Wrapper */}
+        <div className="sticky top-[var(--header-height)] z-30 bg-background/95 backdrop-blur-md py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b border-border/10">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="space-y-4"
+          >
+            {/* Search Bar */}
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search your journals..."
+                  className="w-full h-12 pl-11 pr-4 rounded-2xl bg-card/65 dark:bg-card/30 border border-border/40 focus:border-primary focus:ring-4 focus:ring-primary/8 outline-none transition-all placeholder:text-muted-foreground/60 text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className={cn(
+                  "h-12 w-12 rounded-2xl border-border/40 transition-all duration-300 cursor-pointer active:scale-95",
+                  showFilters && "bg-primary/10 border-primary text-primary"
+                )}
+                onClick={() => setShowFilters(!showFilters)}
               >
-                <div className="flex flex-wrap gap-2.5 py-2.5">
-                  {moodFilters.map((filter) => {
-                    const isSelected = moodFilter === filter.type;
-                    const colors = filter.type !== "all" ? moodColors[filter.type] : null;
-                    
-                    return (
-                      <motion.button
-                        key={filter.type}
-                        onClick={() => setMoodFilter(filter.type)}
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.96 }}
-                        className={cn(
-                          "relative px-4 py-2 rounded-full text-xs font-semibold tracking-wide border cursor-pointer select-none transition-all duration-300 flex items-center gap-1.5",
-                          isSelected
-                            ? "shadow-sm"
-                            : "bg-card/50 hover:bg-card/80 border-border/30 text-muted-foreground hover:text-foreground"
-                        )}
-                        style={isSelected ? {
-                          backgroundColor: colors ? `${colors.primary}18` : "var(--primary)",
-                          borderColor: colors ? colors.primary : "var(--primary)",
-                          color: colors ? colors.primary : "var(--primary-foreground)",
-                          boxShadow: colors ? `0 0 12px ${colors.primary}18` : undefined,
-                        } : undefined}
-                      >
-                        {filter.type !== "all" && (() => {
-                          const Icon = moodIcons[filter.type as MoodType];
-                          return <Icon className="w-3.5 h-3.5" />;
-                        })()}
-                        {filter.label}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                <Filter className="w-4.5 h-4.5" />
+              </Button>
+            </div>
+
+            {/* Mood Filters */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-wrap gap-2.5 py-2.5">
+                    {moodFilters.map((filter) => {
+                      const isSelected = moodFilter === filter.type;
+                      const colors = filter.type !== "all" ? moodColors[filter.type] : null;
+                      
+                      return (
+                        <motion.button
+                          key={filter.type}
+                          onClick={() => setMoodFilter(filter.type)}
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.96 }}
+                          className={cn(
+                            "relative px-4 py-2 rounded-full text-xs font-semibold tracking-wide border cursor-pointer select-none transition-all duration-300 flex items-center gap-1.5",
+                            isSelected
+                              ? "shadow-sm"
+                              : "bg-card/50 hover:bg-card/80 border-border/30 text-muted-foreground hover:text-foreground"
+                          )}
+                          style={isSelected ? {
+                            backgroundColor: colors ? `${colors.primary}18` : "var(--primary)",
+                            borderColor: colors ? colors.primary : "var(--primary)",
+                            color: colors ? colors.primary : "var(--primary-foreground)",
+                            boxShadow: colors ? `0 0 12px ${colors.primary}18` : undefined,
+                          } : undefined}
+                        >
+                          {filter.type !== "all" && (() => {
+                            const Icon = moodIcons[filter.type as MoodType];
+                            return <Icon className="w-3.5 h-3.5" />;
+                          })()}
+                          {filter.label}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
 
         {/* Spacious, Clean Journal Grid */}
         {filteredEntries.length > 0 ? (
@@ -616,10 +621,7 @@ export default function JournalPageClient({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className={cn(
-              "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8",
-              activeTab !== "entries" && "hidden md:grid"
-            )}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
           >
             {filteredEntries.map((entry, index) => (
               <motion.div
@@ -640,10 +642,7 @@ export default function JournalPageClient({
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={cn(
-              "relative overflow-hidden rounded-[32px] border border-border/30 bg-card/40 dark:bg-card/20 backdrop-blur-sm p-12 text-center max-w-xl mx-auto mt-6",
-              activeTab !== "entries" && "hidden md:block"
-            )}
+            className="relative overflow-hidden rounded-[32px] border border-border/30 bg-card/40 dark:bg-card/20 backdrop-blur-sm p-12 text-center max-w-xl mx-auto mt-6"
           >
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-primary" />
@@ -667,10 +666,7 @@ export default function JournalPageClient({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={cn(
-              "rounded-[24px] border border-border/30 bg-card/30 dark:bg-card/15 p-10 text-center max-w-md mx-auto",
-              activeTab !== "entries" && "hidden md:block"
-            )}
+            className="rounded-[24px] border border-border/30 bg-card/30 dark:bg-card/15 p-10 text-center max-w-md mx-auto"
           >
             <Search className="w-10 h-10 mx-auto mb-4 text-muted-foreground/45" />
             <h3 className="text-base font-bold font-primary mb-2 text-foreground/90">No Matches Found</h3>

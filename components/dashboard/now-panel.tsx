@@ -35,7 +35,7 @@ import type { Task, HabitWithStats } from "@/types/database";
 import { toast } from "sonner";
 
 export function NowPanel() {
-  const { recommendedTask, activeHabit, capacity, isLoading, isError } = useNowPanel();
+  const { recommendedTask, activeHabit, capacity, momentum, isLoading, isError } = useNowPanel();
   const updateTaskStatus = useUpdateTaskStatus();
   const logHabitCompletion = useLogCompletion();
   const [focusDialogOpen, setFocusDialogOpen] = useState(false);
@@ -89,15 +89,15 @@ export function NowPanel() {
       case "happy":
       case "excited":
         return {
-          bg: "from-yellow-500/10 via-yellow-500/5 to-transparent",
-          border: "border-yellow-500/20",
+          bg: "from-yellow-500/5 via-transparent to-transparent",
+          border: "border-yellow-500/10",
           icon: "text-yellow-500",
           progress: "bg-yellow-500",
         };
       case "calm":
         return {
-          bg: "from-blue-500/10 via-blue-500/5 to-transparent",
-          border: "border-blue-500/20",
+          bg: "from-blue-500/5 via-transparent to-transparent",
+          border: "border-blue-500/10",
           icon: "text-blue-500",
           progress: "bg-blue-500",
         };
@@ -105,20 +105,26 @@ export function NowPanel() {
       case "frustrated":
       case "anxious":
         return {
-          bg: "from-indigo-500/10 via-indigo-500/5 to-transparent",
-          border: "border-indigo-500/20",
+          bg: "from-indigo-500/5 via-transparent to-transparent",
+          border: "border-indigo-500/10",
           icon: "text-indigo-400",
           progress: "bg-indigo-400",
         };
       default:
         return {
-          bg: "from-primary/10 via-primary/5 to-transparent",
-          border: "border-border/50",
+          bg: "from-primary/5 via-transparent to-transparent",
+          border: "border-border/30",
           icon: "text-primary",
           progress: "bg-gradient-to-r from-primary to-accent",
         };
     }
   })();
+
+  const isStable = momentum?.state === "stable" || momentum?.state === "building";
+  const momentumText = isStable ? "Stable" : "Drifting";
+  const glowColor = isStable
+    ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]"
+    : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]";
 
   return (
     <>
@@ -127,56 +133,48 @@ export function NowPanel() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         className={cn(
-          "glass-card bg-gradient-to-br to-background/30 border shadow-lg rounded-3xl p-6 sm:p-7 space-y-6 relative overflow-hidden",
+          "glass-card bg-gradient-to-br border shadow-md rounded-[28px] p-6 sm:p-8 md:p-10 min-h-[380px] md:min-h-[440px] flex flex-col justify-between space-y-8 relative overflow-hidden",
           moodColorTheme.bg,
           moodColorTheme.border
         )}
       >
         {/* Subtle Decorative Ambient Glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
         {/* 1. CAPACITY HEADER */}
-        <div className="flex flex-col gap-3.5 border-b border-border/30 pb-5">
-          <div className="space-y-1.5 min-w-0">
+        <div className="flex flex-col gap-3.5 border-b border-border/15 pb-6">
+          <div className="space-y-2 min-w-0">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <BatteryMedium className={cn("w-4 h-4", moodColorTheme.icon)} />
-                <span className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                <span className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground/80">
                   Today&apos;s Capacity
                 </span>
               </div>
               
-              {/* Capacity Status Badge & Progress Bar */}
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted border border-border/40 text-foreground">
+              {/* Capacity Status */}
+              <div className="flex items-center gap-2.5 shrink-0 select-none">
+                <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-muted border border-border/40 text-foreground/80">
                   {capacity.energyLevel}
                 </span>
-                <div className="w-12 h-1.5 rounded-full bg-muted/60 overflow-hidden border border-border/20">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: capacity.moodType === "happy" || capacity.moodType === "excited" ? "100%" : capacity.moodType === "sad" ? "40%" : "70%" }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className={cn("h-full rounded-full", moodColorTheme.progress)}
-                  />
-                </div>
               </div>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-primary leading-tight">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-foreground font-primary leading-tight">
               {capacity.rangeText}
             </h2>
-            <p className="text-xs text-muted-foreground leading-normal">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
               {capacity.explanation}
             </p>
           </div>
         </div>
 
         {/* 2. MAIN BODY SECTION: Stacked vertically for clean column fitting */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           
           {/* RECOMMENDED ACTION */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 select-none">
               <BrainCircuit className="w-4 h-4 text-primary" />
               <span className="text-xs font-bold uppercase tracking-[0.15em] text-primary">
                 Recommended Action
@@ -184,15 +182,15 @@ export function NowPanel() {
             </div>
 
             {hasRecommendedTask ? (
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
                   {/* Instant Action Checkbox */}
                   <button
                     onClick={() => handleTaskComplete(recommendedTask)}
                     disabled={updateTaskStatus.isPending}
                     className={cn(
                       "mt-1 shrink-0 w-6 h-6 rounded-lg flex items-center justify-center border transition-all duration-200",
-                      "border-border hover:border-primary hover:bg-primary/5 active:scale-95"
+                      "border-border hover:border-primary hover:bg-primary/5 active:scale-95 cursor-pointer"
                     )}
                   >
                     {updateTaskStatus.isPending ? (
@@ -202,12 +200,12 @@ export function NowPanel() {
                     )}
                   </button>
 
-                  <div className="space-y-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-bold tracking-tight text-foreground leading-snug font-primary truncate">
+                  <div className="space-y-1.5 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground leading-snug font-primary truncate">
                       {recommendedTask.title}
                     </h3>
                     {recommendedTask.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                         {recommendedTask.description}
                       </p>
                     )}
@@ -215,15 +213,15 @@ export function NowPanel() {
                 </div>
 
                 {/* Recommendation badge & actions */}
-                <div className="pl-9 space-y-3">
-                  <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10 text-[10px] px-2 py-0.5 select-none">
+                <div className="pl-10 space-y-4">
+                  <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10 text-[10px] px-2.5 py-0.5 select-none font-medium">
                     {recommendedTask.recommendationReason}
                   </Badge>
                   
-                  <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
                     <Button
                       onClick={() => setFocusDialogOpen(true)}
-                      className="rounded-2xl h-10 px-4 text-xs font-bold gap-1.5 shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.01] transition-all duration-300"
+                      className="rounded-xl h-12 px-6 text-sm font-semibold tracking-wide gap-2 shadow-md shadow-primary/5 hover:shadow-primary/10 hover:scale-[1.01] transition-all duration-300 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       Start Focus Session
@@ -232,7 +230,7 @@ export function NowPanel() {
                       variant="outline"
                       onClick={() => handleTaskComplete(recommendedTask)}
                       disabled={updateTaskStatus.isPending}
-                      className="rounded-2xl h-10 px-4 text-xs font-medium border-border/60 hover:bg-muted"
+                      className="rounded-2xl h-11 px-4 text-xs font-medium border-border/40 hover:bg-muted cursor-pointer"
                     >
                       {updateTaskStatus.isPending ? (
                         <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
@@ -243,11 +241,11 @@ export function NowPanel() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/50 bg-card/20 p-5 flex flex-col items-center justify-center text-center space-y-2">
-                <p className="text-xs text-muted-foreground">
+              <div className="rounded-2xl border border-dashed border-border/40 bg-card/10 p-6 flex flex-col items-center justify-center text-center space-y-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   All caught up! No tasks left on your backlog today.
                 </p>
-                <Button variant="link" className="text-xs font-bold text-primary px-0 h-auto" onClick={() => window.location.href = "/tasks"}>
+                <Button variant="link" className="text-xs font-bold text-primary px-0 h-auto cursor-pointer" onClick={() => window.location.href = "/tasks"}>
                   Add a new task +
                 </Button>
               </div>
@@ -255,11 +253,11 @@ export function NowPanel() {
           </div>
 
           {/* Separator line */}
-          <div className="w-full h-px bg-border/20" />
+          <div className="w-full h-px bg-border/10" />
 
           {/* ACTIVE HABIT */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 select-none">
               <TrendingUp className="w-4 h-4 text-accent" />
               <span className="text-xs font-bold uppercase tracking-[0.15em] text-accent">
                 Active Habit
@@ -267,19 +265,19 @@ export function NowPanel() {
             </div>
 
             {hasActiveHabit ? (
-              <div className="flex items-center justify-between gap-4 p-3 rounded-2xl bg-muted/40 border border-border/20">
-                <div className="min-w-0 space-y-1">
-                  <p className="text-sm font-bold text-foreground truncate font-primary leading-tight">
+              <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-muted/30 border border-border/20">
+                <div className="min-w-0 space-y-1.5">
+                  <p className="text-sm sm:text-base font-semibold text-foreground truncate font-primary leading-none">
                     {activeHabit.name}
                   </p>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">
                       {activeHabit.periodCompletions}/{activeHabit.periodTarget} today
                     </span>
                     {activeHabit.current_streak > 0 && (
-                      <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 border-0 text-[10px] h-4 px-1.5 py-0 select-none">
-                        <Flame className="w-2.5 h-2.5 mr-0.5 fill-current" />
-                        {activeHabit.current_streak}d
+                      <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 border-0 text-[10px] h-4.5 px-1.5 py-0 select-none font-medium">
+                        <Flame className="w-3 h-3 mr-0.5 fill-current" />
+                        {activeHabit.current_streak}d streak
                       </Badge>
                     )}
                   </div>
@@ -291,7 +289,7 @@ export function NowPanel() {
                     onClick={() => handleHabitComplete(activeHabit)}
                     disabled={logHabitCompletion.isPending}
                     className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-95",
+                      "w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-95 cursor-pointer",
                       "border-border/60 hover:border-accent hover:bg-accent/5"
                     )}
                   >
@@ -304,8 +302,8 @@ export function NowPanel() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/50 bg-card/20 p-4 text-center">
-                <p className="text-xs text-muted-foreground">
+              <div className="rounded-2xl border border-dashed border-border/40 bg-card/10 p-5 text-center">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   All habits logged for today. Excellent job!
                 </p>
               </div>

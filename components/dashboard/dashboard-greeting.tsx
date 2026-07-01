@@ -11,6 +11,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { getCalmTimeGreeting } from "@/lib/greetings/getCalmTimeGreeting"
 import { getGentleSubtitle } from "@/lib/greetings/getGentleSubtitle"
@@ -133,111 +134,69 @@ function TimeIllustration({ hour }: TimeIllustrationProps) {
 
 export function DashboardGreeting({ userName }: DashboardGreetingProps) {
   const [mounted, setMounted] = useState(false)
+  const [subtitle, setSubtitle] = useState("")
 
   useEffect(() => {
     setMounted(true)
+    const subtitles = [
+      "Your rhythm feels steady today. Protect your focus and move with intention.",
+      "One quiet step at a time. The work will find its shape.",
+      "Be proud of your quiet progress. Steady efforts compound over time.",
+      "Deep work comes from a calm mind. Give yourself space to think.",
+      "Focus on what matters today, and let go of the noise.",
+      "A productive day starts with a peaceful mind. Take it slow.",
+      "Protect your energy. Quality of attention exceeds quantity of hours.",
+      "Find your tempo. There is no need to rush to be productive.",
+      "Sustain your momentum with gentle breaks. Rest is part of the work.",
+      "Clear skies, clear mind. Center yourself and begin when ready."
+    ];
+    // Stable but changing index using day + hour
+    const index = (new Date().getDate() + new Date().getHours()) % subtitles.length;
+    setSubtitle(subtitles[index]);
   }, [])
 
   // Minimal loading skeleton to prevent hydration flicker
   if (!mounted) {
     return (
-      <div className="space-y-6 flex flex-col items-center md:items-start">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 w-full text-center md:text-left">
+      <div className="space-y-4 flex flex-col items-center md:items-start w-full">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full text-center md:text-left">
           <div className="flex flex-col gap-1.5 items-center md:items-start w-full md:w-auto">
-            <div className="h-9 w-72 bg-muted/30 rounded-lg animate-pulse" />
-            <div className="h-5 w-60 bg-muted/20 rounded-lg animate-pulse" />
+            <div className="h-8 w-64 bg-muted/30 rounded-lg animate-pulse" />
+            <div className="h-5 w-48 bg-muted/20 rounded-lg animate-pulse" />
           </div>
-          <div className="h-24 w-[285px] bg-muted/20 border border-border/30 rounded-3xl animate-pulse shrink-0 self-center md:self-auto" />
+          <div className="h-10 w-24 bg-muted/20 rounded-lg animate-pulse self-center md:self-auto" />
         </header>
-        {/* Navigation pill loading placeholder (Mobile only) */}
-        <div className="h-8 w-64 bg-muted/20 border border-border/20 rounded-2xl animate-pulse mx-auto lg:hidden" />
       </div>
     )
   }
 
   const hour = new Date().getHours()
   const greeting = getCalmTimeGreeting(userName)
-  const subtitle = getGentleSubtitle()
-  
-  const isMorning = hour >= 5 && hour < 12
-  const isAfternoon = hour >= 12 && hour < 17
-  const isEvening = hour >= 17 && hour < 19
-  const isNight = hour >= 19 || hour < 5
 
   const weekdayStr = new Date().toLocaleDateString("en-US", { weekday: "long" })
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" })
 
   return (
-    <div className="space-y-6 flex flex-col items-center md:items-start">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 w-full text-center md:text-left">
-        <div className="flex flex-col gap-1.5 max-w-xl items-center md:items-start w-full md:w-auto">
-          <h1 className="text-3xl md:text-4xl font-semibold font-primary tracking-tight text-foreground/90 leading-tight">
+    <div className="w-full select-none">
+      <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-4 w-full">
+        <div className="flex flex-col gap-1 items-center md:items-start text-center md:text-left max-w-xl w-full md:w-auto">
+          <h1 className="text-2xl md:text-3xl font-semibold font-primary tracking-tight text-foreground/90 leading-tight">
             {greeting}
           </h1>
-          <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {subtitle}
           </p>
         </div>
 
-        {/* Illustrative Date Widget */}
-        <div className="flex items-center gap-2.5 shrink-0 self-center md:self-auto">
-          <div className="relative overflow-hidden rounded-3xl p-4 sm:p-5 border border-border/40 bg-card/45 backdrop-blur-md shadow-sm flex items-center justify-between gap-6 min-w-[285px] group transition-all duration-300 hover:border-primary/20">
-            
-            {/* Dynamic ambient color glow to match time-of-day */}
-            <div className={cn(
-              "absolute -right-8 -bottom-8 w-24 h-24 rounded-full blur-2xl opacity-20 pointer-events-none transition-all duration-500",
-              isMorning && "bg-amber-400",
-              isAfternoon && "bg-sky-400",
-              isEvening && "bg-orange-500",
-              isNight && "bg-indigo-400"
-            )} />
-
-            {/* Date text description */}
-            <div className="flex flex-col gap-0.5 relative z-10">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/70 leading-none">
-                {dateStr}
-              </span>
-              <span className="text-xl sm:text-2xl font-bold font-primary tracking-tight text-foreground/90">
-                {weekdayStr}
-              </span>
-              <span className="text-[10px] sm:text-[11px] text-muted-foreground/60 leading-none mt-0.5">
-                {isMorning && "A fresh start to your day"}
-                {isAfternoon && "Stay steady, keep focus"}
-                {isEvening && "Unwind, look back"}
-                {isNight && "Time for quiet and rest"}
-              </span>
-            </div>
-
-            {/* Sun/Moon Axis Illustration */}
-            <div className="relative z-10 bg-muted/20 dark:bg-muted/10 p-1.5 rounded-2xl border border-border/20 shadow-inner">
-              <TimeIllustration hour={hour} />
-            </div>
-          </div>
+        {/* Clean, minimalist date display */}
+        <div className="flex flex-col items-center md:items-end shrink-0 select-none bg-muted/20 border border-border/20 px-4 py-2 rounded-2xl">
+          <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/80">
+            {dateStr}
+          </span>
+          <span className="text-sm font-bold font-primary text-foreground/90 mt-0.5">
+            {weekdayStr}
+          </span>
         </div>
-      </header>
-
-      {/* Smart Section Navigation Pill (Only visible and centered on Mobile) */}
-      <div className="flex lg:hidden items-center gap-1.5 bg-muted/60 dark:bg-muted/20 border border-border/30 rounded-2xl p-1 w-fit select-none mx-auto relative z-20">
-        <button
-          onClick={() => document.getElementById("routines-column")?.scrollIntoView({ behavior: "smooth" })}
-          className="text-[9px] sm:text-[10px] tracking-widest uppercase font-bold text-muted-foreground/80 hover:text-primary px-3 py-1.5 rounded-xl cursor-pointer hover:bg-card/40 transition-all duration-200"
-        >
-          Routines
-        </button>
-        <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/20" />
-        <button
-          onClick={() => document.getElementById("now-column")?.scrollIntoView({ behavior: "smooth" })}
-          className="text-[9px] sm:text-[10px] tracking-widest uppercase font-bold text-muted-foreground/80 hover:text-primary px-3 py-1.5 rounded-xl cursor-pointer hover:bg-card/40 transition-all duration-200"
-        >
-          Here &amp; Now
-        </button>
-        <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/20" />
-        <button
-          onClick={() => document.getElementById("reflection-column")?.scrollIntoView({ behavior: "smooth" })}
-          className="text-[9px] sm:text-[10px] tracking-widest uppercase font-bold text-muted-foreground/80 hover:text-primary px-3 py-1.5 rounded-xl cursor-pointer hover:bg-card/40 transition-all duration-200"
-        >
-          Reflection
-        </button>
       </div>
     </div>
   )

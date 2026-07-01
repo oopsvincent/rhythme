@@ -90,11 +90,13 @@ export default function MoodPageClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayLog?.id]);
 
-  const isSaving = createMut.isPending || updateMut.isPending;
+  const [isLogging, setIsLogging] = useState(false);
+  const isSaving = createMut.isPending || updateMut.isPending || isLogging;
 
   /* ── One-tap mood save ────────────────────────────────── */
   async function handleMoodTap(score: number) {
-    if (isSaving) return;
+    if (createMut.isPending || updateMut.isPending || isLogging) return;
+    setIsLogging(true);
     const prev = selectedScore;
     setSelectedScore(score);
 
@@ -109,6 +111,7 @@ export default function MoodPageClient() {
         if (!gate.allowed) {
           setSelectedScore(prev);
           setShowGate(true);
+          setIsLogging(false);
           return;
         }
         await createMut.mutateAsync({
@@ -130,6 +133,8 @@ export default function MoodPageClient() {
       } else {
         toast.error(msg);
       }
+    } finally {
+      setIsLogging(false);
     }
   }
 
@@ -149,7 +154,7 @@ export default function MoodPageClient() {
   }
 
   // Determine active mood value for ambient glow
-  const activeMoodValue = hoveredMood ?? selectedScore;
+  const activeMoodValue = todayLog ? (hoveredMood ?? selectedScore) : null;
 
   // Soft color mapping for radial gradient glows
   const getAmbientGlowColor = (value: number | null) => {
@@ -174,10 +179,10 @@ export default function MoodPageClient() {
   const selected = MOOD_SCALE.find((o) => o.value === selectedScore) ?? null;
   const loggedTime = formatTimeLabel(todayLog?.created_at ?? null);
 
-  const displayMoodValue = hoveredMood ?? selectedScore;
+  const displayMoodValue = todayLog ? (hoveredMood ?? selectedScore) : null;
   const displayMood = MOOD_SCALE.find(m => m.value === displayMoodValue) ?? null;
   const DisplayIcon = displayMood?.icon;
-  const isPreviewActive = displayMood !== null;
+  const isPreviewActive = todayLog !== null && displayMood !== null;
 
   /* ── Full page loading skeleton state ──────────────────── */
   if (isLoading) {

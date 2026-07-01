@@ -79,20 +79,22 @@ export async function getSessionsByDevice(deviceId: string): Promise<FocusSessio
 
 export async function getTodaySessions(): Promise<FocusSessionRecord[]> {
   const db = await getFocusDB()
-  const all = await db.getAll('sessions')
-  const today = new Date().toDateString()
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  const end = new Date()
+  end.setHours(23, 59, 59, 999)
   
-  return all.filter(s => new Date(s.completedAt).toDateString() === today)
+  const range = IDBKeyRange.bound(start.toISOString(), end.toISOString())
+  return db.getAllFromIndex('sessions', 'by-date', range)
 }
 
 export async function getSessionsForMonth(year: number, month: number): Promise<FocusSessionRecord[]> {
   const db = await getFocusDB()
-  const all = await db.getAll('sessions')
+  const start = new Date(year, month, 1, 0, 0, 0, 0)
+  const end = new Date(year, month + 1, 0, 23, 59, 59, 999)
   
-  return all.filter(s => {
-    const date = new Date(s.completedAt)
-    return date.getFullYear() === year && date.getMonth() === month
-  })
+  const range = IDBKeyRange.bound(start.toISOString(), end.toISOString())
+  return db.getAllFromIndex('sessions', 'by-date', range)
 }
 
 export async function deleteSession(id: string): Promise<void> {

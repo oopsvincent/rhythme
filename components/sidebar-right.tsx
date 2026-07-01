@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import { CalendarDays, PanelRightClose, PanelRightOpen, BookOpen, Brain, ChevronUp, ChevronDown, CheckSquare } from "lucide-react"
+import { CalendarDays, PanelRightClose, PanelRightOpen, BookOpen, Brain, ChevronUp, ChevronDown, CheckSquare, LineChart } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -13,9 +13,19 @@ import { SidebarJournalContent } from "./journal/sidebar-journal-content"
 import { FocusHeatmapCalendar } from "./focus/focus-heatmap-calendar"
 import { DailyActivityInspector } from "./daily-activity-inspector"
 import { Task, Journal } from "@/types/database"
-import { getTasks } from "@/app/actions/getTasks"
-import { getJournals } from "@/app/actions/journals"
+import { useTasks } from "@/hooks/use-tasks"
+import { useJournals } from "@/hooks/use-journals"
+import { MoodChart } from "./dashboard/mood-chart"
+import { SentimentChart } from "./dashboard/sentiment-chart"
 import { Button } from "./ui/button"
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer"
 import {
   Tooltip,
   TooltipContent,
@@ -27,16 +37,24 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useRightSidebarStore } from "@/store/useRightSidebarStore"
 import { useDashboardCalendarStore, useTaskCalendarStore, useHabitCalendarStore } from "@/store/useCalendarStores"
 
-type SidebarMode = 'tasks' | 'journal' | 'focus' | 'calendar'
+type SidebarMode = 'tasks' | 'journal' | 'focus' | 'calendar' | 'analytics'
 
 export function SidebarRight({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
-  const [tasks, setTasks] = React.useState<Task[]>([])
-  const [journals, setJournals] = React.useState<Journal[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
+  const { data: tasks = [], isLoading: tasksLoading } = useTasks()
+  const { data: journalsData = [], isLoading: journalsLoading } = useJournals()
   const { isCollapsed, toggleCollapsed, isMobileExpanded, toggleMobileExpanded } = useRightSidebarStore()
+
+  const isDashboardOrJournal = pathname === "/dashboard" || pathname === "/" || pathname?.startsWith("/journal")
+
+  const analyticsJournals = React.useMemo(() => {
+    const fourteenDaysAgo = new Date()
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14)
+    const filteredJournals = journalsData.filter(j => new Date(j.created_at) >= fourteenDaysAgo)
+    return filteredJournals.length > 0 ? filteredJournals : journalsData.slice(0, 5)
+  }, [journalsData])
 
   const dashboardDate = useDashboardCalendarStore(s => s.selectedDate)
   const setDashboardDate = useDashboardCalendarStore(s => s.setSelectedDate)
@@ -60,6 +78,7 @@ export function SidebarRight({
     if (pathname?.startsWith("/journal")) return 'journal'
     if (pathname?.startsWith("/focus")) return 'focus'
     if (pathname?.startsWith("/tasks")) return 'tasks'
+    if (pathname === "/dashboard" || pathname === "/") return 'analytics'
     return 'calendar' // Default for dashboard home and other pages
   }
 
@@ -89,6 +108,13 @@ export function SidebarRight({
           title: "Tasks",
           tooltip: { show: "Show task calendar", hide: "Hide task calendar" }
         }
+      case 'analytics':
+        return {
+          icon: <Brain className="h-4 w-4 text-primary" />,
+          iconBg: "bg-primary/10",
+          title: "Analytics",
+          tooltip: { show: "Show analytics", hide: "Hide analytics" }
+        }
       default:
         return {
           icon: <CalendarDays className="h-4 w-4 text-primary" />,
@@ -101,29 +127,25 @@ export function SidebarRight({
 
   const headerConfig = getHeaderConfig()
 
-  // Fetch data based on current page - only fetch what's needed
-  React.useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true)
-      try {
-        if (sidebarMode === 'journal') {
-          const journalsData = await getJournals()
-          setJournals(journalsData)
-        } else if (sidebarMode === 'tasks' || sidebarMode === 'calendar') {
-          const tasksResult = await getTasks()
-          if (tasksResult.data) {
-            setTasks(tasksResult.data)
-          }
-        }
-        // Focus mode doesn't need server data - uses IndexedDB
-      } catch (error) {
-        console.error('Failed to fetch data:', error)
-      } finally {
-        setIsLoading(false)
-      }
+  const journals = React.useMemo(() => {
+    if (sidebarMode === 'analytics') {
+      const fourteenDaysAgo = new Date()
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14)
+      const filteredJournals = journalsData.filter(j => new Date(j.created_at) >= fourteenDaysAgo)
+      return filteredJournals.length > 0 ? filteredJournals : journalsData.slice(0, 5)
     }
-    fetchData()
-  }, [sidebarMode])
+    return journalsData
+  }, [journalsData, sidebarMode])
+
+  const isLoading = React.useMemo(() => {
+    if (sidebarMode === 'tasks' || sidebarMode === 'calendar') {
+      return tasksLoading
+    }
+    if (sidebarMode === 'journal' || sidebarMode === 'analytics') {
+      return journalsLoading
+    }
+    return false
+  }, [sidebarMode, tasksLoading, journalsLoading])
 
   // Render content based on mode
   const renderContent = () => {
@@ -146,6 +168,28 @@ export function SidebarRight({
               onDateSelect={activeCalendarState.setSelectedDate} 
             />
             <DailyActivityInspector selectedDate={activeCalendarState.selectedDate} />
+          </div>
+        )
+      case 'analytics':
+        return isLoading ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-xs text-muted-foreground">Loading analytics...</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6 px-1 py-2">
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 pl-1">
+                7-Day Mood Analytics
+              </h4>
+              <MoodChart journals={journals} />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 pl-1">
+                Sentiment Analysis
+              </h4>
+              <SentimentChart journals={journals} />
+            </div>
           </div>
         )
       default:
@@ -173,48 +217,56 @@ export function SidebarRight({
       case 'journal': return "Journal Quick Actions"
       case 'focus': return "Focus Activity"
       case 'tasks': return "Task Calendar"
+      case 'analytics': return "Analytics"
       default: return "Calendar"
     }
   }
 
   return (
     <>
-      {/* Mobile Bottom Panel - Floating Pill */}
-      <div className="lg:hidden fixed bottom-6 left-6 z-40 flex flex-col items-start gap-2">
-        <AnimatePresence>
-          {isMobileExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ height: "auto", opacity: 1, scale: 1, y: 0 }}
-              exit={{ height: 0, opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="origin-bottom-left w-[calc(100vw-3rem)] max-w-sm bg-background/60 backdrop-blur-3xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden mb-2"
+      {/* Mobile Drawer Trigger (Insights) - floating button on mobile */}
+      {isDashboardOrJournal && (
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Button
+              className="fixed bottom-6 right-6 z-50 md:hidden flex items-center gap-2 rounded-full h-11 px-4 bg-card/85 backdrop-blur-md border border-border/40 text-xs font-semibold text-foreground/80 hover:text-foreground shadow-lg shadow-black/30 hover:bg-card/90 cursor-pointer"
             >
-              <div className="max-h-[60vh] overflow-y-auto px-4 py-4">
-                {renderContent()}
+              <LineChart className="w-3.5 h-3.5 text-primary" />
+              <span>Insights</span>
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent className="max-h-[85vh]">
+            <DrawerHeader className="px-6 pt-6 pb-2 text-left">
+              <DrawerTitle className="text-lg font-semibold tracking-tight flex items-center gap-2 font-primary">
+                <LineChart className="w-4 h-4 text-primary" />
+                Analytics Insights
+              </DrawerTitle>
+              <DrawerDescription className="text-xs text-muted-foreground">
+                Your 7-day mood trends and journal sentiment patterns.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="overflow-y-auto px-6 pb-8 custom-scrollbar">
+              <div className="space-y-6 mt-4">
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 pl-1">
+                    7-Day Mood Analytics
+                  </h4>
+                  <MoodChart journals={analyticsJournals} />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 pl-1">
+                    Sentiment Analysis
+                  </h4>
+                  <SentimentChart journals={analyticsJournals} />
+                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <motion.button
-          onClick={toggleMobileExpanded}
-          className="flex h-14 items-center gap-3 px-5 rounded-full bg-background/60 backdrop-blur-3xl border border-white/20 shadow-2xl transition-all hover:scale-105 active:scale-95 font-medium text-sm text-foreground/80 hover:text-foreground"
-        >
-          <div className={cn("flex h-7 w-7 items-center justify-center rounded-xl", headerConfig.iconBg)}>
-            {headerConfig.icon}
-          </div>
-          <span className="whitespace-nowrap hidden sm:inline-block">{getMobileHeaderText()}</span>
-          {isMobileExpanded ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
-          ) : (
-            <ChevronUp className="h-4 w-4 text-muted-foreground hidden sm:block" />
-          )}
-        </motion.button>
-      </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
 
       {/* Desktop Sidebar - Toggle button lives outside the collapsible area */}
-      <div className="sticky top-0 hidden h-svh lg:flex flex-row">
+      <div className="sticky top-0 hidden h-svh md:flex flex-row">
         {/* Toggle Button - Always visible, never clipped */}
         <div className="relative flex items-start pt-4 z-50">
           <TooltipProvider>
